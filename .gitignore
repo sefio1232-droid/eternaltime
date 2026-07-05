@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# production
+build/
+dist/
+*.tsbuildinfo
+
+# environment
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local artifacts
+coverage/
+.turbo/
+.vercel/
+.tmp/
+.tmp-next-scaffold/
+tmp/
+temp/
+
+# private/local uploads
+private/
+uploads/
+storage/
+supabase/.temp/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

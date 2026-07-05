@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f5f7f6;
+  --surface: #ffffff;
+  --surface-muted: #e9efec;
+  --surface-strong: #121a18;
+  --border: #d4ddda;
+  --border-strong: #96a7a0;
+  --text: #111816;
+  --text-muted: #5d6b66;
+  --text-inverse: #ffffff;
+  --accent: #a57c22;
+  --accent-strong: #6e4d08;
+  --focus: #08748a;
+  --danger: #b4232a;
+  --container: 1120px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-soft: 0 12px 30px rgb(23 23 23 / 8%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.watch-dial-mark {
+  position: relative;
+}
+
+.watch-dial-mark::before {
+  aspect-ratio: 1;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  content: "";
+  display: block;
+  inline-size: 100%;
+}
+
+.watch-dial-mark::after {
+  background:
+    linear-gradient(90deg, transparent 48%, var(--accent-strong) 49%, var(--accent-strong) 51%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, var(--accent-strong) 49%, var(--accent-strong) 51%, transparent 52%);
+  border-radius: 999px;
+  content: "";
+  inset: 22%;
+  opacity: 0.8;
+  position: absolute;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
