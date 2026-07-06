@@ -9,15 +9,20 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts",
+    "catalog:import:audit": "tsx src/modules/imports/catalog/cli/catalog-audit.ts",
+    "catalog:import:preview": "tsx src/modules/imports/catalog/cli/catalog-preview.ts",
+    "secrets:scan": "node scripts/secrets-scan.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.0",
     "@supabase/supabase-js": "2.110.0",
+    "jszip": "^3.10.1",
     "next": "16.2.10",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "server-only": "0.0.1",
+    "xlsx": "^0.18.5",
     "zod": "4.4.3"
   },
   "devDependencies": {
@@ -31,6 +36,7 @@
     "eslint-config-next": "16.2.10",
     "jsdom": "29.1.1",
     "tailwindcss": "4.3.2",
+    "tsx": "^4.23.0",
     "typescript": "6.0.3",
     "vitest": "4.1.9"
   }

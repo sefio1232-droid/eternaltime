@@ -54,6 +54,28 @@ upload
 
 Manual-watch aggregate signals can enter before mapping as an admin research input, but they do not bypass validation, normalization, preview, and approval.
 
+## Local Source Intake Pipeline
+
+The current source-intake implementation is a local, staged pipeline for existing Eternal Time Excel/ZIP catalog files. It reads raw files from `imports/raw/catalog/`, detects source type by file content, parses and normalizes rows, merges source records, validates data quality, audits image candidates, and writes local report/preview artifacts.
+
+Commands:
+
+```bash
+npm run catalog:import:audit
+npm run catalog:import:preview
+```
+
+Outputs:
+
+```text
+imports/reports/catalog-source-audit.md
+imports/generated/catalog-import-preview.json
+```
+
+The raw directory and generated outputs are ignored by Git. The pipeline does not write to production database tables, upload images, copy images to `public/`, or publish source SEO text.
+
+See `docs/CATALOG_SOURCE_DATA.md` for source signatures, priority rules, pricing rules, image audit behavior, and apply eligibility.
+
 ## Upload
 
 - Store source files in a private admin import bucket.
@@ -135,6 +157,8 @@ Reference handling is critical:
 - Do not create fake references for missing data.
 - If a row has a supplier SKU but no manufacturer reference, keep SKU as external import metadata until a catalog admin resolves identity.
 
+The local source pipeline uses the existing catalog domain reference normalization. Suspicious values such as tiny numeric-only references are staged for manual review and do not become confirmed public `watch_references`.
+
 ## Staged Preview
 
 Preview should show:
@@ -150,6 +174,8 @@ Preview should show:
 - Attribute definitions/options needing approval.
 
 No production mutation happens before approval.
+
+For the local source pipeline, preview JSON contains identity, hierarchy, specifications, traits, pricing, content drafts, images, source provenance, validation issues, and apply eligibility. Price staging keeps `publicPriceCandidate` separate from internal source pricing data.
 
 ## Apply
 

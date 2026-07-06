@@ -37,6 +37,12 @@ uploads/
 storage/
 supabase/.temp/
 
+# catalog import local sources and generated artifacts
+imports/raw/catalog/
+imports/generated/
+imports/reports/
+imports/tmp/
+
 # OS/editor
 .DS_Store
 Thumbs.db

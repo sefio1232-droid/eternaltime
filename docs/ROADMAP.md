@@ -173,6 +173,11 @@ Dependencies:
 
 - Phase 3.
 
+Pre-work:
+
+- Catalog Source Intake and Import Pipeline prepares real source data through staged audit/preview before public catalog UI reads catalog rows.
+- The source pipeline does not apply rows to production tables and does not upload images; database apply remains a later approved import step.
+
 Deliverables:
 
 - Server-rendered public catalog.

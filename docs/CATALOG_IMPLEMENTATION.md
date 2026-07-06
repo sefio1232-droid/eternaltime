@@ -100,3 +100,25 @@ This writes `src/lib/supabase/database.types.ts`. Application domain types remai
 ## Integration Validation
 
 The repository contains pure-domain and migration-shape tests. Real constraint/RLS execution still requires a local Supabase/PostgreSQL runtime. Run Supabase migration validation locally when the CLI/runtime is available.
+
+## Catalog Source Import Pipeline
+
+The local catalog source intake pipeline is implemented outside the public UI and outside database mutation paths. It lives under `src/modules/imports/catalog/` and follows the staged import contract:
+
+```text
+raw source discovery -> source detection -> parse -> normalize -> merge sources -> validate -> image audit -> staged preview -> import apply plan
+```
+
+Important implementation decisions:
+
+- Source detection is content-based and filename-independent.
+- `watch_references` remains the canonical concrete watch entity.
+- No `watch_variants` model is introduced.
+- Manufacturer reference normalization reuses the catalog domain function.
+- The generated `ImportApplyPlan` is a proposal only; this phase does not write production catalog rows.
+- `publicPriceCandidate` uses the maximum valid recognized RUB source price for the normalized watch row.
+- Other source price values remain internal import provenance.
+- `Разница` is explicitly excluded from public price selection.
+- Image candidates are manifest entries only; no Supabase Storage upload or `public/` copy occurs in this phase.
+
+Detailed source-data rules are recorded in `docs/CATALOG_SOURCE_DATA.md`.
