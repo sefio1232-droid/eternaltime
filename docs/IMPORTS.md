@@ -69,12 +69,15 @@ Outputs:
 
 ```text
 imports/reports/catalog-source-audit.md
+imports/reports/catalog-review-reasons.md
+imports/reports/catalog-review-reasons.json
 imports/generated/catalog-import-preview.json
+imports/generated/catalog-review-queue.json
 ```
 
 The raw directory and generated outputs are ignored by Git. The pipeline does not write to production database tables, upload images, copy images to `public/`, or publish source SEO text.
 
-See `docs/CATALOG_SOURCE_DATA.md` for source signatures, priority rules, pricing rules, image audit behavior, and apply eligibility.
+See `docs/CATALOG_SOURCE_DATA.md` for source signatures, priority rules, pricing rules, image audit behavior, and apply eligibility. See `docs/CATALOG_IMPORT_QUALITY.md` for deterministic auto-fixes, duplicate classification, reference recovery rules, and the validation severity matrix.
 
 ## Upload
 
@@ -159,6 +162,8 @@ Reference handling is critical:
 
 The local source pipeline uses the existing catalog domain reference normalization. Suspicious values such as tiny numeric-only references are staged for manual review and do not become confirmed public `watch_references`.
 
+The quality pass permits cross-source reference recovery only when Brand, exact normalized title, and a shared stable source URL identify exactly one valid normalized manufacturer reference. Ambiguous or fuzzy matches are rejected.
+
 ## Staged Preview
 
 Preview should show:
@@ -176,6 +181,8 @@ Preview should show:
 No production mutation happens before approval.
 
 For the local source pipeline, preview JSON contains identity, hierarchy, specifications, traits, pricing, content drafts, images, source provenance, validation issues, and apply eligibility. Price staging keeps `publicPriceCandidate` separate from internal source pricing data.
+
+The local source pipeline also writes a compact review queue for non-eligible records. It contains review context only and does not include full raw source rows or image binaries.
 
 ## Apply
 

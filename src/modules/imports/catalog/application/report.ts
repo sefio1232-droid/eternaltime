@@ -159,6 +159,16 @@ export function buildCatalogAuditReport(result: CatalogImportPipelineResult): st
     }
     return candidate.pricing.rubPriceSources.some((source) => source.normalizedAmountMinor !== selected);
   }).length;
+  const sourceConflictCodes = [
+    "identity_source_conflict",
+    "content_draft_conflict",
+    "source_conflict_resolved_by_priority",
+    "source_metadata_conflict",
+  ];
+  const sourceConflictIssues = allIssues.filter((issue) => sourceConflictCodes.includes(issue.code));
+  const blockingSourceConflictIssues = allIssues.filter((issue) =>
+    ["identity_source_conflict", "source_metadata_conflict"].includes(issue.code),
+  );
 
   return [
     "# Catalog Source Audit",
@@ -223,8 +233,9 @@ export function buildCatalogAuditReport(result: CatalogImportPipelineResult): st
       ["Metric", "Count"],
       [
         ["Records merged across sources", String(candidates.filter((candidate) => candidate.sourceRows.length > 1).length)],
-        ["Source conflicts", String(allIssues.filter((issue) => issue.code === "source_conflict").length)],
-        ["Fields resolved by source priority", String(allIssues.filter((issue) => issue.code === "source_conflict").length)],
+        ["Source conflicts", String(sourceConflictIssues.length)],
+        ["Blocking identity/source conflicts", String(blockingSourceConflictIssues.length)],
+        ["Fields resolved by source priority", String(sourceConflictIssues.length)],
         ["Rows requiring manual review", String(manualReviewCount)],
       ],
     ),

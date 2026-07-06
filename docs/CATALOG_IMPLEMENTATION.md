@@ -120,5 +120,8 @@ Important implementation decisions:
 - Other source price values remain internal import provenance.
 - `Разница` is explicitly excluded from public price selection.
 - Image candidates are manifest entries only; no Supabase Storage upload or `public/` copy occurs in this phase.
+- The quality pass classifies source conflicts by impact: content draft conflicts are non-blocking, identity conflicts require review, and compatible duplicate rows merge as the same identity.
+- Image manifest rows attach only to existing product identities and never create standalone product candidates.
+- `catalog-review-queue.json` is generated for future manual review tooling; no admin UI exists in this phase.
 
-Detailed source-data rules are recorded in `docs/CATALOG_SOURCE_DATA.md`.
+Detailed source-data rules are recorded in `docs/CATALOG_SOURCE_DATA.md`. Quality-pass rules are recorded in `docs/CATALOG_IMPORT_QUALITY.md`.

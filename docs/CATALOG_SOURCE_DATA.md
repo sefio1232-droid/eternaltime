@@ -64,6 +64,15 @@ Every normalized field keeps source provenance: source file, source type, workbo
 
 Conflicts are not silently overwritten. Field-specific priority chooses a staged value, while the conflict remains in audit output and can force manual review.
 
+Quality pass policy:
+
+- suspicious references are not used as merge keys;
+- image-manifest-only rows attach to existing product identities and do not create standalone watch candidates;
+- SEO draft conflicts are source content conflicts, not identity blockers;
+- compatible duplicate rows are classified as `duplicate_reference_same_identity`;
+- conflicting duplicate identities remain review issues;
+- detailed normalization and eligibility rules are recorded in `docs/CATALOG_IMPORT_QUALITY.md`.
+
 ## Public Price Rule
 
 PUBLIC PRICE CANDIDATE IS THE MAXIMUM VALID RECOGNIZED RUB PRICE VALUE FOR THE NORMALIZED WATCH ROW.
@@ -178,6 +187,8 @@ Known key families include:
 
 Unknown keys are preserved as unresolved import attributes. They do not reject the whole row and do not automatically create public attribute definitions.
 
+Controlled aliases added by the quality pass include water resistance, case diameter, case material, movement type, and case shape variants. Metadata keys such as `Артикул`, `Бренд`, and `Серия` are treated as identity metadata rather than arbitrary characteristics; conflicts with normalized identity fields are explicit review issues.
+
 ## Image Audit
 
 The pipeline creates an image candidate manifest only. It does not upload images to Supabase Storage and does not copy images to `public/`.
@@ -211,9 +222,17 @@ imports/reports/catalog-source-audit.md
 
 ```text
 imports/generated/catalog-import-preview.json
+imports/generated/catalog-review-queue.json
 ```
 
 Preview records contain identity, hierarchy, specifications, traits, pricing, content drafts, image candidates, source provenance, validation issues, and apply eligibility.
+
+The quality pass also writes local review-reason breakdowns:
+
+```text
+imports/reports/catalog-review-reasons.md
+imports/reports/catalog-review-reasons.json
+```
 
 Eligibility statuses:
 
@@ -222,6 +241,8 @@ Eligibility statuses:
 - `blocked`.
 
 Critical identity issues block automatic apply. Missing public price does not necessarily block informational reference apply, but it blocks automatic Catalog Offer and public Price apply.
+
+Image issues, missing image candidates, unresolved optional attributes, and SEO draft conflicts do not block informational reference apply. Missing or suspicious manufacturer references, unresolved identity conflicts, conflicting source metadata, and conflicting duplicate identities do block automatic reference apply.
 
 ## Future Database Apply
 

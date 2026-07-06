@@ -85,6 +85,7 @@ export type CharacteristicDestination =
   | "first_class_catalog_field"
   | "normalized_catalog_dimension"
   | "controlled_extensible_attribute"
+  | "source_metadata"
   | "unresolved_import_attribute";
 
 export type ParsedCharacteristic = {
@@ -216,6 +217,42 @@ export type ImportApplyPlan = {
   proposedImageUploadCandidates: ImageCandidate[];
 };
 
+export type CatalogReviewActionType =
+  | "confirm_reference"
+  | "correct_reference"
+  | "resolve_duplicate"
+  | "resolve_hierarchy"
+  | "resolve_source_conflict"
+  | "review_characteristic"
+  | "other";
+
+export type CatalogReviewQueueEntry = {
+  candidateId: string;
+  brand: string | null;
+  sourceTitle: string | null;
+  rawReference: string | null;
+  normalizedReference: string | null;
+  sourcePackages: string[];
+  issues: Array<{
+    code: string;
+    severity: ValidationSeverity;
+    field?: string;
+    message: string;
+    rawValue?: string;
+  }>;
+  relevantConflictingValues: Array<{
+    field: string;
+    values: string[];
+  }>;
+  suggestedReviewActionType: CatalogReviewActionType;
+};
+
+export type CatalogReviewQueue = {
+  generatedAt: string;
+  recordCount: number;
+  entries: CatalogReviewQueueEntry[];
+};
+
 export type CatalogImportPreview = {
   generatedAt: string;
   sources: Array<{
@@ -237,4 +274,5 @@ export type CatalogImportPipelineResult = {
   applyPlan: ImportApplyPlan;
   auditReportMarkdown: string;
   preview: CatalogImportPreview;
+  reviewQueue: CatalogReviewQueue;
 };

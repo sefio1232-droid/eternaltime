@@ -8,11 +8,13 @@ import {
 } from "../domain/images";
 import { priceSourceFromField, buildStagedPricing } from "../domain/pricing";
 import { validateManufacturerReference, normalizedBrandKey } from "../domain/references";
+import { normalizeComparableText, tryNormalizeReferenceText } from "../domain/text-normalization";
 import type {
   CatalogSourceType,
   FieldValue,
   ImageCandidate,
   NormalizedCatalogRow,
+  ParsedCharacteristic,
   RawCatalogRow,
   SourceProvenance,
   ValidationIssue,
@@ -106,6 +108,68 @@ function imageSourcesFromRow(row: RawCatalogRow): Array<{ rawColumn: string; raw
     .map(([rawColumn, rawValue]) => ({ rawColumn, rawValue }));
 }
 
+function metadataConflictIssue(input: {
+  characteristic: ParsedCharacteristic;
+  brand: FieldValue | null;
+  brandCollection: FieldValue | null;
+  reference: ReturnType<typeof validateManufacturerReference>;
+  source?: SourceProvenance;
+}): ValidationIssue | null {
+  const rawValue = input.characteristic.rawValue.trim();
+
+  if (!rawValue || input.characteristic.destination !== "source_metadata") {
+    return null;
+  }
+
+  if (input.characteristic.targetField === "brand" && input.brand) {
+    const sameBrand = normalizedBrandKey(rawValue) === normalizedBrandKey(input.brand.value);
+
+    return sameBrand
+      ? null
+      : {
+          severity: "warning",
+          code: "source_metadata_conflict",
+          message: "Characteristic metadata brand conflicts with the normalized identity brand.",
+          source: input.source,
+          field: "brand",
+          rawValue,
+        };
+  }
+
+  if (input.characteristic.targetField === "brandCollection" && input.brandCollection) {
+    const sameCollection = normalizeComparableText(rawValue) === normalizeComparableText(input.brandCollection.value);
+
+    return sameCollection
+      ? null
+      : {
+          severity: "warning",
+          code: "source_metadata_conflict",
+          message: "Characteristic metadata series conflicts with the normalized brand collection candidate.",
+          source: input.source,
+          field: "brandCollection",
+          rawValue,
+        };
+  }
+
+  if (input.characteristic.targetField === "manufacturerReference" && input.reference.normalized) {
+    const metadataReference = tryNormalizeReferenceText(rawValue);
+    const sameReference = metadataReference === input.reference.normalized;
+
+    return sameReference
+      ? null
+      : {
+          severity: "warning",
+          code: "source_metadata_conflict",
+          message: "Characteristic metadata reference conflicts with the normalized manufacturer reference.",
+          source: input.source,
+          field: "manufacturerReference",
+          rawValue,
+        };
+  }
+
+  return null;
+}
+
 export function normalizeCatalogRow(row: RawCatalogRow, zipEntries: string[]): NormalizedCatalogRow {
   const brand = brandFromRow(row);
   const brandCollection = firstFieldValue(row, "brandCollection");
@@ -172,6 +236,22 @@ export function normalizeCatalogRow(row: RawCatalogRow, zipEntries: string[]): N
   const characteristicsProvenance = characteristicsField?.provenance;
 
   for (const characteristic of characteristics) {
+    if (characteristic.destination === "source_metadata") {
+      const issue = metadataConflictIssue({
+        characteristic,
+        brand,
+        brandCollection,
+        reference,
+        source: characteristicsProvenance,
+      });
+
+      if (issue) {
+        validationIssues.push(issue);
+      }
+
+      continue;
+    }
+
     if (!characteristic.resolved) {
       validationIssues.push({
         severity: "info",
