@@ -286,3 +286,16 @@ Manual-watch aggregate screens must not expose private notes, user photos, docum
 - Automatic AI cleanup of production data.
 - Real-time supplier sync.
 - Blind partial import of invalid files.
+
+## Public Hygiene Before Apply
+
+Catalog import preview includes deterministic source-row classification before public reads and database apply planning.
+
+Rows classified as source markers, source notes, technical headings, or unresolved non-product rows remain in reports for provenance, but they are blocked from:
+
+- public Catalog Read models;
+- controlled database apply plans;
+- image upload planning;
+- commercial offer/public price apply.
+
+This prevents spreadsheet comments such as source section markers from becoming `watch_references`. The rule is semantic and deterministic, not a hardcoded title exclusion.

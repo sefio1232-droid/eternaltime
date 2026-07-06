@@ -167,6 +167,18 @@ export type ApplyEligibility = {
   reasons: string[];
 };
 
+export type SourceRowClassificationKind =
+  | "product_candidate"
+  | "source_marker"
+  | "source_note"
+  | "unresolved_non_product";
+
+export type SourceRowClassification = {
+  kind: SourceRowClassificationKind;
+  indicators: string[];
+  action: "allow_public_read_and_apply" | "exclude_from_public_read_and_apply";
+};
+
 export type MergedCatalogCandidate = {
   candidateId: string;
   identity: {
@@ -203,6 +215,7 @@ export type MergedCatalogCandidate = {
   };
   sourceProvenance: SourceProvenance[];
   sourceRows: RawCatalogRow[];
+  sourceRowClassification: SourceRowClassification;
   validationIssues: ValidationIssue[];
   applyEligibility: ApplyEligibility;
 };

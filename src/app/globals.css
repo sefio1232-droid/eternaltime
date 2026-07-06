@@ -2,23 +2,29 @@
 
 :root {
   color-scheme: light;
-  --background: #f5f7f6;
-  --surface: #ffffff;
-  --surface-muted: #e9efec;
-  --surface-strong: #121a18;
-  --border: #d4ddda;
-  --border-strong: #96a7a0;
-  --text: #111816;
-  --text-muted: #5d6b66;
-  --text-inverse: #ffffff;
-  --accent: #a57c22;
-  --accent-strong: #6e4d08;
-  --focus: #08748a;
-  --danger: #b4232a;
-  --container: 1120px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --shadow-soft: 0 12px 30px rgb(23 23 23 / 8%);
+  --background: #f4f1eb;
+  --surface: #fbfaf7;
+  --surface-muted: #ebe7df;
+  --surface-subtle: #f7f4ee;
+  --surface-strong: #191817;
+  --border: #d8d0c4;
+  --border-strong: #9d9282;
+  --text: #191817;
+  --text-muted: #70685d;
+  --text-soft: #958b7e;
+  --text-inverse: #fbfaf7;
+  --accent: #54645e;
+  --accent-strong: #25352f;
+  --focus: #0f6f7d;
+  --danger: #a33b32;
+  --container: 1180px;
+  --measure: 720px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --shadow-soft: 0 18px 45px rgb(40 34 27 / 10%);
+  --font-body: "Inter", "Segoe UI", Arial, sans-serif;
+  --font-display: "Inter Tight", "Segoe UI", Arial, sans-serif;
+  --font-editorial: Georgia, "Times New Roman", serif;
 }
 
 * {
@@ -35,10 +41,8 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--text);
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: var(--font-body);
+  letter-spacing: 0;
   text-rendering: optimizeLegibility;
 }
 
@@ -60,7 +64,7 @@ select {
 }
 
 ::selection {
-  background: var(--accent);
+  background: var(--accent-strong);
   color: var(--text-inverse);
 }
 
@@ -68,28 +72,40 @@ select {
   text-wrap: balance;
 }
 
-.watch-dial-mark {
-  position: relative;
+.type-display {
+  font-family: var(--font-display);
+  font-weight: 620;
+  letter-spacing: 0;
+  line-height: 0.96;
 }
 
-.watch-dial-mark::before {
-  aspect-ratio: 1;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  content: "";
-  display: block;
-  inline-size: 100%;
+.type-section {
+  font-family: var(--font-display);
+  font-weight: 610;
+  letter-spacing: 0;
+  line-height: 1.05;
 }
 
-.watch-dial-mark::after {
-  background:
-    linear-gradient(90deg, transparent 48%, var(--accent-strong) 49%, var(--accent-strong) 51%, transparent 52%),
-    linear-gradient(0deg, transparent 48%, var(--accent-strong) 49%, var(--accent-strong) 51%, transparent 52%);
-  border-radius: 999px;
-  content: "";
-  inset: 22%;
-  opacity: 0.8;
-  position: absolute;
+.type-body {
+  line-height: 1.72;
+}
+
+.type-meta {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+}
+
+.type-reference {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
+.type-price {
+  font-family: var(--font-display);
+  font-weight: 650;
+  letter-spacing: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

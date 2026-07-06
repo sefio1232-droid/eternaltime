@@ -130,6 +130,11 @@ export type CatalogBrandSummary = {
   watchCount: number;
 };
 
+export type CatalogBrandDiscovery = CatalogBrandSummary & {
+  collectionNames: string[];
+  representativeWatches: CatalogWatchCard[];
+};
+
 export type CatalogReadDataset = {
   source: CatalogReadSourceKind;
   generatedAt: string;

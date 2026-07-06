@@ -6,16 +6,15 @@ export type NavigationItem = {
 
 export const publicNavigation: NavigationItem[] = [
   { label: "Часы", href: "/watches" },
-  { label: "Бренды", href: "/brands" },
   { label: "Подбор часов", href: "/selection" },
-  { label: "Сравнение", href: "/compare" },
-  { label: "Моя коллекция", href: "/account/collection" },
+  { label: "Бренды", href: "/brands" },
+  { label: "Журнал", href: "/journal" },
+  { label: "Моя коллекция", href: "/collection" },
 ];
 
 export const utilityNavigation: NavigationItem[] = [
-  { label: "Избранное", href: "/account/favorites" },
-  { label: "Корзина", href: "/cart" },
-  { label: "Аккаунт", href: "/account" },
+  { label: "Поиск", href: "/watches?q=" },
+  { label: "Войти", href: "/account" },
 ];
 
 export const accountNavigation: NavigationItem[] = [
@@ -43,4 +42,4 @@ export const adminNavigation: NavigationItem[] = [
   { label: "Настройки", href: "/admin/settings" },
 ];
 
-export const foundationPublicRoutes = ["/", "/watches", "/brands", "/selection", "/compare"] as const;
+export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/selection", "/collection"] as const;

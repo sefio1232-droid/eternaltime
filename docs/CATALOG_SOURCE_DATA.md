@@ -262,3 +262,37 @@ The future apply process will separately propose:
 - image upload candidates.
 
 Controlled database apply is documented in `docs/CATALOG_APPLY.md`. It remains server-side, authorized, audited, staged through preview approval, guarded by dry run, and blocked unless explicit apply confirmation is provided.
+
+## Public Source-Row Hygiene
+
+The import merge step now assigns each merged candidate an explicit `sourceRowClassification`:
+
+- `product_candidate`;
+- `source_marker`;
+- `source_note`;
+- `unresolved_non_product`.
+
+The classifier is deterministic and does not use AI. It evaluates source title, official title, raw and normalized Manufacturer Reference, hierarchy, parsed specifications, public price candidate, image candidates, and worksheet provenance.
+
+Rows classified as `source_marker`, `source_note`, or `unresolved_non_product` are preserved in preview/audit provenance but are excluded from:
+
+- public catalog read models;
+- public routes;
+- result counts;
+- Brand counts;
+- search;
+- facets;
+- sibling reference groups;
+- future database apply plans.
+
+The current controlled indicators include spreadsheet marker/source-note language such as `ниже`, `далее`, `будут`, `были`, `следующие`, `хз`, `жду`, `магаз`, and `пытаюсь угадать` when combined with non-product-shaped Manufacturer References, sentence-like source references, or no concrete watch facts such as valid public price, valid image, or parsed watch specifications.
+
+When a valid product-shaped Manufacturer Reference exists but the source title contains worksheet-note language, the public staged identity may fall back to the factual minimum `Brand + Manufacturer Reference`. This is recorded as `source_note_title_fallback` and does not invent a model name.
+
+This is not a broad fuzzy-language classifier. Incomplete watches remain valid product candidates when they have a Manufacturer Reference shape that is plausible for a real watch reference. Missing image, missing specifications, or missing public price do not by themselves make a row non-product.
+
+The generated hygiene report is:
+
+```text
+imports/reports/catalog-public-hygiene.md
+```

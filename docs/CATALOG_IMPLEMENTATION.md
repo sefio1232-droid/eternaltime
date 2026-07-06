@@ -155,3 +155,15 @@ Implemented public routes:
 The dev-only image resolver serves local ZIP images through opaque manifest keys. It does not expose filesystem paths, arbitrary ZIP entries, source Excel/ZIP files, or non-eligible record images. The resolver is disabled in production.
 
 Detailed read-experience rules are recorded in `docs/CATALOG_READ_EXPERIENCE.md`.
+
+## Catalog Hygiene And Editorial Foundation
+
+The public read experience now includes an additional hygiene guard over staged preview data:
+
+- import merge classifies source rows as product candidates, source markers, source notes, or unresolved non-product rows;
+- non-product rows are blocked from public reads and future apply planning while preserving provenance;
+- `/brands` reads brand discovery data from the Catalog Read Repository;
+- `/journal` and `/journal/{slug}` read committed editorial content through a replaceable Journal repository;
+- editorial selections are deterministic read models over eligible public watches only.
+
+No Compare, Smart Selection engine, User Watch Collection, Collection Intelligence, Supabase connection, Storage upload, checkout, or database apply is introduced by this phase.

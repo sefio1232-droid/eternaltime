@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
 
     return {
       title: `${brand.name}: каталог часов`,
-      description: `Часы ${brand.name} в каталоге Eternal Time: публичные цены, референсы и характеристики.`,
+      description: `Часы ${brand.name} в каталоге Eternal Time: публичные референсы, цены и характеристики.`,
       alternates: {
         canonical: `/watches/${brand.slug}`,
       },
@@ -63,7 +63,7 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
     return (
       <CatalogSourceState
         title="Каталог пока недоступен"
-        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-источник явно."
+        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-source явно."
       />
     );
   }

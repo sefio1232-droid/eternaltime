@@ -172,6 +172,11 @@ function candidate(input: {
       },
     ],
     sourceRows: [],
+    sourceRowClassification: {
+      kind: "product_candidate",
+      indicators: ["fixture product candidate"],
+      action: "allow_public_read_and_apply",
+    },
     validationIssues: [
       {
         severity: "warning",

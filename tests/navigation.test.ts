@@ -25,6 +25,17 @@ describe("foundation navigation", () => {
     expectUniqueHrefs(publicHrefs);
   });
 
+  it("routes global search to the public catalog search surface", () => {
+    expect(utilityNavigation.find((item) => item.label === "Поиск")?.href).toBe("/watches?q=");
+    expect(publicNavigation.map((item) => item.href)).toEqual([
+      "/watches",
+      "/selection",
+      "/brands",
+      "/journal",
+      "/collection",
+    ]);
+  });
+
   it("keeps protected route menus internally unique", () => {
     expectUniqueHrefs(accountNavigation.map((item) => item.href));
     expectUniqueHrefs(adminNavigation.map((item) => item.href));

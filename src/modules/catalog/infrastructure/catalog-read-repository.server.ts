@@ -7,6 +7,7 @@ import { getServerEnv } from "@/config/server-env";
 import {
   getCatalogBrandBySlug,
   getCatalogWatchByRoute,
+  listCatalogBrands,
   listCatalogWatches,
 } from "@/modules/catalog/application/catalog-read-service";
 import { resolveCatalogReadSourcePolicy } from "@/modules/catalog/infrastructure/catalog-read-source-policy";
@@ -80,6 +81,11 @@ export async function listPublicCatalogWatches(query: CatalogReadQuery) {
 export async function getPublicCatalogBrand(brandSlug: string) {
   const dataset = await getCatalogReadDataset();
   return getCatalogBrandBySlug(dataset, brandSlug);
+}
+
+export async function listPublicCatalogBrands() {
+  const dataset = await getCatalogReadDataset();
+  return listCatalogBrands(dataset);
 }
 
 export async function getPublicCatalogWatch(input: { brandSlug: string; referenceSlug: string }) {

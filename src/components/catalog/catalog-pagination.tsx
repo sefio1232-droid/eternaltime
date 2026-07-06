@@ -35,7 +35,7 @@ export function CatalogPagination({
       <Link
         href={pageHref(pathname, query, Math.max(1, page - 1), includeBrandParam)}
         aria-disabled={page === 1}
-        className={`inline-flex min-h-10 items-center rounded-[var(--radius-sm)] border px-3 text-sm ${
+        className={`inline-flex min-h-10 items-center border px-3 text-sm ${
           page === 1 ? "pointer-events-none opacity-40" : "hover:border-[var(--border-strong)]"
         }`}
       >
@@ -51,7 +51,7 @@ export function CatalogPagination({
             <Link
               href={pageHref(pathname, query, value, includeBrandParam)}
               aria-current={value === page ? "page" : undefined}
-              className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-[var(--radius-sm)] border px-3 text-sm ${
+              className={`inline-flex min-h-10 min-w-10 items-center justify-center border px-3 text-sm ${
                 value === page
                   ? "border-[var(--surface-strong)] bg-[var(--surface-strong)] text-[var(--text-inverse)]"
                   : "hover:border-[var(--border-strong)]"
@@ -65,11 +65,11 @@ export function CatalogPagination({
       <Link
         href={pageHref(pathname, query, Math.min(pageCount, page + 1), includeBrandParam)}
         aria-disabled={page === pageCount}
-        className={`inline-flex min-h-10 items-center rounded-[var(--radius-sm)] border px-3 text-sm ${
+        className={`inline-flex min-h-10 items-center border px-3 text-sm ${
           page === pageCount ? "pointer-events-none opacity-40" : "hover:border-[var(--border-strong)]"
         }`}
       >
-        Вперед
+        Вперёд
       </Link>
     </nav>
   );

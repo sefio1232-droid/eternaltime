@@ -203,3 +203,23 @@ Before adding a public route, decide:
 - What metadata source is used?
 - Does it belong to an existing entity or a new controlled SEO landing page?
 - How will it appear in sitemap and internal linking?
+
+## Implemented Public Experience Routes
+
+Current implemented public routes include:
+
+```text
+/
+/watches
+/watches/{brandSlug}
+/watches/{brandSlug}/{referenceSlug}
+/brands
+/journal
+/journal/{slug}
+/selection
+/collection
+```
+
+`/selection` and `/collection` are public product explanation routes only. They do not create fake quiz results, fake recommendations, fake user collections, or authentication requirements.
+
+`/journal` exposes only published Journal articles from the Journal read repository. Draft articles are excluded from public route resolution and sitemap generation.

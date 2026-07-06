@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: "Eternal Time",
     template: "%s | Eternal Time",
   },
-  description: "Eternal Time: выбор, сравнение, покупка и дальнейшее владение часами.",
+  description: "Eternal Time: каталог, журнал и будущие инструменты для подбора и развития коллекции часов.",
   applicationName: "Eternal Time",
   robots: {
     index: true,

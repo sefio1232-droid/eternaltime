@@ -5,6 +5,10 @@ import {
 } from "@/modules/catalog/application/catalog-read-query";
 import type { CatalogFilterFacets, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
 
+function controlClassName() {
+  return "min-h-11 border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-[var(--border-strong)]";
+}
+
 function SelectField({
   label,
   name,
@@ -18,12 +22,8 @@ function SelectField({
 }>) {
   return (
     <label className="grid gap-2 text-sm">
-      <span className="font-medium text-[var(--text)]">{label}</span>
-      <select
-        name={name}
-        defaultValue={value ?? ""}
-        className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
-      >
+      <span className="text-[var(--text-muted)]">{label}</span>
+      <select name={name} defaultValue={value ?? ""} className={controlClassName()}>
         <option value="">Все</option>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -49,12 +49,12 @@ export function CatalogFilterPanel({
   return (
     <form action={pathname} className="grid gap-5">
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--text)]">Поиск</span>
+        <span className="text-[var(--text-muted)]">Поиск</span>
         <input
           name="q"
           defaultValue={query.search}
           placeholder="Бренд, модель или референс"
-          className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+          className={controlClassName()}
         />
       </label>
 
@@ -62,36 +62,21 @@ export function CatalogFilterPanel({
         <SelectField label="Бренд" name="brand" value={query.brandSlug} options={facets.brands} />
       ) : null}
 
-      <SelectField
-        label="Brand Collection"
-        name="collection"
-        value={query.brandCollection}
-        options={facets.brandCollections}
-      />
+      <SelectField label="Коллекция" name="collection" value={query.brandCollection} options={facets.brandCollections} />
       <SelectField label="Механизм" name="movement" value={query.movement} options={facets.movements.slice(0, 80)} />
-      <SelectField
-        label="Водозащита"
-        name="water"
-        value={query.waterResistance}
-        options={facets.waterResistance.slice(0, 80)}
-      />
-      <SelectField
-        label="Материал корпуса"
-        name="caseMaterial"
-        value={query.caseMaterial}
-        options={facets.caseMaterials.slice(0, 80)}
-      />
+      <SelectField label="Водозащита" name="water" value={query.waterResistance} options={facets.waterResistance.slice(0, 80)} />
+      <SelectField label="Материал корпуса" name="caseMaterial" value={query.caseMaterial} options={facets.caseMaterials.slice(0, 80)} />
       <SelectField label="Стекло" name="crystal" value={query.crystal} options={facets.crystalTypes.slice(0, 80)} />
 
       <fieldset className="grid gap-2 text-sm">
-        <legend className="font-medium text-[var(--text)]">Цена, ₽</legend>
+        <legend className="text-[var(--text-muted)]">Цена, ₽</legend>
         <div className="grid grid-cols-2 gap-2">
           <input
             name="priceMin"
             defaultValue={rubMinorToQueryValue(query.minPriceMinor) ?? ""}
             placeholder={rubMinorToQueryValue(facets.price.minMinor) ?? "от"}
             inputMode="numeric"
-            className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+            className={controlClassName()}
             aria-label="Минимальная цена"
           />
           <input
@@ -99,19 +84,15 @@ export function CatalogFilterPanel({
             defaultValue={rubMinorToQueryValue(query.maxPriceMinor) ?? ""}
             placeholder={rubMinorToQueryValue(facets.price.maxMinor) ?? "до"}
             inputMode="numeric"
-            className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+            className={controlClassName()}
             aria-label="Максимальная цена"
           />
         </div>
       </fieldset>
 
       <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--text)]">Сортировка</span>
-        <select
-          name="sort"
-          defaultValue={query.sort}
-          className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
-        >
+        <span className="text-[var(--text-muted)]">Сортировка</span>
+        <select name="sort" defaultValue={query.sort} className={controlClassName()}>
           <option value="default">По умолчанию</option>
           <option value="price_asc">Сначала дешевле</option>
           <option value="price_desc">Сначала дороже</option>
@@ -122,7 +103,7 @@ export function CatalogFilterPanel({
       <div className="grid grid-cols-2 gap-2">
         <button
           type="submit"
-          className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--surface-strong)] bg-[var(--surface-strong)] px-4 text-sm font-medium text-[var(--text-inverse)]"
+          className="min-h-11 border border-[var(--surface-strong)] bg-[var(--surface-strong)] px-4 text-sm font-medium text-[var(--text-inverse)]"
         >
           Применить
         </button>
@@ -140,7 +121,7 @@ export function CatalogFilterPanel({
             sort: "default",
             page: 1,
           })}
-          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] px-4 text-sm font-medium"
+          className="inline-flex min-h-11 items-center justify-center border border-[var(--border)] px-4 text-sm font-medium"
         >
           Сбросить
         </Link>

@@ -5,6 +5,7 @@ import {
 import type {
   CatalogFilterFacets,
   CatalogFilterOption,
+  CatalogBrandDiscovery,
   CatalogListResult,
   CatalogPublicSpecification,
   CatalogReadDataset,
@@ -259,6 +260,21 @@ export function listCatalogWatches(dataset: CatalogReadDataset, query: CatalogRe
 
 export function getCatalogBrandBySlug(dataset: CatalogReadDataset, brandSlug: string) {
   return dataset.brands.find((brand) => brand.slug === brandSlug) ?? null;
+}
+
+export function listCatalogBrands(dataset: CatalogReadDataset): CatalogBrandDiscovery[] {
+  return dataset.brands.map((brand) => {
+    const watches = dataset.watches.filter((watch) => watch.brandSlug === brand.slug);
+    const collectionNames = [...new Set(watches.map((watch) => watch.brandCollectionName).filter(Boolean) as string[])]
+      .sort((left, right) => left.localeCompare(right, "ru"))
+      .slice(0, 10);
+
+    return {
+      ...brand,
+      collectionNames,
+      representativeWatches: watches.slice(0, 4).map(toCatalogWatchCard),
+    };
+  });
 }
 
 export function getCatalogWatchByRoute(

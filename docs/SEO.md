@@ -189,3 +189,23 @@ AI SEO assistant may identify gaps and create drafts. It cannot:
 - Invent facts.
 
 All AI SEO output requires admin review and normal publication.
+
+## Current Public SEO Surface
+
+The current public surface has factual metadata and canonicals for:
+
+- `/`;
+- `/watches`;
+- `/watches/{brandSlug}`;
+- `/watches/{brandSlug}/{referenceSlug}`;
+- `/brands`;
+- `/journal`;
+- published `/journal/{slug}` pages;
+- `/selection`;
+- `/collection`.
+
+Journal article structured data is emitted only for published articles with stored metadata. Draft Journal sources are not routed, indexed, or listed in the sitemap.
+
+Raw catalog SEO description drafts from import sources remain internal source content drafts and are not published through catalog cards, catalog detail pages, Journal, or metadata.
+
+Source marker rows and source notes are excluded before public read models are built; they cannot create canonical watch URLs or sitemap entries.

@@ -14,7 +14,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 
 function buttonClasses(variant: ButtonVariant): string {
   return [
-    "inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] border px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-45",
+    "inline-flex min-h-11 items-center justify-center border px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-45",
     variantClasses[variant],
   ].join(" ");
 }

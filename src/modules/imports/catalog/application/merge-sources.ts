@@ -2,6 +2,7 @@ import { buildStagedPricing } from "../domain/pricing";
 import { normalizedBrandKey } from "../domain/references";
 import { markPrimaryImageCandidate } from "../domain/images";
 import { mapCatalogHeader } from "../domain/headers";
+import { applySourceRowClassification, cleanPublicIdentityTitle } from "../domain/source-row-classification";
 import {
   areTextValuesEquivalent,
   normalizeComparableText,
@@ -424,8 +425,18 @@ export function mergeNormalizedCatalogRows(rows: NormalizedCatalogRow[]): Merged
     const characteristics = groupedRows.flatMap((row) => row.characteristics);
     const specs = characteristicMaps(characteristics);
     const imageCandidates = markPrimaryImageCandidate(groupedRows.flatMap((row) => row.imageCandidates));
-    const title = officialNameField?.value ?? titleField?.value ?? null;
-    const watchModelCandidate = officialNameField?.value ?? titleField?.value ?? null;
+    const rawTitle = officialNameField?.value ?? titleField?.value ?? null;
+    const cleanedTitle = cleanPublicIdentityTitle({
+      brand,
+      title: rawTitle,
+      referenceRaw: reference.raw || null,
+      referenceNormalized: reference.normalized,
+    });
+    if (cleanedTitle.issue) {
+      issues.push(cleanedTitle.issue);
+    }
+    const title = cleanedTitle.title;
+    const watchModelCandidate = title;
     const eligibility = deriveEligibility({
       brand,
       title,
@@ -435,7 +446,7 @@ export function mergeNormalizedCatalogRows(rows: NormalizedCatalogRow[]): Merged
       pricing,
     });
 
-    return {
+    const mergedCandidate = {
       candidateId: key,
       identity: {
         brand,
@@ -469,9 +480,16 @@ export function mergeNormalizedCatalogRows(rows: NormalizedCatalogRow[]): Merged
       },
       sourceProvenance: collectProvenance(groupedRows),
       sourceRows: groupedRows.map((row) => row.sourceRow),
+      sourceRowClassification: {
+        kind: "product_candidate",
+        indicators: ["pending source-row classification"],
+        action: "allow_public_read_and_apply",
+      },
       validationIssues: issues,
       applyEligibility: eligibility,
     } satisfies MergedCatalogCandidate;
+
+    return applySourceRowClassification(mergedCandidate);
   });
 
   return merged.sort((left, right) => left.candidateId.localeCompare(right.candidateId));

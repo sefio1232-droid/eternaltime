@@ -103,7 +103,7 @@ export default async function WatchReferencePage({ params }: WatchPageProps) {
     return (
       <CatalogSourceState
         title="Каталог пока недоступен"
-        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-источник явно."
+        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-source явно."
       />
     );
   }

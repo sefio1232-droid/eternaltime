@@ -1,7 +1,7 @@
-import { createCatalogDevImageKey } from "@/modules/catalog/infrastructure/dev-image-keys";
 import { createMoney } from "@/modules/catalog/domain/money";
 import { referenceSlugFromNormalized } from "@/modules/catalog/domain/reference-normalization";
 import { slugifyCatalogText } from "@/modules/catalog/domain/slug";
+import { createCatalogDevImageKey } from "@/modules/catalog/infrastructure/dev-image-keys";
 import type {
   CatalogImagePresentation,
   CatalogPublicSpecification,
@@ -178,6 +178,10 @@ function readModelFromCandidate(input: {
   const { candidate } = input;
 
   if (candidate.applyEligibility.status !== "eligible") {
+    return null;
+  }
+
+  if (candidate.sourceRowClassification?.action === "exclude_from_public_read_and_apply") {
     return null;
   }
 

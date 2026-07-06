@@ -11,11 +11,11 @@ export function CatalogImage({
   if (image.kind === "none") {
     return (
       <div
-        className={`flex h-full min-h-48 w-full items-center justify-center bg-[var(--surface-muted)] text-center text-sm text-[var(--text-muted)] ${className}`}
+        className={`flex h-full min-h-48 w-full items-center justify-center bg-[var(--surface-subtle)] text-center text-sm text-[var(--text-soft)] ${className}`}
         role="img"
         aria-label={image.alt}
       >
-        <span>Изображение готовится</span>
+        <span>Фото готовится</span>
       </div>
     );
   }

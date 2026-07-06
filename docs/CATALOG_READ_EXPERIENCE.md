@@ -203,3 +203,38 @@ Preview catalog data is a development source. Production sitemap and production 
 ## Future Repository
 
 The future Supabase catalog repository will implement the same read contracts using published Brands, Brand Collections, Watch Models, `watch_references`, visible safe offers, and public catalog images. The UI contract should not need to change when preview source is replaced by database reads.
+
+## Public Hygiene Filter
+
+The preview adapter reads only candidates whose apply eligibility is `eligible` and whose `sourceRowClassification.action` is `allow_public_read_and_apply`.
+
+Non-product source rows such as spreadsheet section markers, comments, notes, headings, and technical separators are excluded before public read models are built. They are not represented as watch routes, search results, Brand counts, facets, or sibling references.
+
+This filter is defensive; the primary classification happens in the import merge pipeline and is preserved in generated preview/audit artifacts.
+
+## Brand Discovery
+
+`/brands` is a discovery page over the Catalog Read Repository. It is not hardcoded to the initial four brands. The page shows only public brands that have public watch references, their public counts, representative watches, and available Brand Collection names.
+
+`/watches/{brandSlug}` remains the browse route for a brand.
+
+## Public Visual Direction
+
+The public experience now uses a calmer editorial/product system:
+
+- neutral sans-serif body and interface type;
+- restrained display type;
+- secondary Manufacturer Reference style;
+- visible but non-marketplace price style;
+- image-first watch cards;
+- clean specification rows rather than card-heavy dashboards;
+- desktop filters as a quiet side rail;
+- mobile filters through an explicit dialog/sheet.
+
+The UI still exposes the same read/query behavior: search, filters, sorting, pagination, watch detail pages, and dev-only image rendering.
+
+## Journal And Editorial Selections
+
+The public Journal is a repository-backed content boundary with committed article sources for this phase. Public Journal models expose only published articles and calculated reading time. Draft status is internal and is not present in public models.
+
+Editorial selections are presentation/read models only. They are built from eligible public watches through documented deterministic criteria. They do not implement Smart Selection, Collection Intelligence, popularity claims, or database persistence.
