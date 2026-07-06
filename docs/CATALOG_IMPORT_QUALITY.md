@@ -16,7 +16,8 @@ After the quality pass:
 - Normalized records: 586.
 - Eligible: 569.
 - Manual review: 5.
-- Blocked: 12.
+- Intentionally skipped missing reference: 12.
+- Blocked: 0.
 
 The lower normalized record count is expected: image-manifest-only rows are now attached only to an existing product identity and no longer create standalone catalog candidates.
 
@@ -26,11 +27,16 @@ Identity blocking issues:
 
 - `missing_brand`
 - `missing_usable_title`
-- `missing_reference`
-- `suspicious_reference`
 - `identity_source_conflict`
 - `source_metadata_conflict`
 - `duplicate_reference_conflict`
+
+Current-cycle skip issues:
+
+- `missing_reference`
+- `suspicious_reference`
+
+If the only unresolved operational blocker is unavailable reliable Manufacturer Reference, the record becomes `intentionally_skipped_missing_reference`. It stays in audit outputs but does not enter automatic apply.
 
 Commercial-only issues:
 
@@ -130,7 +136,7 @@ A missing or suspicious reference can be recovered only when:
 
 If the match is absent or ambiguous, recovery is rejected. The importer does not infer references from similar titles.
 
-Tiny numeric-only values such as `7` remain suspicious. They do not become confirmed public references unless a safe cross-source recovery rule supplies a unique valid reference.
+Tiny numeric-only values such as `7` remain suspicious. They do not become confirmed public references unless a safe cross-source recovery rule supplies a unique valid reference. In the current apply cycle they are intentionally skipped and excluded from `watch_references`.
 
 ## Image Manifest Policy
 
@@ -164,4 +170,4 @@ The review queue contains only compact data required for future manual review: c
 
 ## Remaining Human Review Boundary
 
-After this pass, remaining manual review should represent real identity uncertainty rather than optional enrichment gaps. Remaining blocked rows are expected when manufacturer references are missing or suspicious and no safe cross-source recovery exists.
+After this pass, remaining manual review should represent real identity uncertainty rather than optional enrichment gaps. Missing/suspicious reference rows are intentionally skipped for the current apply cycle and can be revisited later with reliable source evidence.

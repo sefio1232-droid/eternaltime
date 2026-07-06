@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createMoney } from "@/modules/catalog/domain/money";
 import { assertScoreRange } from "@/modules/catalog/domain/score";
-import { isCatalogSlug } from "@/modules/catalog/domain/slug";
+import { isCatalogSlug, slugifyCatalogText } from "@/modules/catalog/domain/slug";
 
 describe("catalog domain invariants", () => {
   it("validates integer minor-unit money", () => {
@@ -20,5 +20,7 @@ describe("catalog domain invariants", () => {
     expect(isCatalogSlug("tissot-prx")).toBe(true);
     expect(isCatalogSlug("Tissot")).toBe(false);
     expect(isCatalogSlug("bad--slug")).toBe(false);
+    expect(slugifyCatalogText("Tissot PRX Powermatic 80")).toBe("tissot-prx-powermatic-80");
+    expect(slugifyCatalogText("!!!")).toBeNull();
   });
 });

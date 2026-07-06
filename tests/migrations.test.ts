@@ -19,6 +19,7 @@ describe("database migrations", () => {
       "20260705013000_catalog_identity.sql",
       "20260705014000_commercial_state_and_media.sql",
       "20260705015000_rls_policies.sql",
+      "20260706010000_import_apply_operations.sql",
     ]);
   });
 
@@ -51,6 +52,9 @@ describe("database migrations", () => {
       "offer_price_history",
       "inventory_events",
       "watch_images",
+      "import_batches",
+      "import_rows",
+      "audit_logs",
     ]) {
       expect(allSql).toContain(`alter table public.${table} enable row level security`);
     }
@@ -58,5 +62,13 @@ describe("database migrations", () => {
 
   it("does not create blanket public write policies", () => {
     expect(allSql).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
+  });
+
+  it("adds controlled import apply operation tables and transactional RPC boundary", () => {
+    expect(allSql).toContain("create table public.import_batches");
+    expect(allSql).toContain("create table public.import_rows");
+    expect(allSql).toContain("create table public.audit_logs");
+    expect(allSql).toContain("create or replace function public.apply_catalog_import_batch(input jsonb)");
+    expect(allSql).toContain("grant execute on function public.apply_catalog_import_batch(jsonb) to service_role");
   });
 });

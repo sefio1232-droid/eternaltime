@@ -269,6 +269,10 @@ function deriveEligibility(input: {
 }): ApplyEligibility {
   const reasons: string[] = [];
   const hasCriticalError = input.issues.some((issue) => issue.severity === "error");
+  const criticalIssueCodes = input.issues.filter((issue) => issue.severity === "error").map((issue) => issue.code);
+  const hasOnlyUnavailableReferenceErrors =
+    criticalIssueCodes.length > 0 &&
+    criticalIssueCodes.every((code) => code === "missing_reference" || code === "suspicious_reference");
   const hasBlockingIdentityConflict = input.issues.some((issue) =>
     ["identity_source_conflict", "duplicate_reference_conflict", "source_metadata_conflict"].includes(issue.code),
   );
@@ -307,6 +311,15 @@ function deriveEligibility(input: {
       referenceApplyEligible: false,
       commercialApplyEligible: false,
       reasons: [...reasons, "identity conflict requires manual review"],
+    };
+  }
+
+  if (hasOnlyUnavailableReferenceErrors && input.brand && input.title && input.watchModelCandidate && !hasBlockingIdentityConflict) {
+    return {
+      status: "intentionally_skipped_missing_reference",
+      referenceApplyEligible: false,
+      commercialApplyEligible: false,
+      reasons: ["Intentionally skipped because reliable manufacturer reference is unavailable."],
     };
   }
 

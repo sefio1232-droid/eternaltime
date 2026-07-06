@@ -158,7 +158,7 @@ export type ParsedCatalogSource = {
   imageRows: RawCatalogRow[];
 };
 
-export type ApplyEligibilityStatus = "eligible" | "manual_review" | "blocked";
+export type ApplyEligibilityStatus = "eligible" | "manual_review" | "blocked" | "intentionally_skipped_missing_reference";
 
 export type ApplyEligibility = {
   status: ApplyEligibilityStatus;

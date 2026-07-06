@@ -151,6 +151,9 @@ export function buildCatalogAuditReport(result: CatalogImportPipelineResult): st
     candidate.validationIssues.some((issue) => issue.severity === "warning"),
   ).length;
   const manualReviewCount = candidates.filter((candidate) => candidate.applyEligibility.status === "manual_review").length;
+  const intentionallySkippedCount = candidates.filter(
+    (candidate) => candidate.applyEligibility.status === "intentionally_skipped_missing_reference",
+  ).length;
   const multipleRubCandidates = candidates.filter((candidate) => candidate.pricing.rubPriceSources.length > 1).length;
   const maximumRubSelected = candidates.filter((candidate) => {
     const selected = candidate.pricing.selectedPublicPriceSource?.normalizedAmountMinor;
@@ -186,6 +189,7 @@ export function buildCatalogAuditReport(result: CatalogImportPipelineResult): st
         ["Rows with errors", String(rowsWithErrors)],
         ["Rows with warnings", String(rowsWithWarnings)],
         ["Rows requiring manual review", String(manualReviewCount)],
+        ["Rows intentionally skipped for missing reference", String(intentionallySkippedCount)],
       ],
     ),
     markdownTable(["Source file", "Source type", "Raw rows"], rawRowRows(result.sources)),
@@ -199,6 +203,10 @@ export function buildCatalogAuditReport(result: CatalogImportPipelineResult): st
         .map(([code, count]) => [code, String(count)]),
     ),
     issueExamples(allIssues.filter((issue) => issue.code.includes("reference") || issue.code.includes("duplicate"))),
+    "",
+    intentionallySkippedCount > 0
+      ? `Intentionally skipped because reliable manufacturer reference is unavailable: ${intentionallySkippedCount}.`
+      : "No records are intentionally skipped for unavailable manufacturer reference.",
     "",
     "## Price Audit",
     markdownTable(["Detected price column", "Occurrences"], priceColumns(candidates)),

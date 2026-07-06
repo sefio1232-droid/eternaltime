@@ -63,6 +63,8 @@ Commands:
 ```bash
 npm run catalog:import:audit
 npm run catalog:import:preview
+npm run catalog:import:apply:dry-run
+npm run catalog:import:apply
 ```
 
 Outputs:
@@ -73,11 +75,16 @@ imports/reports/catalog-review-reasons.md
 imports/reports/catalog-review-reasons.json
 imports/generated/catalog-import-preview.json
 imports/generated/catalog-review-queue.json
+imports/generated/catalog-apply-dry-run.json
+imports/reports/catalog-apply-dry-run.md
+imports/generated/catalog-image-upload-plan.json
 ```
 
 The raw directory and generated outputs are ignored by Git. The pipeline does not write to production database tables, upload images, copy images to `public/`, or publish source SEO text.
 
 See `docs/CATALOG_SOURCE_DATA.md` for source signatures, priority rules, pricing rules, image audit behavior, and apply eligibility. See `docs/CATALOG_IMPORT_QUALITY.md` for deterministic auto-fixes, duplicate classification, reference recovery rules, and the validation severity matrix.
+
+See `docs/CATALOG_APPLY.md` for the controlled dry-run/apply boundary, explicit confirmation token, database preflight, transaction strategy, idempotency rules, and image upload plan.
 
 ## Upload
 
@@ -164,6 +171,8 @@ The local source pipeline uses the existing catalog domain reference normalizati
 
 The quality pass permits cross-source reference recovery only when Brand, exact normalized title, and a shared stable source URL identify exactly one valid normalized manufacturer reference. Ambiguous or fuzzy matches are rejected.
 
+For the current apply cycle, records that still lack a reliable Manufacturer Reference are classified as `intentionally_skipped_missing_reference`. They remain auditable and are excluded from automatic database apply.
+
 ## Staged Preview
 
 Preview should show:
@@ -193,6 +202,7 @@ Apply must be:
 - Transactional where practical.
 - Idempotent by batch and row.
 - Audited.
+- Guarded by dry run and explicit confirmation before database writes.
 
 Apply order:
 

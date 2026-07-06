@@ -238,11 +238,14 @@ Eligibility statuses:
 
 - `eligible`;
 - `manual_review`;
+- `intentionally_skipped_missing_reference`;
 - `blocked`.
 
 Critical identity issues block automatic apply. Missing public price does not necessarily block informational reference apply, but it blocks automatic Catalog Offer and public Price apply.
 
 Image issues, missing image candidates, unresolved optional attributes, and SEO draft conflicts do not block informational reference apply. Missing or suspicious manufacturer references, unresolved identity conflicts, conflicting source metadata, and conflicting duplicate identities do block automatic reference apply.
+
+For the current import cycle, records whose only unresolved operational blocker is unavailable reliable Manufacturer Reference are classified as `intentionally_skipped_missing_reference`. They are not automatic apply candidates, are not manual review work for this cycle, and remain in audit outputs for future return.
 
 ## Future Database Apply
 
@@ -258,4 +261,4 @@ The future apply process will separately propose:
 - public Price changes;
 - image upload candidates.
 
-Future database apply must remain server-side, authorized, audited, and staged through preview approval.
+Controlled database apply is documented in `docs/CATALOG_APPLY.md`. It remains server-side, authorized, audited, staged through preview approval, guarded by dry run, and blocked unless explicit apply confirmation is provided.

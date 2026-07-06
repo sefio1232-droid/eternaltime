@@ -73,6 +73,8 @@ Service role:
 - Used only in server-only trusted code when user-scoped RLS is insufficient.
 - Never exposed to client code.
 
+Catalog import apply uses service role only from CLI/server operational code after dry run, database preflight, and explicit confirmation. The apply process must not log or report service role keys, connection strings, or access tokens.
+
 ## Storage Security
 
 Recommended buckets:
@@ -158,6 +160,8 @@ Not allowed:
 - Client-side uploads.
 - Browser-visible admin state.
 - Any code imported by Client Components.
+
+Catalog import apply does not add broad authenticated write policies for catalog tables. The controlled database apply function is restricted to service-role execution.
 
 ## Admin Access
 

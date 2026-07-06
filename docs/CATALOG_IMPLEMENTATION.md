@@ -123,5 +123,7 @@ Important implementation decisions:
 - The quality pass classifies source conflicts by impact: content draft conflicts are non-blocking, identity conflicts require review, and compatible duplicate rows merge as the same identity.
 - Image manifest rows attach only to existing product identities and never create standalone product candidates.
 - `catalog-review-queue.json` is generated for future manual review tooling; no admin UI exists in this phase.
+- Controlled database apply is implemented as a separate preview-driven boundary with dry run, explicit confirmation, database preflight, and generated image upload plan.
+- Records with unavailable reliable Manufacturer Reference are classified as `intentionally_skipped_missing_reference` and are excluded from `watch_references`, offer, price, and image upload apply plans.
 
-Detailed source-data rules are recorded in `docs/CATALOG_SOURCE_DATA.md`. Quality-pass rules are recorded in `docs/CATALOG_IMPORT_QUALITY.md`.
+Detailed source-data rules are recorded in `docs/CATALOG_SOURCE_DATA.md`. Quality-pass rules are recorded in `docs/CATALOG_IMPORT_QUALITY.md`. Controlled apply rules are recorded in `docs/CATALOG_APPLY.md`.

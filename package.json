@@ -12,6 +12,8 @@
     "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts",
     "catalog:import:audit": "tsx src/modules/imports/catalog/cli/catalog-audit.ts",
     "catalog:import:preview": "tsx src/modules/imports/catalog/cli/catalog-preview.ts",
+    "catalog:import:apply:dry-run": "tsx src/modules/imports/catalog/cli/catalog-apply-dry-run.ts",
+    "catalog:import:apply": "tsx src/modules/imports/catalog/cli/catalog-apply.ts",
     "secrets:scan": "node scripts/secrets-scan.mjs"
   },
   "dependencies": {

@@ -178,6 +178,7 @@ Pre-work:
 - Catalog Source Intake and Import Pipeline prepares real source data through staged audit/preview before public catalog UI reads catalog rows.
 - The source pipeline does not apply rows to production tables and does not upload images; database apply remains a later approved import step.
 - Catalog Import Quality Pass improves deterministic normalization, duplicate classification, reference recovery boundaries, and review queue output before any public catalog UI or database apply work.
+- Controlled Catalog Database Apply adds dry-run/apply infrastructure, import batch persistence, explicit confirmation, and image upload planning. Actual writes remain blocked unless database environment preflight succeeds.
 
 Deliverables:
 

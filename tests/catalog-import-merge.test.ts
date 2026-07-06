@@ -105,7 +105,7 @@ describe("catalog source merge and apply eligibility", () => {
     expect(candidate.applyEligibility.status).toBe("eligible");
   });
 
-  it("blocks critical identity issues and excludes blocked rows from commercial apply plan", () => {
+  it("intentionally skips missing or suspicious references and excludes them from apply plan", () => {
     const badRow = normalized({
       sourceFile: "orient.zip",
       sourceType: "orient_package",
@@ -121,9 +121,12 @@ describe("catalog source merge and apply eligibility", () => {
     const [candidate] = mergeNormalizedCatalogRows([badRow]);
     const plan = buildImportApplyPlan([candidate]);
 
-    expect(candidate.applyEligibility.status).toBe("blocked");
+    expect(candidate.applyEligibility.status).toBe("intentionally_skipped_missing_reference");
+    expect(candidate.applyEligibility.referenceApplyEligible).toBe(false);
     expect(candidate.validationIssues.some((issue) => issue.code === "suspicious_reference")).toBe(true);
+    expect(candidate.applyEligibility.reasons).toContain("Intentionally skipped because reliable manufacturer reference is unavailable.");
     expect(plan.proposedCatalogOfferChanges).toHaveLength(0);
+    expect(plan.proposedWatchReferenceChanges).toHaveLength(0);
   });
 
   it("allows informational reference staging without public price but blocks commercial apply", () => {
@@ -369,7 +372,7 @@ describe("catalog source merge and apply eligibility", () => {
     const unresolved = candidates.find((candidate) => candidate.identity.referenceNormalized === null);
 
     expect(unresolved?.validationIssues.some((issue) => issue.code === "reference_recovery_ambiguous")).toBe(true);
-    expect(unresolved?.applyEligibility.status).toBe("blocked");
+    expect(unresolved?.applyEligibility.status).toBe("intentionally_skipped_missing_reference");
   });
 
   it("generates a compact review queue for non-eligible records", () => {

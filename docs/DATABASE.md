@@ -932,6 +932,12 @@ Rule:
 
 - Audit logs are not a place for secrets, private documents, tokens, or raw payment credentials.
 
+Implementation note:
+
+- Controlled catalog apply adds `import_batches`, `import_rows`, `audit_logs`, and the transactional database function `public.apply_catalog_import_batch(input jsonb)` through a versioned migration.
+- The function is an operational service-role boundary for approved catalog import apply. It is not a public write path.
+- It stores compact structured apply metadata and safe audit summaries, not raw Excel/ZIP dumps or image binaries.
+
 ## Search And Filtering Strategy
 
 Public catalog queries should use:
