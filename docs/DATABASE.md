@@ -969,3 +969,9 @@ Not stored as source of truth:
 - AI-generated SEO text without admin approval.
 - Current recommendation text as a permanent fact.
 - Public legal or delivery promises without verified business settings.
+
+## Implementation Notes
+
+The database and catalog foundation phase is implemented in versioned Supabase migrations under `supabase/migrations/`.
+
+Exact implementation decisions for role codes, reference normalization, reference slugs, first-class fields, controlled attributes, commercial state, and RLS policy scope are recorded in `docs/CATALOG_IMPLEMENTATION.md`.

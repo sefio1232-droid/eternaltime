@@ -35,11 +35,15 @@ Initial roles:
 
 Roles should be granted and revoked through server-authorized admin operations. Never identify an admin by hardcoded email checks in frontend code.
 
+Implementation detail: role lookup is backed by `roles` and `user_roles`, with helper functions used by RLS and server-side authorization. Initial admin assignment is a controlled database operation by Supabase Auth user ID, not an application email fallback.
+
 ## RLS Expectations
 
 Public readable:
 
 - Published brands, Brand Collections, Watch Models, Manufacturer References, images, articles, SEO landing pages, and safe offer data.
+
+Catalog RLS is implemented for the catalog foundation tables. Public policies are read-only and lifecycle-scoped; catalog writes require `admin` or `catalog_manager`.
 
 User-owned:
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { resolveAdminAccess } from "@/modules/auth/access-policy";
+import { getUserRoles } from "@/modules/auth/role-source.server";
 import { getCurrentUser, type AuthenticatedUser } from "@/modules/auth/server";
 
 export type AccessResult =
@@ -35,10 +36,15 @@ export async function requireAdminAccess(): Promise<AccessResult> {
     return authenticated;
   }
 
+  const roleSource = await getUserRoles(authenticated.user.id);
+
+  if (roleSource.status !== "configured") {
+    return { allowed: false, reason: "role_source_unavailable" };
+  }
+
   const decision = resolveAdminAccess({
     isAuthenticated: true,
-    // Phase 1 has no roles table yet. Admin routes fail closed until Phase 2 implements role lookup.
-    roles: null,
+    roles: roleSource.roles,
   });
 
   if (!decision.allowed) {

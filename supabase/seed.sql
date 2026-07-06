@@ -1,0 +1,2 @@
+-- Intentionally empty.
+-- Phase 2 does not seed catalog watches, prices, images, or offers.

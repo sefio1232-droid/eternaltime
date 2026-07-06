@@ -132,6 +132,12 @@ Data access should be explicit per module:
 
 Do not spread raw Supabase queries across UI components. Public reads, authenticated reads, admin reads, and service-role tasks should be separate functions.
 
+The catalog foundation uses explicit module boundaries under `src/modules/catalog/`:
+
+- `domain/` for deterministic catalog rules such as reference normalization, money, slugs, and scores.
+- `application/` for typed query input parsing.
+- `infrastructure/` for server-only Supabase query functions.
+
 ## Authentication
 
 Supabase Auth is the identity provider. Application user data belongs in `profiles`. The app must support guest sessions for cart, recently viewed, and comparison flows without treating guests as authenticated users.
@@ -146,6 +152,8 @@ Authorization is enforced at multiple layers:
 - Storage policies for private files.
 
 Frontend conditionals can hide UI, but they are never the source of truth.
+
+Admin route authorization reads the database role source through `roles` and `user_roles`. If role retrieval is unavailable, admin access fails closed.
 
 ## Supabase Boundaries
 

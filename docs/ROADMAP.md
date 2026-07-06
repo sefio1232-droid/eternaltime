@@ -109,6 +109,10 @@ Intentionally excluded:
 - Full account area.
 - Catalog admin tools.
 
+Implementation status:
+
+- Implemented together with the database/catalog foundation: `profiles`, `roles`, `user_roles`, server-side role lookup, admin route guard update, and RLS policy baseline.
+
 ## Phase 3: Catalog Domain And Database
 
 Goal: implement the descriptive catalog and commercial-state schema.
@@ -145,6 +149,10 @@ Intentionally excluded:
 - Public catalog UI.
 - Bulk import UI.
 - Orders.
+
+Implementation status:
+
+- Implemented as database and domain foundation only. Public catalog UI, bulk import UI, and order workflows remain deferred.
 
 ## Phase 4: Public Catalog And Watch Pages
 

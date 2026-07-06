@@ -192,3 +192,7 @@ Controlled metadata for indexable entities: title, description, canonical URL, r
 - Provisional Watch Identities are internal aggregation/reconciliation aids, not public catalog entities.
 - Collection Intelligence operates on User Watches plus normalized catalog/reference/user traits.
 - AI can assist with drafts, classification suggestions, and wording, but AI output is not a domain source of truth.
+
+## Implementation Notes
+
+The database foundation implements Manufacturer Reference normalization as deterministic separator-insensitive normalization while preserving the original display reference. The implementation details and exact role/commercial-state codes are recorded in `docs/CATALOG_IMPLEMENTATION.md`.
