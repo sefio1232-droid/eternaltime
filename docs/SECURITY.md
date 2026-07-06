@@ -75,6 +75,8 @@ Service role:
 
 Catalog import apply uses service role only from CLI/server operational code after dry run, database preflight, and explicit confirmation. The apply process must not log or report service role keys, connection strings, or access tokens.
 
+The controlled import apply RPC is restricted to `service_role` execution. The migration revokes function execution from `public`, grants execute only to `service_role`, uses `SECURITY DEFINER` with explicit `search_path = public`, and does not use dynamic SQL with uncontrolled identifiers.
+
 ## Storage Security
 
 Recommended buckets:
@@ -125,6 +127,24 @@ Private documents must not be stored in public buckets. They should have:
 - No direct public links.
 
 User Watch photos are private user media by default and are separate from catalog images. They must not be copied into public catalog image storage automatically, even when a User Watch is later linked to a catalog reference.
+
+## Development Catalog Images
+
+Before Supabase Storage is connected, local development can render real catalog source images through the Catalog Read Experience dev image resolver.
+
+Rules:
+
+- resolver is disabled in production;
+- browser receives only an opaque validated image key;
+- browser cannot request arbitrary filesystem paths or arbitrary ZIP entries;
+- `..` traversal and absolute paths are rejected;
+- only valid image candidates from the current generated image upload plan can resolve;
+- manual-review and intentionally skipped records cannot resolve images;
+- broken image candidates cannot resolve;
+- source Excel/ZIP files are never served through HTTP;
+- no directory listing is exposed.
+
+Future production catalog images must come from the public catalog image storage boundary, not local ZIP packages.
 
 ## Server Secrets
 

@@ -6,7 +6,7 @@ SEO is a strategic system in Eternal Time. It must be controlled, data-backed, a
 
 Preferred public URL families:
 
-- `/catalog` for general catalog browsing.
+- `/watches` for general catalog browsing.
 - `/brands/{brandSlug}` for brand pages.
 - `/brands/{brandSlug}/collections/{collectionSlug}` for Brand Collection pages.
 - `/watches/{brandSlug}/{referenceSlug}` for canonical watch reference pages.
@@ -30,8 +30,9 @@ Watch slugs should prefer brand plus Manufacturer Reference identity. Manufactur
 ## Canonical Strategy
 
 - Watch page canonical points to the `watch_references` URL.
+- General public catalog canonical points to `/watches`; `/catalog` redirects to `/watches`.
 - Brand and Brand Collection canonicals point to their clean route without arbitrary query params.
-- Filtered catalog URLs are generally canonicalized to `/catalog` unless represented by a controlled SEO landing page.
+- Filtered catalog URLs are generally canonicalized to `/watches` unless represented by a controlled SEO landing page.
 - Paginated pages use self-canonical only when indexation is intentionally allowed.
 - Sort/order query parameters should not create alternate canonicals.
 
@@ -101,6 +102,8 @@ Use structured data only when accurate:
 - `FAQPage` only when visible FAQ content exists on the page.
 
 Order data, private User Watch Collection data, and admin draft data should never leak into structured data.
+
+The Catalog Read Experience may use the generated preview source only for development/test. Production sitemap and structured-data generation must not index or publish preview records. Product structured data from the read experience uses only public identity fields, images, and public price; it does not include source price observations, stock claims, shipping, reviews, or aggregate ratings.
 
 ## Sitemap
 

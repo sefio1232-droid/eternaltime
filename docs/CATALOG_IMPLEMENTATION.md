@@ -127,3 +127,31 @@ Important implementation decisions:
 - Records with unavailable reliable Manufacturer Reference are classified as `intentionally_skipped_missing_reference` and are excluded from `watch_references`, offer, price, and image upload apply plans.
 
 Detailed source-data rules are recorded in `docs/CATALOG_SOURCE_DATA.md`. Quality-pass rules are recorded in `docs/CATALOG_IMPORT_QUALITY.md`. Controlled apply rules are recorded in `docs/CATALOG_APPLY.md`.
+
+## Catalog Read Experience
+
+The public catalog read experience now uses a dedicated Catalog Read Repository boundary:
+
+```text
+Catalog data source -> Catalog Read Repository -> Catalog Read Models -> Server Components / UI
+```
+
+The current development source is an explicit preview adapter over generated import artifacts. It is selected with `CATALOG_READ_SOURCE=preview` and is allowed only outside production. Production does not fall back to preview data when the database repository is unavailable or empty.
+
+Public read models expose only public catalog presentation data: Brand, Brand Collection, Watch Model, Manufacturer Reference identity, canonical slugs, public price, public specifications, image presentation sources, and sibling Manufacturer References sharing the same Watch Model concept.
+
+They deliberately exclude import provenance, validation issues, raw source rows, source SEO drafts, internal price observations, source CNY cost, and source difference / `Raznitsa` values.
+
+Implemented public routes:
+
+```text
+/watches
+/watches/{brandSlug}
+/watches/{brandSlug}/{referenceSlug}
+```
+
+`/catalog` redirects to `/watches` to avoid duplicate canonical catalog pages. The canonical watch route remains `/watches/{brandSlug}/{referenceSlug}`.
+
+The dev-only image resolver serves local ZIP images through opaque manifest keys. It does not expose filesystem paths, arbitrary ZIP entries, source Excel/ZIP files, or non-eligible record images. The resolver is disabled in production.
+
+Detailed read-experience rules are recorded in `docs/CATALOG_READ_EXPERIENCE.md`.

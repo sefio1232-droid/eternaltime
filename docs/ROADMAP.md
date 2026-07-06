@@ -200,6 +200,14 @@ Intentionally excluded:
 - User Watch Collection.
 - AI-generated content.
 
+Implementation status:
+
+- Catalog Read Experience is implemented through a public read boundary and real eligible staged records for local development.
+- `/watches`, `/watches/{brandSlug}`, and `/watches/{brandSlug}/{referenceSlug}` render from public read models.
+- Preview source is explicit dev/test-only and fails closed in production.
+- Local ZIP image rendering is available through a dev-only validated image resolver.
+- Production Supabase catalog repository, Storage image repository, database apply execution, admin review UI, Compare, Smart Selection, checkout, User Watch Collection, and Collection Intelligence remain deferred.
+
 ## Phase 5: Account, Favorites, Comparisons, Selection Sessions
 
 Goal: add personal non-commerce interactions.

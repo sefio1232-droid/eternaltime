@@ -71,4 +71,17 @@ describe("database migrations", () => {
     expect(allSql).toContain("create or replace function public.apply_catalog_import_batch(input jsonb)");
     expect(allSql).toContain("grant execute on function public.apply_catalog_import_batch(jsonb) to service_role");
   });
+
+  it("keeps catalog import apply RPC restricted to the service role", () => {
+    const applyMigration = migrations.find((migration) => migration.file === "20260706010000_import_apply_operations.sql")?.sql ?? "";
+
+    expect(applyMigration).toContain("security definer");
+    expect(applyMigration).toContain("set search_path = public");
+    expect(applyMigration).toContain("revoke all on function public.apply_catalog_import_batch(jsonb) from public");
+    expect(applyMigration).toContain("grant execute on function public.apply_catalog_import_batch(jsonb) to service_role");
+    expect(applyMigration).not.toMatch(/grant execute on function public\.apply_catalog_import_batch\(jsonb\) to anon/i);
+    expect(applyMigration).not.toMatch(/grant execute on function public\.apply_catalog_import_batch\(jsonb\) to authenticated/i);
+    expect(applyMigration).not.toMatch(/\bexecute\s+format\b/i);
+    expect(applyMigration).not.toMatch(/\bexecute\s+immediate\b/i);
+  });
 });

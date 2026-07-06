@@ -21,12 +21,12 @@ Notes:
 ## Catalog Routes
 
 ```text
-app/(shop)/catalog/page.tsx
-app/(shop)/catalog/[...filters]/page.tsx
+app/(shop)/watches/page.tsx
+app/(shop)/watches/[brandSlug]/page.tsx
 app/(shop)/watches/[brandSlug]/[referenceSlug]/page.tsx
 ```
 
-Catalog filter URLs are usable for users but not automatically indexable. SEO landing pages are separate controlled entities.
+Current canonical browsing route is `/watches`. `/catalog` redirects to `/watches` to avoid duplicate public catalog surfaces. Catalog filter URLs are usable for users through query params but are not automatically indexable. SEO landing pages are separate controlled entities.
 
 ## Brand And Brand Collection Routes
 
@@ -65,6 +65,8 @@ Watch pages render:
 - Current price and inventory from visible `catalog_offers`.
 - Sibling colors/configurations from other references under the same `watch_model_id`.
 - Breadcrumbs: Brand -> Brand Collection optional -> Watch Model optional -> Manufacturer Reference.
+
+During local development before production database reads are available, the Catalog Read Experience can use the explicit dev-only preview source. That source is disabled in production and must not be used for production SEO indexing.
 
 ## Compare Routes
 
