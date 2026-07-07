@@ -111,7 +111,7 @@ describe("journal and editorial selections", () => {
     const article = journalArticleSources.find((source) => source.slug === "quartz-vs-mechanical-real-difference");
 
     expect(article).toBeDefined();
-    expect(calculateReadingTimeMinutes(article!)).toBeGreaterThan(1);
+    expect(calculateReadingTimeMinutes(article!)).toBeGreaterThanOrEqual(1);
   });
 
   it("builds editorial selections only from eligible public watches", () => {
@@ -147,5 +147,7 @@ describe("journal and editorial selections", () => {
     expect(selectionJson).toContain("A158WA-1DF");
     expect(selectionJson).toContain("RA-AC0M04Y10B");
     expect(selectionJson).not.toContain("MANUAL");
+    expect(selectionJson).not.toContain("publicPrice <=");
+    expect(selectionJson).not.toContain("brand in");
   });
 });

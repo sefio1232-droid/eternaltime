@@ -62,7 +62,7 @@ The preview adapter maps only records with `applyEligibility.status = eligible`.
 
 Manual-review records and `intentionally_skipped_missing_reference` records are excluded from cards, detail routes, images, and public read models. Raw reference `7` cannot produce a public route.
 
-Current local preview count after the quality pass is 569 eligible records. The code does not hardcode that number.
+Current local public read count after public hygiene and controlled apply dry-run is 559 eligible records. The code does not hardcode that number.
 
 ## Routes
 
@@ -134,11 +134,9 @@ Cards show only public facts:
 - Brand;
 - title;
 - Manufacturer Reference;
-- Brand Collection when available;
 - public price;
-- up to three normalized key specifications.
 
-Cards do not show fake discounts, previous prices, stock claims, delivery promises, ratings, review counts, bestseller badges, internal source prices, or `Raznitsa`.
+Cards do not show fake discounts, previous prices, stock claims, delivery promises, ratings, review counts, bestseller badges, default specification snippets, internal source prices, or `Raznitsa`.
 
 ## Watch Detail Page
 
@@ -220,16 +218,18 @@ This filter is defensive; the primary classification happens in the import merge
 
 ## Public Visual Direction
 
-The public experience now uses a calmer editorial/product system:
+The public experience now uses the complete visual system reset called Modern Horology / Precision Editorial:
 
-- neutral sans-serif body and interface type;
-- restrained display type;
-- secondary Manufacturer Reference style;
-- visible but non-marketplace price style;
-- image-first watch cards;
-- clean specification rows rather than card-heavy dashboards;
-- desktop filters as a quiet side rail;
-- mobile filters through an explicit dialog/sheet.
+- cool near-white, graphite, steel, and deep-blue semantic tokens instead of beige/brown luxury cues;
+- restrained sans-serif typography with explicit display, page, section, body, UI label, metadata, reference, and price roles;
+- the `ETERNAL TIME` wordmark with primary navigation for watches, selection, journal, and brands;
+- a single header search action that opens a dialog and submits to `/watches?q=...`;
+- image-first watch presentation on cool studio surfaces;
+- compact product cards showing media, Brand, title, Manufacturer Reference, and public price only;
+- catalog filters in a top toolbar/facet band rather than a permanent desktop sidebar;
+- mobile filters through an explicit sheet;
+- watch detail pages with large media on the left and identity, price, highlights, and non-persistent actions on the right;
+- editorial Journal and public selection/collection explanation pages without internal phase, import, or database language.
 
 The UI still exposes the same read/query behavior: search, filters, sorting, pagination, watch detail pages, and dev-only image rendering.
 

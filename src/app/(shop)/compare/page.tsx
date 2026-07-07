@@ -4,10 +4,10 @@ export default function ComparePage() {
   return (
     <FoundationPage
       eyebrow="Сравнение"
-      title="Сравнение Manufacturer References"
-      description="Foundation route для будущего сравнения часов по factual specifications и коммерческому состоянию."
-      stateTitle="Сравнение пусто"
-      stateDescription="Пользовательские comparisons и guest continuity будут реализованы после catalog foundation."
+      title="Сравнение часов появится позже"
+      description="Будущий инструмент поможет сопоставлять размеры, механизмы, материалы и сценарии ношения."
+      stateTitle="Список сравнения пуст"
+      stateDescription="Пока можно открыть карточки часов и смотреть характеристики по одной модели."
     />
   );
 }

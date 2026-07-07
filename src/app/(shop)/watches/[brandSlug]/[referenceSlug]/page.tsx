@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
 
     return {
       title: `${watch.title} ${watch.referenceDisplay}`,
-      description: `${watch.brandName} ${watch.referenceDisplay}: публичная цена ${formatCatalogMoney(
+      description: `${watch.brandName} ${watch.referenceDisplay}: цена ${formatCatalogMoney(
         watch.publicPrice,
       )}, характеристики и изображения в каталоге Eternal Time.`,
       alternates: {
@@ -103,7 +103,7 @@ export default async function WatchReferencePage({ params }: WatchPageProps) {
     return (
       <CatalogSourceState
         title="Каталог пока недоступен"
-        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-source явно."
+        message="Мы готовим витрину к показу. Вернитесь чуть позже или перейдите в журнал Eternal Time."
       />
     );
   }

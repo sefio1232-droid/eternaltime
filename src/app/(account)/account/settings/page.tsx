@@ -5,9 +5,9 @@ export default function AccountSettingsPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="Настройки"
-      description="Foundation route для будущих уведомлений и настроек приватности."
+      description="Персональные уведомления, приватность и параметры аккаунта будут собраны здесь."
       stateTitle="Настройки пока недоступны"
-      stateDescription="Phase 1 создаёт boundaries, но не хранит пользовательские preference records."
+      stateDescription="Раздел откроется вместе с персональными возможностями Eternal Time."
     />
   );
 }

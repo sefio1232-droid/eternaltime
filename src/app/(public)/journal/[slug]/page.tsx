@@ -63,11 +63,11 @@ export default async function JournalArticlePage({ params }: JournalArticlePageP
           <Link href="/journal" className="type-meta hover:text-[var(--text)]">
             Журнал
           </Link>
-          <header className="mt-5 border-b border-[var(--border)] pb-7">
+          <header className="mt-5 border-b border-[var(--border)] pb-8">
             <p className="type-meta">
               {article.category} · {article.readingTimeMinutes} мин чтения · {article.publishedAt}
             </p>
-            <h1 className="type-display mt-4 text-5xl text-balance md:text-6xl">{article.title}</h1>
+            <h1 className="type-page mt-4 text-4xl text-balance md:text-5xl">{article.title}</h1>
             <p className="type-body mt-5 text-xl text-[var(--text-muted)]">{article.dek}</p>
           </header>
 

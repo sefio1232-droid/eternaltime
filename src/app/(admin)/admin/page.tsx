@@ -4,10 +4,10 @@ export default function AdminPage() {
   return (
     <FoundationPage
       eyebrow="Admin"
-      title="Административный foundation"
-      description="Защищённая зона для будущих catalog, content, SEO и operational workflows."
-      stateTitle="Admin role model ещё не подключён"
-      stateDescription="Phase 1 намеренно не создаёт hardcoded development admin."
+      title="Администрирование Eternal Time"
+      description="Защищенная зона для будущего управления каталогом, контентом, заказами и настройками."
+      stateTitle="Раздел управления закрыт"
+      stateDescription="Доступ определяется серверной авторизацией."
     />
   );
 }

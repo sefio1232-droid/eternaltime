@@ -7,8 +7,8 @@ export function CatalogWatchCardView({ watch }: Readonly<{ watch: CatalogWatchCa
   return (
     <article className="group h-full">
       <Link href={watch.href} className="grid h-full gap-4 focus-visible:outline-offset-4">
-        <div className="aspect-[4/3] overflow-hidden border border-[var(--border)] bg-[var(--surface-subtle)] p-5">
-          <CatalogImage image={watch.primaryImage} className="transition-transform duration-300 group-hover:scale-[1.025]" />
+        <div className="watch-media aspect-[4/3] overflow-hidden p-5">
+          <CatalogImage image={watch.primaryImage} className="transition-transform duration-300 group-hover:scale-[1.018]" />
         </div>
         <div className="grid gap-2">
           <div className="flex items-start justify-between gap-4">
@@ -16,10 +16,7 @@ export function CatalogWatchCardView({ watch }: Readonly<{ watch: CatalogWatchCa
             <span className="type-reference text-right">{watch.referenceDisplay}</span>
           </div>
           <h2 className="min-h-12 text-base font-semibold leading-6">{watch.title}</h2>
-          {watch.brandCollectionName ? (
-            <p className="text-sm text-[var(--text-muted)]">{watch.brandCollectionName}</p>
-          ) : null}
-          <p className="type-price pt-2 text-lg">{formatCatalogMoney(watch.publicPrice)}</p>
+          <p className="type-price pt-1 text-lg">{formatCatalogMoney(watch.publicPrice)}</p>
         </div>
       </Link>
     </article>

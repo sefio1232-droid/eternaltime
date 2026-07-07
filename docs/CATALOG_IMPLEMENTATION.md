@@ -167,3 +167,21 @@ The public read experience now includes an additional hygiene guard over staged 
 - editorial selections are deterministic read models over eligible public watches only.
 
 No Compare, Smart Selection engine, User Watch Collection, Collection Intelligence, Supabase connection, Storage upload, checkout, or database apply is introduced by this phase.
+
+## Complete Visual System Reset
+
+The public experience has been reset to a Modern Horology / Precision Editorial direction while preserving the existing Catalog Read Repository and staged-preview development source.
+
+Implementation decisions:
+
+- global tokens now use cool near-white, graphite, steel, and deep-blue surfaces;
+- typography is role-based through shared CSS utility classes for display, page, section, body, labels, metadata, references, and price;
+- public header navigation is limited to `Часы`, `Подбор`, `Журнал`, and `Бренды`, with `Коллекция` and `Войти` as utility actions;
+- global search is a dialog action that submits `q` to `/watches`;
+- catalog browse uses a top toolbar/facet band and separate product grid, fixing the previous desktop overlap risk from the permanent sidebar layout;
+- watch cards are compact and do not expose default specs, internal pricing, import provenance, or source criteria;
+- watch detail pages expose non-persistent `Добавить в коллекцию` and `Сравнить` actions only as navigation affordances;
+- `/selection` and `/collection` remain public product explanation pages and do not create fake sessions, recommendations, or user collection data;
+- Journal sources were normalized to readable committed content with drafts excluded from public models.
+
+This reset does not add Compare logic, Smart Selection, User Watch Collection backend, Collection Intelligence, checkout, database apply, Supabase Storage upload, or AI.

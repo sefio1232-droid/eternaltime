@@ -9,7 +9,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Каталог часов",
-  description: "Публичный каталог Eternal Time: Casio, Tissot, Orient и Citizen из проверенного staged preview.",
+  description: "Каталог Eternal Time: Casio, Tissot, Orient и Citizen с ценами, изображениями и характеристиками.",
   alternates: {
     canonical: "/watches",
   },
@@ -38,7 +38,7 @@ export default async function WatchesPage({
     return (
       <CatalogSourceState
         title="Каталог пока недоступен"
-        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-source явно."
+        message="Мы готовим витрину к показу. Вернитесь чуть позже или перейдите в журнал Eternal Time."
       />
     );
   }
@@ -48,7 +48,7 @@ export default async function WatchesPage({
       result={resultState.result}
       pathname="/watches"
       title="Каталог часов"
-      description="Реальные позиции из текущего подготовленного каталога: только публичные поля, проверенные референсы и утверждённая публичная цена там, где она есть."
+      description="Подборка реальных моделей Eternal Time: фильтруйте по бренду, механизму, материалам и цене без лишнего шума."
       includeBrandFilter
     />
   );

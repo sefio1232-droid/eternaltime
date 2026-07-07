@@ -5,9 +5,9 @@ export default function AdminSettingsPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Настройки"
-      description="Foundation route для будущей централизованной legal/business configuration."
-      stateTitle="Настройки не заполнены"
-      stateDescription="Юридические и коммерческие данные нельзя выдумывать или hardcode-ить."
+      description="Будущий раздел централизованных настроек Eternal Time."
+      stateTitle="Настройки пока не заполнены"
+      stateDescription="Юридические и коммерческие данные появятся только из проверенного источника."
     />
   );
 }

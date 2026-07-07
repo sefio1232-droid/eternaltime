@@ -25,15 +25,14 @@ describe("foundation navigation", () => {
     expectUniqueHrefs(publicHrefs);
   });
 
-  it("routes global search to the public catalog search surface", () => {
-    expect(utilityNavigation.find((item) => item.label === "Поиск")?.href).toBe("/watches?q=");
+  it("keeps the reset public header navigation focused", () => {
     expect(publicNavigation.map((item) => item.href)).toEqual([
       "/watches",
       "/selection",
-      "/brands",
       "/journal",
-      "/collection",
+      "/brands",
     ]);
+    expect(utilityNavigation.map((item) => item.href)).toEqual(["/collection", "/account"]);
   });
 
   it("keeps protected route menus internally unique", () => {

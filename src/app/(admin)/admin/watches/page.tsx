@@ -5,9 +5,9 @@ export default function AdminWatchesPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Управление часами"
-      description="Foundation route для будущих Manufacturer References и catalog facts."
-      stateTitle="Catalog admin не реализован"
-      stateDescription="Watch references и attributes относятся к фазе catalog domain/database."
+      description="Будущий раздел для карточек часов, характеристик, изображений и коммерческого состояния."
+      stateTitle="Управление каталогом пока закрыто"
+      stateDescription="Сейчас доступен только публичный слой чтения каталога."
     />
   );
 }

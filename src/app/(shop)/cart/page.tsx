@@ -12,10 +12,10 @@ export default function CartPage() {
   return (
     <FoundationPage
       eyebrow="Корзина"
-      title="Коммерческий flow появится позже"
-      description="Foundation route для будущей корзины, guest cart и merge после авторизации."
-      stateTitle="Корзина ещё не подключена"
-      stateDescription="Checkout, payment и delivery integrations не входят в Phase 1."
+      title="Покупка часов появится позже"
+      description="Сейчас Eternal Time сфокусирован на выборе, каталоге и редакционном контексте."
+      stateTitle="Корзина пока недоступна"
+      stateDescription="Можно изучить каталог, журнал и будущие сценарии подбора."
     />
   );
 }

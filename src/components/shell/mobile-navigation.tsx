@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { NavigationItem } from "@/config/navigation";
+import { SearchDialog } from "@/components/shell/search-dialog";
 
 export function MobileNavigation({
   primaryItems,
@@ -14,10 +15,11 @@ export function MobileNavigation({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="ml-auto md:hidden">
+    <div className="ml-auto flex items-center gap-2 md:hidden">
+      <SearchDialog compact />
       <button
         type="button"
-        className="border border-[var(--border-strong)] px-4 py-2 text-sm"
+        className="h-10 border border-[var(--border)] px-3 text-sm"
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
         onClick={() => setIsOpen((value) => !value)}
@@ -27,20 +29,12 @@ export function MobileNavigation({
       {isOpen ? (
         <div
           id="mobile-navigation"
-          className="absolute left-0 right-0 top-[72px] z-30 border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5 shadow-[var(--shadow-soft)]"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Навигация"
+          className="absolute left-0 right-0 top-16 z-40 border-b border-[var(--border)] bg-[var(--canvas)] px-5 py-5 shadow-[var(--shadow-soft)]"
         >
-          <form action="/watches" className="mb-5" role="search">
-            <label className="sr-only" htmlFor="mobile-site-search">
-              Поиск по каталогу
-            </label>
-            <input
-              id="mobile-site-search"
-              name="q"
-              placeholder="Поиск по часам"
-              className="h-12 w-full border-b border-[var(--border-strong)] bg-transparent text-base outline-none"
-            />
-          </form>
-          <nav aria-label="Основная мобильная навигация" className="grid">
+          <nav aria-label="Мобильная навигация" className="grid">
             {[...primaryItems, ...utilityItems].map((item) => (
               <Link
                 key={item.href}

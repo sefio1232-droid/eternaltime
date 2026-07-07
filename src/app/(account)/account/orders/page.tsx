@@ -5,9 +5,9 @@ export default function AccountOrdersPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="Мои заказы"
-      description="Foundation route для будущих заказов и immutable order snapshots."
-      stateTitle="Заказы ещё не реализованы"
-      stateDescription="Order domain, payment status и delivery status относятся к коммерческим фазам."
+      description="История заказов появится после запуска покупки часов."
+      stateTitle="Заказов пока нет"
+      stateDescription="Пока Eternal Time работает как каталог и редакционный помощник выбора."
     />
   );
 }

@@ -7,7 +7,11 @@ import {
   formatCatalogMoney,
 } from "@/modules/catalog/application/catalog-format";
 import { groupSpecificationsByPublicSection } from "@/modules/catalog/application/catalog-read-service";
-import type { CatalogSpecificationGroup, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
+import type {
+  CatalogPublicSpecification,
+  CatalogSpecificationGroup,
+  CatalogWatchDetail,
+} from "@/modules/catalog/domain/read-models";
 
 const groupLabels: Record<CatalogSpecificationGroup, string> = {
   mechanism: "Механизм",
@@ -18,27 +22,55 @@ const groupLabels: Record<CatalogSpecificationGroup, string> = {
   strap: "Ремешок и браслет",
   water_resistance: "Водозащита",
   functions: "Функции",
-  other: "Дополнительно",
+  other: "Другое",
 };
 
 const groupOrder: CatalogSpecificationGroup[] = [
   "mechanism",
   "case",
   "dimensions",
-  "dial",
   "glass",
-  "strap",
   "water_resistance",
+  "dial",
+  "strap",
   "functions",
   "other",
 ];
 
+const highlightKeys = [
+  "movement_type_raw",
+  "movement_raw",
+  "crystal_type_raw",
+  "case_material_raw",
+  "water_resistance_raw",
+  "case_diameter_raw",
+  "case_dimensions_raw",
+];
+
+function highlights(specifications: CatalogPublicSpecification[]): CatalogPublicSpecification[] {
+  const byKey = new Map(specifications.map((specification) => [specification.key, specification]));
+  const picked: CatalogPublicSpecification[] = [];
+
+  for (const key of highlightKeys) {
+    const specification = byKey.get(key);
+    if (specification && !picked.some((item) => item.label === specification.label)) {
+      picked.push(specification);
+    }
+    if (picked.length === 5) {
+      break;
+    }
+  }
+
+  return picked;
+}
+
 export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatchDetail }>) {
   const groupedSpecifications = groupSpecificationsByPublicSection(watch.specifications);
+  const keyFacts = highlights(watch.specifications);
 
   return (
     <Container className="py-8 lg:py-12">
-      <div className="grid gap-12">
+      <div className="grid gap-14">
         <nav aria-label="Хлебные крошки" className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-muted)]">
           <Link href="/watches" className="hover:text-[var(--text)]">
             Часы
@@ -51,15 +83,15 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
           <span className="text-[var(--text)]">{watch.referenceDisplay}</span>
         </nav>
 
-        <section className="grid gap-9 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)] lg:items-start">
+        <section className="grid gap-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.9fr)] lg:items-start">
           <div className="grid gap-4">
-            <div className="aspect-[5/4] border border-[var(--border)] bg-[var(--surface-subtle)] p-6">
-              <CatalogImage image={watch.primaryImage} />
+            <div className="watch-media min-h-[420px] p-7 lg:min-h-[620px]">
+              <CatalogImage image={watch.primaryImage} className="drop-shadow-[0_24px_40px_rgb(16_19_22_/_18%)]" />
             </div>
             {watch.imageGallery.length > 1 ? (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
                 {watch.imageGallery.slice(0, 8).map((image, index) => (
-                  <div key={`${image.kind}-${image.alt}-${index}`} className="aspect-square border border-[var(--border)] bg-[var(--surface-subtle)] p-2">
+                  <div key={`${image.kind}-${image.alt}-${index}`} className="watch-media aspect-square p-2">
                     <CatalogImage image={image} />
                   </div>
                 ))}
@@ -67,44 +99,37 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
             ) : null}
           </div>
 
-          <div className="grid gap-8">
+          <div className="grid gap-8 lg:sticky lg:top-24">
             <div>
-              <p className="type-meta">{watch.brandName}</p>
-              <h1 className="type-display mt-3 text-5xl text-balance md:text-6xl">{watch.title}</h1>
+              <p className="type-label">{watch.brandName}</p>
+              <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">{watch.title}</h1>
               <p className="type-reference mt-5">{watch.referenceDisplay}</p>
             </div>
 
-            <dl className="grid gap-3 border-y border-[var(--border)] py-5 text-sm">
+            <dl className="grid gap-3 text-sm">
               {watch.brandCollectionName ? (
-                <div className="grid grid-cols-[140px_1fr] gap-4">
+                <div className="grid grid-cols-[130px_1fr] gap-4">
                   <dt className="text-[var(--text-muted)]">Коллекция</dt>
                   <dd>{watch.brandCollectionName}</dd>
                 </div>
               ) : null}
-              <div className="grid grid-cols-[140px_1fr] gap-4">
+              <div className="grid grid-cols-[130px_1fr] gap-4">
                 <dt className="text-[var(--text-muted)]">Модель</dt>
                 <dd>{watch.watchModelName}</dd>
               </div>
-              <div className="grid grid-cols-[140px_1fr] gap-4">
-                <dt className="text-[var(--text-muted)]">Референс</dt>
-                <dd>{watch.referenceDisplay}</dd>
-              </div>
             </dl>
 
-            <section className="grid gap-3">
-              <p className="type-meta">Публичная цена</p>
-              <p className="type-price text-4xl">{formatCatalogMoney(watch.publicPrice)}</p>
-              <p className="type-body text-sm text-[var(--text-muted)]">
-                Покупка и доставка появятся только после финальной настройки коммерческого процесса.
-              </p>
+            <section className="grid gap-2">
+              <p className="type-meta">Цена</p>
+              <p className="type-price text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
             </section>
 
-            {watch.keySpecifications.length > 0 ? (
-              <section>
-                <h2 className="type-section text-2xl">Главное</h2>
-                <dl className="mt-4 grid gap-3">
-                  {watch.keySpecifications.map((specification) => (
-                    <div key={specification.key} className="grid grid-cols-[140px_1fr] gap-4 border-b border-[var(--border)] pb-3 text-sm">
+            {keyFacts.length > 0 ? (
+              <section className="grid gap-3">
+                <h2 className="type-section text-xl">Коротко о модели</h2>
+                <dl className="grid gap-2">
+                  {keyFacts.map((specification) => (
+                    <div key={specification.key} className="grid grid-cols-[130px_1fr] gap-4 text-sm">
                       <dt className="text-[var(--text-muted)]">{specification.label}</dt>
                       <dd>{specification.value}</dd>
                     </div>
@@ -112,16 +137,31 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
                 </dl>
               </section>
             ) : null}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/collection"
+                className="inline-flex h-[var(--control-height)] items-center justify-center bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]"
+              >
+                Добавить в коллекцию
+              </Link>
+              <Link
+                href="/compare"
+                className="inline-flex h-[var(--control-height)] items-center justify-center border border-[var(--border-strong)] px-4 text-sm font-semibold hover:border-[var(--accent)]"
+              >
+                Сравнить
+              </Link>
+            </div>
           </div>
         </section>
 
         {watch.specifications.length > 0 ? (
-          <section className="grid gap-6">
-            <div className="border-b border-[var(--border)] pb-4">
-              <p className="type-meta">Спецификация</p>
-              <h2 className="type-section mt-2 text-3xl">Публичные характеристики</h2>
+          <section className="grid gap-7">
+            <div>
+              <p className="type-label">Детали</p>
+              <h2 className="type-section mt-2 text-3xl">Характеристики</h2>
             </div>
-            <div className="grid gap-x-10 gap-y-8 md:grid-cols-2">
+            <div className="grid gap-x-12 gap-y-9 md:grid-cols-2">
               {groupOrder.map((group) => {
                 const specifications = groupedSpecifications[group];
                 if (!specifications?.length) {
@@ -129,11 +169,11 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
                 }
 
                 return (
-                  <section key={group} className="grid gap-4">
-                    <h3 className="font-semibold">{groupLabels[group]}</h3>
-                    <dl className="grid gap-3 text-sm">
+                  <section key={group} className="grid content-start gap-4">
+                    <h3 className="text-lg font-semibold">{groupLabels[group]}</h3>
+                    <dl className="grid gap-2 text-sm">
                       {specifications.map((specification) => (
-                        <div key={specification.key} className="grid grid-cols-[140px_1fr] gap-4 border-b border-[var(--border)] pb-3">
+                        <div key={specification.key} className="grid grid-cols-[150px_1fr] gap-4 py-2">
                           <dt className="text-[var(--text-muted)]">{specification.label}</dt>
                           <dd>{specification.value}</dd>
                         </div>
@@ -147,11 +187,11 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
         ) : null}
 
         {watch.siblingReferences.length > 0 ? (
-          <section className="grid gap-6">
-            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--border)] pb-4">
+          <section className="grid gap-7">
+            <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="type-meta">Модель</p>
-                <h2 className="type-section mt-2 text-3xl">Другие исполнения</h2>
+                <p className="type-label">Модель</p>
+                <h2 className="type-section mt-2 text-3xl">Другие исполнения модели</h2>
               </div>
               <p className="text-sm text-[var(--text-muted)]">{formatCatalogCount(watch.siblingReferences.length)} рядом</p>
             </div>

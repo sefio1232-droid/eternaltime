@@ -47,13 +47,13 @@ export function CatalogPagination({
 
         return (
           <span key={value} className="inline-flex items-center gap-2">
-            {showGap ? <span className="text-[var(--text-muted)]">…</span> : null}
+            {showGap ? <span className="text-[var(--text-muted)]">...</span> : null}
             <Link
               href={pageHref(pathname, query, value, includeBrandParam)}
               aria-current={value === page ? "page" : undefined}
               className={`inline-flex min-h-10 min-w-10 items-center justify-center border px-3 text-sm ${
                 value === page
-                  ? "border-[var(--surface-strong)] bg-[var(--surface-strong)] text-[var(--text-inverse)]"
+                  ? "border-[var(--surface-graphite)] bg-[var(--surface-graphite)] text-[var(--text-inverse)]"
                   : "hover:border-[var(--border-strong)]"
               }`}
             >
@@ -69,7 +69,7 @@ export function CatalogPagination({
           page === pageCount ? "pointer-events-none opacity-40" : "hover:border-[var(--border-strong)]"
         }`}
       >
-        Вперёд
+        Вперед
       </Link>
     </nav>
   );

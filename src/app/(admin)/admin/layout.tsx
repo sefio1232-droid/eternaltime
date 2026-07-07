@@ -16,8 +16,8 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
   if (!access.allowed) {
     return (
       <AccessRequiredState
-        title="Admin area закрыта"
-        description="Phase 1 не создаёт fake-admin fallback. Доступ к admin routes запрещён, пока Phase 2 не подключит server-side role model."
+        title="Административная зона закрыта"
+        description="Этот раздел доступен только пользователям с правами управления Eternal Time."
       />
     );
   }
@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
   return (
     <ProtectedShell
       title="Администрирование"
-      description="Утилитарная зона управления Eternal Time для будущих catalog, orders, content, SEO и imports workflows."
+      description="Зона управления Eternal Time для каталога, контента, заказов и служебных процессов."
       navigation={adminNavigation}
     >
       {children}

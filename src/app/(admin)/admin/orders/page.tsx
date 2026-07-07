@@ -5,9 +5,9 @@ export default function AdminOrdersPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Заказы"
-      description="Foundation route для будущих order operations."
-      stateTitle="Заказы не реализованы"
-      stateDescription="Payment/delivery events и order status history будут добавлены позже."
+      description="Будущий раздел операционной работы с заказами."
+      stateTitle="Заказы пока не подключены"
+      stateDescription="Покупка часов будет запускаться отдельным коммерческим этапом."
     />
   );
 }

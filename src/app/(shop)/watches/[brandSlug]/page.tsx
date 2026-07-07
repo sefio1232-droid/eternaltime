@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
 
     return {
       title: `${brand.name}: каталог часов`,
-      description: `Часы ${brand.name} в каталоге Eternal Time: публичные референсы, цены и характеристики.`,
+      description: `Часы ${brand.name} в Eternal Time: модели, цены, изображения и характеристики.`,
       alternates: {
         canonical: `/watches/${brand.slug}`,
       },
@@ -63,7 +63,7 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
     return (
       <CatalogSourceState
         title="Каталог пока недоступен"
-        message="Источник публичного каталога не настроен для этого окружения. В локальной разработке включите preview-source явно."
+        message="Мы готовим витрину к показу. Вернитесь чуть позже или перейдите в журнал Eternal Time."
       />
     );
   }
@@ -77,7 +77,7 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
       result={resultState.result}
       pathname={`/watches/${resultState.brand.slug}`}
       title={`Часы ${resultState.brand.name}`}
-      description={`Все доступные публичные карточки ${resultState.brand.name}: референсы, текущая публичная цена и нормализованные характеристики.`}
+      description={`Модели ${resultState.brand.name} в Eternal Time: от повседневных кварцевых часов до механики и спортивных инструментов.`}
       includeBrandFilter={false}
     />
   );

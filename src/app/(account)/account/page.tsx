@@ -5,9 +5,9 @@ export default function AccountPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="Обзор личного кабинета"
-      description="Здесь будет персональный обзор Eternal Time без generic SaaS dashboard и без fake statistics."
-      stateTitle="Персональные данные не подключены"
-      stateDescription="Profile, orders и saved actions появятся после auth/RLS фаз."
+      description="Здесь появится персональный обзор Eternal Time: сохраненные часы, сравнения и личные настройки."
+      stateTitle="Персональные данные пока недоступны"
+      stateDescription="После входа здесь будут собраны ваши действия и сохраненные материалы."
     />
   );
 }

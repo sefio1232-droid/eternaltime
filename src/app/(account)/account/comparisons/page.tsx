@@ -5,9 +5,9 @@ export default function AccountComparisonsPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="Сравнения"
-      description="Foundation route для сохранённых сравнений часов."
+      description="Здесь будут сохраненные сравнения часов."
       stateTitle="Сравнения не созданы"
-      stateDescription="Comparison storage и guest-to-user continuity будут реализованы позже."
+      stateDescription="Сохранять наборы для сравнения можно будет позже."
     />
   );
 }

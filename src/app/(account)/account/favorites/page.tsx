@@ -5,9 +5,9 @@ export default function AccountFavoritesPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="Избранное"
-      description="Foundation route для будущих saved Manufacturer References."
+      description="Здесь появятся сохраненные часы и быстрый возврат к интересным моделям."
       stateTitle="Избранное пусто"
-      stateDescription="Favorites будут подключены после catalog identity и user-owned storage policies."
+      stateDescription="Сохранять модели можно будет после подключения личных действий."
     />
   );
 }

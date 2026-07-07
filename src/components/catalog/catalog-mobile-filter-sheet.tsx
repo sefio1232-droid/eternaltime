@@ -21,7 +21,7 @@ export function CatalogMobileFilterSheet({
     <div className="lg:hidden">
       <button
         type="button"
-        className="w-full border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-left text-sm font-medium"
+        className="w-full border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-left text-sm font-semibold"
         aria-expanded={isOpen}
         aria-controls="catalog-mobile-filters"
         onClick={() => setIsOpen(true)}
@@ -30,19 +30,19 @@ export function CatalogMobileFilterSheet({
       </button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/35" role="presentation">
+        <div className="fixed inset-0 z-40 bg-[var(--surface-graphite)]/45" role="presentation">
           <section
             id="catalog-mobile-filters"
             role="dialog"
             aria-modal="true"
             aria-label="Фильтры каталога"
-            className="absolute bottom-0 left-0 right-0 max-h-[88vh] overflow-auto bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)]"
+            className="absolute bottom-0 left-0 right-0 max-h-[88vh] overflow-auto bg-[var(--canvas)] p-5 shadow-[var(--shadow-soft)]"
           >
-            <div className="mb-5 flex items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
-              <h2 className="text-lg font-semibold">Фильтры</h2>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="type-section text-xl">Фильтры</h2>
               <button
                 type="button"
-                className="border border-[var(--border)] px-3 py-2 text-sm"
+                className="h-9 border border-[var(--border)] px-3 text-sm"
                 onClick={() => setIsOpen(false)}
               >
                 Закрыть

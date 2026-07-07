@@ -16,8 +16,8 @@ export default async function AccountLayout({ children }: Readonly<{ children: R
   if (!access.allowed) {
     return (
       <AccessRequiredState
-        title="Личный кабинет защищён"
-        description="Account routes используют server-side auth boundary. В Phase 1 Supabase может быть не настроен, поэтому приватные разделы не раскрывают пользовательские данные."
+        title="Личный кабинет защищен"
+        description="Войдите, чтобы открыть персональные разделы Eternal Time."
       />
     );
   }
@@ -25,7 +25,7 @@ export default async function AccountLayout({ children }: Readonly<{ children: R
   return (
     <ProtectedShell
       title="Личный кабинет"
-      description="Персональная зона Eternal Time для заказов, избранного, сравнений и User Watch Collection."
+      description="Персональная зона Eternal Time для заказов, избранного, сравнений и личной коллекции."
       navigation={accountNavigation}
     >
       {children}

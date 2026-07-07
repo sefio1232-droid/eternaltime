@@ -5,9 +5,9 @@ export default function AccountAddressesPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="Адреса"
-      description="Foundation route для будущей адресной книги и checkout snapshots."
-      stateTitle="Адреса не подключены"
-      stateDescription="User-owned address tables и RLS будут реализованы в соответствующей фазе."
+      description="Адресная книга будет использоваться для будущих заказов и доставки."
+      stateTitle="Адреса пока не подключены"
+      stateDescription="Добавление адресов появится вместе с оформлением заказа."
     />
   );
 }

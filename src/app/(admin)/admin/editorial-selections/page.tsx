@@ -5,9 +5,9 @@ export default function AdminEditorialSelectionsPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Editorial Selections"
-      description="Foundation route для редакционных и коммерческих подборок."
-      stateTitle="Подборки не подключены"
-      stateDescription="SEO-safe Editorial Selections будут управляться через content/catalog workflow."
+      description="Будущий раздел управления редакционными подборками."
+      stateTitle="Подборки пока не редактируются"
+      stateDescription="Публичные подборки сейчас формируются безопасным read-only слоем."
     />
   );
 }

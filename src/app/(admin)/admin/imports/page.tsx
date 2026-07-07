@@ -5,9 +5,9 @@ export default function AdminImportsPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Импорты"
-      description="Foundation route для будущего staged Excel/CSV import workflow."
-      stateTitle="Импорт не реализован"
-      stateDescription="Phase 1 не принимает файлы и не создаёт catalog data."
+      description="Здесь позже появится рабочая зона для загрузки, проверки и применения источников каталога."
+      stateTitle="Интерфейс импортов пока недоступен"
+      stateDescription="Текущий импорт управляется локальными проверяемыми командами."
     />
   );
 }

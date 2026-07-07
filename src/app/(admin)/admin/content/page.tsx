@@ -5,9 +5,9 @@ export default function AdminContentPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Контент"
-      description="Foundation route для будущих articles и guides."
-      stateTitle="Content system не реализована"
-      stateDescription="Статьи и metadata появятся в content/SEO phases."
+      description="Редакционные статьи, гиды и материалы будут управляться отсюда."
+      stateTitle="Система контента пока недоступна"
+      stateDescription="Публичный журнал сейчас читает только опубликованные материалы."
     />
   );
 }

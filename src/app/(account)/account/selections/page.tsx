@@ -5,9 +5,9 @@ export default function AccountSelectionsPage() {
     <FoundationPage
       eyebrow="Аккаунт"
       title="История подборов"
-      description="Foundation route для будущих structured selection sessions."
-      stateTitle="Подборы ещё не сохраняются"
-      stateDescription="Selection session persistence появится после catalog foundation."
+      description="Будущие подборы часов можно будет сохранять и продолжать из личного кабинета."
+      stateTitle="Подборы еще не сохраняются"
+      stateDescription="История появится после запуска персональных сценариев выбора."
     />
   );
 }

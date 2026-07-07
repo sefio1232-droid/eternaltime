@@ -5,9 +5,9 @@ export default function AdminBrandCollectionsPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Brand Collections"
-      description="Foundation route для брендовых продуктовых семейств, не User Watch Collections."
-      stateTitle="Brand Collections не подключены"
-      stateDescription="Терминология закреплена в DOMAIN.md; таблицы появятся в catalog phase."
+      description="Управление брендовыми продуктовыми семействами будет жить в этом разделе."
+      stateTitle="Brand Collections пока не редактируются"
+      stateDescription="Раздел откроется после подключения управляемых catalog workflows."
     />
   );
 }

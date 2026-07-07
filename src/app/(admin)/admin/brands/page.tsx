@@ -5,9 +5,9 @@ export default function AdminBrandsPage() {
     <FoundationPage
       eyebrow="Admin"
       title="Бренды"
-      description="Foundation route для будущего управления Brands."
-      stateTitle="Данные брендов отсутствуют"
-      stateDescription="Admin writes будут доступны только после role model и catalog migrations."
+      description="Будущий раздел управления брендами Eternal Time."
+      stateTitle="Данные брендов пока не редактируются"
+      stateDescription="Управление брендами будет доступно в защищенной зоне."
     />
   );
 }
