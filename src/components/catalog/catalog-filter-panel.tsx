@@ -54,7 +54,7 @@ export function CatalogFilterPanel({
           <input
             name="q"
             defaultValue={query.search}
-            placeholder="Бренд, модель или номер"
+            placeholder="Бренд, модель или артикул"
             className={controlClassName()}
           />
         </label>
@@ -72,7 +72,7 @@ export function CatalogFilterPanel({
 
       <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:items-end">
         <fieldset className="grid gap-2 md:col-span-2">
-          <legend className="type-meta">Цена, ₽</legend>
+          <legend className="type-meta">Цена, руб.</legend>
           <div className="grid grid-cols-2 gap-2">
             <input
               name="priceMin"
@@ -94,7 +94,7 @@ export function CatalogFilterPanel({
         </fieldset>
 
         <label className="grid gap-2">
-          <span className="type-meta">Сортировка</span>
+          <span className="type-meta">Порядок</span>
           <select name="sort" defaultValue={query.sort} className={controlClassName()}>
             <option value="default">По умолчанию</option>
             <option value="price_asc">Сначала дешевле</option>

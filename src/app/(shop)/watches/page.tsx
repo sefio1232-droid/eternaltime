@@ -48,7 +48,7 @@ export default async function WatchesPage({
       result={resultState.result}
       pathname="/watches"
       title="Каталог часов"
-      description="Подборка реальных моделей Eternal Time: фильтруйте по бренду, механизму, материалам и цене без лишнего шума."
+      description="Реальные модели Eternal Time: фильтруйте по бренду, механизму, материалам и цене без лишнего шума."
       includeBrandFilter
     />
   );

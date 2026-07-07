@@ -185,3 +185,16 @@ Implementation decisions:
 - Journal sources were normalized to readable committed content with drafts excluded from public models.
 
 This reset does not add Compare logic, Smart Selection, User Watch Collection backend, Collection Intelligence, checkout, database apply, Supabase Storage upload, or AI.
+
+## Editorial Art Direction And Layout Refinement
+
+The public visual system has been refined after the reset without changing catalog read contracts:
+
+- product media now uses shared `product-stage` presentation classes that integrate real watch images into cool studio surfaces;
+- missing catalog images no longer expose public placeholder copy and do not invent substitute imagery;
+- public labels use user-facing terms such as `Артикул` or `Код` instead of internal reference terminology;
+- home, brand, Journal, article, selection, collection, catalog listing, and watch detail pages were recomposed with calmer typography, asymmetry, and fewer boxed sections;
+- Journal content strings were normalized to readable committed UTF-8 Russian and grouped into featured, secondary, compact, and topic sections;
+- brand pages avoid large visual placeholders when representative images are unavailable.
+
+Existing Catalog Read Repository behavior, query parsing, filtering, sorting, pagination, SEO routes, structured data, dev-only image resolver, Journal repository, and editorial selection read models remain in place. This phase does not implement Compare logic, Smart Selection logic, User Watch Collection backend, Collection Intelligence, checkout, database apply, Supabase Storage upload, or AI.

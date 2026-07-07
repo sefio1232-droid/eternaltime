@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import type { CatalogImagePresentation } from "@/modules/catalog/domain/read-models";
 
 export function CatalogImage({
@@ -10,23 +9,20 @@ export function CatalogImage({
 }>) {
   if (image.kind === "none") {
     return (
-      <div
-        className={`watch-media flex h-full min-h-48 w-full items-center justify-center text-center text-sm text-[var(--text-soft)] ${className}`}
+      <span
         role="img"
         aria-label={image.alt}
+        className={`flex h-full w-full items-center justify-center ${className}`}
       >
-        <span>Фото готовится</span>
-      </div>
+        <span className="media-placeholder-mark" aria-hidden="true">
+          ET
+        </span>
+      </span>
     );
   }
 
   return (
-    <img
-      src={image.src}
-      alt={image.alt}
-      className={`h-full w-full object-contain ${className}`}
-      loading="lazy"
-      decoding="async"
-    />
+    // eslint-disable-next-line @next/next/no-img-element -- catalog images can come from dev ZIP resolver or remote source URLs.
+    <img src={image.src} alt={image.alt} className={`h-full w-full object-contain ${className}`} loading="lazy" decoding="async" />
   );
 }

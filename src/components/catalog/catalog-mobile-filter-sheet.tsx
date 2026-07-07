@@ -26,7 +26,7 @@ export function CatalogMobileFilterSheet({
         aria-controls="catalog-mobile-filters"
         onClick={() => setIsOpen(true)}
       >
-        Фильтры и сортировка
+        Фильтры и порядок
       </button>
 
       {isOpen ? (

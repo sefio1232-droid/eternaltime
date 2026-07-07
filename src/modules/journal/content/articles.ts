@@ -22,14 +22,15 @@ export const journalArticleSources: JournalArticleSource[] = [
     slug: "why-g-shock-became-cult",
     title: "Почему G-Shock стали культовыми",
     dek: "Культовый статус редко появляется только из-за дизайна. В случае G-Shock важнее сочетание прочности, ясного образа и повседневной пользы.",
-    category: "История",
+    category: "Истории моделей",
     status: "published",
     publishedAt: "2026-07-07",
+    relatedWatchRefs: [{ brandSlug: "casio", referenceSlug: "a158wa1df" }],
     body: [
       {
         paragraphs: [
           "G-Shock воспринимаются не просто как линейка электронных часов. Для многих это отдельный язык: заметная защита, уверенный корпус, крупные кнопки и ощущение предмета, который можно носить каждый день без церемоний.",
-          "Главная идея таких часов понятна без рекламного объяснения. Они рассчитаны на движение, воду, работу руками, поездки и спорт. Форма почти всегда объясняет функцию, и в этом есть редкая честность.",
+          "Главная идея таких часов понятна без рекламного объяснения. Они рассчитаны на движение, воду, поездки, спорт и работу руками. Форма почти всегда объясняет функцию, и в этом есть редкая честность.",
         ],
       },
       {
@@ -51,7 +52,7 @@ export const journalArticleSources: JournalArticleSource[] = [
     body: [
       {
         paragraphs: [
-          "Кварцевые часы используют электронный ход и обычно требуют меньше ежедневного внимания. Механические работают за счет заводной пружины и сложной системы деталей. Один тип не лучше другого автоматически: они решают разные задачи.",
+          "Кварцевые часы используют электронный ход и обычно требуют меньше ежедневного внимания. Механические работают за счет заводной пружины и системы деталей. Один тип не лучше другого автоматически: они решают разные задачи.",
           "Кварц выбирают за практичность, точность, тонкий корпус и спокойное владение. Механика интересна тем, что в ней виден сам механизм времени: завод, ротор, запас хода и плавность секундной стрелки.",
         ],
       },
@@ -68,7 +69,7 @@ export const journalArticleSources: JournalArticleSource[] = [
     slug: "water-resistance-atm-guide",
     title: "Что означают 3 ATM, 5 ATM, 10 ATM и 20 ATM",
     dek: "Маркировка водозащиты не равна приглашению делать с часами все подряд. Это ориентир по допустимым сценариям.",
-    category: "Гид",
+    category: "Гиды",
     status: "published",
     publishedAt: "2026-07-07",
     body: [
@@ -91,7 +92,7 @@ export const journalArticleSources: JournalArticleSource[] = [
     slug: "choose-watch-size-for-wrist",
     title: "Как выбрать размер часов под запястье",
     dek: "Диаметр корпуса важен, но посадку определяют ушки, толщина, форма корпуса и браслет.",
-    category: "Гид",
+    category: "Гиды",
     status: "published",
     publishedAt: "2026-07-07",
     body: [
@@ -135,10 +136,11 @@ export const journalArticleSources: JournalArticleSource[] = [
   {
     slug: "tissot-prx-design-return",
     title: "Почему дизайн Tissot PRX снова популярен",
-    dek: "PRX интересны не только названием: их узнаваемость строится на геометрии корпуса, интегрированном браслете и спортивной элегантности.",
-    category: "История",
+    dek: "PRX интересны не только названием: узнаваемость строится на геометрии корпуса, интегрированном браслете и спортивной элегантности.",
+    category: "Истории моделей",
     status: "published",
     publishedAt: "2026-07-07",
+    relatedWatchRefs: [{ brandSlug: "tissot", referenceSlug: "t0062071103601" }],
     body: [
       {
         paragraphs: [
@@ -162,6 +164,7 @@ export const journalArticleSources: JournalArticleSource[] = [
     category: "Механика",
     status: "published",
     publishedAt: "2026-07-07",
+    relatedWatchRefs: [{ brandSlug: "orient", referenceSlug: "faa02002d9" }],
     body: [
       {
         paragraphs: [
@@ -204,7 +207,7 @@ export const journalArticleSources: JournalArticleSource[] = [
     slug: "draft-diving-watch-history",
     title: "Черновик: как читать историю дайверских часов",
     dek: "Внутренний черновик будущей статьи.",
-    category: "История",
+    category: "Истории моделей",
     status: "draft",
     publishedAt: "2026-07-07",
     body: [{ paragraphs: ["Черновик недоступен в публичном журнале."] }],
@@ -213,7 +216,7 @@ export const journalArticleSources: JournalArticleSource[] = [
     slug: "draft-chronograph-guide",
     title: "Черновик: зачем нужен хронограф",
     dek: "Внутренний черновик будущей статьи.",
-    category: "Гид",
+    category: "Гиды",
     status: "draft",
     publishedAt: "2026-07-07",
     body: [{ paragraphs: ["Черновик недоступен в публичном журнале."] }],

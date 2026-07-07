@@ -56,20 +56,20 @@ export function listEditorialSelections(dataset: CatalogReadDataset): EditorialS
   return [
     selection({
       slug: "under-30000-rub",
-      title: "До 30 000 ₽",
-      dek: "Часы с подтверждённой ценой до 30 000 ₽.",
+      title: "До 30 000 руб.",
+      dek: "Модели с подтвержденной ценой до 30 000 руб.",
       criteriaLabel: "По цене",
       watches: underThirtyThousand,
     }),
     selection({
       slug: "japanese-brands",
       title: "Японские бренды",
-      dek: "Casio, Orient и Citizen — в одной подборке.",
+      dek: "Casio, Orient и Citizen в одной спокойной подборке.",
       criteriaLabel: "По брендам",
       watches: japaneseBrands,
     }),
     selection({
-      slug: "mechanical-references",
+      slug: "mechanical-watches",
       title: "Механические часы",
       dek: "Модели с механическим или автоматическим механизмом.",
       criteriaLabel: "По механизму",

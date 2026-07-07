@@ -207,6 +207,7 @@ Implementation status:
 - Catalog public hygiene excludes deterministic non-product source rows from public reads and future apply planning.
 - `/brands`, `/journal`, `/journal/{slug}`, `/selection`, and `/collection` are implemented as public read/explanation surfaces.
 - The public visual system has been reset to Modern Horology / Precision Editorial: cool semantic tokens, restrained typography, header search dialog, toolbar-based catalog filtering, compact product cards, redesigned watch detail pages, brand discovery, Journal reading, and product explanation routes for future selection/collection.
+- The public art direction has been refined with calmer typography, integrated product media stages, text-led brand handling for weak imagery, mixed Journal layouts, readable article pages, and removal of public technical/import language from user-facing copy.
 - Preview source is explicit dev/test-only and fails closed in production.
 - Local ZIP image rendering is available through a dev-only validated image resolver.
 - Production Supabase catalog repository, Storage image repository, database apply execution, admin review UI, Compare, Smart Selection, checkout, User Watch Collection, and Collection Intelligence remain deferred.

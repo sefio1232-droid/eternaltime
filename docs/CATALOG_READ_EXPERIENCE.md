@@ -238,3 +238,17 @@ The UI still exposes the same read/query behavior: search, filters, sorting, pag
 The public Journal is a repository-backed content boundary with committed article sources for this phase. Public Journal models expose only published articles and calculated reading time. Draft status is internal and is not present in public models.
 
 Editorial selections are presentation/read models only. They are built from eligible public watches through documented deterministic criteria. They do not implement Smart Selection, Collection Intelligence, popularity claims, or database persistence.
+
+## Editorial Art Direction Refinement
+
+The public experience now uses a calmer editorial art direction on top of the same read models:
+
+- watch media is presented on neutral studio/product stages instead of heavy dark rectangles;
+- missing images use a quiet non-textual placeholder mark and never render `Фото готовится`;
+- typography has been reduced in weight and scale so home, catalog, brand, detail, and Journal pages feel like a mature product surface rather than poster sections;
+- the home page is an editorial/product front page that connects catalog, Journal, and future collection thinking without internal implementation language;
+- brand pages are text-led when representative imagery is weak and show only real available watch images when present;
+- Journal pages use featured, secondary, compact, and category-grouped layouts;
+- article pages render related articles only through an explicit same-category factual relation.
+
+This refinement preserves search, filtering, sorting, pagination, detail routes, catalog read isolation, the development image resolver security boundary, and the Journal repository boundary. It does not add Compare logic, Smart Selection logic, User Watch Collection backend, Collection Intelligence, checkout, database apply, Supabase Storage upload, or AI.

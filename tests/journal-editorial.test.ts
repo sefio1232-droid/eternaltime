@@ -150,4 +150,17 @@ describe("journal and editorial selections", () => {
     expect(selectionJson).not.toContain("publicPrice <=");
     expect(selectionJson).not.toContain("brand in");
   });
+
+  it("keeps Journal categories readable and connected to explicit article groups", () => {
+    const articles = listPublishedJournalArticles();
+    const categories = new Set(articles.map((article) => article.category));
+
+    expect(categories).toContain("Гиды");
+    expect(categories).toContain("Материалы");
+    expect(categories).toContain("Истории моделей");
+    expect(categories).toContain("Стиль");
+    expect(getPublishedJournalArticle("tissot-prx-design-return")?.relatedWatchRefs).toEqual([
+      { brandSlug: "tissot", referenceSlug: "t0062071103601" },
+    ]);
+  });
 });

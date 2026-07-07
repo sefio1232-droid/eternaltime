@@ -51,7 +51,7 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
             </div>
             <form action="/watches" className="grid gap-4" role="search">
               <label className="grid gap-2">
-                <span className="type-meta">Бренд, модель или номер на корпусе</span>
+                <span className="type-meta">Бренд, модель или код на корпусе</span>
                 <input
                   name="q"
                   autoFocus

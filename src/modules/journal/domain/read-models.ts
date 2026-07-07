@@ -1,9 +1,4 @@
-export type JournalArticleCategory =
-  | "История"
-  | "Механика"
-  | "Гид"
-  | "Материалы"
-  | "Стиль";
+export type JournalArticleCategory = "Истории моделей" | "Механика" | "Гиды" | "Материалы" | "Стиль";
 
 export type JournalArticleSummary = {
   slug: string;

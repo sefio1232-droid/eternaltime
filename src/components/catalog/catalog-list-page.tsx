@@ -26,7 +26,7 @@ export function CatalogListPage({
         <header className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <p className="type-label">Каталог</p>
-            <h1 className="type-page mt-3 max-w-3xl text-4xl text-balance md:text-5xl">{title}</h1>
+            <h1 className="type-page mt-3 max-w-3xl text-3xl text-balance md:text-5xl">{title}</h1>
             <p className="type-body mt-4 max-w-2xl text-[var(--text-muted)]">{description}</p>
           </div>
           <p className="text-sm text-[var(--text-muted)]">
@@ -37,7 +37,7 @@ export function CatalogListPage({
           </p>
         </header>
 
-        <section data-layout="catalog-toolbar" className="bg-[var(--surface-muted)] p-4 lg:p-5">
+        <section data-layout="catalog-toolbar" className="border-y border-[var(--border)] py-4 lg:py-5">
           <div className="hidden lg:block">
             <CatalogFilterPanel
               facets={result.facets}
@@ -56,7 +56,7 @@ export function CatalogListPage({
 
         <section className="grid gap-8" aria-label="Результаты каталога">
           {result.items.length > 0 ? (
-            <div data-layout="catalog-grid" className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            <div data-layout="catalog-grid" className="grid gap-x-6 gap-y-11 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {result.items.map((watch) => (
                 <CatalogWatchCardView key={watch.id} watch={watch} />
               ))}
