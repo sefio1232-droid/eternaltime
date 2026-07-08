@@ -70,12 +70,29 @@ describe("editorial art direction and layout refinement", () => {
 
     expect(listPage).toContain('data-layout="catalog-toolbar"');
     expect(listPage).toContain('data-layout="catalog-grid"');
+    expect(listPage).toContain("editorial-panel");
     expect(listPage).toContain("2xl:grid-cols-4");
     expect(filters).toContain('name="water"');
     expect(card).toContain("watch.brandName");
     expect(card).toContain("Код {watch.referenceDisplay}");
+    expect(card).toContain("product-card-surface");
+    expect(card).toContain("aspect-[1/1.08]");
     expect(card).toContain("formatCatalogMoney(watch.publicPrice)");
     expect(card).not.toContain("keySpecifications.map");
+  });
+
+  it("uses product-grade stage surfaces on home and watch detail pages", () => {
+    const home = file("src/app/(public)/page.tsx");
+    const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
+    const styles = file("src/app/globals.css");
+
+    expect(home).toContain("product-stage-hero");
+    expect(home).toContain("blueprint-panel");
+    expect(home).toContain("editorial-panel");
+    expect(detail).toContain("product-stage-hero");
+    expect(detail).toContain("editorial-panel");
+    expect(styles).toContain(".site-frame");
+    expect(styles).toContain(".blueprint-panel");
   });
 
   it("defines Journal featured, secondary, and compact layout groups without placeholder image copy", () => {

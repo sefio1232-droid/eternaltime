@@ -23,13 +23,13 @@ export function CatalogListPage({
   return (
     <Container className="py-10 lg:py-14">
       <div className="grid gap-9">
-        <header className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+        <header className="grid gap-5 border-b border-[var(--border)] pb-8 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <p className="type-label">Каталог</p>
             <h1 className="type-page mt-3 max-w-3xl text-3xl text-balance md:text-5xl">{title}</h1>
             <p className="type-body mt-4 max-w-2xl text-[var(--text-muted)]">{description}</p>
           </div>
-          <p className="text-sm text-[var(--text-muted)]">
+          <p className="editorial-panel px-5 py-4 text-sm text-[var(--text-muted)]">
             <span className="font-[var(--font-reference)] text-2xl font-semibold text-[var(--text)]">
               {formatCatalogCount(result.totalRecords)}
             </span>{" "}
@@ -37,7 +37,7 @@ export function CatalogListPage({
           </p>
         </header>
 
-        <section data-layout="catalog-toolbar" className="border-y border-[var(--border)] py-4 lg:py-5">
+        <section data-layout="catalog-toolbar" className="editorial-panel p-4 lg:p-5">
           <div className="hidden lg:block">
             <CatalogFilterPanel
               facets={result.facets}

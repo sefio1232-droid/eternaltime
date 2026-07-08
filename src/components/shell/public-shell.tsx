@@ -6,10 +6,10 @@ import { SearchDialog } from "@/components/shell/search-dialog";
 
 export function PublicShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--canvas)]/94 backdrop-blur-md">
+    <div className="site-frame min-h-screen bg-[var(--background)]">
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--canvas)]/88 backdrop-blur-xl">
         <Container className="flex min-h-16 items-center gap-5">
-          <Link href="/" className="mr-4 font-[var(--font-reference)] text-sm font-semibold tracking-[0.18em]">
+          <Link href="/" className="mr-4 border-r border-[var(--border)] pr-5 font-[var(--font-reference)] text-sm font-semibold tracking-[0.18em]">
             ETERNAL TIME
           </Link>
 

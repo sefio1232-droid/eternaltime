@@ -84,9 +84,9 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
           <span className="text-[var(--text)]">{watch.referenceDisplay}</span>
         </nav>
 
-        <section className="grid gap-10 lg:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.88fr)] lg:items-start">
+        <section className="grid gap-10 lg:grid-cols-[minmax(0,1.48fr)_minmax(340px,0.82fr)] lg:items-start">
           <div className="grid gap-4">
-            <div className="product-stage product-stage-detail min-h-[420px] p-7 lg:min-h-[620px]">
+            <div className="product-stage product-stage-hero min-h-[430px] p-7 lg:min-h-[660px]">
               <CatalogImage image={watch.primaryImage} className="drop-shadow-[0_24px_40px_rgb(16_19_22_/_18%)]" />
             </div>
             {gallery.length > 1 ? (
@@ -100,8 +100,8 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
             ) : null}
           </div>
 
-          <div className="grid gap-7 lg:sticky lg:top-24">
-            <div>
+          <div className="editorial-panel grid gap-7 p-6 lg:sticky lg:top-24">
+            <div className="border-b border-[var(--border)] pb-6">
               <p className="type-label">{watch.brandName}</p>
               <h1 className="type-page mt-3 text-3xl text-balance md:text-4xl">{watch.title}</h1>
               <p className="type-reference mt-5">Артикул {watch.referenceDisplay}</p>

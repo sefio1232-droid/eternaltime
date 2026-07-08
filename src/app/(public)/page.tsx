@@ -49,37 +49,56 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="bg-[var(--canvas)]">
-        <Container className="grid gap-12 py-12 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:py-16">
-          <div className="max-w-[620px]">
+      <section className="overflow-hidden border-b border-[var(--border)] bg-[var(--canvas)]">
+        <Container className="grid gap-12 py-12 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:py-16">
+          <div className="max-w-[640px]">
             <p className="type-label">Eternal Time</p>
-            <h1 className="type-display mt-5 text-3xl text-balance sm:text-4xl lg:text-5xl">
-              Часы, каталог и коллекция — в одной системе выбора.
+            <h1 className="type-display mt-5 text-4xl text-balance sm:text-5xl lg:text-6xl">
+              Часы как предмет, выбор как система.
             </h1>
             <p className="type-body mt-6 max-w-xl text-lg text-[var(--text-muted)]">
-              Здесь можно спокойно смотреть модели, читать о материалах и понимать, какую роль следующая покупка сыграет рядом с тем, что уже есть.
+              Каталог, журнал и будущая личная коллекция соединены в один спокойный маршрут: сначала увидеть модель, затем понять детали и только потом выбирать следующую роль.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <ButtonLink href="/watches">Смотреть часы</ButtonLink>
-              <Link href="/journal" className="text-sm font-semibold text-[var(--accent)] hover:text-[var(--accent-strong)]">
-                Читать журнал
+              <ButtonLink href="/watches">Смотреть каталог</ButtonLink>
+              <Link href="/selection" className="text-sm font-semibold text-[var(--accent)] hover:text-[var(--accent-strong)]">
+                Начать с роли
               </Link>
+            </div>
+
+            <div className="mt-10 grid max-w-md grid-cols-2 border-y border-[var(--border)]">
+              <div className="border-r border-[var(--border)] py-4 pr-5">
+                <p className="font-[var(--font-reference)] text-3xl font-semibold">{formatCatalogCount(dataset?.watches.length ?? 0)}</p>
+                <p className="type-meta">моделей</p>
+              </div>
+              <div className="py-4 pl-5">
+                <p className="font-[var(--font-reference)] text-3xl font-semibold">{formatCatalogCount(dataset?.brands.length ?? 0)}</p>
+                <p className="type-meta">бренда</p>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-4">
-            {heroWatches.length > 0 ? (
-              <div className="grid min-h-[420px] gap-3 sm:grid-cols-[1.35fr_0.65fr]">
-                <Link href={heroWatches[0].href} className="product-stage product-stage-detail p-7">
-                  <CatalogImage image={heroWatches[0].primaryImage} className="drop-shadow-[0_24px_36px_rgb(16_19_22_/_18%)]" />
+          <div className="relative">
+            {focusWatch ? (
+              <div className="grid gap-4">
+                <Link href={focusWatch.href} className="product-stage product-stage-hero min-h-[480px] p-8 lg:min-h-[620px]">
+                  <CatalogImage image={focusWatch.primaryImage} className="drop-shadow-[0_32px_44px_rgb(16_19_22_/_22%)]" />
+                  <span className="absolute bottom-6 left-6 right-6 grid gap-1 border-t border-[var(--border)] bg-[rgb(248_250_251_/_78%)] pt-4 backdrop-blur-md sm:left-auto sm:w-72">
+                    <span className="type-meta">{focusWatch.brandName}</span>
+                    <span className="font-semibold leading-6">{focusWatch.title}</span>
+                    <span className="type-reference">Код {focusWatch.referenceDisplay}</span>
+                  </span>
                 </Link>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
-                  {heroWatches.slice(1, 3).map((watch) => (
-                    <Link key={watch.id} href={watch.href} className="product-stage product-stage-plain min-h-48 p-5">
-                      <CatalogImage image={watch.primaryImage} />
-                    </Link>
-                  ))}
-                </div>
+
+                {heroWatches.length > 1 ? (
+                  <div className="grid grid-cols-4 gap-3">
+                    {heroWatches.slice(1, 5).map((watch) => (
+                      <Link key={watch.id} href={watch.href} className="product-stage product-stage-contact aspect-square p-3">
+                        <CatalogImage image={watch.primaryImage} />
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="border-y border-[var(--border)] py-10">
@@ -89,61 +108,39 @@ export default async function HomePage() {
                 </p>
               </div>
             )}
+          </div>
+        </Container>
+      </section>
 
-            <div className="grid gap-4 border-t border-[var(--border)] pt-5 md:grid-cols-[1fr_auto_auto] md:items-end">
-              <p className="type-body max-w-xl text-[var(--text-muted)]">
-                {focusWatch
-                  ? `${focusWatch.brandName} ${focusWatch.title} — пример того, как модель показана через предмет, код и основные факты.`
-                  : "Каталог, журнал и будущая коллекция соединены в один маршрут выбора."}
-              </p>
-              <div>
-                <p className="font-[var(--font-reference)] text-3xl font-semibold">{formatCatalogCount(dataset?.watches.length ?? 0)}</p>
-                <p className="type-meta">моделей</p>
-              </div>
-              <div>
-                <p className="font-[var(--font-reference)] text-3xl font-semibold">{formatCatalogCount(dataset?.brands.length ?? 0)}</p>
-                <p className="type-meta">бренда</p>
-              </div>
-            </div>
+      <section className="blueprint-panel text-[var(--text-inverse)]">
+        <Container className="grid gap-8 py-12 lg:grid-cols-[0.42fr_1fr] lg:items-start">
+          <div>
+            <p className="type-label text-[var(--surface-steel)]">Система</p>
+            <h2 className="type-section mt-3 text-3xl">Не витрина ради витрины.</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              ["01", "Каталог", "Факты, цены, изображения и характеристики собраны в читаемую витрину."],
+              ["02", "Журнал", "Материалы объясняют размер, стекло, механизм, водозащиту и историю моделей."],
+              ["03", "Коллекция", "Следующий слой будет помогать видеть роли часов и выбирать осмысленнее."],
+            ].map(([number, title, text]) => (
+              <Link key={title} href={title === "Каталог" ? "/watches" : title === "Журнал" ? "/journal" : "/collection"} className="grid gap-4 border-t border-[rgb(255_255_255_/_22%)] pt-5">
+                <span className="type-reference text-[var(--surface-steel)]">{number}</span>
+                <span className="text-xl font-semibold">{title}</span>
+                <span className="type-body text-[var(--surface-steel)]">{text}</span>
+              </Link>
+            ))}
           </div>
         </Container>
       </section>
 
       <Container className="grid gap-20 py-16">
-        <section className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
-          <div className="max-w-sm">
-            <p className="type-label">Маршруты</p>
-            <h2 className="type-section mt-2 text-3xl">Три способа двигаться по выбору</h2>
-          </div>
-          <div className="grid gap-7 md:grid-cols-[1.2fr_0.8fr]">
-            <Link href="/watches" className="grid gap-5 border-t border-[var(--border-strong)] pt-5">
-              <span className="type-reference">01</span>
-              <span className="text-2xl font-semibold">Открыть каталог</span>
-              <span className="type-body text-[var(--text-muted)]">
-                Фильтры, поиск, сортировка и страницы моделей помогают быстро сузить 559 часов до понятного списка.
-              </span>
-            </Link>
-            <div className="grid gap-7">
-              <Link href="/journal" className="grid gap-4 border-t border-[var(--border)] pt-5">
-                <span className="type-reference">02</span>
-                <span className="text-xl font-semibold">Разобраться в деталях</span>
-                <span className="type-body text-[var(--text-muted)]">Гиды по размеру, стеклу, механизму и водозащите.</span>
-              </Link>
-              <Link href="/collection" className="grid gap-4 border-t border-[var(--border)] pt-5">
-                <span className="type-reference">03</span>
-                <span className="text-xl font-semibold">Думать коллекцией</span>
-                <span className="type-body text-[var(--text-muted)]">Будущий личный слой для ролей, повторов и следующих шагов.</span>
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {catalogWatches.length > 0 ? (
           <section className="grid gap-8">
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
                 <p className="type-label">Каталог</p>
-                <h2 className="type-section mt-2 text-3xl md:text-4xl">Часы крупнее, спокойнее, ближе к предмету</h2>
+                <h2 className="type-section mt-2 text-3xl md:text-4xl">Модели выглядят как предметы, а не как превью</h2>
               </div>
               <Link href="/watches" className="text-sm font-semibold text-[var(--accent)] hover:text-[var(--accent-strong)]">
                 Открыть каталог
@@ -190,7 +187,7 @@ export default async function HomePage() {
 
         {featuredArticle ? (
           <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-            <Link href={`/journal/${featuredArticle.slug}`} className="grid content-between gap-10 border-y border-[var(--border-strong)] py-8">
+            <Link href={`/journal/${featuredArticle.slug}`} className="editorial-panel grid content-between gap-10 p-8">
               <div>
                 <p className="type-label">{featuredArticle.category}</p>
                 <h2 className="type-editorial mt-4 max-w-2xl text-4xl text-balance md:text-5xl">{featuredArticle.title}</h2>
@@ -221,7 +218,7 @@ export default async function HomePage() {
             </div>
             <div className="grid gap-8 lg:grid-cols-2">
               {selections.map((selection) => (
-                <article key={selection.slug} className="grid gap-5 border-t border-[var(--border)] pt-5 md:grid-cols-[1fr_180px]">
+                <article key={selection.slug} className="editorial-panel grid gap-5 p-6 md:grid-cols-[1fr_180px]">
                   <div>
                     <p className="type-label">{selection.criteriaLabel}</p>
                     <h3 className="mt-3 text-2xl font-semibold">{selection.title}</h3>
@@ -263,19 +260,6 @@ export default async function HomePage() {
           </Link>
         </Container>
       </section>
-
-      <Container className="py-16">
-        <section className="grid gap-5 border-t border-[var(--border-strong)] pt-8 md:grid-cols-[1fr_auto] md:items-center">
-          <div>
-            <p className="type-label">Подбор</p>
-            <h2 className="type-section mt-2 text-3xl">Начните со сценария, а не с бренда.</h2>
-            <p className="type-body mt-3 max-w-2xl text-[var(--text-muted)]">
-              Повседневные, под рубашку, для поездок или первая механика — подбор будет сужать каталог по тому, как вы будете носить часы.
-            </p>
-          </div>
-          <ButtonLink href="/selection" variant="secondary">Как это устроено</ButtonLink>
-        </section>
-      </Container>
     </>
   );
 }
