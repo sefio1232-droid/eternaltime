@@ -76,6 +76,14 @@ export default async function HomePage() {
                 <p className="type-meta">бренда</p>
               </div>
             </div>
+
+            <div className="commerce-strip mt-6 grid max-w-xl grid-cols-2 gap-px overflow-hidden text-sm sm:grid-cols-4">
+              {["Реальные модели", "Цены без шума", "Характеристики", "Гиды к выбору"].map((item) => (
+                <span key={item} className="bg-[rgb(255_255_255_/_54%)] px-3 py-3 text-[var(--text-muted)]">
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="relative">

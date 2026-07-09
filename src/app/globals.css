@@ -279,6 +279,52 @@ select {
   background-size: auto, 44px 44px, auto;
 }
 
+.commerce-strip {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 86%), rgb(238 243 246 / 72%)),
+    var(--surface);
+  box-shadow: 0 18px 60px rgb(16 19 22 / 7%);
+}
+
+.price-plate {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  border: 1px solid rgb(16 19 22 / 10%);
+  background: rgb(255 255 255 / 62%);
+  padding: 0.45rem 0.7rem;
+}
+
+.card-cta-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.card-cta-line::after {
+  width: 1.4rem;
+  height: 1px;
+  content: "";
+  background: currentColor;
+  transition: width 180ms ease;
+}
+
+.group:hover .card-cta-line::after {
+  width: 2.2rem;
+}
+
+.product-info-rail {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 86%), rgb(246 248 250 / 82%)),
+    var(--surface);
+  box-shadow: 0 24px 70px rgb(16 19 22 / 9%);
+}
+
 .media-placeholder-mark {
   display: inline-flex;
   height: 56px;

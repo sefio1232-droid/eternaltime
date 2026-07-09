@@ -77,6 +77,8 @@ describe("editorial art direction and layout refinement", () => {
     expect(card).toContain("Код {watch.referenceDisplay}");
     expect(card).toContain("product-card-surface");
     expect(card).toContain("aspect-[1/1.08]");
+    expect(card).toContain("price-plate");
+    expect(card).toContain("card-cta-line");
     expect(card).toContain("formatCatalogMoney(watch.publicPrice)");
     expect(card).not.toContain("keySpecifications.map");
   });
@@ -89,10 +91,13 @@ describe("editorial art direction and layout refinement", () => {
     expect(home).toContain("product-stage-hero");
     expect(home).toContain("blueprint-panel");
     expect(home).toContain("editorial-panel");
+    expect(home).toContain("commerce-strip");
     expect(detail).toContain("product-stage-hero");
-    expect(detail).toContain("editorial-panel");
+    expect(detail).toContain("product-info-rail");
+    expect(detail).toContain("price-plate");
     expect(styles).toContain(".site-frame");
     expect(styles).toContain(".blueprint-panel");
+    expect(styles).toContain(".commerce-strip");
   });
 
   it("defines Journal featured, secondary, and compact layout groups without placeholder image copy", () => {

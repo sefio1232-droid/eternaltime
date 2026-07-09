@@ -100,7 +100,7 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
             ) : null}
           </div>
 
-          <div className="editorial-panel grid gap-7 p-6 lg:sticky lg:top-24">
+          <div className="product-info-rail grid gap-7 p-6 lg:sticky lg:top-24">
             <div className="border-b border-[var(--border)] pb-6">
               <p className="type-label">{watch.brandName}</p>
               <h1 className="type-page mt-3 text-3xl text-balance md:text-4xl">{watch.title}</h1>
@@ -120,9 +120,12 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
               </div>
             </dl>
 
-            <section className="grid gap-2 border-t border-[var(--border)] pt-5">
+            <section className="grid gap-3 border-t border-[var(--border)] pt-5">
               <p className="type-meta">Цена</p>
-              <p className="type-price text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
+              <p className="price-plate type-price justify-self-start text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
+              <p className="text-sm leading-6 text-[var(--text-muted)]">
+                Цена показана спокойно: без скидочных обещаний, лишних сравнений и шумных бейджей.
+              </p>
             </section>
 
             {keyFacts.length > 0 ? (
@@ -144,7 +147,7 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
                 href="/collection"
                 className="inline-flex h-[var(--control-height)] items-center justify-center bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]"
               >
-                В коллекцию
+                Сохранить модель
               </Link>
               <Link
                 href="/compare"

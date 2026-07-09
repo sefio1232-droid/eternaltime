@@ -252,3 +252,15 @@ The public experience now uses a calmer editorial art direction on top of the sa
 - article pages render related articles only through an explicit same-category factual relation.
 
 This refinement preserves search, filtering, sorting, pagination, detail routes, catalog read isolation, the development image resolver security boundary, and the Journal repository boundary. It does not add Compare logic, Smart Selection logic, User Watch Collection backend, Collection Intelligence, checkout, database apply, Supabase Storage upload, or AI.
+
+## Product Presentation Polish
+
+The product surface now prioritizes a more commercial, watch-store-ready presentation without adding unsupported commerce claims:
+
+- the home page leads with one strong product stage, catalog proof, and a concise system/trust strip;
+- watch cards expose brand, model, code, price, and a clear `Смотреть` action line;
+- price presentation uses a restrained plate treatment instead of marketplace badges or fake discounts;
+- watch detail pages use a dedicated product information rail and a primary `Сохранить модель` action;
+- catalog browse uses editorial/product surfaces while preserving the same filters, sorting, and pagination.
+
+The UI still avoids fake stock, invented delivery promises, sale badges, reviews, ratings, checkout, or payment behavior.
