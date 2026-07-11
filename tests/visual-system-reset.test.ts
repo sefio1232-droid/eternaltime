@@ -100,12 +100,15 @@ describe("editorial art direction and layout refinement", () => {
     expect(styles).toContain(".commerce-strip");
   });
 
-  it("defines Journal featured, secondary, and compact layout groups without placeholder image copy", () => {
+  it("defines Journal as an editorial magazine surface without placeholder image copy", () => {
     const journal = file("src/app/(public)/journal/page.tsx");
 
-    expect(journal).toContain('data-journal-layout="featured"');
-    expect(journal).toContain('data-journal-layout="secondary"');
-    expect(journal).toContain('data-journal-layout="compact"');
+    expect(journal).toContain('data-journal-layout="magazine-cover"');
+    expect(journal).toContain('data-journal-layout="asymmetric-pair"');
+    expect(journal).toContain('data-journal-layout="text-led"');
+    expect(journal).toContain('data-journal-layout="editorial-quote"');
+    expect(journal).toContain('data-journal-layout="full-bleed-photo"');
+    expect(journal).toContain('data-journal-layout="reading-list"');
     expect(journal).not.toContain("Фото готовится");
   });
 
@@ -120,21 +123,31 @@ describe("editorial art direction and layout refinement", () => {
 
   it("labels watch identity as an article/code instead of reference wording", () => {
     const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
+    const collectionAction = file("src/components/collection/collection-watch-action.tsx");
 
     expect(detail).toContain("Артикул {watch.referenceDisplay}");
     expect(detail).not.toContain("Manufacturer Reference");
     expect(detail).not.toContain("watch reference");
-    expect(detail).toContain('href="/collection"');
-    expect(detail).toContain('href="/compare"');
+    expect(detail).toContain("CollectionWatchAction");
+    expect(collectionAction).toContain("Добавить в коллекцию");
+    expect(collectionAction).toContain('href="/collection"');
+    expect(detail).not.toContain('href="/compare"');
     expect(detail).not.toContain("localStorage");
     expect(detail).not.toContain("useState");
   });
 
-  it("renders article related blocks only through factual same-category relation", () => {
+  it("renders magazine article related blocks through factual article and watch relations", () => {
     const articlePage = file("src/app/(public)/journal/[slug]/page.tsx");
+    const relations = file("src/modules/journal/application/journal-catalog-relations.ts");
 
+    expect(articlePage).toContain('data-article-layout="magazine-article"');
+    expect(articlePage).toContain('data-article-section="recommended-watches"');
+    expect(articlePage).toContain('data-article-section="related-materials"');
     expect(articlePage).toContain('data-related-kind="same-category"');
     expect(articlePage).toContain("candidate.category === article.category");
+    expect(relations).toContain("article.relatedWatchRefs");
+    expect(relations).toContain("watch.brandSlug === reference.brandSlug");
+    expect(relations).toContain('watch.primaryImage.kind !== "none"');
     expect(articlePage).not.toContain("Math.random");
   });
 

@@ -33,6 +33,15 @@ Add watch
 
 The manual form must not feel like an admin product editor.
 
+Implementation status:
+
+- `/collection/new` implements the minimal Quick Add step.
+- Required: display name only.
+- Optional: free-text Brand, model, reference, one private photo, and note.
+- Creation atomically writes the manual `user_watches` row, `user_watch_source_data`, and an empty `user_watch_analysis_traits` row.
+- Missing catalog match never blocks creation.
+- Progressive technical enrichment, provisional identity assignment, and match-candidate generation remain planned.
+
 Flow:
 
 ```text

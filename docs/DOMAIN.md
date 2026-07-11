@@ -71,6 +71,13 @@ One watch owned or tracked by a user. It can link to a Manufacturer Reference or
 
 Manual User Watches must not automatically create public catalog entries.
 
+Initial ownership statuses are deliberately minimal:
+
+- `owned`: currently owned.
+- `previously_owned`: owned in the past.
+
+Do not infer ownership from Candidate, Cart, or Order state.
+
 ### User Watch Source Data
 
 Private raw facts entered by the user about their own watch. Source data preserves user text and estimates such as brand, model, reference, period, raw case size, raw dial color, raw attachment, raw material, and raw water resistance. It is not normalized catalog data and must not be published as catalog facts.
@@ -129,9 +136,15 @@ A structured user flow for finding watches. It stores answers, constraints, cand
 
 A saved set of Manufacturer References or order snapshots compared by a user or guest. Comparisons should store item identity and preserve enough context to restore the comparison later.
 
-### Favorite
+### Candidate List
 
-A saved Manufacturer Reference. Favorite is not ownership and does not imply cart intent.
+A user/session-owned consideration workspace between interest and purchase. It can preserve the originating Selection Session or Recommendation Scenario and contains Candidate Items. MVP normally has one active default Candidate List; additional goal-specific lists require a real user workflow.
+
+### Candidate Item
+
+A saved Manufacturer Reference in a Candidate List. Its stage is `saved`, `considering`, `finalist`, or `removed`. Candidate is not ownership, is not a Cart Item, and does not require an active Catalog Offer.
+
+MVP does not create a separate Wishlist/Favorite domain. Low-intent saved watches are Candidate Items at the `saved` stage.
 
 ### Recently Viewed
 
@@ -147,6 +160,10 @@ A temporary set of intended purchases. A cart may belong to a guest session or a
 
 A selected Catalog Offer and quantity. It is not an immutable purchase record.
 
+### Checkout Session
+
+A temporary, owner-scoped checkout draft created from one Cart. It stores contact, delivery, payment-method selection, totals preview, expiry, and the idempotency boundary for creating one Order. It never stores card credentials.
+
 ### Order
 
 The immutable commercial record created from checkout. It owns buyer contact snapshot, address snapshot, selected delivery method snapshot, payment method snapshot, status, totals, and order items.
@@ -158,6 +175,10 @@ An immutable purchase snapshot of a Catalog Offer and Manufacturer Reference at 
 ### Payment
 
 A provider-agnostic payment state machine and event stream related to an Order. It should not force a single provider into core order logic.
+
+### Payment Attempt
+
+One idempotent attempt to initiate or complete payment for an Order through a provider adapter. Attempts store amount, currency, status, provider reference, and safe metadata; provider events remain append-only.
 
 ### Delivery
 
@@ -192,6 +213,7 @@ Controlled metadata for indexable entities: title, description, canonical URL, r
 - Provisional Watch Identities are internal aggregation/reconciliation aids, not public catalog entities.
 - Collection Intelligence operates on User Watches plus normalized catalog/reference/user traits.
 - AI can assist with drafts, classification suggestions, and wording, but AI output is not a domain source of truth.
+- Candidate, Comparison, Cart, Order, and User Watch are distinct states: consideration, analysis, immediate purchase intent, immutable transaction, and ownership.
 
 ## Implementation Notes
 

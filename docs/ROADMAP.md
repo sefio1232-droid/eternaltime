@@ -1,5 +1,19 @@
 # Eternal Time Roadmap
 
+## Current Product Journey Priority
+
+The product-journey review in `docs/PRODUCT_JOURNEY_REVIEW.md` refines the next implementation order without changing completed catalog/import foundations:
+
+1. Journey and visual-density foundation.
+2. Guest/session continuity, Candidates, and difference-first Compare.
+3. User Watch Collection and manual ownership.
+4. Collection Intelligence and collection-fit explanations.
+5. Cross-surface Journal/Selection/Catalog/Collection integration.
+6. Cart and Checkout Session foundation.
+7. Orders, real provider adapters, and post-purchase ownership.
+
+This order makes User Watch Collection the differentiating product center while still establishing a useful consideration state before the larger ownership module. No separate Wishlist is planned for MVP.
+
 The roadmap is dependency-driven. It keeps the MVP realistic while preserving architecture for a larger product.
 
 ## Phase 0: Architecture Baseline
@@ -166,7 +180,7 @@ Scope:
 - Brand Collection pages.
 - Watch pages.
 - Image gallery.
-- Favorites and recently viewed basics.
+- Recently viewed basics and Candidate entry points.
 - SEO metadata and structured data for catalog entities.
 
 Dependencies:
@@ -212,7 +226,7 @@ Implementation status:
 - Local ZIP image rendering is available through a dev-only validated image resolver.
 - Production Supabase catalog repository, Storage image repository, database apply execution, admin review UI, Compare, Smart Selection, checkout, User Watch Collection, and Collection Intelligence remain deferred.
 
-## Phase 5: Account, Favorites, Comparisons, Selection Sessions
+## Phase 5: Account, Candidates, Comparisons, Selection Sessions
 
 Goal: add personal non-commerce interactions.
 
@@ -220,7 +234,7 @@ Scope:
 
 - Account navigation.
 - Profile page.
-- Favorites.
+- Candidate List and Candidate Item stages: saved, considering, finalist.
 - Recently viewed.
 - Saved comparisons.
 - Structured selection sessions.
@@ -234,12 +248,14 @@ Deliverables:
 
 - Authenticated account area.
 - Guest-to-user continuity for comparisons where appropriate.
+- Guest-to-user continuity and idempotent merge for Candidates.
 - Selection session storage and scoring baseline.
 
 Definition of done:
 
 - Private data is protected by RLS.
 - Selection works without AI.
+- Selection results can create/update a Candidate context.
 - Mobile account navigation is usable.
 
 Intentionally excluded:
@@ -266,6 +282,7 @@ Scope:
 - Service history.
 - Private photos and documents with signed access.
 - Future public User Watch Collection fields behind opt-in controls.
+- Idempotent ownership link from a delivered Order Item when the user confirms ownership.
 
 Dependencies:
 
@@ -295,6 +312,14 @@ Intentionally excluded:
 - Public User Watch Collection pages.
 - Recommendation engine.
 - Admin catalog enrichment from manual-watch aggregates.
+
+Implementation status:
+
+- Core ownership migration, owner RLS, default collection creation, catalog-linked add, manual Quick Add, private photo upload, collection overview, User Watch detail, ownership editing, and soft deletion are implemented.
+- `/collection` is the canonical ownership route; `/account/collection` redirects to it.
+- Raw source data and empty analysis-trait foundations are created for manual watches.
+- Provisional identity and match-candidate tables exist as protected foundations, but matching/reconciliation workflows are not implemented.
+- Service history, documents, progressive trait enrichment, public opt-in collection views, and post-order ownership transition remain pending.
 
 ## Phase 7: Collection Intelligence
 
@@ -343,9 +368,11 @@ Scope:
 - Merge guest cart after login.
 - Cart items.
 - Checkout contact/address flow.
+- Expiring Checkout Sessions.
 - Promo code architecture.
 - Order creation.
 - Immutable order item snapshots.
+- Idempotent Checkout Session to Order boundary.
 
 Dependencies:
 
@@ -363,6 +390,7 @@ Definition of done:
 - Existing order data survives catalog changes.
 - Price and availability are rechecked before order creation.
 - Guest cart merge is tested.
+- Price, orderability, purchase limit, inventory evidence, and delivery data are revalidated before Order creation.
 
 Intentionally excluded:
 
@@ -378,10 +406,12 @@ Scope:
 - Payment adapter interface.
 - Delivery adapter interface.
 - Payment events.
+- Idempotent payment attempts.
 - Delivery events.
 - Order status history.
 - Admin order management.
 - Webhook validation structure.
+- Delivered Order Item to User Watch confirmation after delivery.
 
 Dependencies:
 
@@ -398,6 +428,7 @@ Definition of done:
 - Core order logic is not tied to one provider.
 - Webhook handlers validate signatures when real providers are added.
 - No invented merchant credentials or promises.
+- Returned, gifted, undelivered, or declined items do not become User Watches automatically.
 
 Intentionally excluded:
 

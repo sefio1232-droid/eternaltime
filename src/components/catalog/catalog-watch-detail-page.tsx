@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import { CatalogWatchCardView } from "@/components/catalog/catalog-watch-card";
+import { CollectionWatchAction } from "@/components/collection/collection-watch-action";
 import { Container } from "@/components/ui/container";
 import {
   formatCatalogCount,
@@ -64,7 +65,13 @@ function highlights(specifications: CatalogPublicSpecification[]): CatalogPublic
   return picked;
 }
 
-export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatchDetail }>) {
+export function CatalogWatchDetailPage({
+  watch,
+  collectionState,
+}: Readonly<{
+  watch: CatalogWatchDetail;
+  collectionState?: string;
+}>) {
   const groupedSpecifications = groupSpecificationsByPublicSection(watch.specifications);
   const keyFacts = highlights(watch.specifications);
   const gallery = watch.imageGallery.filter((image) => image.kind !== "none");
@@ -142,20 +149,12 @@ export function CatalogWatchDetailPage({ watch }: Readonly<{ watch: CatalogWatch
               </section>
             ) : null}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Link
-                href="/collection"
-                className="inline-flex h-[var(--control-height)] items-center justify-center bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]"
-              >
-                Сохранить модель
-              </Link>
-              <Link
-                href="/compare"
-                className="inline-flex h-[var(--control-height)] items-center justify-center border border-[var(--border-strong)] px-4 text-sm font-semibold hover:border-[var(--accent)]"
-              >
-                Сравнить
-              </Link>
-            </div>
+            <CollectionWatchAction
+              watchReferenceId={watch.id}
+              displayName={watch.title}
+              returnTo={watch.href}
+              state={collectionState}
+            />
           </div>
         </section>
 

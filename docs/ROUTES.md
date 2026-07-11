@@ -77,12 +77,24 @@ app/(shop)/compare/[comparisonId]/page.tsx
 
 Guest comparisons can be session-scoped. Saved comparisons are user-owned.
 
+Compare is normally entered from Watch Detail or the Candidate workspace. It does not require a permanent primary-navigation item.
+
+## Candidate Routes
+
+```text
+app/(shop)/candidates/page.tsx
+```
+
+`/candidates` is the single MVP saved/shortlist workspace. `saved`, `considering`, and `finalist` are item states within this route; do not create separate Wishlist or stage routes.
+
+The route is private to its user or server-managed guest session and is always noindex.
+
 ## Selection Routes
 
 ```text
-app/(shop)/select/page.tsx
-app/(shop)/select/[sessionId]/page.tsx
-app/(shop)/select/[sessionId]/results/page.tsx
+app/(shop)/selection/page.tsx
+app/(shop)/selection/[sessionId]/page.tsx
+app/(shop)/selection/[sessionId]/results/page.tsx
 ```
 
 Selection is structured and deterministic. It should not require AI.
@@ -92,11 +104,12 @@ Selection is structured and deterministic. It should not require AI.
 ```text
 app/(shop)/cart/page.tsx
 app/(shop)/checkout/page.tsx
-app/(shop)/checkout/success/page.tsx
-app/(shop)/checkout/failure/page.tsx
+app/(shop)/checkout/confirmation/[orderId]/page.tsx
 ```
 
 Checkout must revalidate offer orderability, price, inventory, and delivery/payment availability server-side before creating an order.
+
+Checkout failure/retry should remain a state of the same Checkout Session when possible. Do not create fake success/failure routes that bypass real Order and Payment state.
 
 ## Account Routes
 
@@ -106,20 +119,20 @@ app/(account)/account/profile/page.tsx
 app/(account)/account/orders/page.tsx
 app/(account)/account/orders/[orderId]/page.tsx
 app/(account)/account/orders/[orderId]/tracking/page.tsx
-app/(account)/account/favorites/page.tsx
 app/(account)/account/comparisons/page.tsx
-app/(account)/account/selection-sessions/page.tsx
+app/(account)/account/selections/page.tsx
 app/(account)/account/recently-viewed/page.tsx
 app/(account)/account/collection/page.tsx
 app/(account)/account/collection/[userWatchId]/page.tsx
 app/(account)/account/collection/analysis/page.tsx
-app/(account)/account/collection/recommendations/page.tsx
 app/(account)/account/addresses/page.tsx
 app/(account)/account/notifications/page.tsx
 app/(account)/account/support/page.tsx
 ```
 
 These routes are the user-facing "My Collection" area. In architecture documents the domain term is User Watch Collection. Account mobile navigation should be compact and task-oriented, not a generic SaaS dashboard.
+
+Collection profile, roles, gaps, and Recommendation Scenarios are sections/tabs inside `/account/collection/analysis` for MVP. Add dedicated routes only if real complexity later requires them.
 
 ## Future Public User Watch Collection Routes
 
@@ -223,3 +236,39 @@ Current implemented public routes include:
 `/selection` and `/collection` are public product explanation routes only. They do not create fake quiz results, fake recommendations, fake user collections, or authentication requirements.
 
 `/journal` exposes only published Journal articles from the Journal read repository. Draft articles are excluded from public route resolution and sitemap generation.
+
+## Implemented User Watch Collection Routes
+
+```text
+/collection
+/collection/new
+/collection/{userWatchId}
+/login
+/auth/callback
+```
+
+- `/collection` is noindex and renders only the authenticated user's User Watches; unauthenticated visitors receive a useful entry state and login path.
+- `/collection/new` is authenticated minimal Quick Add.
+- `/collection/{userWatchId}` is owner-scoped detail/edit/delete; unknown or foreign IDs resolve as not found.
+- `/account/collection` redirects to `/collection` so the product has one ownership surface.
+- Watch Detail uses `/login?returnTo=...` when authentication is required and returns to the same Manufacturer Reference.
+
+The previous public `/collection` explanation page has been replaced by the real ownership experience. Collection Profile/gaps/recommendations are not routed or rendered until deterministic Collection Intelligence exists.
+
+## Product Navigation Decision
+
+Primary navigation target:
+
+- `/journal`;
+- `/watches`;
+- `/selection`;
+- `/collection` for the public explanation or `/account/collection` after authentication.
+
+Utility navigation target:
+
+- search;
+- `/candidates` with count when non-empty;
+- account;
+- `/cart` with a commerce-specific indicator.
+
+Brand discovery remains available through `/brands`, catalog navigation, and search but does not require equal primary-header weight once the User Watch Collection is functional. Cart and Collection must remain visually and semantically distinct.

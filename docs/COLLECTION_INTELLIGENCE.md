@@ -2,6 +2,8 @@
 
 Collection Intelligence is a deterministic module that analyzes a User Watch Collection and suggests logical development directions. It must work without AI.
 
+Current implementation boundary: User Watch Collection now persists catalog-linked and manual User Watches, raw manual source data, empty/partial analysis-trait rows, and collection-version invalidation. Profile extraction, role calculation, gap detection, Recommendation Scenarios, candidate scoring, result snapshots, and user-facing analysis are not implemented yet and must not be simulated in the UI.
+
 ## Pipeline
 
 ```text

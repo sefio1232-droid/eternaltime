@@ -30,7 +30,7 @@ Decisions:
 
 - `watch_references` is the canonical concrete watch entity for MVP.
 - There is no separate `watch_variants` table in MVP.
-- Factual specifications, images, description, Product structured data, favorites, comparisons, recently viewed, and recommendation candidates attach to `watch_references`.
+- Factual specifications, images, description, Product structured data, Candidate Items, comparisons, recently viewed, and recommendation candidates attach to `watch_references`.
 - Price and inventory attach to `catalog_offers`.
 - Multiple offers can exist for one reference only when a real commercial need exists, such as different seller/channel/condition/bundle. They must not duplicate watch identity.
 
@@ -485,6 +485,7 @@ Important columns:
 - User-entered display data: `custom_brand_name`, `custom_model_name`, `custom_reference`, `custom_display_name`.
 - `provisional_watch_identity_id` nullable.
 - Ownership data: `user_title`, `acquired_at`, `acquisition_source`, `condition`, `personal_note`.
+- `source_order_item_id` nullable and unique when ownership was created from a delivered Order Item.
 - Set data: `has_box`, `has_papers`, `has_warranty_card`, `has_extra_links`.
 - `last_service_at`.
 - `public_visibility`: `private`, `public_summary`, `public_full`.
@@ -711,21 +712,47 @@ Indexes:
 
 ## User Behavior
 
-### `favorites`
+### `candidate_lists`
 
-Purpose: user-saved Manufacturer References.
+Purpose: user/session-owned consideration workspace between interest and purchase intent.
 
 Important columns:
 
-- `user_id`, `watch_reference_id`, `created_at`.
+- `id`, `user_id` nullable, `session_id` nullable.
+- `selection_session_id` nullable, `recommendation_result_id` nullable.
+- `title`, `goal_code`, `status`: `active`, `archived`, `completed`.
+- `created_at`, `updated_at`.
 
-Uniqueness:
+Rules:
 
-- Unique `(user_id, watch_reference_id)`.
+- Owner is exactly one authenticated user or server-managed guest session.
+- MVP normally has one default active list per owner.
+- A Candidate List is not a User Watch Collection and not a Cart.
 
 RLS:
 
-- User owns rows.
+- User owns authenticated rows.
+- Guest access is mediated by server-side session authorization.
+
+### `candidate_items`
+
+Purpose: Manufacturer References saved or actively considered inside a Candidate List.
+
+Important columns:
+
+- `id`, `candidate_list_id`, `watch_reference_id`.
+- `stage`: `saved`, `considering`, `finalist`, `removed`.
+- `source_type`, `source_id`, `intended_role_code`, `note`, `sort_order`.
+- `created_at`, `updated_at`, `removed_at`.
+
+Uniqueness:
+
+- One active item per `(candidate_list_id, watch_reference_id)`.
+
+Rules:
+
+- Candidate Items reference `watch_references`, not `catalog_offers`.
+- MVP does not add a separate Wishlist/Favorites table; low-intent saves use stage `saved`.
 
 ### `recently_viewed`
 
@@ -745,7 +772,7 @@ Purpose: saved comparison sets.
 
 Important columns:
 
-- `comparisons`: owner user/session, title, status.
+- `comparisons`: owner user/session, optional `candidate_list_id`, title, status, lifecycle timestamps.
 - `comparison_items`: comparison, watch reference, sort order.
 
 RLS:
@@ -776,7 +803,9 @@ Purpose: guest or user cart.
 
 Important columns:
 
-- `id`, `user_id` nullable, `session_id` nullable, `status`, `merged_into_cart_id`.
+- `id`, `user_id` nullable, `session_id` nullable.
+- `status`: `active`, `converted`, `abandoned`, `merged`, `expired`.
+- `merged_into_cart_id`, lifecycle timestamps.
 
 Indexes:
 
@@ -793,10 +822,32 @@ Purpose: selected offer and quantity.
 Important columns:
 
 - `id`, `cart_id`, `catalog_offer_id`, `quantity`, `added_at`.
+- Optional added-price observation for explicit price-change messaging; it is not an Order snapshot.
 
 Validation:
 
 - Cart item must reference an orderable offer at checkout time.
+- Cart load and checkout revalidate visibility, orderability, purchase limit, price, inventory evidence, and delivery data.
+
+### `checkout_sessions`
+
+Purpose: expiring checkout draft and idempotency boundary between Cart and Order.
+
+Important columns:
+
+- `id`, `cart_id`, `user_id` nullable, `session_id` nullable.
+- `status`: `draft`, `ready`, `order_created`, `expired`, `abandoned`.
+- Contact/address draft fields or typed draft JSON.
+- Selected delivery method/estimate and payment method code.
+- Totals preview, currency, `expires_at`.
+- Unique `idempotency_key`, `order_id` nullable.
+
+Rules:
+
+- Exactly one owner: user or server-managed guest session.
+- At most one successful Order per Checkout Session.
+- Never stores card credentials, provider secrets, or raw sensitive payment payloads.
+- Delivery selection stays in the Checkout Session draft and is copied into the immutable Order snapshot; no separate delivery-selection table is required for MVP.
 
 ### `orders`
 
@@ -817,6 +868,12 @@ RLS:
 
 - User reads own orders.
 - Admin read/write status through server authorization.
+
+Lifecycle guidance:
+
+- Order: `pending_payment`, `confirmed`, `processing`, `shipped`, `delivered`, `cancelled`, `returned`.
+- Payment: `not_started`, `pending`, `authorized`, `paid`, `failed`, `cancelled`, `partially_refunded`, `refunded`.
+- Delivery: `pending`, `preparing`, `handed_over`, `in_transit`, `delivered`, `failed`, `returned`.
 
 ### `order_items`
 
@@ -851,6 +908,23 @@ Important columns:
 Rule:
 
 - Store safe metadata only. Do not log secrets, full tokens, or raw sensitive payloads.
+
+### `payment_attempts`
+
+Purpose: idempotent provider-facing payment initiation attempts for an Order.
+
+Important columns:
+
+- `id`, `order_id`, `provider_code`, `provider_reference` nullable.
+- `amount_minor`, `currency_code`, `status`.
+- Unique `idempotency_key`.
+- Safe request/response metadata, `created_at`, `updated_at`.
+
+Rules:
+
+- Payment Attempts do not replace append-only `payment_events`.
+- Provider callbacks are validated and processed idempotently.
+- No card credentials or secrets are stored.
 
 ## Content, SEO, And Business Configuration
 
@@ -977,6 +1051,23 @@ Not stored as source of truth:
 - Public legal or delivery promises without verified business settings.
 
 ## Implementation Notes
+
+### User Watch Collection Implementation
+
+Migration `20260711010000_user_watch_collection.sql` implements:
+
+- `user_watch_collections` with one default private collection per user and `collection_version` invalidation;
+- `user_watches` with catalog-linked/manual source distinction, ownership status, acquisition details, notes, and soft deletion;
+- `user_watch_source_data` and `user_watch_analysis_traits` one-to-one foundations;
+- `provisional_watch_identities` and `user_watch_match_candidates` schema foundations without automatic matching behavior;
+- `user_watch_files` and private `user-watch-collection-media-private` Storage bucket policies;
+- authenticated owner RLS for all user-owned collection tables;
+- atomic `ensure_user_watch_collection`, `create_catalog_user_watch`, and `create_manual_user_watch` RPCs using `auth.uid()`;
+- automatic `collection_version` increment on User Watch changes.
+
+Catalog duplicate handling is intentionally not a database uniqueness constraint because a user may own more than one physical instance of the same Manufacturer Reference. The create RPC requires explicit duplicate confirmation instead.
+
+Service records, ownership transition from delivered Orders, and Collection Intelligence result tables remain planned and are not created by this migration.
 
 The database and catalog foundation phase is implemented in versioned Supabase migrations under `supabase/migrations/`.
 

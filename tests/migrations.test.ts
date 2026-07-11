@@ -20,6 +20,7 @@ describe("database migrations", () => {
       "20260705014000_commercial_state_and_media.sql",
       "20260705015000_rls_policies.sql",
       "20260706010000_import_apply_operations.sql",
+      "20260711010000_user_watch_collection.sql",
     ]);
   });
 
@@ -55,6 +56,12 @@ describe("database migrations", () => {
       "import_batches",
       "import_rows",
       "audit_logs",
+      "user_watch_collections",
+      "user_watches",
+      "user_watch_source_data",
+      "user_watch_analysis_traits",
+      "user_watch_match_candidates",
+      "user_watch_files",
     ]) {
       expect(allSql).toContain(`alter table public.${table} enable row level security`);
     }
@@ -83,5 +90,25 @@ describe("database migrations", () => {
     expect(applyMigration).not.toMatch(/grant execute on function public\.apply_catalog_import_batch\(jsonb\) to authenticated/i);
     expect(applyMigration).not.toMatch(/\bexecute\s+format\b/i);
     expect(applyMigration).not.toMatch(/\bexecute\s+immediate\b/i);
+  });
+
+  it("adds owner-scoped User Watch Collection tables and authenticated RPC boundaries", () => {
+    const collectionMigration = migrations.find(
+      (migration) => migration.file === "20260711010000_user_watch_collection.sql",
+    )?.sql ?? "";
+
+    expect(collectionMigration).toContain("create table public.user_watch_collections");
+    expect(collectionMigration).toContain("create table public.user_watches");
+    expect(collectionMigration).toContain("create table public.user_watch_source_data");
+    expect(collectionMigration).toContain("create table public.user_watch_analysis_traits");
+    expect(collectionMigration).toContain("create table public.provisional_watch_identities");
+    expect(collectionMigration).toContain("create table public.user_watch_match_candidates");
+    expect(collectionMigration).toContain("create table public.user_watch_files");
+    expect(collectionMigration).toContain("user_id = auth.uid()");
+    expect(collectionMigration).toContain("owner_user_id = auth.uid()");
+    expect(collectionMigration).toContain("message = 'authentication_required'");
+    expect(collectionMigration).toContain("grant execute on function public.create_catalog_user_watch");
+    expect(collectionMigration).toContain("grant execute on function public.create_manual_user_watch");
+    expect(collectionMigration).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
   });
 });

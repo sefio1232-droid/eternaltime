@@ -93,7 +93,7 @@ Review conclusions:
 
 - Manufacturer Reference and Watch Variant should not be separate MVP entities.
 - In this domain they are usually 1:1; a separate Variant mostly duplicates Reference.
-- The useful responsibility previously assigned to Watch Variant is now carried by `watch_references`: concrete specs, images, comparison identity, favorites, search/filter identity, and recommendation candidate identity.
+- The useful responsibility previously assigned to Watch Variant is now carried by `watch_references`: concrete specs, images, Candidate/Comparison identity, search/filter identity, and recommendation candidate identity.
 - Removing Watch Variant from MVP reduces migrations, joins, admin complexity, import ambiguity, and SEO duplication.
 - Adding a separate extension later is possible by introducing `watch_reference_configurations` or similar only if real data proves one reference can map to multiple materially different configurations. That future migration would be additive if current foreign keys consistently point to `watch_references`.
 

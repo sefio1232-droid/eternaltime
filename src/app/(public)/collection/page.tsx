@@ -1,61 +1,71 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { CollectionEmptyState } from "@/components/collection/collection-empty-state";
+import { CollectionOverview } from "@/components/collection/collection-overview";
 import { Container } from "@/components/ui/container";
+import { getCurrentUser } from "@/modules/auth/server";
+import { listUserWatches } from "@/modules/user-watch-collection/application/collection-service";
+import { createUserWatchCollectionRepository } from "@/modules/user-watch-collection/infrastructure/user-watch-repository.server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Моя коллекция",
-  description: "Будущая личная коллекция Eternal Time: роли моделей, осознанное развитие набора и связь с каталогом.",
-  alternates: {
-    canonical: "/collection",
-  },
+  description: "Личное пространство Eternal Time для часов, которыми вы владеете или владели.",
+  robots: { index: false, follow: false },
 };
 
-export default function CollectionPage() {
-  const ideas = [
-    ["Собрать", "Сохранить свои часы, источник владения, комплектность и личный контекст."],
-    ["Понять", "Увидеть, какие сценарии, размеры, механизмы и стили уже закрыты."],
-    ["Развить", "Выбирать следующие часы так, чтобы коллекция становилась осмысленнее."],
-  ];
+export const dynamic = "force-dynamic";
+
+type CollectionPageProps = Readonly<{
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>;
+
+export default async function CollectionPage({ searchParams }: CollectionPageProps) {
+  const params = await searchParams;
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser.user) {
+    return (
+      <Container className="grid gap-10 py-10 lg:py-14">
+        <header className="grid gap-5 border-b border-[var(--border)] pb-7 md:grid-cols-[0.8fr_1.2fr] md:items-end">
+          <div>
+            <p className="type-label">Моя коллекция</p>
+            <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">Личное пространство для реальных часов</h1>
+          </div>
+          <p className="type-body max-w-2xl text-[var(--text-muted)]">
+            Здесь хранятся только часы, которыми вы владеете или владели: каталог, ручные записи, история приобретения и заметки.
+          </p>
+        </header>
+        <CollectionEmptyState authenticated={false} />
+        {currentUser.status === "unconfigured" || params.collection === "unavailable" ? (
+          <p className="text-sm text-[var(--danger)]">Supabase Auth не настроен для этого окружения.</p>
+        ) : null}
+      </Container>
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return (
+      <Container className="py-12">
+        <CollectionEmptyState authenticated={true} />
+      </Container>
+    );
+  }
+
+  const watches = await listUserWatches(createUserWatchCollectionRepository(supabase), currentUser.user.id);
 
   return (
-    <Container className="grid gap-12 py-10 lg:py-16">
-      <header className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
-        <div>
-          <p className="type-label">Моя коллекция</p>
-          <h1 className="type-page mt-3 text-3xl text-balance md:text-5xl">Личные часы как система, а не список покупок</h1>
+    <Container className="py-10 lg:py-14">
+      {watches.length > 0 ? <CollectionOverview watches={watches} /> : (
+        <div className="grid gap-10">
+          <header>
+            <p className="type-label">Моя коллекция</p>
+            <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">Часы, которыми вы владеете</h1>
+          </header>
+          <CollectionEmptyState authenticated />
         </div>
-        <p className="type-body max-w-2xl text-[var(--text-muted)]">
-          Коллекция задумана как пространство, где владелец видит роли своих часов, понимает повторы и выбирает следующий шаг без случайного накопления.
-        </p>
-      </header>
-
-      <section className="grid gap-8 lg:grid-cols-[0.46fr_1fr]">
-        <p className="type-editorial max-w-sm text-3xl text-[var(--text-muted)]">
-          Каталог показывает модели. Коллекция будет показывать отношения между ними.
-        </p>
-        <div className="grid gap-6 md:grid-cols-3">
-          {ideas.map(([title, text], index) => (
-            <article key={title} className="border-t border-[var(--border)] pt-5">
-              <p className="type-reference">0{index + 1}</p>
-              <h2 className="mt-4 text-xl font-semibold">{title}</h2>
-              <p className="type-body mt-3 text-[var(--text-muted)]">{text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-6 border-y border-[var(--border-strong)] py-8 md:grid-cols-[1fr_auto] md:items-center">
-        <div>
-          <p className="type-label">Первый слой уже здесь</p>
-          <h2 className="type-section mt-2 text-3xl">Каталог помогает понять язык моделей</h2>
-        </div>
-        <Link
-          href="/journal"
-          className="inline-flex h-[var(--control-height)] items-center justify-center bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--text-inverse)]"
-        >
-          Читать журнал
-        </Link>
-      </section>
+      )}
+      {params.deleted === "1" ? <p className="mt-6 text-sm">Часы удалены из активной коллекции.</p> : null}
     </Container>
   );
 }

@@ -248,7 +248,7 @@ The public experience now uses a calmer editorial art direction on top of the sa
 - typography has been reduced in weight and scale so home, catalog, brand, detail, and Journal pages feel like a mature product surface rather than poster sections;
 - the home page is an editorial/product front page that connects catalog, Journal, and future collection thinking without internal implementation language;
 - brand pages are text-led when representative imagery is weak and show only real available watch images when present;
-- Journal pages use featured, secondary, compact, and category-grouped layouts;
+- Journal pages use mixed image-led, text-led, and reading-list layouts;
 - article pages render related articles only through an explicit same-category factual relation.
 
 This refinement preserves search, filtering, sorting, pagination, detail routes, catalog read isolation, the development image resolver security boundary, and the Journal repository boundary. It does not add Compare logic, Smart Selection logic, User Watch Collection backend, Collection Intelligence, checkout, database apply, Supabase Storage upload, or AI.
@@ -264,3 +264,22 @@ The product surface now prioritizes a more commercial, watch-store-ready present
 - catalog browse uses editorial/product surfaces while preserving the same filters, sorting, and pagination.
 
 The UI still avoids fake stock, invented delivery promises, sale badges, reviews, ratings, checkout, or payment behavior.
+
+## Premium Journal Surface
+
+The public Journal is now treated as a premium editorial media surface inside Eternal Time, not as a blog feed or product grid.
+
+The `/journal` index uses magazine-style composition:
+
+- an oversized issue header and cover story;
+- asymmetric story pairings instead of equal cards;
+- text-led article groups without images;
+- a full-width editorial quote band;
+- large photographic moments only when an article has a factual related watch image;
+- a quiet reading list instead of repeated preview cards.
+
+Article pages use a long-form magazine layout with large headline typography, wide spacing, a factual hero image when available, readable body measure, pull quotes, related same-category materials, and related watch rows sourced only from explicit `relatedWatchRefs`.
+
+This does not add content automation, AI, fake imagery, fake recommendations, checkout, admin review UI, database writes, or Supabase Storage uploads. Journal media remains tied to existing public catalog read models and is omitted when no factual image relation exists.
+
+This premium direction is subject to the bounded type and spacing system in `docs/PRODUCT_JOURNEY_REVIEW.md`. The current large-display experiment is not the target density baseline: the next implementation pass must reduce oversized Journal headings and repeated viewport-scale spacing while preserving editorial composition.

@@ -7,7 +7,7 @@ Security is a core architecture concern for Eternal Time. Public catalog data, p
 Use Supabase Auth for user identity. The app uses:
 
 - Anonymous sessions for guest browsing, cart, recently viewed, and comparison.
-- Authenticated sessions for account, orders, User Watch Collection, favorites, saved comparisons, and addresses.
+- Authenticated sessions for account, orders, User Watch Collection, Candidates, saved comparisons, and addresses.
 - Server-only privileged clients for trusted jobs and admin operations.
 
 `profiles.id` should match `auth.users.id`.
@@ -49,7 +49,7 @@ User-owned:
 
 - Profiles.
 - Addresses.
-- Favorites.
+- Candidate Lists and Candidate Items.
 - Comparisons.
 - Selection sessions.
 - User Watch Collections.
@@ -114,6 +114,16 @@ Private by default:
 Public User Watch Collection visibility is opt-in and per-watch visibility is explicit. Public views render only safe fields.
 
 Manual-watch matching and catalog enrichment must use privacy-safe aggregates. Admin catalog teams may see normalized missing-watch signals such as counts by brand/reference/model, but must not see private notes, documents, user photos, service history, acquisition details, or personal stories.
+
+Implemented User Watch Collection guarantees:
+
+- all user-owned collection tables have RLS policies scoped to `auth.uid()`;
+- Server Actions derive ownership from `auth.getUser()` and never accept client-provided `user_id`;
+- detail/update/delete queries include both User Watch ID and authenticated owner ID;
+- catalog-linked create validates the existing published/archival `watch_reference` in the database;
+- manual create writes only private User Watch/source/trait rows and never mutates public catalog tables;
+- private photos use owner-prefixed Storage paths and short-lived signed URLs;
+- magic-link return paths accept local paths only and reject external redirects.
 
 ## Private Documents
 

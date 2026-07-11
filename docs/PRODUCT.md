@@ -4,6 +4,8 @@
 
 Eternal Time is a premium watch product for the full ownership cycle: discovery, selection, comparison, purchase, personal collection management, collection analysis, and future collection development. It is not only an online store. The catalog is the central product surface, but the long-term value comes from helping a user understand watches and their own preferences.
 
+The approved cross-product journey, visual-density constraints, Candidate model, CTA architecture, and implementation order are recorded in `docs/PRODUCT_JOURNEY_REVIEW.md`.
+
 The primary loop is:
 
 1. A person studies watches.
@@ -16,6 +18,8 @@ The primary loop is:
 8. The system identifies stable preferences and gaps.
 9. The system suggests logical directions for collection development.
 10. The user returns to select the next watch.
+
+This loop is not a required funnel. A user may enter through an article, Brand, watch page, Selection Session, Candidate workspace, or User Watch Collection. Each surface should preserve context and offer one natural next-best action.
 
 ## Product Principles
 
@@ -41,9 +45,15 @@ Users can start a selection session by answering structured questions about budg
 
 Users compare selected Manufacturer References by first-class attributes: dimensions, mechanism, material, water resistance, functions, price, availability, and subjective positioning. Comparison must remain shareable and restorable.
 
+### Consider
+
+Users maintain one Candidate workspace between casual interest and purchase intent. Candidate items can be saved, actively considered, or marked as finalists. MVP does not create a separate Wishlist/Favorites product alongside Candidates.
+
 ### Purchase
 
 Users add a current catalog offer to a cart, proceed through checkout, provide contact and delivery information, choose available payment and delivery options, and receive an immutable order snapshot.
+
+Cart contains immediate purchase intent and references Catalog Offers. Candidate items reference Manufacturer References and remain valid when commercial offers change.
 
 ### Own
 
@@ -64,7 +74,7 @@ The catalog must support:
 - Sorting by relevance, price, newest, popularity, and controlled editorial order where appropriate.
 - Pagination or cursor-based loading that remains SEO-compatible.
 - Brand, Brand Collection, model, reference, category, and Editorial Selection landing pages.
-- Favorites, recently viewed watches, comparisons, and entry points to selection sessions.
+- Candidate saving, recently viewed watches, comparisons, and entry points to Selection Sessions.
 
 The catalog should not treat price, stock, and delivery date as part of the immutable watch description.
 
@@ -75,7 +85,7 @@ A watch page should eventually include:
 - Brand, Brand Collection, model, reference number, display name, and canonical URL.
 - Gallery, main image, descriptive attributes, price, previous price if valid, availability, and delivery estimate when verified.
 - Mechanism information, dimensions, wrist-fit explanation, water-resistance explanation, set contents, originality, and pre-shipment inspection process.
-- Comparison, favorites, similar watches, alternatives in budget, watches with different character, related articles, FAQ, and structured data.
+- Candidates, comparison, similar watches, alternatives in budget, watches with different character, related articles, FAQ, and structured data.
 - A future non-AI feature: "How will these watches fit into my collection?"
 
 ## User Watch Collection Experience
@@ -96,6 +106,14 @@ The User Watch Collection area is a core module, not a saved-products list. It m
 Private data must never become public by default.
 User watch photos must never become catalog images automatically.
 
+Implementation status:
+
+- `/collection` is the authenticated ownership center with a useful unauthenticated entry state.
+- Users can add an existing published Manufacturer Reference from Watch Detail or create a manual User Watch through minimal Quick Add.
+- User Watch detail supports nickname/display name, ownership status, acquisition date/price/currency/source, personal note, private photo, and soft deletion.
+- Manual watches remain independent from public catalog identity and create private raw source data plus an empty analysis-traits foundation.
+- Service history, documents UI, matching/reconciliation UI, Collection Profile, gaps, and recommendations remain planned.
+
 ## Collection Development Loop
 
 The loop is deterministic in the base product:
@@ -115,7 +133,7 @@ AI may later improve wording or draft explanations, but it must not be required 
 
 ## Smart Selection
 
-Smart selection is a guided decision workflow, not a chat-only AI feature. It should collect structured preferences, compare them with catalog data, and return explainable candidates. It can use previous favorites, comparisons, and Collection Profile when the user is authenticated and has consented to use that context.
+Smart selection is a guided decision workflow, not a chat-only AI feature. It should collect structured preferences, compare them with catalog data, and return explainable candidates. It can use previous Candidate Items, comparisons, and Collection Profile when the user is authenticated and has consented to use that context.
 
 ## Purchase Flow
 
@@ -130,6 +148,8 @@ The checkout architecture must support:
 - Immutable order item snapshots.
 - Order status history.
 - Payment and delivery events.
+- Idempotent Checkout Session to Order creation.
+- Price, orderability, inventory evidence, and delivery revalidation before Order creation.
 
 Existing orders must remain accurate even if catalog text, images, prices, or availability change later.
 
@@ -144,6 +164,8 @@ After purchase, a user should be able to:
 - Record future service events.
 - Receive Collection Intelligence analysis that includes the newly owned watch.
 
+Creating ownership from a delivered Order Item is user-confirmed and idempotent. Returned items, gifts, and undelivered orders must not become User Watches automatically.
+
 ## MVP Boundaries
 
 MVP should include:
@@ -153,7 +175,7 @@ MVP should include:
 - Catalog domain model and database migrations.
 - Public catalog listing and watch pages.
 - Controlled filters and SEO-safe URLs.
-- Favorites, recently viewed, comparisons, and selection sessions.
+- Candidates, recently viewed, comparisons, and Selection Sessions.
 - User Watch Collection with manual and catalog-linked watches.
 - Rule-based Collection Intelligence.
 - Cart, checkout skeleton, orders, and provider adapter boundaries.

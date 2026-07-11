@@ -11,6 +11,7 @@ import {
 
 type WatchPageProps = Readonly<{
   params: Promise<{ brandSlug: string; referenceSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }>;
 
 export const dynamic = "force-dynamic";
@@ -87,7 +88,7 @@ function productStructuredData(watch: Awaited<ReturnType<typeof getPublicCatalog
   return data;
 }
 
-export default async function WatchReferencePage({ params }: WatchPageProps) {
+export default async function WatchReferencePage({ params, searchParams }: WatchPageProps) {
   const { brandSlug, referenceSlug } = await params;
   const resultState = await getPublicCatalogWatch({ brandSlug, referenceSlug })
     .then((watch) => ({ type: "ok" as const, watch }))
@@ -113,13 +114,15 @@ export default async function WatchReferencePage({ params }: WatchPageProps) {
   }
 
   const structuredData = productStructuredData(resultState.watch);
+  const query = await searchParams;
+  const collectionState = typeof query.collection === "string" ? query.collection : undefined;
 
   return (
     <>
       {structuredData ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       ) : null}
-      <CatalogWatchDetailPage watch={resultState.watch} />
+      <CatalogWatchDetailPage watch={resultState.watch} collectionState={collectionState} />
     </>
   );
 }

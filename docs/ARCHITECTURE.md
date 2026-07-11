@@ -31,6 +31,7 @@ src/
     collection-intelligence/
     manual-watch-matching/
     selection/
+    candidates/
     comparison/
     cart/
     orders/
@@ -108,6 +109,7 @@ Application services orchestrate workflows:
 
 - Catalog search and filter service.
 - Selection session service.
+- Candidate workspace and guest-to-user merge service.
 - Comparison service.
 - Cart merge and checkout service.
 - Order creation service.
@@ -119,6 +121,8 @@ Application services orchestrate workflows:
 - Admin authorization service.
 
 Services should call data access functions and domain rules. They should return typed results and user-safe errors.
+
+Cross-surface next-best actions are application read models. Journal, Watch Detail, Selection, Candidates, Compare, and User Watch Collection must not duplicate context/CTA decision logic in React components.
 
 ## Data Access
 
@@ -137,6 +141,14 @@ The catalog foundation uses explicit module boundaries under `src/modules/catalo
 - `domain/` for deterministic catalog rules such as reference normalization, money, slugs, and scores.
 - `application/` for typed query input parsing.
 - `infrastructure/` for server-only Supabase query functions.
+
+The User Watch Collection implementation follows the same boundary under `src/modules/user-watch-collection/`:
+
+- `domain/` for ownership types and validation;
+- `application/` for repository contracts, workflows, and authenticated Server Actions;
+- `infrastructure/` for owner-scoped Supabase reads/writes and private photo handling.
+
+UI routes and components consume these application contracts and do not accept `user_id` from client input.
 
 ## Authentication
 
