@@ -1,32 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
-import { Container } from "@/components/ui/container";
-import {
-  findJournalArticleVisualWatch,
-} from "@/modules/journal/application/journal-catalog-relations";
-import {
-  getPublishedJournalArticle,
-  listPublishedJournalArticles,
-} from "@/modules/journal/application/journal-repository";
+import { EditorialContainer } from "@/components/ui/editorial-primitives";
+import { findJournalArticleVisualWatch } from "@/modules/journal/application/journal-catalog-relations";
+import { getPublishedJournalArticle, listPublishedJournalArticles } from "@/modules/journal/application/journal-repository";
 import { getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import { isProminentCatalogImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import type { CatalogReadDataset, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
 import type { JournalArticle, JournalArticleCategory } from "@/modules/journal/domain/read-models";
 
 export const metadata: Metadata = {
   title: "Журнал",
   description: "Редакционные материалы Eternal Time о выборе, устройстве и культуре часов.",
-  alternates: {
-    canonical: "/journal",
-  },
+  alternates: { canonical: "/journal" },
 };
 
 const sectionLabels: Record<JournalArticleCategory, string> = {
   Гиды: "Гиды",
-  Материалы: "Материалы и устройство",
+  Материалы: "Механика и материалы",
   "Истории моделей": "Истории моделей",
   Стиль: "Стиль и посадка",
-  Механика: "Механика",
+  Механика: "Механика и материалы",
 };
 
 async function loadCatalogDataset(): Promise<CatalogReadDataset | null> {
@@ -37,52 +31,31 @@ async function loadCatalogDataset(): Promise<CatalogReadDataset | null> {
   }
 }
 
-function listFullPublishedArticles(): JournalArticle[] {
+function fullArticles(): JournalArticle[] {
   return listPublishedJournalArticles()
     .map((article) => getPublishedJournalArticle(article.slug))
     .filter((article): article is JournalArticle => Boolean(article));
 }
 
 function ArticleMeta({ article }: Readonly<{ article: JournalArticle }>) {
-  return (
-    <p className="journal-meta">
-      {article.category} / {article.readingTimeMinutes} мин / {article.publishedAt}
-    </p>
-  );
-}
-
-function ArticleLink({
-  article,
-  children,
-  className = "",
-}: Readonly<{
-  article: JournalArticle;
-  children: React.ReactNode;
-  className?: string;
-}>) {
-  return (
-    <Link href={`/journal/${article.slug}`} className={`journal-link ${className}`}>
-      {children}
-    </Link>
-  );
+  return <p className="journal-meta">{sectionLabels[article.category]} · {article.readingTimeMinutes} мин · {article.publishedAt}</p>;
 }
 
 function WatchPhoto({
   watch,
   caption,
   className = "",
+  slot = "journal-compact",
 }: Readonly<{
   watch: CatalogWatchDetail | null;
   caption: string;
   className?: string;
+  slot?: "journal-lead" | "journal-compact";
 }>) {
-  if (!watch || watch.primaryImage.kind === "none") {
-    return null;
-  }
-
+  if (!watch || watch.primaryImage.kind === "none" || !isProminentCatalogImage(watch.primaryImage)) return null;
   return (
     <figure className={`journal-photo ${className}`}>
-      <CatalogImage image={watch.primaryImage} className="journal-photo-image" />
+      <CatalogImage image={watch.primaryImage} presentation="guarded" compositionSlot={slot} className="journal-photo-image" />
       <figcaption className="journal-caption">{caption}</figcaption>
     </figure>
   );
@@ -90,142 +63,120 @@ function WatchPhoto({
 
 export default async function JournalPage() {
   const dataset = await loadCatalogDataset();
-  const articles = listFullPublishedArticles();
-  const coverArticle = articles.find((article) => findJournalArticleVisualWatch(article, dataset)) ?? articles[0];
-  const coverWatch = coverArticle ? findJournalArticleVisualWatch(coverArticle, dataset) : null;
-  const remaining = articles.filter((article) => article.slug !== coverArticle?.slug);
-  const visualArticles = remaining.filter((article) => findJournalArticleVisualWatch(article, dataset));
-  const textArticles = remaining.filter((article) => !findJournalArticleVisualWatch(article, dataset));
-  const wideArticle = visualArticles[0] ?? remaining[0];
-  const narrowArticle = textArticles[0] ?? visualArticles[1] ?? remaining[1];
-  const textStrip = textArticles.filter((article) => article.slug !== narrowArticle?.slug).slice(0, 3);
-  const photoFeature = visualArticles.find((article) => article.slug !== wideArticle?.slug) ?? visualArticles[0];
-  const readingList = articles.filter(
-    (article) =>
-      article.slug !== coverArticle?.slug &&
-      article.slug !== wideArticle?.slug &&
-      article.slug !== narrowArticle?.slug &&
-      article.slug !== photoFeature?.slug,
-  );
-  const categories = Array.from(new Set(articles.map((article) => article.category)));
+  const articles = fullArticles();
+  const lead = articles.find((article) => findJournalArticleVisualWatch(article, dataset)) ?? articles[0];
+  const leadWatch = lead ? findJournalArticleVisualWatch(lead, dataset) : null;
+  const hasLeadImage = Boolean(leadWatch?.primaryImage.kind !== "none" && leadWatch?.primaryImage && isProminentCatalogImage(leadWatch.primaryImage));
+  const remaining = articles.filter((article) => article.slug !== lead?.slug);
+  const secondary = remaining.slice(0, 3);
+  const compact = remaining.slice(3, 6);
+  const readingList = remaining.slice(6);
+  const groups = Array.from(new Set(articles.map((article) => sectionLabels[article.category]))).map((label) => ({
+    label,
+    count: articles.filter((article) => sectionLabels[article.category] === label).length,
+  }));
 
   return (
     <main className="journal-page">
-      <Container className="max-w-[var(--container-wide)] py-12 lg:py-20">
-        <header className="journal-issue-head">
-          <div>
-            <p className="type-label">Журнал Eternal Time</p>
-            <h1 className="journal-display mt-4 max-w-5xl text-balance">Часы как культура выбора, формы и привычки</h1>
+      <EditorialContainer className="journal-layout public-page">
+        <aside className="journal-sidebar">
+          <header>
+            <h1 className="journal-masthead">Журнал</h1>
+            <p>Идеи, истории и экспертиза о часах и времени</p>
+          </header>
+          <nav aria-label="Рубрики журнала" className="journal-category-list">
+            <span>
+              <strong>Все материалы</strong>
+              <em>{articles.length}</em>
+            </span>
+            {groups.map((group) => (
+              <span key={group.label}>
+                <strong>{group.label}</strong>
+                <em>{group.count}</em>
+              </span>
+            ))}
+          </nav>
+          <div className="journal-subscribe-note">
+            <p>Подборки, истории моделей и практические ориентиры для спокойного выбора.</p>
+            <Link href="/selection" className="editorial-button editorial-button-dark">Начать подбор</Link>
           </div>
-          <p className="journal-deck">
-            Материалы о моделях, механике, посадке и деталях без рыночного шума. Меньше витрины, больше взгляда.
-          </p>
-        </header>
+        </aside>
 
-        {coverArticle ? (
-          <section data-journal-layout="magazine-cover" className="journal-cover">
-            <div className="journal-cover-copy">
-              <ArticleMeta article={coverArticle} />
-              <ArticleLink article={coverArticle}>
-                <h2 className="journal-cover-title text-balance">{coverArticle.title}</h2>
-                <p className="journal-deck mt-6 max-w-2xl">{coverArticle.dek}</p>
-              </ArticleLink>
-            </div>
-            <ArticleLink article={coverArticle} className="journal-cover-media">
-              <WatchPhoto watch={coverWatch} caption={coverWatch?.title ?? coverArticle.category} className="aspect-[1.12/1]" />
-            </ArticleLink>
+        <div className="journal-main">
+          <header className="journal-topline">
+            <p>Время — больше, чем измерение. Это выбор, стиль и детали, которые остаются.</p>
+            <Link href="/selection" className="editorial-button">Перейти к подбору</Link>
+          </header>
+
+          <section data-journal-layout={hasLeadImage ? "lead-image" : "lead-text"} className={`journal-issue-grid ${hasLeadImage ? "" : "journal-issue-grid-text-led"}`}>
+            {lead ? (
+              <Link href={`/journal/${lead.slug}`} className="journal-link journal-cover">
+                <span className="journal-cover-copy">
+                  <ArticleMeta article={lead} />
+                  <strong className="journal-cover-title text-balance">{lead.title}</strong>
+                  <em>Читать статью</em>
+                </span>
+                {hasLeadImage ? (
+                  <span className="journal-cover-media">
+                    <WatchPhoto watch={leadWatch} caption={lead.category} className="aspect-[1.28/1]" slot="journal-lead" />
+                  </span>
+                ) : null}
+              </Link>
+            ) : null}
+
+            {secondary.length > 0 ? (
+              <div className="journal-right-stack">
+                {secondary.map((article) => (
+                  <Link key={article.slug} href={`/journal/${article.slug}`} className="journal-link journal-side-story">
+                    <span>
+                      <ArticleMeta article={article} />
+                      <strong>{article.title}</strong>
+                    </span>
+                    <WatchPhoto watch={findJournalArticleVisualWatch(article, dataset)} caption={article.category} className="aspect-[1.55/1]" slot="journal-compact" />
+                  </Link>
+                ))}
+              </div>
+            ) : null}
           </section>
-        ) : null}
 
-        {wideArticle && narrowArticle ? (
-          <section data-journal-layout="asymmetric-pair" className="journal-asymmetric">
-            <ArticleLink article={wideArticle} className="journal-asymmetric-wide">
-              <WatchPhoto
-                watch={findJournalArticleVisualWatch(wideArticle, dataset)}
-                caption={wideArticle.category}
-                className="mb-8 aspect-[1.55/1]"
-              />
-              <ArticleMeta article={wideArticle} />
-              <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-balance md:text-6xl">
-                {wideArticle.title}
-              </h2>
-              <p className="journal-copy mt-5 max-w-2xl">{wideArticle.dek}</p>
-            </ArticleLink>
+          {compact.length > 0 ? (
+            <section data-journal-layout="text-led" className="journal-text-strip">
+              <div className="journal-section-label">
+                <p className="type-label">Короткое чтение</p>
+                <p className="journal-mini-note mt-3">Материалы, которым не нужна большая иллюстрация.</p>
+              </div>
+              <div className="journal-text-columns">
+                {compact.map((article) => (
+                  <Link key={article.slug} href={`/journal/${article.slug}`} className="journal-link journal-text-note">
+                    <ArticleMeta article={article} />
+                    <h2 className="mt-4 text-2xl font-semibold leading-tight text-balance">{article.title}</h2>
+                    <p className="journal-copy mt-4">{article.dek}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
-            <ArticleLink article={narrowArticle} className="journal-asymmetric-narrow">
-              <ArticleMeta article={narrowArticle} />
-              <h2 className="mt-4 text-3xl font-semibold leading-tight text-balance">{narrowArticle.title}</h2>
-              <p className="journal-copy mt-5">{narrowArticle.dek}</p>
-            </ArticleLink>
+          <section data-journal-layout="editorial-quote" className="journal-quote-band">
+            <p>Идеальные часы — не о том, чтобы показывать время. Они о том, чтобы напоминать, как его ценить.</p>
           </section>
-        ) : null}
 
-        {textStrip.length > 0 ? (
-          <section data-journal-layout="text-led" className="journal-text-strip">
-            <div className="journal-section-label">
-              <p className="type-label">Без иллюстраций</p>
-              <p className="journal-mini-note">Текстовые материалы, где важнее понятная мысль, а не картинка.</p>
+          <section data-journal-layout="reading-list" className="journal-reading-list">
+            <div>
+              <p className="type-label">Читайте также</p>
+              <h2 className="mt-3 text-2xl font-semibold leading-tight">Близкие материалы</h2>
             </div>
-            <div className="journal-text-columns">
-              {textStrip.map((article) => (
-                <ArticleLink key={article.slug} article={article} className="journal-text-note">
-                  <ArticleMeta article={article} />
-                  <h2 className="mt-4 text-2xl font-semibold leading-tight text-balance">{article.title}</h2>
-                  <p className="journal-copy mt-4">{article.dek}</p>
-                </ArticleLink>
+            <div className="journal-list-lines">
+              {readingList.map((article) => (
+                <Link key={article.slug} href={`/journal/${article.slug}`} className="journal-list-line">
+                  <span>{article.title}</span>
+                  <span className="journal-meta">{sectionLabels[article.category]} · {article.readingTimeMinutes} мин</span>
+                </Link>
               ))}
             </div>
           </section>
-        ) : null}
-
-        <section data-journal-layout="editorial-quote" className="journal-quote-band">
-          <p>
-            Хорошая статья о часах не торопит к покупке. Она помогает увидеть пропорции, понять компромисс и спокойнее
-            выбрать вещь, которая останется с вами надолго.
-          </p>
-        </section>
-
-        {photoFeature ? (
-          <section data-journal-layout="full-bleed-photo" className="journal-photo-feature">
-            <ArticleLink article={photoFeature}>
-              <WatchPhoto
-                watch={findJournalArticleVisualWatch(photoFeature, dataset)}
-                caption={photoFeature.category}
-                className="aspect-[2.15/1]"
-              />
-              <div className="journal-photo-feature-copy">
-                <ArticleMeta article={photoFeature} />
-                <h2 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight text-balance md:text-6xl">
-                  {photoFeature.title}
-                </h2>
-              </div>
-            </ArticleLink>
-          </section>
-        ) : null}
-
-        <section data-journal-layout="reading-list" className="journal-reading-list">
-          <div>
-            <p className="type-label">Читайте также</p>
-            <h2 className="mt-3 text-3xl font-semibold leading-tight">Редакционная полка</h2>
-          </div>
-          <div className="journal-list-lines">
-            {readingList.map((article) => (
-              <ArticleLink key={article.slug} article={article} className="journal-list-line">
-                <span>{article.title}</span>
-                <span className="journal-meta">{sectionLabels[article.category]} / {article.readingTimeMinutes} мин</span>
-              </ArticleLink>
-            ))}
-            {readingList.length === 0
-              ? categories.map((category) => (
-                  <div key={category} className="journal-list-line">
-                    <span>{sectionLabels[category]}</span>
-                    <span className="journal-meta">Новые материалы появятся после публикации</span>
-                  </div>
-                ))
-              : null}
-          </div>
-        </section>
-      </Container>
+        </div>
+      </EditorialContainer>
     </main>
   );
 }

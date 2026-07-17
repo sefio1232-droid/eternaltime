@@ -1,0 +1,451 @@
+.section {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.36fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 5.5rem);
+  padding-block: clamp(4rem, 7vw, 7rem);
+  border-top: 1px solid rgb(16 22 27 / 0.1);
+  color: #10161b;
+}
+
+.sectionCopy {
+  display: grid;
+  align-content: start;
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+.eyebrow {
+  margin: 0;
+  color: #9d622d;
+  font-size: 0.72rem;
+  font-weight: 820;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.section h2,
+.finalCall h2 {
+  max-width: 15ch;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.45rem, 5.5vw, 5.7rem);
+  font-weight: 560;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.section p {
+  max-width: 36rem;
+  margin: 0;
+  color: #5b6166;
+  font-size: clamp(1rem, 1.16vw, 1.12rem);
+  line-height: 1.72;
+}
+
+.loopDiagram {
+  position: relative;
+  min-height: clamp(28rem, 42vw, 38rem);
+  overflow: hidden;
+}
+
+.loopDiagram::before {
+  position: absolute;
+  inset: 9% 8% 14%;
+  content: "";
+  border: 1px solid rgb(16 22 27 / 0.12);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+
+.loopDiagram > span {
+  position: absolute;
+  top: calc(49% + sin((var(--step-index) * 45deg)) * 37%);
+  left: calc(50% + cos((var(--step-index) * 45deg)) * 39%);
+  width: max-content;
+  color: #10161b;
+  font-size: 0.68rem;
+  font-weight: 820;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+}
+
+.watchFigure {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.watchFigure img {
+  width: 100%;
+  height: clamp(11rem, 18vw, 19rem);
+  object-fit: contain;
+  filter: drop-shadow(0 1.2rem 1.8rem rgb(16 22 27 / 0.12));
+}
+
+.watchFigure figcaption {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.watchFigure figcaption span {
+  color: #9d622d;
+  font-size: 0.64rem;
+  font-weight: 820;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.watchFigure figcaption strong,
+.watchFigure figcaption em {
+  overflow: hidden;
+  color: #10161b;
+  font-size: 0.82rem;
+  font-style: normal;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watchFigure figcaption em {
+  color: #5b6166;
+}
+
+.loopDiagram .watchFigure {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(19rem, 42%);
+  transform: translate(-50%, -50%);
+}
+
+.axisSystem {
+  display: grid;
+  gap: clamp(1.25rem, 2vw, 2rem);
+  align-content: center;
+}
+
+.axisRow {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr) 10rem;
+  gap: 1rem;
+  align-items: center;
+  color: #10161b;
+}
+
+.axisRow span,
+.axisRow em {
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 820;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.axisRow em {
+  color: #5b6166;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+}
+
+.axisRow i {
+  position: relative;
+  height: 1px;
+  background: rgb(16 22 27 / 0.14);
+}
+
+.axisRow i::after {
+  position: absolute;
+  inset: -1px auto -1px 0;
+  width: var(--axis-fill);
+  content: "";
+  background: #c28a3a;
+}
+
+.selectionWatches,
+.candidateLine,
+.collectionPreview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 2rem);
+  align-items: end;
+}
+
+.compareBoard {
+  display: grid;
+  gap: clamp(1.5rem, 2.5vw, 2.5rem);
+  align-content: center;
+}
+
+.compareRows {
+  display: grid;
+  border-top: 1px solid rgb(16 22 27 / 0.12);
+}
+
+.compareRows p {
+  display: grid;
+  max-width: none;
+  grid-template-columns: minmax(9rem, 0.34fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding-block: 0.9rem;
+  border-bottom: 1px solid rgb(16 22 27 / 0.1);
+}
+
+.compareRows span {
+  color: #9d622d;
+  font-size: 0.68rem;
+  font-weight: 820;
+  letter-spacing: 0.14em;
+}
+
+.compareRows strong {
+  color: #10161b;
+  font-weight: 620;
+}
+
+.purchaseJourney {
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+}
+
+.purchaseTrack {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  align-self: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-block: 1px solid rgb(16 22 27 / 0.12);
+}
+
+.purchaseTrack li {
+  position: relative;
+  min-height: 8rem;
+  padding: 1.1rem;
+  border-right: 1px solid rgb(16 22 27 / 0.1);
+  color: #10161b;
+  font-size: 0.7rem;
+  font-weight: 820;
+  letter-spacing: 0.12em;
+}
+
+.purchaseTrack li:last-child {
+  border-right: 0;
+}
+
+.purchaseTrack li::after {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  content: "";
+  border-radius: 999px;
+  background: #c28a3a;
+}
+
+.collectionStory {
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(clamp(1rem, 4vw, 4rem), calc(50vw - 720px));
+  border-top: 0;
+  background:
+    radial-gradient(ellipse at 77% 30%, rgb(194 138 58 / 0.18), transparent 35%),
+    linear-gradient(135deg, #102638, #0c1b28);
+  color: #fbf8f2;
+}
+
+.collectionStory .eyebrow,
+.collectionStory .watchFigure figcaption span {
+  color: #c28a3a;
+}
+
+.collectionStory p,
+.collectionStory .watchFigure figcaption em {
+  color: rgb(251 248 242 / 0.66);
+}
+
+.collectionStory h2,
+.collectionStory .watchFigure figcaption strong {
+  color: #fbf8f2;
+}
+
+.collectionPreview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.collectionIntelligence {
+  background:
+    radial-gradient(ellipse at 90% 12%, rgb(45 98 141 / 0.12), transparent 31%),
+    linear-gradient(180deg, #fbf8f2, #f5f1e9);
+}
+
+.insightPanel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  align-self: center;
+  background: rgb(16 22 27 / 0.12);
+}
+
+.insightPanel p {
+  display: grid;
+  min-height: 16rem;
+  max-width: none;
+  align-content: space-between;
+  padding: 1.25rem;
+  background: #fbf8f2;
+}
+
+.insightPanel span {
+  color: #c28a3a;
+  font-size: 0.72rem;
+  font-weight: 820;
+}
+
+.insightPanel strong {
+  color: #10161b;
+  font-size: 1.15rem;
+}
+
+.insightPanel em {
+  color: #5b6166;
+  font-style: normal;
+}
+
+.journalLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+  gap: 1px;
+  align-self: stretch;
+  background: rgb(16 22 27 / 0.12);
+}
+
+.journalLead,
+.journalRows a {
+  display: grid;
+  gap: 1rem;
+  align-content: end;
+  min-height: 18rem;
+  padding: clamp(1.25rem, 2vw, 2rem);
+  background: #fbf8f2;
+  color: #10161b;
+}
+
+.journalRows {
+  display: grid;
+  gap: 1px;
+}
+
+.journalRows a {
+  min-height: 8.95rem;
+}
+
+.journalLayout span,
+.journalLayout em {
+  color: #9d622d;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 820;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.journalLayout strong {
+  max-width: 28rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.2vw, 2.3rem);
+  font-weight: 560;
+  line-height: 1.08;
+}
+
+.finalCall {
+  display: grid;
+  min-height: clamp(28rem, 44vw, 40rem);
+  place-items: center;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: 1.25rem;
+  border-top: 0;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgb(194 138 58 / 0.16), transparent 36%),
+    linear-gradient(135deg, #10161b, #13283a);
+  color: #fbf8f2;
+  text-align: center;
+}
+
+.finalCall h2 {
+  max-width: 12ch;
+  color: #fbf8f2;
+}
+
+.finalCall p {
+  color: rgb(251 248 242 / 0.7);
+}
+
+.finalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
+.finalCall :global(.editorial-button:not(.editorial-button-dark)) {
+  border-color: rgb(251 248 242 / 0.32);
+  color: #fbf8f2;
+}
+
+@media (max-width: 1000px) {
+  .section,
+  .purchaseJourney {
+    grid-template-columns: 1fr;
+  }
+
+  .section h2,
+  .finalCall h2 {
+    max-width: 13ch;
+  }
+
+  .journalLayout,
+  .purchaseTrack {
+    grid-template-columns: 1fr;
+  }
+
+  .purchaseTrack li {
+    min-height: 4.5rem;
+    border-right: 0;
+    border-bottom: 1px solid rgb(16 22 27 / 0.1);
+  }
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding-block: 3.25rem;
+  }
+
+  .loopDiagram {
+    min-height: 25rem;
+  }
+
+  .loopDiagram > span {
+    font-size: 0.56rem;
+  }
+
+  .axisRow,
+  .compareRows p {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .selectionWatches,
+  .candidateLine,
+  .collectionPreview,
+  .insightPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .watchFigure img {
+    height: 13rem;
+  }
+}

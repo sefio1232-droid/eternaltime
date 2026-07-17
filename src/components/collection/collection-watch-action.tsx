@@ -40,7 +40,7 @@ export async function CollectionWatchAction({
   if (existingCount > 0) {
     return (
       <div className="grid gap-3 border-t border-[var(--border)] pt-4">
-        <p className="text-sm">Эта reference уже есть в вашей коллекции ({existingCount}).</p>
+        <p className="text-sm">Эта модель уже есть в вашей коллекции ({existingCount}).</p>
         <div className="flex flex-wrap gap-3">
           <ButtonLink href="/collection">Открыть коллекцию</ButtonLink>
           <form action={createCatalogUserWatchAction}>

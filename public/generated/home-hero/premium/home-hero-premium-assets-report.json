@@ -1,0 +1,1196 @@
+{
+  "generatedAt": "2026-07-14T02:43:46.270Z",
+  "sourcePlanPath": "imports/generated/catalog-image-upload-plan.json",
+  "outputDir": "public/generated/home-hero/premium",
+  "previewPath": "public/generated/home-hero/premium/home-hero-premium-preview.jpg",
+  "previewBytes": 322673,
+  "angleComparisonPath": "public/generated/home-hero/premium/main-watch-angle-comparison.jpg",
+  "angleComparisonBytes": 148051,
+  "pr100AngleReview": {
+    "referenceSlug": "t1504171104100",
+    "imageClassifications": [
+      {
+        "sourceImageIndex": 1,
+        "view": "front view",
+        "heroSuitability": "usable only as a flat catalogue/front asset",
+        "notes": "Dial, bezel, crown and pushers are readable, but the watch is strictly frontal and lacks product-scene movement."
+      },
+      {
+        "sourceImageIndex": 2,
+        "view": "side view",
+        "heroSuitability": "not suitable",
+        "notes": "Shows case thickness and crown/pushers, but the dial is not readable enough for a homepage hero."
+      },
+      {
+        "sourceImageIndex": 3,
+        "view": "back view",
+        "heroSuitability": "not suitable",
+        "notes": "Back/caseback source; useful for detail pages, not for the homepage hero center."
+      }
+    ],
+    "selectedMainReferenceSlug": "mtgb3000dn1a",
+    "selectedMainReason": "No high-quality three-quarter PR 100 Chronograph source exists in the current manifest, and the Tissot fallback sources remain too frontal. The hero uses the best real perspective product shot from the approved priority list."
+  },
+  "assets": [
+    {
+      "candidateId": "tissot:T1584071105100",
+      "brand": "Tissot",
+      "title": "Tissot Classic Dream 40mm",
+      "referenceNormalized": "T1584071105100",
+      "publicPriceRub": 58000,
+      "applyEligibility": "eligible",
+      "scenario": "01 Каждый день",
+      "role": "main",
+      "model": "Tissot Classic Dream 40mm",
+      "referenceSlug": "t1584071105100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": null,
+      "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw02a9a684/product-pictures/2f790d95-4663-4668-9a3f-bbec89aac0d2_T158-407-11-051-00.png",
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw02a9a684/product-pictures/2f790d95-4663-4668-9a3f-bbec89aac0d2_T158-407-11-051-00.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 48.26,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 68.09,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw56eeb662/product-pictures/6e79da4c-470a-46ee-b810-73e1f49495c9_T158-407-11-051-00_PROFIL.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 8.09,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": true,
+          "transparentPixelPercent": 92.8,
+          "suitableForHero": false
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwcf76f7ac/product-pictures/dddfcba3-0004-4c87-a6e2-bb27e7c6b750_T158-407-11-051-00_B1.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 32.49,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 78.02,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-classic-dream-40mm-main.png",
+      "outputDimensions": {
+        "width": 1800,
+        "height": 1900
+      },
+      "outputBytes": 743237,
+      "removeBackground": true,
+      "backgroundThreshold": 246,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 332,
+        "top": 7,
+        "width": 1074,
+        "height": 1666,
+        "padding": 83
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.94,
+        "targetObjectHeightRatio": 0.82,
+        "resizedWidth": 1387,
+        "resizedHeight": 1387,
+        "left": 197,
+        "top": 261,
+        "outputCanvasWidth": 1800,
+        "outputCanvasHeight": 1900
+      },
+      "selectionReason": "Clean 1680px frontal Tissot image, calm black dial, full case visibility, and a 58 000 RUB public price make it stronger for a premium everyday hero than low-price Casio options.",
+      "includeInContactSheet": true,
+      "reusedExistingOutput": true,
+      "reuseReason": "Existing generated output reused because source image could not be fetched during this run: Remote image fetch failed for t1584071105100: https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw02a9a684/product-pictures/2f790d95-4663-4668-9a3f-bbec89aac0d2_T158-407-11-051-00.png (fetch failed)"
+    },
+    {
+      "candidateId": "tissot:T1504171104100",
+      "brand": "Tissot",
+      "title": "Tissot PR 100 40mm Chronograph",
+      "referenceNormalized": "T1504171104100",
+      "publicPriceRub": 45678,
+      "applyEligibility": "eligible",
+      "scenario": "01 Каждый день",
+      "role": "secondary",
+      "model": "Tissot PR 100 40mm Chronograph",
+      "referenceSlug": "t1504171104100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_1.webp",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_1.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0.09,
+          "objectAreaPercent": 60.71,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 63.18,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_2.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 6.89,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 93.91,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_3.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 24.98,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 82.76,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-pr100-chronograph-secondary.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1700
+      },
+      "outputBytes": 853309,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 604,
+      "cropBounds": {
+        "left": 178,
+        "top": 36,
+        "width": 622,
+        "height": 735,
+        "padding": 36
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.92,
+        "targetObjectHeightRatio": 0.8,
+        "resizedWidth": 1207,
+        "resizedHeight": 1207,
+        "left": 189,
+        "top": 247,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1700
+      },
+      "selectionReason": "Three local images, readable blue chronograph dial, and a 45 678 RUB price make it a useful supporting daily watch without becoming the hero center.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "tissot:T1504101605100",
+      "brand": "Tissot",
+      "title": "Tissot PR 100 40mm",
+      "referenceNormalized": "T1504101605100",
+      "publicPriceRub": 38000,
+      "applyEligibility": "eligible",
+      "scenario": "02 Под рубашку",
+      "role": "main",
+      "model": "Tissot PR 100 40mm",
+      "referenceSlug": "t1504101605100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": "images/Tissot/T150.410.16.051.00/T150.410.16.051.00_1.webp",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Tissot/T150.410.16.051.00/T150.410.16.051.00_1.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 48.56,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 67.84,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Tissot/T150.410.16.051.00/T150.410.16.051.00_2.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 5.41,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 95.57,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Tissot/T150.410.16.051.00/T150.410.16.051.00_3.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 24.71,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 83.23,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-pr100-40mm-leather-main.png",
+      "outputDimensions": {
+        "width": 1700,
+        "height": 1800
+      },
+      "outputBytes": 602723,
+      "removeBackground": true,
+      "backgroundThreshold": 246,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 329,
+        "top": 9,
+        "width": 1079,
+        "height": 1662,
+        "padding": 82
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.93,
+        "targetObjectHeightRatio": 0.8,
+        "resizedWidth": 1296,
+        "resizedHeight": 1296,
+        "left": 196,
+        "top": 252,
+        "outputCanvasWidth": 1700,
+        "outputCanvasHeight": 1800
+      },
+      "selectionReason": "Leather strap, black dial, sapphire crystal data, and 1680px source quality give the shirt scenario a clean dress-watch read.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "tissot:T1502101104100",
+      "brand": "Tissot",
+      "title": "Tissot PR 100 34mm",
+      "referenceNormalized": "T1502101104100",
+      "publicPriceRub": 38000,
+      "applyEligibility": "eligible",
+      "scenario": "02 Под рубашку",
+      "role": "secondary",
+      "model": "Tissot PR 100 34mm",
+      "referenceSlug": "t1502101104100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_1.webp",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_1.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 41.96,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 74.54,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_2.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 4.61,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 96.32,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_3.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 18.16,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 87.89,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-pr100-34mm-secondary.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1700
+      },
+      "outputBytes": 525575,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 392,
+        "top": 7,
+        "width": 954,
+        "height": 1663,
+        "padding": 82
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.92,
+        "targetObjectHeightRatio": 0.78,
+        "resizedWidth": 1207,
+        "resizedHeight": 1207,
+        "left": 189,
+        "top": 247,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1700
+      },
+      "selectionReason": "A compact Tissot with a clean 1680px frontal source supports the dress scenario without relying on unstable low-resolution Orient remote imagery.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "tissot:T1204171104101",
+      "brand": "Tissot",
+      "title": "Tissot Seastar 1000 Chronograph 45.5mm",
+      "referenceNormalized": "T1204171104101",
+      "publicPriceRub": 65000,
+      "applyEligibility": "eligible",
+      "scenario": "03 Путешествия",
+      "role": "main",
+      "model": "Tissot Seastar 1000 Chronograph 45.5mm",
+      "referenceSlug": "t1204171104101",
+      "selectedSourceImageIndex": 2,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": null,
+      "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw85b4a174/product-pictures/1b126cfd-8f82-4e1b-af48-dfb8516e8d08_T120_417_11_041_01.png",
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwf803dd5f/product-pictures/bb6e4cb6-cb1a-456a-89bb-a5c57566501d_T120-417-11-041-01_shadow.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 63.3,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 59.53,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw85b4a174/product-pictures/1b126cfd-8f82-4e1b-af48-dfb8516e8d08_T120_417_11_041_01.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 55.24,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 63.02,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwc837a932/product-pictures/f8ede51c-2336-40e7-898b-cac35e641e3f_T605-046-894_ZOOM.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 21.88,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 81.71,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-seastar-1000-chrono-main.png",
+      "outputDimensions": {
+        "width": 1800,
+        "height": 1900
+      },
+      "outputBytes": 1115951,
+      "removeBackground": true,
+      "backgroundThreshold": 246,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 277,
+        "top": 8,
+        "width": 1204,
+        "height": 1663,
+        "padding": 82
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.94,
+        "targetObjectHeightRatio": 0.82,
+        "resizedWidth": 1387,
+        "resizedHeight": 1387,
+        "left": 199,
+        "top": 257,
+        "outputCanvasWidth": 1800,
+        "outputCanvasHeight": 1900
+      },
+      "selectionReason": "The 1680px frontal Seastar source has stronger source quality than the 800px shadow image and matches travel through water resistance and chronograph utility.",
+      "includeInContactSheet": true,
+      "reusedExistingOutput": true,
+      "reuseReason": "Existing generated output reused because source image could not be fetched during this run: Remote image fetch failed for t1204171104101: https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwf803dd5f/product-pictures/bb6e4cb6-cb1a-456a-89bb-a5c57566501d_T120-417-11-041-01_shadow.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800 (fetch failed)"
+    },
+    {
+      "candidateId": "casio:GBDH10001A4",
+      "brand": "Casio",
+      "title": "Casio GBD-H1000-1A4",
+      "referenceNormalized": "GBDH10001A4",
+      "publicPriceRub": 60000,
+      "applyEligibility": "eligible",
+      "scenario": "03 Путешествия",
+      "role": "secondary",
+      "model": "Casio GBD-H1000-1A4",
+      "referenceSlug": "gbdh10001a4",
+      "selectedSourceImageIndex": 2,
+      "sourcePackage": "casio_for_it_latest_with_photos_repacked (1).zip",
+      "sourceZipEntry": "images/Casio/GBD-H1000-1A4/GBD-H1000-1A4_2.png",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 408,
+        "height": 490
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Casio/GBD-H1000-1A4/GBD-H1000-1A4_1.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 408,
+            "height": 544
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 53.36,
+          "objectAreaPercent": 70.49,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Casio/GBD-H1000-1A4/GBD-H1000-1A4_2.png",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 408,
+            "height": 490
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 85.34,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 37.31,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/casio-gbd-h1000-1a4-secondary.png",
+      "outputDimensions": {
+        "width": 1500,
+        "height": 1700
+      },
+      "outputBytes": 1059015,
+      "removeBackground": true,
+      "backgroundThreshold": 238,
+      "channelSpreadTolerance": 28,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 408,
+        "height": 490,
+        "padding": 38
+      },
+      "wasCropped": false,
+      "normalizedPlacement": {
+        "objectScale": 0.9,
+        "targetObjectHeightRatio": 0.74,
+        "resizedWidth": 943,
+        "resizedHeight": 1132,
+        "left": 279,
+        "top": 294,
+        "outputCanvasWidth": 1500,
+        "outputCanvasHeight": 1700
+      },
+      "selectionReason": "A mid-segment G-Shock with real 60 000 RUB price and travel/sport functions; source is lower resolution, so it is not promoted to the main hero asset.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "casio:MTGB3000DN1A",
+      "brand": "Casio",
+      "title": "Casio MTG-B3000DN-1A",
+      "referenceNormalized": "MTGB3000DN1A",
+      "publicPriceRub": 100000,
+      "applyEligibility": "eligible",
+      "scenario": "05 Спорт",
+      "role": "main",
+      "model": "Casio MTG-B3000DN-1A",
+      "referenceSlug": "mtgb3000dn1a",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "casio_for_it_latest_with_photos_repacked (1).zip",
+      "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_1.png",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 2000,
+        "height": 2000
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_1.png",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2000
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 66.38,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 51.91,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_2.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2000
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 64.65,
+          "objectAreaPercent": 54.22,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_3.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2001
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 12.32,
+          "objectAreaPercent": 100,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 4,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_4.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2000
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 86.74,
+          "objectAreaPercent": 24.6,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": false
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/casio-mtg-b3000dn-1a-main.png",
+      "outputDimensions": {
+        "width": 1800,
+        "height": 1900
+      },
+      "outputBytes": 2376257,
+      "removeBackground": true,
+      "backgroundThreshold": 238,
+      "channelSpreadTolerance": 30,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 176,
+        "top": 0,
+        "width": 1648,
+        "height": 2000,
+        "padding": 123
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.94,
+        "targetObjectHeightRatio": 0.82,
+        "resizedWidth": 1387,
+        "resizedHeight": 1387,
+        "left": 201,
+        "top": 257,
+        "outputCanvasWidth": 1800,
+        "outputCanvasHeight": 1900
+      },
+      "selectionReason": "Premium 100 000 RUB G-Shock MT-G with 2000px imagery, strong case architecture, and a clear sport character; not a low-price digital Casio.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "tissot:T1202173306100",
+      "brand": "Tissot",
+      "title": "Tissot Seastar 1000 38mm",
+      "referenceNormalized": "T1202173306100",
+      "publicPriceRub": 61000,
+      "applyEligibility": "eligible",
+      "scenario": "05 Спорт",
+      "role": "secondary",
+      "model": "Tissot Seastar 1000 38mm",
+      "referenceSlug": "t1202173306100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": null,
+      "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw5aeb24f9/product-pictures/f5586f80-dd51-444a-9e2c-b31e7e69351c_T120-217-33-061-00.png",
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw5aeb24f9/product-pictures/f5586f80-dd51-444a-9e2c-b31e7e69351c_T120-217-33-061-00.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 43.98,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 72.08,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw9cce00f7/product-pictures/d75af1c2-0270-4c3b-b645-3b8bae31bed7_T120-217-33-061-00_PROFIL.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 7.17,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": true,
+          "transparentPixelPercent": 93.64,
+          "suitableForHero": false
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw58545eb2/product-pictures/e2799532-f46b-4bd9-88e5-6f212b1e21dd_T120-217-33-061-00_B1.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 23.58,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 83.73,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-seastar-1000-38mm-secondary.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1700
+      },
+      "outputBytes": 528180,
+      "removeBackground": true,
+      "backgroundThreshold": 246,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 362,
+        "top": 48,
+        "width": 1023,
+        "height": 1593,
+        "padding": 79
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.92,
+        "targetObjectHeightRatio": 0.78,
+        "resizedWidth": 1207,
+        "resizedHeight": 1207,
+        "left": 191,
+        "top": 247,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1700
+      },
+      "selectionReason": "Compact Seastar gives sport a calmer Swiss alternative while keeping strong Tissot image quality.",
+      "includeInContactSheet": true,
+      "reusedExistingOutput": true,
+      "reuseReason": "Existing generated output reused because source image could not be fetched during this run: Remote image fetch failed for t1202173306100: https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw5aeb24f9/product-pictures/f5586f80-dd51-444a-9e2c-b31e7e69351c_T120-217-33-061-00.png (fetch failed)"
+    },
+    {
+      "candidateId": "tissot:T1374073305100",
+      "brand": "Tissot",
+      "title": "Tissot PRX Powermatic 80 40mm",
+      "referenceNormalized": "T1374073305100",
+      "publicPriceRub": 101010,
+      "applyEligibility": "eligible",
+      "scenario": "06 В коллекцию",
+      "role": "main",
+      "model": "Tissot PRX Powermatic 80 40mm",
+      "referenceSlug": "t1374073305100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": null,
+      "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw66243f3d/product-pictures/a56e8842-e93e-482a-b6bb-fb5dc223c496_T137-407-33-051-00_Shadow-png.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+      "sourceDimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw66243f3d/product-pictures/a56e8842-e93e-482a-b6bb-fb5dc223c496_T137-407-33-051-00_Shadow-png.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0.05,
+          "objectAreaPercent": 61.02,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 61.65,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwd5960041/product-pictures/7472fccc-5e69-4187-8560-1460f33da85b_T137_407_33_051_00_PROFIL.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 5.55,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": true,
+          "transparentPixelPercent": 95.21,
+          "suitableForHero": false
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw6c772cad/product-pictures/73b5d2e0-c91f-419e-b069-901a9f3b6d68_T137_407_33_051_00_B1.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 20.3,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 83.99,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-prx-powermatic-80-main.png",
+      "outputDimensions": {
+        "width": 1800,
+        "height": 1900
+      },
+      "outputBytes": 1325364,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 314,
+      "cropBounds": {
+        "left": 175,
+        "top": 35,
+        "width": 625,
+        "height": 735,
+        "padding": 36
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.94,
+        "targetObjectHeightRatio": 0.82,
+        "resizedWidth": 1387,
+        "resizedHeight": 1387,
+        "left": 203,
+        "top": 257,
+        "outputCanvasWidth": 1800,
+        "outputCanvasHeight": 1900
+      },
+      "selectionReason": "The 101 010 RUB PRX Powermatic is the strongest collection-upgrade signal: recognizable integrated case, mechanical movement, and distinctive gold/black visual.",
+      "includeInContactSheet": true,
+      "reusedExistingOutput": true,
+      "reuseReason": "Existing generated output reused because source image could not be fetched during this run: Remote image fetch failed for t1374073305100: https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw66243f3d/product-pictures/a56e8842-e93e-482a-b6bb-fb5dc223c496_T137-407-33-051-00_Shadow-png.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800 (fetch failed)"
+    },
+    {
+      "candidateId": "tissot:T1204171705103",
+      "brand": "Tissot",
+      "title": "Tissot Seastar 1000 Chronograph 45.5mm",
+      "referenceNormalized": "T1204171705103",
+      "publicPriceRub": 68000,
+      "applyEligibility": "eligible",
+      "scenario": "06 В коллекцию",
+      "role": "secondary",
+      "model": "Tissot Seastar 1000 Chronograph 45.5mm",
+      "referenceSlug": "t1204171705103",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": null,
+      "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw9c3c1b7e/product-pictures/8d598a99-895e-473a-a0c6-95adff2a5f75_T120_417_17_051_03.png",
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw9c3c1b7e/product-pictures/8d598a99-895e-473a-a0c6-95adff2a5f75_T120_417_17_051_03.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 56.09,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 62.24,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw70e41dea/product-pictures/3c4de7fe-9998-4030-a57f-b8cc29130777_T120_417_17_051_03_PROFIL.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 8.18,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": true,
+          "transparentPixelPercent": 92.84,
+          "suitableForHero": false
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw0c870ff1/product-pictures/15333c8c-44c8-423f-b578-4392b1f5e9b4_T120-417-17-051-03_B1.png",
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 30.35,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 79.12,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/tissot-seastar-black-chrono-secondary.png",
+      "outputDimensions": {
+        "width": 1700,
+        "height": 1800
+      },
+      "outputBytes": 1088181,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 277,
+        "top": 8,
+        "width": 1220,
+        "height": 1663,
+        "padding": 82
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.92,
+        "targetObjectHeightRatio": 0.78,
+        "resizedWidth": 1282,
+        "resizedHeight": 1282,
+        "left": 203,
+        "top": 259,
+        "outputCanvasWidth": 1700,
+        "outputCanvasHeight": 1800
+      },
+      "selectionReason": "A black Seastar chronograph adds a robust collection-counterpoint with high-quality Tissot source imagery.",
+      "includeInContactSheet": true,
+      "reusedExistingOutput": true,
+      "reuseReason": "Existing generated output reused because source image could not be fetched during this run: Remote image fetch failed for t1204171705103: https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw9c3c1b7e/product-pictures/8d598a99-895e-473a-a0c6-95adff2a5f75_T120_417_17_051_03.png (fetch failed)"
+    },
+    {
+      "candidateId": "casio:MTGB3000DN1A",
+      "brand": "Casio",
+      "title": "Casio MTG-B3000DN-1A",
+      "referenceNormalized": "MTGB3000DN1A",
+      "publicPriceRub": 100000,
+      "applyEligibility": "eligible",
+      "scenario": "Angle selected",
+      "role": "selected-perspective",
+      "model": "Casio MTG-B3000DN-1A",
+      "referenceSlug": "mtgb3000dn1a",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "casio_for_it_latest_with_photos_repacked (1).zip",
+      "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_1.png",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 2000,
+        "height": 2000
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_1.png",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2000
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 66.38,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 51.91,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_2.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2000
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 64.65,
+          "objectAreaPercent": 54.22,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_3.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2001
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 12.32,
+          "objectAreaPercent": 100,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 4,
+          "sourceZipEntry": "images/Casio/MTG-B3000DN-1A/MTG-B3000DN-1A_4.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 2000,
+            "height": 2000
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 86.74,
+          "objectAreaPercent": 24.6,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": false
+        }
+      ],
+      "outputPath": "public/generated/home-hero/premium/casio-mtg-b3000dn-1a-perspective.png",
+      "outputDimensions": {
+        "width": 1900,
+        "height": 1900
+      },
+      "outputBytes": 2664413,
+      "removeBackground": true,
+      "backgroundThreshold": 238,
+      "channelSpreadTolerance": 30,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 195,
+        "top": 0,
+        "width": 1610,
+        "height": 2000,
+        "padding": 104
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.94,
+        "targetObjectHeightRatio": 0.84,
+        "resizedWidth": 1465,
+        "resizedHeight": 1465,
+        "left": 200,
+        "top": 218,
+        "outputCanvasWidth": 1900,
+        "outputCanvasHeight": 1900
+      },
+      "selectionReason": "T150.417.11.041.00 has only front, side, and back images; available Tissot fallback sources remain too frontal. This premium MT-G source is the strongest real perspective product shot in the requested price band.",
+      "includeInContactSheet": true
+    }
+  ]
+}

@@ -18,7 +18,7 @@ export function QuickAddForm({ hasError = false }: Readonly<{ hasError?: boolean
           <input name="modelName" maxLength={160} className="control-surface px-3" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Артикул / reference <span className="font-normal text-[var(--text-muted)]">необязательно</span>
+          Код модели <span className="font-normal text-[var(--text-muted)]">необязательно</span>
           <input name="reference" maxLength={120} className="control-surface px-3" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">

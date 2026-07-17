@@ -1,0 +1,567 @@
+{
+  "generatedAt": "2026-07-17T07:25:56.352Z",
+  "sourceModel": "src/components/home/home-scenario-model.ts",
+  "count": 16,
+  "records": [
+    {
+      "reference": "EFK-100D-2A",
+      "normalizedReference": "EFK100D2A",
+      "originalPath": "/generated/home-hero/candidates/04-first-mechanical/main-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/candidates/04-first-mechanical/main-01.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 390,
+        "top": 150,
+        "width": 920,
+        "height": 1500
+      },
+      "transparentMargins": {
+        "top": 150,
+        "right": 390,
+        "bottom": 150,
+        "left": 390
+      },
+      "visibleAreaRatio": 0.451,
+      "crop": {
+        "left": 337,
+        "top": 97,
+        "width": 1026,
+        "height": 1606,
+        "padding": 53
+      },
+      "normalizedWidth": 1026,
+      "normalizedHeight": 1606,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.02,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 1671789,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "GBD-H1000-1A4",
+      "normalizedReference": "GBDH10001A4",
+      "originalPath": "/generated/home-hero/final/gbdh10001a4/frame-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/gbdh10001a4/frame-01.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 690,
+        "top": 744,
+        "width": 320,
+        "height": 316
+      },
+      "transparentMargins": {
+        "top": 744,
+        "right": 690,
+        "bottom": 740,
+        "left": 690
+      },
+      "visibleAreaRatio": 0.033,
+      "crop": {
+        "left": 679,
+        "top": 733,
+        "width": 342,
+        "height": 338,
+        "padding": 11
+      },
+      "normalizedWidth": 342,
+      "normalizedHeight": 338,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 122016,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "MTG-B3000DN-1A",
+      "normalizedReference": "MTGB3000DN1A",
+      "originalPath": "/generated/home-hero/candidates/05-sport/alt-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/candidates/05-sport/alt-01.png",
+      "sourceWidth": 1800,
+      "sourceHeight": 1900,
+      "visibleBounds": {
+        "left": 286,
+        "top": 293,
+        "width": 973,
+        "height": 1314
+      },
+      "transparentMargins": {
+        "top": 293,
+        "right": 541,
+        "bottom": 293,
+        "left": 286
+      },
+      "visibleAreaRatio": 0.3738,
+      "crop": {
+        "left": 240,
+        "top": 247,
+        "width": 1065,
+        "height": 1406,
+        "padding": 46
+      },
+      "normalizedWidth": 1065,
+      "normalizedHeight": 1406,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.0436,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 2317779,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "MTG-B3000DN-1A",
+      "normalizedReference": "MTGB3000DN1A",
+      "originalPath": "/generated/home-hero/candidates/06-collection/alt-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/candidates/06-collection/alt-01.png",
+      "sourceWidth": 1900,
+      "sourceHeight": 1900,
+      "visibleBounds": {
+        "left": 276,
+        "top": 256,
+        "width": 1027,
+        "height": 1388
+      },
+      "transparentMargins": {
+        "top": 256,
+        "right": 597,
+        "bottom": 256,
+        "left": 276
+      },
+      "visibleAreaRatio": 0.3949,
+      "crop": {
+        "left": 227,
+        "top": 207,
+        "width": 1125,
+        "height": 1486,
+        "padding": 49
+      },
+      "normalizedWidth": 1125,
+      "normalizedHeight": 1486,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.0364,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 2599971,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "RA-AC0M03S10B",
+      "normalizedReference": "RAAC0M03S10B",
+      "originalPath": "/generated/home-hero/final/raac0m03s10b/frame-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/raac0m03s10b/frame-01.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 747,
+        "top": 740,
+        "width": 207,
+        "height": 320
+      },
+      "transparentMargins": {
+        "top": 740,
+        "right": 746,
+        "bottom": 740,
+        "left": 747
+      },
+      "visibleAreaRatio": 0.0216,
+      "crop": {
+        "left": 736,
+        "top": 729,
+        "width": 229,
+        "height": 342,
+        "padding": 11
+      },
+      "normalizedWidth": 229,
+      "normalizedHeight": 342,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 56653,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "RA-AC0M03S10B",
+      "normalizedReference": "RAAC0M03S10B",
+      "originalPath": "/generated/home-hero/final/raac0m03s10b/frame-02.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/raac0m03s10b/frame-02.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 708,
+        "top": 750,
+        "width": 203,
+        "height": 298
+      },
+      "transparentMargins": {
+        "top": 750,
+        "right": 789,
+        "bottom": 752,
+        "left": 708
+      },
+      "visibleAreaRatio": 0.0198,
+      "crop": {
+        "left": 698,
+        "top": 740,
+        "width": 223,
+        "height": 318,
+        "padding": 10
+      },
+      "normalizedWidth": 223,
+      "normalizedHeight": 318,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 69777,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "RA-AC0Q03S10B",
+      "normalizedReference": "RAAC0Q03S10B",
+      "originalPath": "/generated/home-hero/final/raac0q03s10b/frame-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/raac0q03s10b/frame-01.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 709,
+        "top": 746,
+        "width": 173,
+        "height": 309
+      },
+      "transparentMargins": {
+        "top": 746,
+        "right": 818,
+        "bottom": 745,
+        "left": 709
+      },
+      "visibleAreaRatio": 0.0175,
+      "crop": {
+        "left": 698,
+        "top": 735,
+        "width": 195,
+        "height": 331,
+        "padding": 11
+      },
+      "normalizedWidth": 195,
+      "normalizedHeight": 331,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 57281,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T120.417.11.041.03",
+      "normalizedReference": "T1204171104103",
+      "originalPath": "/generated/home-hero/final/t1204171104103/frame-03.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/t1204171104103/frame-03.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 373,
+        "top": 214,
+        "width": 954,
+        "height": 1372
+      },
+      "transparentMargins": {
+        "top": 214,
+        "right": 373,
+        "bottom": 214,
+        "left": 373
+      },
+      "visibleAreaRatio": 0.4277,
+      "crop": {
+        "left": 325,
+        "top": 166,
+        "width": 1050,
+        "height": 1468,
+        "padding": 48
+      },
+      "normalizedWidth": 1050,
+      "normalizedHeight": 1468,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.0306,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 1216290,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T120.417.17.051.02",
+      "normalizedReference": "T1204171705102",
+      "originalPath": "/generated/home-hero/final/t1204171705102/frame-02.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/t1204171705102/frame-02.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 709,
+        "top": 745,
+        "width": 219,
+        "height": 311
+      },
+      "transparentMargins": {
+        "top": 745,
+        "right": 772,
+        "bottom": 744,
+        "left": 709
+      },
+      "visibleAreaRatio": 0.0223,
+      "crop": {
+        "left": 698,
+        "top": 734,
+        "width": 241,
+        "height": 333,
+        "padding": 11
+      },
+      "normalizedWidth": 241,
+      "normalizedHeight": 333,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 96385,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T120.807.33.051.00",
+      "normalizedReference": "T1208073305100",
+      "originalPath": "/generated/home-hero/final/t1208073305100/frame-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/t1208073305100/frame-01.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 760,
+        "top": 740,
+        "width": 180,
+        "height": 320
+      },
+      "transparentMargins": {
+        "top": 740,
+        "right": 760,
+        "bottom": 740,
+        "left": 760
+      },
+      "visibleAreaRatio": 0.0188,
+      "crop": {
+        "left": 749,
+        "top": 729,
+        "width": 202,
+        "height": 342,
+        "padding": 11
+      },
+      "normalizedWidth": 202,
+      "normalizedHeight": 342,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 52741,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T129.410.11.053.00",
+      "normalizedReference": "T1294101105300",
+      "originalPath": "/generated/home-hero/final/t1294101105300/frame-02.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/t1294101105300/frame-02.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 709,
+        "top": 740,
+        "width": 206,
+        "height": 319
+      },
+      "transparentMargins": {
+        "top": 740,
+        "right": 785,
+        "bottom": 741,
+        "left": 709
+      },
+      "visibleAreaRatio": 0.0215,
+      "crop": {
+        "left": 698,
+        "top": 729,
+        "width": 228,
+        "height": 341,
+        "padding": 11
+      },
+      "normalizedWidth": 228,
+      "normalizedHeight": 341,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 76116,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T137.407.11.041.00",
+      "normalizedReference": "T1374071104100",
+      "originalPath": "/generated/home-hero/final/t1374071104100/frame-03.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/t1374071104100/frame-03.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 726,
+        "top": 740,
+        "width": 248,
+        "height": 320
+      },
+      "transparentMargins": {
+        "top": 740,
+        "right": 726,
+        "bottom": 740,
+        "left": 726
+      },
+      "visibleAreaRatio": 0.0259,
+      "crop": {
+        "left": 715,
+        "top": 729,
+        "width": 270,
+        "height": 342,
+        "padding": 11
+      },
+      "normalizedWidth": 270,
+      "normalizedHeight": 342,
+      "safeMaxRenderHeight": 420,
+      "opticalScale": 1.08,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 38936,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T137.407.33.051.00",
+      "normalizedReference": "T1374073305100",
+      "originalPath": "/generated/home-hero/final/t1374073305100/frame-02.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/final/t1374073305100/frame-02.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 399,
+        "top": 162,
+        "width": 902,
+        "height": 1475
+      },
+      "transparentMargins": {
+        "top": 162,
+        "right": 399,
+        "bottom": 163,
+        "left": 399
+      },
+      "visibleAreaRatio": 0.4348,
+      "crop": {
+        "left": 347,
+        "top": 110,
+        "width": 1006,
+        "height": 1579,
+        "padding": 52
+      },
+      "normalizedWidth": 1006,
+      "normalizedHeight": 1579,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.0201,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 1678497,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T150.210.11.041.00",
+      "normalizedReference": "T1502101104100",
+      "originalPath": "/generated/home-hero/candidates/01-everyday/alt-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/candidates/01-everyday/alt-01.png",
+      "sourceWidth": 1600,
+      "sourceHeight": 1700,
+      "visibleBounds": {
+        "left": 248,
+        "top": 306,
+        "width": 574,
+        "height": 1088
+      },
+      "transparentMargins": {
+        "top": 306,
+        "right": 778,
+        "bottom": 306,
+        "left": 248
+      },
+      "visibleAreaRatio": 0.2296,
+      "crop": {
+        "left": 210,
+        "top": 268,
+        "width": 650,
+        "height": 1164,
+        "padding": 38
+      },
+      "normalizedWidth": 650,
+      "normalizedHeight": 1164,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.053,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 477373,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T150.410.16.051.00",
+      "normalizedReference": "T1504101605100",
+      "originalPath": "/generated/home-hero/candidates/02-under-shirt/main-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/candidates/02-under-shirt/main-01.png",
+      "sourceWidth": 1700,
+      "sourceHeight": 1800,
+      "visibleBounds": {
+        "left": 259,
+        "top": 316,
+        "width": 714,
+        "height": 1168
+      },
+      "transparentMargins": {
+        "top": 316,
+        "right": 727,
+        "bottom": 316,
+        "left": 259
+      },
+      "visibleAreaRatio": 0.2725,
+      "crop": {
+        "left": 218,
+        "top": 275,
+        "width": 796,
+        "height": 1250,
+        "padding": 41
+      },
+      "normalizedWidth": 796,
+      "normalizedHeight": 1250,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.0514,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 546763,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T150.417.11.041.00",
+      "normalizedReference": "T1504171104100",
+      "originalPath": "/generated/home-hero/candidates/01-everyday/secondary-01.png",
+      "normalizedPath": "/generated/home-hero/orbit-normalized/candidates/01-everyday/secondary-01.png",
+      "sourceWidth": 1600,
+      "sourceHeight": 1700,
+      "visibleBounds": {
+        "left": 248,
+        "top": 307,
+        "width": 962,
+        "height": 1088
+      },
+      "transparentMargins": {
+        "top": 307,
+        "right": 390,
+        "bottom": 305,
+        "left": 248
+      },
+      "visibleAreaRatio": 0.3848,
+      "crop": {
+        "left": 210,
+        "top": 269,
+        "width": 1038,
+        "height": 1164,
+        "padding": 38
+      },
+      "normalizedWidth": 1038,
+      "normalizedHeight": 1164,
+      "safeMaxRenderHeight": 560,
+      "opticalScale": 1.053,
+      "qualityClass": "orbit_normalized_exact_reference",
+      "outputBytes": 820797,
+      "noArtificialUpscale": true
+    }
+  ]
+}

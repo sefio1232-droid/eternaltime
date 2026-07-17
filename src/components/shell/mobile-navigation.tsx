@@ -19,12 +19,12 @@ export function MobileNavigation({
       <SearchDialog compact />
       <button
         type="button"
-        className="h-10 border border-[var(--border)] px-3 text-sm"
+        className="inline-flex h-9 w-9 items-center justify-center text-sm"
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
         onClick={() => setIsOpen((value) => !value)}
       >
-        Меню
+        <span aria-hidden="true">☰</span><span className="sr-only">Меню</span>
       </button>
       {isOpen ? (
         <div
@@ -32,14 +32,14 @@ export function MobileNavigation({
           role="dialog"
           aria-modal="true"
           aria-label="Навигация"
-          className="absolute left-0 right-0 top-16 z-40 border-b border-[var(--border)] bg-[var(--canvas)] px-5 py-5 shadow-[var(--shadow-soft)]"
+          className="absolute left-0 right-0 top-14 z-40 border-b border-[var(--border)] bg-[var(--canvas)] px-5 py-4"
         >
           <nav aria-label="Мобильная навигация" className="grid">
             {[...primaryItems, ...utilityItems].map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="border-t border-[var(--border)] py-4 text-lg"
+                className="border-t border-[var(--border)] py-3 text-base"
                 onClick={() => setIsOpen(false)}
               >
                 {item.label}

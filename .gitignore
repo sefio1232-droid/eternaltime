@@ -39,9 +39,14 @@ supabase/.temp/
 
 # catalog import local sources and generated artifacts
 imports/raw/catalog/
+imports/raw/home-hero/
 imports/generated/
 imports/reports/
 imports/tmp/
+
+# generated visual QA screenshots
+public/generated/**/screenshots/
+public/generated/**/design-lab-screenshots/
 
 # OS/editor
 .DS_Store

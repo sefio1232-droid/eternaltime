@@ -5,7 +5,7 @@ type ButtonVariant = "primary" | "secondary" | "ghost";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border-[var(--accent)] bg-[var(--accent)] text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]",
+    "border-[var(--surface-graphite)] bg-[var(--surface-graphite)] text-[var(--text-inverse)] hover:bg-[var(--text)]",
   secondary:
     "border-[var(--border-strong)] bg-transparent text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent-strong)]",
   ghost:

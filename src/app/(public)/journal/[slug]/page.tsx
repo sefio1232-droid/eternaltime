@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
+import { resolveArticleMediaVariant, type ArticleMediaVariant } from "@/components/journal/article-media-presentation";
 import { Container } from "@/components/ui/container";
 import { getPublicEnv } from "@/config/public-env";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
@@ -63,19 +64,21 @@ function ArticleMeta({ article }: Readonly<{ article: JournalArticle }>) {
 function ArticleHeroPhoto({
   watch,
   article,
+  variant,
 }: Readonly<{
   watch: CatalogWatchDetail | null;
   article: JournalArticle;
+  variant: ArticleMediaVariant;
 }>) {
-  if (!watch || watch.primaryImage.kind === "none") {
+  if (!watch || watch.primaryImage.kind === "none" || variant === "none") {
     return null;
   }
 
   return (
-    <figure className="journal-article-hero-photo">
-      <CatalogImage image={watch.primaryImage} className="journal-photo-image" />
+    <figure className="journal-article-hero-photo" data-media-variant={variant}>
+      <CatalogImage image={watch.primaryImage} presentation="guarded" compositionSlot="journal-lead" className="journal-photo-image" />
       <figcaption className="journal-caption">
-        {watch.brandName} {watch.referenceDisplay} / визуальная связь с материалом
+        {watch.brandName} · код модели {watch.referenceDisplay}
       </figcaption>
       <span className="sr-only">{article.title}</span>
     </figure>
@@ -86,10 +89,10 @@ function RecommendedWatchRow({ watch }: Readonly<{ watch: CatalogWatchDetail }>)
   return (
     <Link href={watch.href} className="journal-watch-row">
       <span className="journal-watch-thumb">
-        <CatalogImage image={watch.primaryImage} className="journal-photo-image" />
+        <CatalogImage image={watch.primaryImage} compositionSlot="journal-compact" className="journal-photo-image" />
       </span>
       <span className="min-w-0">
-        <span className="journal-meta">{watch.brandName} / {watch.referenceDisplay}</span>
+        <span className="journal-meta">{watch.brandName} · {watch.referenceDisplay}</span>
         <span className="mt-2 block text-xl font-semibold leading-tight text-balance">{watch.title}</span>
       </span>
       <span className="journal-watch-price">{formatCatalogMoney(watch.publicPrice)}</span>
@@ -108,6 +111,7 @@ export default async function JournalArticlePage({ params }: JournalArticlePageP
   const env = getPublicEnv();
   const dataset = await loadCatalogDataset();
   const heroWatch = findJournalArticleVisualWatch(article, dataset);
+  const mediaVariant = resolveArticleMediaVariant(heroWatch?.primaryImage ?? null, article.slug);
   const recommendedWatches = resolveJournalArticleRelatedWatches(article, dataset).slice(0, 3);
   const relatedArticles = listPublishedJournalArticles()
     .filter((candidate) => candidate.slug !== article.slug && candidate.category === article.category)
@@ -131,21 +135,22 @@ export default async function JournalArticlePage({ params }: JournalArticlePageP
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <main className="journal-page">
-        <Container className="max-w-[var(--container-wide)] py-10 lg:py-20">
-          <article data-article-layout="magazine-article" className="journal-article">
-            <nav aria-label="Возврат к журналу" className="mb-12">
+        <Container className="max-w-[var(--container-wide)] public-page">
+          <article data-article-layout="magazine-article" data-media-presentation={mediaVariant} className="journal-article">
+            <nav aria-label="Возврат к журналу" className="mb-7">
               <Link href="/journal" className="journal-meta hover:text-[var(--text)]">
                 Журнал
               </Link>
             </nav>
 
-            <header className="journal-article-header">
-              <ArticleMeta article={article} />
-              <h1 className="journal-article-title text-balance">{article.title}</h1>
-              <p className="journal-article-dek">{article.dek}</p>
-            </header>
-
-            <ArticleHeroPhoto watch={heroWatch} article={article} />
+            <div className="journal-article-intro">
+              <header className="journal-article-header">
+                <ArticleMeta article={article} />
+                <h1 className="journal-article-title text-balance">{article.title}</h1>
+                <p className="journal-article-dek">{article.dek}</p>
+              </header>
+              <ArticleHeroPhoto watch={heroWatch} article={article} variant={mediaVariant} />
+            </div>
 
             <div className="journal-article-layout">
               <aside className="journal-article-rail" aria-label="Сведения о материале">

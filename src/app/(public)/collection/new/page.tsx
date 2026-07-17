@@ -24,13 +24,13 @@ export default async function QuickAddPage({ searchParams }: QuickAddPageProps) 
   const params = await searchParams;
 
   return (
-    <Container className="max-w-4xl py-10 lg:py-14">
+    <Container className="max-w-4xl public-page">
       <div className="grid gap-8 border-t border-[var(--border-strong)] pt-7 md:grid-cols-[0.62fr_1.38fr]">
         <div>
-          <p className="type-label">Quick Add</p>
-          <h1 className="type-page mt-3 text-4xl text-balance">Добавить часы вручную</h1>
+          <p className="type-label">Новая запись</p>
+          <h1 className="type-page mt-3 text-3xl text-balance md:text-4xl">Добавить часы вручную</h1>
           <p className="type-body mt-4 text-[var(--text-muted)]">
-            Достаточно личного названия. Бренд, модель, артикул, фотография и заметка необязательны.
+            Достаточно личного названия. Бренд, модель, код, фотография и заметка необязательны.
           </p>
         </div>
         <QuickAddForm hasError={params.error === "validation"} />

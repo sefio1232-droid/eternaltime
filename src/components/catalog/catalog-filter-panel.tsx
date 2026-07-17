@@ -1,100 +1,79 @@
 import Link from "next/link";
-import {
-  catalogQueryHref,
-  rubMinorToQueryValue,
-} from "@/modules/catalog/application/catalog-read-query";
+import { catalogQueryHref, rubMinorToQueryValue } from "@/modules/catalog/application/catalog-read-query";
 import type { CatalogFilterFacets, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
 
 function controlClassName() {
-  return "h-[var(--control-height)] w-full border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-[var(--accent)]";
+  return "catalog-filter-control";
 }
 
-function SelectField({
-  label,
-  name,
-  value,
-  options,
-}: Readonly<{
+function FilterIcon({ kind }: Readonly<{ kind: "brand" | "collection" | "movement" | "material" | "glass" | "price" | "sort" | "search" }>) {
+  return <span aria-hidden="true" className={`catalog-filter-icon catalog-filter-icon-${kind}`} />;
+}
+
+function SelectField({ label, name, value, options, icon }: Readonly<{
   label: string;
   name: string;
   value: string | null;
   options: Array<{ value: string; label: string; count: number }>;
+  icon: "brand" | "collection" | "movement" | "material" | "glass" | "sort";
 }>) {
   return (
-    <label className="grid gap-2">
-      <span className="type-meta">{label}</span>
+    <label className="catalog-filter-item">
+      <FilterIcon kind={icon} />
+      <span>{label}</span>
       <select name={name} defaultValue={value ?? ""} className={controlClassName()}>
         <option value="">Все</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label} ({option.count})
-          </option>
-        ))}
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label} ({option.count})</option>)}
       </select>
     </label>
   );
 }
 
-export function CatalogFilterPanel({
-  facets,
-  query,
-  pathname,
-  includeBrandFilter,
-}: Readonly<{
+export function CatalogFilterPanel({ facets, query, pathname, includeBrandFilter }: Readonly<{
   facets: CatalogFilterFacets;
   query: CatalogReadQuery;
   pathname: string;
   includeBrandFilter: boolean;
 }>) {
+  const activeFilterCount = [
+    query.search,
+    includeBrandFilter ? query.brandSlug : null,
+    query.brandCollection,
+    query.movement,
+    query.waterResistance,
+    query.caseMaterial,
+    query.crystal,
+    query.minPriceMinor,
+    query.maxPriceMinor,
+  ].filter((value) => value !== null && value !== "").length;
+  const resetHref = catalogQueryHref(pathname, query, {
+    search: "",
+    brandSlug: null,
+    brandCollection: null,
+    movement: null,
+    waterResistance: null,
+    caseMaterial: null,
+    crystal: null,
+    minPriceMinor: null,
+    maxPriceMinor: null,
+    sort: "default",
+    page: 1,
+  });
+
   return (
-    <form action={pathname} className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.35fr_repeat(6,minmax(0,1fr))]">
-        <label className="grid gap-2">
-          <span className="type-meta">Поиск</span>
-          <input
-            name="q"
-            defaultValue={query.search}
-            placeholder="Бренд, модель или артикул"
-            className={controlClassName()}
-          />
+    <form action={pathname} className="catalog-filter-bar" data-catalog-filter-count={activeFilterCount}>
+      <div className="catalog-filter-primary-row">
+        <label className="catalog-filter-item catalog-filter-search">
+          <FilterIcon kind="search" />
+          <span>Поиск</span>
+          <input name="q" defaultValue={query.search} placeholder="Бренд, модель или артикул" className={controlClassName()} />
         </label>
-
-        {includeBrandFilter ? (
-          <SelectField label="Бренд" name="brand" value={query.brandSlug} options={facets.brands} />
-        ) : null}
-
-        <SelectField label="Коллекция" name="collection" value={query.brandCollection} options={facets.brandCollections} />
-        <SelectField label="Механизм" name="movement" value={query.movement} options={facets.movements.slice(0, 80)} />
-        <SelectField label="Водозащита" name="water" value={query.waterResistance} options={facets.waterResistance.slice(0, 80)} />
-        <SelectField label="Корпус" name="caseMaterial" value={query.caseMaterial} options={facets.caseMaterials.slice(0, 80)} />
-        <SelectField label="Стекло" name="crystal" value={query.crystal} options={facets.crystalTypes.slice(0, 80)} />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:items-end">
-        <fieldset className="grid gap-2 md:col-span-2">
-          <legend className="type-meta">Цена, руб.</legend>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              name="priceMin"
-              defaultValue={rubMinorToQueryValue(query.minPriceMinor) ?? ""}
-              placeholder={rubMinorToQueryValue(facets.price.minMinor) ?? "от"}
-              inputMode="numeric"
-              className={controlClassName()}
-              aria-label="Минимальная цена"
-            />
-            <input
-              name="priceMax"
-              defaultValue={rubMinorToQueryValue(query.maxPriceMinor) ?? ""}
-              placeholder={rubMinorToQueryValue(facets.price.maxMinor) ?? "до"}
-              inputMode="numeric"
-              className={controlClassName()}
-              aria-label="Максимальная цена"
-            />
-          </div>
-        </fieldset>
-
-        <label className="grid gap-2">
-          <span className="type-meta">Порядок</span>
+        {includeBrandFilter ? <SelectField label="Бренды" name="brand" value={query.brandSlug} options={facets.brands} icon="brand" /> : null}
+        <SelectField label="Коллекции" name="collection" value={query.brandCollection} options={facets.brandCollections} icon="collection" />
+        <SelectField label="Механизм" name="movement" value={query.movement} options={facets.movements.slice(0, 80)} icon="movement" />
+        <label className="catalog-filter-item">
+          <FilterIcon kind="sort" />
+          <span>Сортировка</span>
           <select name="sort" defaultValue={query.sort} className={controlClassName()}>
             <option value="default">По умолчанию</option>
             <option value="price_asc">Сначала дешевле</option>
@@ -102,32 +81,29 @@ export function CatalogFilterPanel({
             <option value="name_asc">По названию</option>
           </select>
         </label>
-
-        <button
-          type="submit"
-          className="h-[var(--control-height)] bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]"
-        >
-          Применить
-        </button>
-        <Link
-          href={catalogQueryHref(pathname, query, {
-            search: "",
-            brandSlug: null,
-            brandCollection: null,
-            movement: null,
-            waterResistance: null,
-            caseMaterial: null,
-            crystal: null,
-            minPriceMinor: null,
-            maxPriceMinor: null,
-            sort: "default",
-            page: 1,
-          })}
-          className="inline-flex h-[var(--control-height)] items-center justify-center border border-[var(--border)] px-5 text-sm font-semibold"
-        >
-          Сбросить
-        </Link>
+        <button type="submit" className="catalog-filter-submit">Применить</button>
       </div>
+
+      <details className="catalog-filter-more">
+        <summary>
+          <FilterIcon kind="material" />
+          Все фильтры{activeFilterCount > 0 ? ` · выбрано ${activeFilterCount}` : ""}
+        </summary>
+        <div className="catalog-filter-expanded">
+          <SelectField label="Водозащита" name="water" value={query.waterResistance} options={facets.waterResistance.slice(0, 80)} icon="material" />
+          <SelectField label="Материал" name="caseMaterial" value={query.caseMaterial} options={facets.caseMaterials.slice(0, 80)} icon="material" />
+          <SelectField label="Стекло" name="crystal" value={query.crystal} options={facets.crystalTypes.slice(0, 80)} icon="glass" />
+          <fieldset className="catalog-filter-price">
+            <legend><FilterIcon kind="price" /> Цена</legend>
+            <div>
+              <input name="priceMin" defaultValue={rubMinorToQueryValue(query.minPriceMinor) ?? ""} placeholder={rubMinorToQueryValue(facets.price.minMinor) ?? "от"} inputMode="numeric" className={controlClassName()} aria-label="Минимальная цена" />
+              <input name="priceMax" defaultValue={rubMinorToQueryValue(query.maxPriceMinor) ?? ""} placeholder={rubMinorToQueryValue(facets.price.maxMinor) ?? "до"} inputMode="numeric" className={controlClassName()} aria-label="Максимальная цена" />
+            </div>
+          </fieldset>
+        </div>
+      </details>
+
+      {activeFilterCount > 0 ? <Link href={resetHref} className="catalog-filter-reset">Сбросить выбранные фильтры</Link> : null}
     </form>
   );
 }

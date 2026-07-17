@@ -70,15 +70,16 @@ describe("editorial art direction and layout refinement", () => {
 
     expect(listPage).toContain('data-layout="catalog-toolbar"');
     expect(listPage).toContain('data-layout="catalog-grid"');
-    expect(listPage).toContain("editorial-panel");
-    expect(listPage).toContain("2xl:grid-cols-4");
+    expect(listPage).toContain("catalog-toolbar");
+    expect(listPage).toContain("xl:grid-cols-4");
     expect(filters).toContain('name="water"');
+    expect(filters).toContain("<details");
+    expect(filters).toContain("activeFilterCount");
     expect(card).toContain("watch.brandName");
     expect(card).toContain("Код {watch.referenceDisplay}");
     expect(card).toContain("product-card-surface");
-    expect(card).toContain("aspect-[1/1.08]");
+    expect(card).toContain("catalog-card-media");
     expect(card).toContain("price-plate");
-    expect(card).toContain("card-cta-line");
     expect(card).toContain("formatCatalogMoney(watch.publicPrice)");
     expect(card).not.toContain("keySpecifications.map");
   });
@@ -88,27 +89,35 @@ describe("editorial art direction and layout refinement", () => {
     const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
     const styles = file("src/app/globals.css");
 
-    expect(home).toContain("product-stage-hero");
-    expect(home).toContain("blueprint-panel");
-    expect(home).toContain("editorial-panel");
-    expect(home).toContain("commerce-strip");
-    expect(detail).toContain("product-stage-hero");
-    expect(detail).toContain("product-info-rail");
+    expect(home).toContain("HomeProductHero");
+    expect(home).toContain("HomeEcosystemIntro");
+    expect(home).toContain("HomeSelectionProfile");
+    expect(home).toContain("HomeCompareStory");
+    expect(home).toContain("HomeCollectionIntelligence");
+    expect(home).not.toContain("HomeSelectionStory");
+    expect(home).not.toContain("HomeScenarioOverview");
+    expect(home).not.toContain("home-route-list");
+    expect(home).not.toContain("home-service-strip");
+    expect(detail).toContain("product-stage-detail");
+    expect(detail).toContain("watch-detail-hero");
+    expect(detail).toContain("resolveCatalogImageQualityPresentation");
     expect(detail).toContain("price-plate");
     expect(styles).toContain(".site-frame");
-    expect(styles).toContain(".blueprint-panel");
-    expect(styles).toContain(".commerce-strip");
+    expect(styles).toContain(".public-heading");
+    expect(styles).toContain(".catalog-image--guarded");
   });
 
   it("defines Journal as an editorial magazine surface without placeholder image copy", () => {
     const journal = file("src/app/(public)/journal/page.tsx");
 
-    expect(journal).toContain('data-journal-layout="magazine-cover"');
-    expect(journal).toContain('data-journal-layout="asymmetric-pair"');
+    expect(journal).toContain('data-journal-layout={hasLeadImage ? "lead-image" : "lead-text"}');
+    expect(journal).toContain("journal-issue-grid-text-led");
+    expect(journal).toContain("journal-issue-grid");
     expect(journal).toContain('data-journal-layout="text-led"');
     expect(journal).toContain('data-journal-layout="editorial-quote"');
-    expect(journal).toContain('data-journal-layout="full-bleed-photo"');
     expect(journal).toContain('data-journal-layout="reading-list"');
+    expect(journal).toContain("journal-sidebar");
+    expect(journal).toContain("journal-right-stack");
     expect(journal).not.toContain("Фото готовится");
   });
 
@@ -125,7 +134,7 @@ describe("editorial art direction and layout refinement", () => {
     const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
     const collectionAction = file("src/components/collection/collection-watch-action.tsx");
 
-    expect(detail).toContain("Артикул {watch.referenceDisplay}");
+    expect(detail).toContain("Код модели {watch.referenceDisplay}");
     expect(detail).not.toContain("Manufacturer Reference");
     expect(detail).not.toContain("watch reference");
     expect(detail).toContain("CollectionWatchAction");
@@ -134,6 +143,33 @@ describe("editorial art direction and layout refinement", () => {
     expect(detail).not.toContain('href="/compare"');
     expect(detail).not.toContain("localStorage");
     expect(detail).not.toContain("useState");
+  });
+
+  it("supports adaptive article media and guards local catalog images from fullscreen scaling", () => {
+    const articlePage = file("src/app/(public)/journal/[slug]/page.tsx");
+    const mediaPolicy = file("src/components/journal/article-media-presentation.ts");
+    const styles = file("src/app/globals.css");
+
+    expect(articlePage).toContain("data-media-presentation={mediaVariant}");
+    expect(articlePage).toContain("data-media-variant={variant}");
+    for (const variant of ["none", "landscape", "contained", "side", "compact"]) {
+      expect(mediaPolicy).toContain(`\"${variant}\"`);
+    }
+    expect(mediaPolicy).toContain('image.kind === "development_zip"');
+    expect(mediaPolicy).toContain('return "contained"');
+    expect(styles).toContain('[data-media-variant="compact"]');
+    expect(styles).toContain('[data-media-variant="side"]');
+  });
+
+  it("keeps public layouts bounded on small screens and uses a compact missing-image state", () => {
+    const styles = file("src/app/globals.css");
+    const card = file("src/components/catalog/catalog-watch-card.tsx");
+    const media = file("src/components/catalog/catalog-image.tsx");
+
+    expect(styles).toContain("@media (max-width: 767px)");
+    expect(styles).toContain("min-width: 0");
+    expect(card).toContain('watch.primaryImage.kind === "none" ? "max-h-40"');
+    expect(media).not.toContain("Фото готовится");
   });
 
   it("renders magazine article related blocks through factual article and watch relations", () => {

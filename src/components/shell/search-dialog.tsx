@@ -20,8 +20,8 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
         type="button"
         className={
           compact
-            ? "inline-flex h-10 w-10 items-center justify-center border border-[var(--border)] text-sm"
-            : "inline-flex h-10 items-center gap-2 border border-[var(--border)] px-3 text-sm"
+            ? "inline-flex h-9 w-9 items-center justify-center text-sm"
+            : "inline-flex h-9 items-center gap-2 px-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
         }
         aria-haspopup="dialog"
         aria-expanded={isOpen}
@@ -37,7 +37,7 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
             role="dialog"
             aria-modal="true"
             aria-label="Поиск по каталогу"
-            className="mx-auto mt-16 max-w-2xl bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)]"
+            className="mx-auto mt-16 max-w-2xl bg-[var(--surface)] p-5"
           >
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="type-section text-xl">Поиск часов</h2>

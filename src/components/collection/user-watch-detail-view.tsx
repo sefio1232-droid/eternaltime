@@ -28,13 +28,13 @@ export function UserWatchDetailView({
       </nav>
 
       <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <CollectionWatchMedia imageUrl={watch.primaryImageUrl} alt={watch.displayName} className="aspect-square" />
+        <CollectionWatchMedia imageUrl={watch.primaryImageUrl} alt={watch.displayName} className="max-h-[560px] aspect-square" />
         <div className="grid gap-6 border-t border-[var(--border-strong)] pt-6">
           <div>
             <p className="type-meta">
               {watch.sourceKind === "catalog" ? "Связаны с каталогом" : "Добавлены вручную"}
             </p>
-            <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">{watch.displayName}</h1>
+            <h1 className="type-page mt-3 text-3xl text-balance md:text-4xl">{watch.displayName}</h1>
             <p className="mt-4 text-[var(--text-muted)]">
               {[watch.brandName, watch.modelName, watch.referenceDisplay].filter(Boolean).join(" / ")}
             </p>
@@ -61,7 +61,7 @@ export function UserWatchDetailView({
         <form action={updateUserWatchAction} className="grid gap-5 sm:grid-cols-2">
           <input type="hidden" name="userWatchId" value={watch.id} />
           <label className="grid gap-2 text-sm font-semibold sm:col-span-2">
-            Название / nickname
+            Личное название
             <input required name="displayName" defaultValue={watch.displayName} maxLength={160} className="control-surface px-3" />
           </label>
           <label className="grid gap-2 text-sm font-semibold">

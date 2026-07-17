@@ -25,11 +25,11 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
 
   if (!currentUser.user) {
     return (
-      <Container className="grid gap-10 py-10 lg:py-14">
+      <Container className="grid gap-8 public-page">
         <header className="grid gap-5 border-b border-[var(--border)] pb-7 md:grid-cols-[0.8fr_1.2fr] md:items-end">
           <div>
             <p className="type-label">Моя коллекция</p>
-            <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">Личное пространство для реальных часов</h1>
+            <h1 className="public-heading mt-3">Личное пространство для ваших часов</h1>
           </div>
           <p className="type-body max-w-2xl text-[var(--text-muted)]">
             Здесь хранятся только часы, которыми вы владеете или владели: каталог, ручные записи, история приобретения и заметки.
@@ -37,7 +37,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         </header>
         <CollectionEmptyState authenticated={false} />
         {currentUser.status === "unconfigured" || params.collection === "unavailable" ? (
-          <p className="text-sm text-[var(--danger)]">Supabase Auth не настроен для этого окружения.</p>
+          <p className="text-sm text-[var(--danger)]">Вход в коллекцию сейчас недоступен.</p>
         ) : null}
       </Container>
     );
@@ -46,7 +46,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return (
-      <Container className="py-12">
+      <Container className="public-page">
         <CollectionEmptyState authenticated={true} />
       </Container>
     );
@@ -55,12 +55,12 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   const watches = await listUserWatches(createUserWatchCollectionRepository(supabase), currentUser.user.id);
 
   return (
-    <Container className="py-10 lg:py-14">
+    <Container className="public-page">
       {watches.length > 0 ? <CollectionOverview watches={watches} /> : (
         <div className="grid gap-10">
           <header>
             <p className="type-label">Моя коллекция</p>
-            <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">Часы, которыми вы владеете</h1>
+            <h1 className="public-heading mt-3">Часы, которыми вы владеете</h1>
           </header>
           <CollectionEmptyState authenticated />
         </div>

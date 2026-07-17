@@ -18,14 +18,14 @@ export default function SelectionPage() {
   ];
 
   return (
-    <Container className="grid gap-12 py-10 lg:py-16">
+    <Container className="grid gap-10 public-page">
       <header className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
         <div>
           <p className="type-label">Подбор</p>
-          <h1 className="type-page mt-3 text-3xl text-balance md:text-5xl">Выбор часов начинается с роли</h1>
+          <h1 className="public-heading mt-3">Выбор часов начинается с роли</h1>
         </div>
         <p className="type-body max-w-2xl text-[var(--text-muted)]">
-          Подбор будет вести через понятные вопросы: где вы носите часы, какой размер комфортен, какие материалы уместны и какую роль модель займет рядом с тем, что уже есть.
+          Начните с контекста: где вы носите часы, какой размер комфортен, какие материалы уместны и какую роль модель займет рядом с тем, что уже есть.
         </p>
       </header>
 
@@ -44,10 +44,10 @@ export default function SelectionPage() {
         </div>
       </section>
 
-      <section className="grid gap-6 border-y border-[var(--border-strong)] py-8 md:grid-cols-[1fr_auto] md:items-center">
+      <section className="grid gap-6 border-y border-[var(--border-strong)] py-7 md:grid-cols-[1fr_auto] md:items-center">
         <div>
-          <p className="type-label">Пока подбор готовится</p>
-          <h2 className="type-section mt-2 text-3xl">Исследуйте каталог вручную</h2>
+          <p className="type-label">Следующий шаг</p>
+          <h2 className="type-section mt-2 text-2xl md:text-3xl">Сопоставьте критерии с реальными моделями</h2>
         </div>
         <Link
           href="/watches"

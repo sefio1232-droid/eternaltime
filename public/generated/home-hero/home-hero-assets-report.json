@@ -1,0 +1,595 @@
+{
+  "generatedAt": "2026-07-14T02:42:31.106Z",
+  "sourcePlanPath": "imports/generated/catalog-image-upload-plan.json",
+  "outputDir": "public/generated/home-hero",
+  "previewPath": "public/generated/home-hero/home-hero-assets-preview.jpg",
+  "previewBytes": 152787,
+  "assets": [
+    {
+      "candidateId": "casio:A158WA1DF",
+      "brand": "Casio",
+      "title": "Casio A158WA-1DF",
+      "referenceNormalized": "A158WA1DF",
+      "publicPriceRub": 3700,
+      "applyEligibility": "eligible",
+      "scenario": "01 На каждый день",
+      "role": "asset",
+      "model": "Casio A158WA-1DF",
+      "referenceSlug": "a158wa1df",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "casio_for_it_latest_with_photos_repacked (1).zip",
+      "sourceZipEntry": "images/Casio/A158WA-1DF/A158WA-1DF_1.webp",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 800,
+        "height": 1000
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Casio/A158WA-1DF/A158WA-1DF_1.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 1000
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 51.6,
+          "objectAreaPercent": 100,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Casio/A158WA-1DF/A158WA-1DF_2.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1200,
+            "height": 913
+          },
+          "orientation": "horizontal",
+          "whiteSpacePercent": 23.52,
+          "objectAreaPercent": 99.31,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Casio/A158WA-1DF/A158WA-1DF_3.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 1000
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 50.73,
+          "objectAreaPercent": 67.93,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/casio-a158wa-1df.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1600
+      },
+      "outputBytes": 947101,
+      "removeBackground": true,
+      "backgroundThreshold": 242,
+      "channelSpreadTolerance": 22,
+      "removedPixelCount": 412824,
+      "cropBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 1000,
+        "padding": 60
+      },
+      "wasCropped": false,
+      "normalizedPlacement": {
+        "objectScale": 0.9,
+        "targetObjectHeightRatio": 0.78,
+        "resizedWidth": 899,
+        "resizedHeight": 1123,
+        "left": 329,
+        "top": 243,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1600
+      },
+      "selectionReason": "Primary product angle has the most readable dial; controlled scale keeps the angled bracelet from filling the canvas.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "tissot:T1502101104100",
+      "brand": "Tissot",
+      "title": "Tissot PR 100 34mm",
+      "referenceNormalized": "T1502101104100",
+      "publicPriceRub": 38000,
+      "applyEligibility": "eligible",
+      "scenario": "02 Под рубашку",
+      "role": "asset",
+      "model": "Tissot PR 100 34mm",
+      "referenceSlug": "t1502101104100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_1.webp",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 1680,
+        "height": 1680
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_1.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 41.96,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 74.54,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_2.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 4.61,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 96.32,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Tissot/T150.210.11.041.00/T150.210.11.041.00_3.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1680,
+            "height": 1680
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 18.16,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 87.89,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/tissot-pr100-34mm.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1600
+      },
+      "outputBytes": 487946,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 0,
+      "cropBounds": {
+        "left": 392,
+        "top": 7,
+        "width": 954,
+        "height": 1663,
+        "padding": 82
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.92,
+        "targetObjectHeightRatio": 0.78,
+        "resizedWidth": 1148,
+        "resizedHeight": 1148,
+        "left": 218,
+        "top": 226,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1600
+      },
+      "selectionReason": "Primary front image keeps the compact case and crown readable without using a technical angle.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "casio:AE1200WH1AV",
+      "brand": "Casio",
+      "title": "Casio AE-1200WH-1AV",
+      "referenceNormalized": "AE1200WH1AV",
+      "publicPriceRub": 4200,
+      "applyEligibility": "eligible",
+      "scenario": "03 Для путешествий",
+      "role": "asset",
+      "model": "Casio AE-1200WH-1AV",
+      "referenceSlug": "ae1200wh1av",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "casio_for_it_latest_with_photos_repacked (1).zip",
+      "sourceZipEntry": "images/Casio/AE-1200WH-1AV/AE-1200WH-1AV_1.jpg",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 366,
+        "height": 555
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Casio/AE-1200WH-1AV/AE-1200WH-1AV_1.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 366,
+            "height": 555
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 28.02,
+          "objectAreaPercent": 100,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Casio/AE-1200WH-1AV/AE-1200WH-1AV_2.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 1000,
+            "height": 1011
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 24.75,
+          "objectAreaPercent": 97.13,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/casio-ae1200wh-1av.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1600
+      },
+      "outputBytes": 686688,
+      "removeBackground": true,
+      "backgroundThreshold": 242,
+      "channelSpreadTolerance": 24,
+      "removedPixelCount": 56925,
+      "cropBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 366,
+        "height": 555,
+        "padding": 36
+      },
+      "wasCropped": false,
+      "normalizedPlacement": {
+        "objectScale": 0.86,
+        "targetObjectHeightRatio": 0.7,
+        "resizedWidth": 635,
+        "resizedHeight": 963,
+        "left": 471,
+        "top": 319,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1600
+      },
+      "selectionReason": "Primary image shows the full rectangular case; lower scale avoids turning the digital model into a close-up.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "casio:GBDH10001A4",
+      "brand": "Casio",
+      "title": "Casio GBD-H1000-1A4",
+      "referenceNormalized": "GBDH10001A4",
+      "publicPriceRub": 60000,
+      "applyEligibility": "eligible",
+      "scenario": "05 Для спорта",
+      "role": "asset",
+      "model": "Casio GBD-H1000-1A4",
+      "referenceSlug": "gbdh10001a4",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "casio_for_it_latest_with_photos_repacked (1).zip",
+      "sourceZipEntry": "images/Casio/GBD-H1000-1A4/GBD-H1000-1A4_1.jpg",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 408,
+        "height": 544
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Casio/GBD-H1000-1A4/GBD-H1000-1A4_1.jpg",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 408,
+            "height": 544
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 53.33,
+          "objectAreaPercent": 70.49,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": false,
+          "transparentPixelPercent": 0,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Casio/GBD-H1000-1A4/GBD-H1000-1A4_2.png",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 408,
+            "height": 490
+          },
+          "orientation": "vertical",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 85.34,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 37.31,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/casio-gbd-h1000-1a4.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1800
+      },
+      "outputBytes": 633781,
+      "removeBackground": true,
+      "backgroundThreshold": 240,
+      "channelSpreadTolerance": 24,
+      "removedPixelCount": 118356,
+      "cropBounds": {
+        "left": 2,
+        "top": 8,
+        "width": 404,
+        "height": 536,
+        "padding": 38
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.84,
+        "targetObjectHeightRatio": 0.68,
+        "resizedWidth": 771,
+        "resizedHeight": 1028,
+        "left": 411,
+        "top": 406,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1800
+      },
+      "selectionReason": "Primary front image is kept smaller so the protective case protrusions do not press against the hero canvas.",
+      "includeInContactSheet": true
+    },
+    {
+      "candidateId": "tissot:T1374073305100",
+      "brand": "Tissot",
+      "title": "Tissot PRX Powermatic 80 40mm",
+      "referenceNormalized": "T1374073305100",
+      "publicPriceRub": 101010,
+      "applyEligibility": "eligible",
+      "scenario": "06 Следующее дополнение",
+      "role": "asset",
+      "model": "Tissot PRX Powermatic 80 40mm",
+      "referenceSlug": "t1374073305100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": null,
+      "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw66243f3d/product-pictures/a56e8842-e93e-482a-b6bb-fb5dc223c496_T137-407-33-051-00_Shadow-png.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+      "sourceDimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw66243f3d/product-pictures/a56e8842-e93e-482a-b6bb-fb5dc223c496_T137-407-33-051-00_Shadow-png.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0.05,
+          "objectAreaPercent": 61.02,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 61.65,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwd5960041/product-pictures/7472fccc-5e69-4187-8560-1460f33da85b_T137_407_33_051_00_PROFIL.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 5.55,
+          "isFrontCandidate": false,
+          "isTechnical": true,
+          "hasTransparency": true,
+          "transparentPixelPercent": 95.21,
+          "suitableForHero": false
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": null,
+          "remoteImageUrl": "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw6c772cad/product-pictures/73b5d2e0-c91f-419e-b069-901a9f3b6d68_T137_407_33_051_00_B1.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800",
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 20.3,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 83.99,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/tissot-prx-powermatic-80.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1700
+      },
+      "outputBytes": 1047749,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 314,
+      "cropBounds": {
+        "left": 175,
+        "top": 35,
+        "width": 625,
+        "height": 735,
+        "padding": 36
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.9,
+        "targetObjectHeightRatio": 0.78,
+        "resizedWidth": 1181,
+        "resizedHeight": 1181,
+        "left": 204,
+        "top": 260,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1700
+      },
+      "selectionReason": "Primary front image keeps the PRX case visible while allowing the integrated bracelet to breathe.",
+      "includeInContactSheet": true,
+      "reusedExistingOutput": true,
+      "reuseReason": "Existing generated output reused because source image could not be fetched during this run: Remote image fetch failed for t1374073305100: https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw66243f3d/product-pictures/a56e8842-e93e-482a-b6bb-fb5dc223c496_T137-407-33-051-00_Shadow-png.png?sh=800%2Cgravity%3Dcenter&sm=fit&sw=800 (fetch failed)"
+    },
+    {
+      "candidateId": "tissot:T1504171104100",
+      "brand": "Tissot",
+      "title": "Tissot PR 100 40mm Chronograph",
+      "referenceNormalized": "T1504171104100",
+      "publicPriceRub": 45678,
+      "applyEligibility": "eligible",
+      "scenario": "Lab static frame",
+      "role": "asset",
+      "model": "Tissot PR 100 40mm Chronograph",
+      "referenceSlug": "t1504171104100",
+      "selectedSourceImageIndex": 1,
+      "sourcePackage": "tissot_for_it_package_v8_more_photos.zip",
+      "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_1.webp",
+      "remoteImageUrl": null,
+      "sourceDimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "sourceAnalyses": [
+        {
+          "sourceImageIndex": 1,
+          "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_1.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0.09,
+          "objectAreaPercent": 60.71,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 63.18,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 2,
+          "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_2.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 6.89,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 93.91,
+          "suitableForHero": true
+        },
+        {
+          "sourceImageIndex": 3,
+          "sourceZipEntry": "images/Tissot/T150.417.11.041.00/T150.417.11.041.00_3.webp",
+          "remoteImageUrl": null,
+          "dimensions": {
+            "width": 800,
+            "height": 800
+          },
+          "orientation": "square",
+          "whiteSpacePercent": 0,
+          "objectAreaPercent": 24.98,
+          "isFrontCandidate": true,
+          "isTechnical": false,
+          "hasTransparency": true,
+          "transparentPixelPercent": 82.76,
+          "suitableForHero": true
+        }
+      ],
+      "outputPath": "public/generated/home-hero/tissot-pr100-chronograph.png",
+      "outputDimensions": {
+        "width": 1600,
+        "height": 1700
+      },
+      "outputBytes": 853309,
+      "removeBackground": true,
+      "backgroundThreshold": 244,
+      "channelSpreadTolerance": 18,
+      "removedPixelCount": 604,
+      "cropBounds": {
+        "left": 178,
+        "top": 36,
+        "width": 622,
+        "height": 735,
+        "padding": 36
+      },
+      "wasCropped": true,
+      "normalizedPlacement": {
+        "objectScale": 0.92,
+        "targetObjectHeightRatio": 0.8,
+        "resizedWidth": 1207,
+        "resizedHeight": 1207,
+        "left": 189,
+        "top": 247,
+        "outputCanvasWidth": 1600,
+        "outputCanvasHeight": 1700
+      },
+      "selectionReason": "Static design-lab frame uses the requested T150.417.11.041.00 primary front image.",
+      "includeInContactSheet": false
+    }
+  ]
+}

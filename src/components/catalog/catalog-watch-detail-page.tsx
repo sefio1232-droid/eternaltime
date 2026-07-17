@@ -2,11 +2,18 @@ import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import { CatalogWatchCardView } from "@/components/catalog/catalog-watch-card";
 import { CollectionWatchAction } from "@/components/collection/collection-watch-action";
-import { Container } from "@/components/ui/container";
+import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import {
   formatCatalogCount,
   formatCatalogMoney,
 } from "@/modules/catalog/application/catalog-format";
+import {
+  buildFactualWatchDescription,
+  displayWatchTitle,
+  formatCatalogDisplayValue,
+} from "@/modules/catalog/application/catalog-display";
+import { resolveCatalogImageQualityPresentation } from "@/modules/catalog/application/catalog-image-presentation-policy";
+import { selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { groupSpecificationsByPublicSection } from "@/modules/catalog/application/catalog-read-service";
 import type {
   CatalogPublicSpecification,
@@ -57,12 +64,27 @@ function highlights(specifications: CatalogPublicSpecification[]): CatalogPublic
     if (specification && !picked.some((item) => item.label === specification.label)) {
       picked.push(specification);
     }
-    if (picked.length === 5) {
+    if (picked.length === 4) {
       break;
     }
   }
 
   return picked;
+}
+
+function titleScaleClass(title: string): "watch-detail-title-short" | "watch-detail-title-medium" | "watch-detail-title-long" {
+  const compactLength = title.replace(/\s/g, "").length;
+  const technicalParts = title.split(/[-.]/).length;
+
+  if (compactLength > 28 || technicalParts >= 4) {
+    return "watch-detail-title-long";
+  }
+
+  if (compactLength > 18 || technicalParts >= 3) {
+    return "watch-detail-title-medium";
+  }
+
+  return "watch-detail-title-short";
 }
 
 export function CatalogWatchDetailPage({
@@ -75,10 +97,22 @@ export function CatalogWatchDetailPage({
   const groupedSpecifications = groupSpecificationsByPublicSection(watch.specifications);
   const keyFacts = highlights(watch.specifications);
   const gallery = watch.imageGallery.filter((image) => image.kind !== "none");
+  const heroImage = selectBestCatalogHeroImage(gallery.length > 0 ? gallery : [watch.primaryImage]);
+  const imagePresentation = resolveCatalogImageQualityPresentation({
+    primaryImage: heroImage,
+    galleryCount: gallery.length,
+  });
+  const displayTitle = displayWatchTitle({ brandName: watch.brandName, title: watch.title });
+  const displayModelTitle = displayWatchTitle({ brandName: watch.brandName, title: watch.watchModelName });
+  const titleScale = titleScaleClass(displayTitle);
+  const overviewText = buildFactualWatchDescription(watch);
+  const deckTitle = watch.officialName && watch.officialName !== watch.title
+    ? displayWatchTitle({ brandName: watch.brandName, title: watch.officialName })
+    : displayModelTitle;
 
   return (
-    <Container className="py-8 lg:py-12">
-      <div className="grid gap-14">
+    <EditorialContainer className="watch-detail-page public-page">
+      <div className="grid gap-10 lg:gap-12">
         <nav aria-label="Хлебные крошки" className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-muted)]">
           <Link href="/watches" className="hover:text-[var(--text)]">
             Часы
@@ -91,78 +125,81 @@ export function CatalogWatchDetailPage({
           <span className="text-[var(--text)]">{watch.referenceDisplay}</span>
         </nav>
 
-        <section className="grid gap-10 lg:grid-cols-[minmax(0,1.48fr)_minmax(340px,0.82fr)] lg:items-start">
-          <div className="grid gap-4">
-            <div className="product-stage product-stage-hero min-h-[430px] p-7 lg:min-h-[660px]">
-              <CatalogImage image={watch.primaryImage} className="drop-shadow-[0_24px_40px_rgb(16_19_22_/_18%)]" />
+        <section className="watch-detail-hero" data-image-presentation={imagePresentation}>
+          <div className="watch-detail-copy">
+            <p className="type-label">{watch.brandName} {watch.brandCollectionName ? ` / ${watch.brandCollectionName}` : ""}</p>
+            <h1 className={`watch-detail-title ${titleScale} text-balance`}>{displayTitle}</h1>
+            <p className="watch-detail-deck">
+              {deckTitle}. Код модели {watch.referenceDisplay}.
+            </p>
+            <div className="watch-detail-price-row">
+              <p className="price-plate type-price text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
             </div>
-            {gallery.length > 1 ? (
-              <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
-                {gallery.slice(0, 8).map((image, index) => (
-                  <div key={`${image.kind}-${image.alt}-${index}`} className="product-stage product-stage-plain aspect-square p-2">
-                    <CatalogImage image={image} />
-                  </div>
-                ))}
-              </div>
-            ) : null}
+            <div className="watch-detail-actions">
+              <CollectionWatchAction
+                watchReferenceId={watch.id}
+                displayName={displayTitle}
+                returnTo={watch.href}
+                state={collectionState}
+              />
+            </div>
           </div>
 
-          <div className="product-info-rail grid gap-7 p-6 lg:sticky lg:top-24">
-            <div className="border-b border-[var(--border)] pb-6">
-              <p className="type-label">{watch.brandName}</p>
-              <h1 className="type-page mt-3 text-3xl text-balance md:text-4xl">{watch.title}</h1>
-              <p className="type-reference mt-5">Артикул {watch.referenceDisplay}</p>
+          <div className="watch-detail-media-shell">
+            <div className="product-stage product-stage-detail detail-media p-6 sm:p-9">
+              <CatalogImage
+                image={heroImage}
+                priority
+                presentation={imagePresentation === "detail-hero" ? "full" : "guarded"}
+                compositionSlot="detail-hero"
+                galleryCount={gallery.length}
+              />
             </div>
-
-            <dl className="grid gap-3 text-sm">
-              {watch.brandCollectionName ? (
-                <div className="grid grid-cols-[120px_1fr] gap-4">
-                  <dt className="text-[var(--text-muted)]">Коллекция</dt>
-                  <dd>{watch.brandCollectionName}</dd>
-                </div>
-              ) : null}
-              <div className="grid grid-cols-[120px_1fr] gap-4">
-                <dt className="text-[var(--text-muted)]">Модель</dt>
-                <dd>{watch.watchModelName}</dd>
-              </div>
-            </dl>
-
-            <section className="grid gap-3 border-t border-[var(--border)] pt-5">
-              <p className="type-meta">Цена</p>
-              <p className="price-plate type-price justify-self-start text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
-              <p className="text-sm leading-6 text-[var(--text-muted)]">
-                Цена показана спокойно: без скидочных обещаний, лишних сравнений и шумных бейджей.
-              </p>
-            </section>
-
-            {keyFacts.length > 0 ? (
-              <section className="grid gap-3 border-t border-[var(--border)] pt-5">
-                <h2 className="type-section text-xl">Главное</h2>
-                <dl className="grid gap-2">
-                  {keyFacts.map((specification) => (
-                    <div key={specification.key} className="grid grid-cols-[120px_1fr] gap-4 text-sm">
-                      <dt className="text-[var(--text-muted)]">{specification.label}</dt>
-                      <dd>{specification.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            ) : null}
-
-            <CollectionWatchAction
-              watchReferenceId={watch.id}
-              displayName={watch.title}
-              returnTo={watch.href}
-              state={collectionState}
-            />
           </div>
         </section>
 
+        {keyFacts.length > 0 ? (
+          <dl className="watch-key-specs" aria-label="Ключевые характеристики">
+            {keyFacts.map((specification) => (
+              <div key={specification.key}>
+                <dt>{formatCatalogDisplayValue(specification.value)}</dt>
+                <dd>{specification.label}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+
+        <nav className="watch-detail-tabs" aria-label="Разделы модели">
+          <a href="#overview">Обзор</a>
+          <a href="#specifications">Характеристики</a>
+          <a href="#fit">На запястье</a>
+          <a href="#collection">В коллекции</a>
+          <Link href="/journal">Журнал</Link>
+        </nav>
+
+        <section id="overview" className="watch-overview-section">
+          <div>
+            <p className="type-label">Обзор</p>
+            <h2 className="type-editorial text-3xl text-balance md:text-5xl">{displayModelTitle}</h2>
+          </div>
+          <p>{overviewText}</p>
+        </section>
+
+        {gallery.length > 1 ? (
+          <section id="fit" className="watch-gallery-section">
+            {gallery.slice(0, 5).map((image, index) => (
+              <figure key={`${image.kind}-${image.alt}-${index}`} className="product-stage product-stage-plain">
+                <CatalogImage image={image} presentation="guarded" compositionSlot="detail-gallery" imageIndex={index} galleryCount={gallery.length} />
+              </figure>
+            ))}
+          </section>
+        ) : null}
+
         {watch.specifications.length > 0 ? (
-          <section className="grid gap-7">
+          <section id="specifications" className="grid gap-7">
             <div>
               <p className="type-label">Детали</p>
-              <h2 className="type-section mt-2 text-3xl">Характеристики</h2>
+              <h2 className="type-section mt-2 text-2xl md:text-3xl">Характеристики</h2>
             </div>
             <div className="grid gap-x-12 gap-y-9 md:grid-cols-2">
               {groupOrder.map((group) => {
@@ -178,7 +215,7 @@ export function CatalogWatchDetailPage({
                       {specifications.map((specification) => (
                         <div key={specification.key} className="grid grid-cols-[150px_1fr] gap-4 py-2">
                           <dt className="text-[var(--text-muted)]">{specification.label}</dt>
-                          <dd>{specification.value}</dd>
+                          <dd>{formatCatalogDisplayValue(specification.value)}</dd>
                         </div>
                       ))}
                     </dl>
@@ -190,7 +227,7 @@ export function CatalogWatchDetailPage({
         ) : null}
 
         {watch.siblingReferences.length > 0 ? (
-          <section className="grid gap-7">
+          <section id="collection" className="grid gap-7">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="type-label">Модель</p>
@@ -224,6 +261,6 @@ export function CatalogWatchDetailPage({
           </section>
         ) : null}
       </div>
-    </Container>
+    </EditorialContainer>
   );
 }

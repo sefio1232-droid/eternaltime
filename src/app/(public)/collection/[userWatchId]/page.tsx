@@ -43,7 +43,7 @@ export default async function UserWatchPage({ params, searchParams }: UserWatchP
   const query = await searchParams;
 
   return (
-    <Container className="py-8 lg:py-12">
+    <Container className="public-page">
       <UserWatchDetailView
         watch={watch}
         created={query.created === "1"}

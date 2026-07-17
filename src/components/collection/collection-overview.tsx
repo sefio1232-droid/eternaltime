@@ -15,11 +15,11 @@ export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSum
   const [lead, ...rest] = watches;
 
   return (
-    <div className="grid gap-10">
+    <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-[var(--border)] pb-6">
         <div>
           <p className="type-label">Моя коллекция</p>
-          <h1 className="type-page mt-3 text-4xl text-balance md:text-5xl">Часы, которыми вы владеете</h1>
+          <h1 className="public-heading mt-3">Часы, которыми вы владеете</h1>
           <p className="type-body mt-3 max-w-2xl text-[var(--text-muted)]">
             Личное пространство для реальных часов, истории приобретения и заметок.
           </p>
@@ -30,7 +30,7 @@ export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSum
       {lead ? (
         <section className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
           <Link href={`/collection/${lead.id}`} className="block">
-            <CollectionWatchMedia imageUrl={lead.primaryImageUrl} alt={lead.displayName} className="aspect-[1.45/1]" />
+            <CollectionWatchMedia imageUrl={lead.primaryImageUrl} alt={lead.displayName} className="max-h-[460px] aspect-[1.45/1]" />
           </Link>
           <div className="border-t border-[var(--border-strong)] pt-5">
             <p className="type-meta">{sourceLabel(lead.sourceKind)} / {ownershipLabel(lead.ownershipStatus)}</p>

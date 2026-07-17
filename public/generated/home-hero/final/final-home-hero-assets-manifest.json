@@ -1,0 +1,1191 @@
+{
+  "generatedAt": "2026-07-17T07:26:02.153Z",
+  "sourceDir": "imports/raw/home-hero/final",
+  "outputRoot": "public/generated/home-hero/final",
+  "contactSheetPath": "public/generated/home-hero/final/final-home-hero-assets-contact-sheet.jpg",
+  "contactSheetBytes": 255764,
+  "ignoredNestedEntries": [
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "EFK-100D-2A/i (2).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "EFK-100D-2A/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "GBD-H1000-1A4/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "GBD-H1000-1A4/i (2).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "GBD-H1000-1A4/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "RA-AC0M03S10B/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "RA-AC0M03S10B/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "RA-AC0Q03S10B/i (3).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "RA-AC0Q03S10B/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.417.11.041.03/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.417.11.041.03/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.417.11.041.03/t120_417_11_041_03_auto_auto_5_90.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.417.17.051.02/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.417.17.051.02/i (2).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.417.17.051.02/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.807.33.051.00/i (2).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T120.807.33.051.00/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T129.410.11.053.00/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T129.410.11.053.00/i (3).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T129.410.11.053.00/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T137.407.11.041.00/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T137.407.11.041.00/i (3).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T137.407.11.041.00/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T137.407.33.051.00/1.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T137.407.33.051.00/T137-407-33-051-00.jpg",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T150.410.16.051.00/i (3).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T150.410.16.051.00/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T150.417.11.041.00/i (1).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T150.417.11.041.00/i (2).webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    },
+    {
+      "zipName": "T150.210.11.041.00.zip",
+      "entryName": "T150.417.11.041.00/i.webp",
+      "reason": "dedicated_zip_exists_for_reference"
+    }
+  ],
+  "references": [
+    {
+      "reference": "T150.417.11.041.00",
+      "referenceSlug": "t1504171104100",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T150.417.11.041.00.zip",
+          "sourceEntryName": "T150.417.11.041.00/i (1).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 55417,
+          "cropBounds": {
+            "left": 41,
+            "top": 0,
+            "width": 247,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1504171104100/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 123164,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T150.417.11.041.00.zip",
+          "sourceEntryName": "T150.417.11.041.00/i (2).webp",
+          "sourceDimensions": {
+            "width": 210,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 31343,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 210,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1504171104100/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 97498,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "T150.417.11.041.00.zip",
+          "sourceEntryName": "T150.417.11.041.00/i.webp",
+          "sourceDimensions": {
+            "width": 480,
+            "height": 235
+          },
+          "sourceLongSidePx": 480,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 96554,
+          "cropBounds": {
+            "left": 171,
+            "top": 25,
+            "width": 146,
+            "height": 210,
+            "padding": 12
+          },
+          "outputPath": "public/generated/home-hero/final/t1504171104100/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 54831,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T129.410.11.053.00",
+      "referenceSlug": "t1294101105300",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T129.410.11.053.00.zip",
+          "sourceEntryName": "T129.410.11.053.00/i (1).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 53224,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 320,
+            "height": 320,
+            "padding": 18
+          },
+          "outputPath": "public/generated/home-hero/final/t1294101105300/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 92707,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T129.410.11.053.00.zip",
+          "sourceEntryName": "T129.410.11.053.00/i (3).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 58427,
+          "cropBounds": {
+            "left": 38,
+            "top": 0,
+            "width": 244,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1294101105300/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 99403,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "T129.410.11.053.00.zip",
+          "sourceEntryName": "T129.410.11.053.00/i.webp",
+          "sourceDimensions": {
+            "width": 186,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 15966,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 186,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1294101105300/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 96648,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "EFK-100D-2A",
+      "referenceSlug": "efk100d2a",
+      "sourceFrameCount": 2,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "EFK-100D-2A.zip",
+          "sourceEntryName": "EFK-100D-2A/i (2).webp",
+          "sourceDimensions": {
+            "width": 267,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 55408,
+          "cropBounds": {
+            "left": 39,
+            "top": 0,
+            "width": 192,
+            "height": 320,
+            "padding": 18
+          },
+          "outputPath": "public/generated/home-hero/final/efk100d2a/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 77888,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "EFK-100D-2A.zip",
+          "sourceEntryName": "EFK-100D-2A/i.webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 66123,
+          "cropBounds": {
+            "left": 53,
+            "top": 0,
+            "width": 214,
+            "height": 320,
+            "padding": 18
+          },
+          "outputPath": "public/generated/home-hero/final/efk100d2a/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 94158,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T150.210.11.041.00",
+      "referenceSlug": "t1502101104100",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T150.210.11.041.00.zip",
+          "sourceEntryName": "T150.210.11.041.00/i (1).webp",
+          "sourceDimensions": {
+            "width": 471,
+            "height": 320
+          },
+          "sourceLongSidePx": 471,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 0,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 471,
+            "height": 320,
+            "padding": 28
+          },
+          "outputPath": "public/generated/home-hero/final/t1502101104100/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 66922,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T150.210.11.041.00.zip",
+          "sourceEntryName": "T150.210.11.041.00/i (2).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 67115,
+          "cropBounds": {
+            "left": 52,
+            "top": 0,
+            "width": 197,
+            "height": 320,
+            "padding": 18
+          },
+          "outputPath": "public/generated/home-hero/final/t1502101104100/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 98846,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "T150.210.11.041.00.zip",
+          "sourceEntryName": "T150.210.11.041.00/i.webp",
+          "sourceDimensions": {
+            "width": 177,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 29076,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 177,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1502101104100/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 78622,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T150.410.16.051.00",
+      "referenceSlug": "t1504101605100",
+      "sourceFrameCount": 2,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T150.410.16.051.00.zip",
+          "sourceEntryName": "T150.410.16.051.00/i (3).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 61049,
+          "cropBounds": {
+            "left": 43,
+            "top": 0,
+            "width": 234,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1504101605100/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 86695,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T150.410.16.051.00.zip",
+          "sourceEntryName": "T150.410.16.051.00/i.webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 45463,
+          "cropBounds": {
+            "left": 15,
+            "top": 0,
+            "width": 276,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1504101605100/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 122546,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "RA-AC0M03S10B",
+      "referenceSlug": "raac0m03s10b",
+      "sourceFrameCount": 2,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "RA-AC0M03S10B.zip",
+          "sourceEntryName": "RA-AC0M03S10B/i (1).webp",
+          "sourceDimensions": {
+            "width": 207,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 21423,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 207,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/raac0m03s10b/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 83489,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "RA-AC0M03S10B.zip",
+          "sourceEntryName": "RA-AC0M03S10B/i.webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 58648,
+          "cropBounds": {
+            "left": 42,
+            "top": 0,
+            "width": 239,
+            "height": 320,
+            "padding": 18
+          },
+          "outputPath": "public/generated/home-hero/final/raac0m03s10b/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 93860,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T120.417.11.041.03",
+      "referenceSlug": "t1204171104103",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T120.417.11.041.03.zip",
+          "sourceEntryName": "T120.417.11.041.03/i (1).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 53072,
+          "cropBounds": {
+            "left": 45,
+            "top": 0,
+            "width": 275,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1204171104103/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 126697,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T120.417.11.041.03.zip",
+          "sourceEntryName": "T120.417.11.041.03/i.webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 48846,
+          "cropBounds": {
+            "left": 46,
+            "top": 0,
+            "width": 269,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1204171104103/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 136040,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "T120.417.11.041.03.zip",
+          "sourceEntryName": "T120.417.11.041.03/t120_417_11_041_03_auto_auto_5_90.webp",
+          "sourceDimensions": {
+            "width": 1275,
+            "height": 1700
+          },
+          "sourceLongSidePx": 1700,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 1006343,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 1275,
+            "height": 1700,
+            "padding": 95
+          },
+          "outputPath": "public/generated/home-hero/final/t1204171104103/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 1255391,
+          "noArtificialUpscale": true,
+          "readiness": "source_ready_for_motion_review"
+        }
+      ],
+      "readiness": "has_motion_frames"
+    },
+    {
+      "reference": "GBD-H1000-1A4",
+      "referenceSlug": "gbdh10001a4",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "GBD-H1000-1A4.zip",
+          "sourceEntryName": "GBD-H1000-1A4/i (1).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 47300,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 320,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/gbdh10001a4/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 141161,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "GBD-H1000-1A4.zip",
+          "sourceEntryName": "GBD-H1000-1A4/i (2).webp",
+          "sourceDimensions": {
+            "width": 480,
+            "height": 252
+          },
+          "sourceLongSidePx": 480,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 83969,
+          "cropBounds": {
+            "left": 120,
+            "top": 0,
+            "width": 360,
+            "height": 252,
+            "padding": 20
+          },
+          "outputPath": "public/generated/home-hero/final/gbdh10001a4/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 108065,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "GBD-H1000-1A4.zip",
+          "sourceEntryName": "GBD-H1000-1A4/i.webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 26150,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 320,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/gbdh10001a4/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 173100,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "RA-AC0Q03S10B",
+      "referenceSlug": "raac0q03s10b",
+      "sourceFrameCount": 2,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "RA-AC0Q03S10B.zip",
+          "sourceEntryName": "RA-AC0Q03S10B/i (3).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 68198,
+          "cropBounds": {
+            "left": 55,
+            "top": 0,
+            "width": 211,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/raac0q03s10b/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 81203,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "RA-AC0Q03S10B.zip",
+          "sourceEntryName": "RA-AC0Q03S10B/i.webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 67083,
+          "cropBounds": {
+            "left": 32,
+            "top": 0,
+            "width": 261,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/raac0q03s10b/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 90903,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T120.417.17.051.02",
+      "referenceSlug": "t1204171705102",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T120.417.17.051.02.zip",
+          "sourceEntryName": "T120.417.17.051.02/i (1).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 83657,
+          "cropBounds": {
+            "left": 82,
+            "top": 48,
+            "width": 166,
+            "height": 225,
+            "padding": 12
+          },
+          "outputPath": "public/generated/home-hero/final/t1204171705102/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 62252,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T120.417.17.051.02.zip",
+          "sourceEntryName": "T120.417.17.051.02/i (2).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 54512,
+          "cropBounds": {
+            "left": 31,
+            "top": 0,
+            "width": 257,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1204171705102/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 120332,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "T120.417.17.051.02.zip",
+          "sourceEntryName": "T120.417.17.051.02/i.webp",
+          "sourceDimensions": {
+            "width": 480,
+            "height": 252
+          },
+          "sourceLongSidePx": 480,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 92489,
+          "cropBounds": {
+            "left": 145,
+            "top": 0,
+            "width": 188,
+            "height": 252,
+            "padding": 15
+          },
+          "outputPath": "public/generated/home-hero/final/t1204171705102/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 76843,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T137.407.11.041.00",
+      "referenceSlug": "t1374071104100",
+      "sourceFrameCount": 3,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T137.407.11.041.00.zip",
+          "sourceEntryName": "T137.407.11.041.00/i (1).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 60723,
+          "cropBounds": {
+            "left": 48,
+            "top": 0,
+            "width": 226,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1374071104100/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 102606,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T137.407.11.041.00.zip",
+          "sourceEntryName": "T137.407.11.041.00/i (3).webp",
+          "sourceDimensions": {
+            "width": 320,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 60601,
+          "cropBounds": {
+            "left": 73,
+            "top": 17,
+            "width": 227,
+            "height": 303,
+            "padding": 17
+          },
+          "outputPath": "public/generated/home-hero/final/t1374071104100/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 82720,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 3,
+          "sourceZipName": "T137.407.11.041.00.zip",
+          "sourceEntryName": "T137.407.11.041.00/i.webp",
+          "sourceDimensions": {
+            "width": 270,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 7040,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 270,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1374071104100/frame-03.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 56614,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "T120.807.33.051.00",
+      "referenceSlug": "t1208073305100",
+      "sourceFrameCount": 2,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T120.807.33.051.00.zip",
+          "sourceEntryName": "T120.807.33.051.00/i (2).webp",
+          "sourceDimensions": {
+            "width": 180,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 20012,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 180,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1208073305100/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 80088,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T120.807.33.051.00.zip",
+          "sourceEntryName": "T120.807.33.051.00/i.webp",
+          "sourceDimensions": {
+            "width": 180,
+            "height": 320
+          },
+          "sourceLongSidePx": 320,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 20012,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 180,
+            "height": 320,
+            "padding": 19
+          },
+          "outputPath": "public/generated/home-hero/final/t1208073305100/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 80088,
+          "noArtificialUpscale": true,
+          "readiness": "low_resolution_motion_candidate"
+        }
+      ],
+      "readiness": "low_resolution_only"
+    },
+    {
+      "reference": "MTG-B3000DN-1A",
+      "referenceSlug": "mtgb3000dn1a",
+      "sourceFrameCount": 0,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [],
+      "readiness": "missing_user_supplied_zip_frames"
+    },
+    {
+      "reference": "T137.407.33.051.00",
+      "referenceSlug": "t1374073305100",
+      "sourceFrameCount": 2,
+      "motionIntent": "orbit_frame_set",
+      "motionNotes": "Use these frames as product states for a restrained circular/orbital transition. Do not fake perspective by skewing a single frame.",
+      "frames": [
+        {
+          "frameIndex": 1,
+          "sourceZipName": "T137.407.33.051.00.zip",
+          "sourceEntryName": "T137.407.33.051.00/1.webp",
+          "sourceDimensions": {
+            "width": 900,
+            "height": 1200
+          },
+          "sourceLongSidePx": 1200,
+          "sourceFormat": "webp",
+          "removedBackgroundPixels": 477209,
+          "cropBounds": {
+            "left": 62,
+            "top": 0,
+            "width": 775,
+            "height": 1200,
+            "padding": 72
+          },
+          "outputPath": "public/generated/home-hero/final/t1374073305100/frame-01.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 860794,
+          "noArtificialUpscale": true,
+          "readiness": "source_ready_for_motion_review"
+        },
+        {
+          "frameIndex": 2,
+          "sourceZipName": "T137.407.33.051.00.zip",
+          "sourceEntryName": "T137.407.33.051.00/T137-407-33-051-00.jpg",
+          "sourceDimensions": {
+            "width": 917,
+            "height": 1500
+          },
+          "sourceLongSidePx": 1500,
+          "sourceFormat": "jpeg",
+          "removedBackgroundPixels": 404018,
+          "cropBounds": {
+            "left": 0,
+            "top": 0,
+            "width": 917,
+            "height": 1500,
+            "padding": 90
+          },
+          "outputPath": "public/generated/home-hero/final/t1374073305100/frame-02.png",
+          "outputDimensions": {
+            "width": 1700,
+            "height": 1800
+          },
+          "outputBytes": 1737431,
+          "noArtificialUpscale": true,
+          "readiness": "source_ready_for_motion_review"
+        }
+      ],
+      "readiness": "has_motion_frames"
+    }
+  ]
+}
