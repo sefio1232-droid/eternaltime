@@ -56,7 +56,7 @@ describe("approved visual direction", () => {
 
     expect(home).toContain("buildHomeScenarios(dataset)");
     expect(home).toContain("buildHomeOrbitWatches(scenarios)");
-    expect(home).toContain("<HomeProductHero scenarios={scenarios} orbitWatches={orbitWatches} />");
+    expect(home).toContain('<HomeProductHero scenarios={scenarios} orbitWatches={orbitWatches} reviewEnabled={process.env.NODE_ENV !== "production"} />');
     expect(hero).toContain("next/image");
     expect(hero).toContain("slot.watch.imageSrc");
     expect(hero).toContain("activeWatch");

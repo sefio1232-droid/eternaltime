@@ -21,6 +21,7 @@
     "home-hero:prepare-candidates": "node scripts/prepare-home-hero-candidates.mjs",
     "home-hero:prepare-final-assets": "node scripts/prepare-home-hero-final-assets.mjs",
     "home-hero:prepare-orbit-assets": "node scripts/prepare-home-hero-orbit-assets.mjs",
+    "homepage:prepare-premium-assets": "node scripts/prepare-homepage-premium-assets.mjs",
     "secrets:scan": "node scripts/secrets-scan.mjs"
   },
   "dependencies": {

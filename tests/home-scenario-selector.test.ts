@@ -2,15 +2,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  buildHomeEditorialCuration,
   buildHomeOrbitWatches,
   buildHomeScenarios,
   forwardOrbitDistance,
+  getHomeWatchHref,
   harmonizedVisualScale,
   homeScenarioDefinitions,
   orbitAnchorNameFromDistance,
   orbitDistance,
   orbitPresentationForDistance,
-  rejectedHomeHeroAssets,
   scenarioIndexFromOrbitIndex,
   shortestSignedCircularDistance,
   shortestOrbitDirection,
@@ -63,24 +64,66 @@ const fixtureDataset: CatalogReadDataset = {
 };
 
 const expectedScenarioRefs = [
-  ["T150.210.11.041.00", "T150.417.11.041.00", "EFK-100D-2A", "T129.410.11.053.00"],
-  ["T150.410.16.051.00", "RA-AC0M03S10B", "T129.410.11.053.00", "T150.210.11.041.00"],
-  ["T120.417.11.041.03", "GBD-H1000-1A4", "RA-AC0Q03S10B", "T120.417.17.051.02"],
-  ["EFK-100D-2A", "RA-AC0M03S10B", "RA-AC0Q03S10B", "T137.407.11.041.00"],
-  ["T120.417.11.041.03", "T120.807.33.051.00", "MTG-B3000DN-1A", "GBD-H1000-1A4"],
-  ["T137.407.33.051.00", "T137.407.11.041.00", "MTG-B3000DN-1A", "T120.417.17.051.02"],
+  ["T150.410.16.051.00", "T150.417.11.041.00", "T150.210.11.041.00", "EFK-100D-2A"],
+  ["T150.410.16.051.00", "T150.210.11.041.00", "T150.417.11.041.00", "EFK-100D-2A"],
+  ["T120.417.11.041.03", "MTG-B3000DN-1A", "EFK-100D-2A", "T150.417.11.041.00"],
+  ["EFK-100D-2A", "T137.407.33.051.00", "T120.417.11.041.03", "T150.410.16.051.00"],
+  ["T120.417.11.041.03", "MTG-B3000DN-1A", "EFK-100D-2A", "T150.417.11.041.00"],
+  ["T137.407.33.051.00", "MTG-B3000DN-1A", "T120.417.11.041.03", "T150.410.16.051.00"],
 ];
 
 describe("homepage production multi-watch hero", () => {
+  it("builds exact-reference editorial curation from canonical catalog records", () => {
+    const editorialDataset: CatalogReadDataset = {
+      ...fixtureDataset,
+      watches: [
+        ...fixtureDataset.watches,
+        watch({ reference: "T150.210.11.041.00", brandName: "Tissot", title: "Tissot PR 100 34mm" }),
+        watch({ reference: "T120.417.17.051.03", brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph" }),
+        watch({ reference: "MTG-B3000DN-1A", brandName: "Casio", title: "Casio G-Shock MT-G" }),
+        watch({ reference: "RA-AC0018E30B", brandName: "Orient", title: "Orient Classic Green" }),
+        watch({ reference: "RA-AA0811E19B", brandName: "Orient", title: "Orient Mako III Green" }),
+        watch({ reference: "RA-AC0022S30B", brandName: "Orient", title: "Orient Classic White" }),
+        watch({ reference: "NJ0210-13L", brandName: "Citizen", title: "Citizen Automatic Dress Blue" }),
+        watch({ reference: "NJ0210-56A", brandName: "Citizen", title: "Citizen Automatic Dress White" }),
+      ],
+    };
+    const curation = buildHomeEditorialCuration(editorialDataset);
+    const curatedWatches = [
+      ...(curation.path ? [curation.path] : []),
+      ...(curation.selection ? [curation.selection] : []),
+      ...(curation.comparisonSeastar ? [curation.comparisonSeastar] : []),
+      ...curation.collectionOwned,
+      ...(curation.collectionRecommendation ? [curation.collectionRecommendation] : []),
+      ...curation.journal,
+      ...curation.final,
+    ];
+
+    expect(curation.selection?.reference).toBe("EFK-100D-2A");
+    expect(curation.comparisonSeastar?.reference).toBe("T120.417.17.051.03");
+    expect(curation.collectionOwned).toHaveLength(4);
+    expect(curation.journal).toHaveLength(3);
+    expect(curation.final).toHaveLength(2);
+    expect(new Set(curatedWatches.map((item) => item.brandName))).toEqual(new Set(["Tissot", "Casio", "Orient", "Citizen"]));
+    expect(curatedWatches.every((item) => getHomeWatchHref(item) === item.href)).toBe(true);
+    expect(curatedWatches.filter((item) => item.reference === "T137.407.33.051.00")).toHaveLength(1);
+
+    const ownedOrient = curation.collectionOwned.find((item) => item.reference === "RA-AC0018E30B");
+    expect(ownedOrient?.asset.path).toBe("/generated/homepage-editorial-assets/orient-classic-raac0018e30b-cutout.png");
+    expect(curation.collectionRecommendation?.asset.path).toBe("/generated/homepage-editorial-assets/orient-mako-raaa0811e19b-cutout.png");
+    expect(existsSync(join(root, "public", ownedOrient?.asset.path.replace(/^\/+/, "") ?? ""))).toBe(true);
+    expect(existsSync(join(root, "public", curation.collectionRecommendation?.asset.path.replace(/^\/+/, "") ?? ""))).toBe(true);
+  });
+
   it("defines six approved scenarios with four curated slots each", () => {
     expect(homeScenarioDefinitions).toHaveLength(6);
     expect(homeScenarioDefinitions.map((scenario) => scenario.title)).toEqual([
-      "На каждый день",
-      "Под рубашку",
-      "Для путешествий",
-      "Первая механика",
-      "Для спорта",
-      "Следующее дополнение в коллекцию",
+      "\u041d\u0430 \u043a\u0430\u0436\u0434\u044b\u0439 \u0434\u0435\u043d\u044c",
+      "\u041f\u043e\u0434 \u0440\u0443\u0431\u0430\u0448\u043a\u0443",
+      "\u0414\u043b\u044f \u043f\u0443\u0442\u0435\u0448\u0435\u0441\u0442\u0432\u0438\u0439",
+      "\u041f\u0435\u0440\u0432\u0430\u044f \u043c\u0435\u0445\u0430\u043d\u0438\u043a\u0430",
+      "\u0414\u043b\u044f \u0441\u043f\u043e\u0440\u0442\u0430",
+      "\u0412 \u043a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u044e",
     ]);
 
     homeScenarioDefinitions.forEach((scenario, index) => {
@@ -96,10 +139,10 @@ describe("homepage production multi-watch hero", () => {
     const scenarios = buildHomeScenarios(fixtureDataset);
 
     expect(scenarios).toHaveLength(6);
-    expect(scenarios[0]?.hero.mainWatch.reference).toBe("T150.210.11.041.00");
+    expect(scenarios[0]?.hero.mainWatch.reference).toBe("T150.410.16.051.00");
     expect(scenarios[0]?.hero.slots[1]?.catalogMatched).toBe(true);
     expect(scenarios[0]?.hero.slots[1]?.href).toBe("/watches/tissot/t1504171104100");
-    expect(scenarios[0]?.hero.slots[1]?.priceLabel?.replace(/\u00a0/g, " ")).toBe("45 678 ₽");
+    expect(scenarios[0]?.hero.slots[1]?.priceLabel?.replace(/\u00a0/g, " ")).toBe("45 678 \u20bd");
     expect(scenarios[1]?.hero.mainWatch.catalogMatched).toBe(true);
     expect(scenarios[2]?.hero.mainWatch.catalogMatched).toBe(true);
     expect(scenarios[3]?.hero.mainWatch.catalogMatched).toBe(true);
@@ -183,12 +226,14 @@ describe("homepage production multi-watch hero", () => {
     expect(halfway(6).presentation.x).toBeGreaterThan(at7(6).presentation.x);
     expect(halfway(6).presentation.scale).toBeLessThan(at6(6).presentation.scale);
     expect(halfway(6).presentation.scale).toBeGreaterThan(at7(6).presentation.scale);
+    expect(halfway(6).presentation.opacity).toBeGreaterThanOrEqual(0.85);
 
     expect(halfway(7).distance).toBe(0.5);
     expect(halfway(7).presentation.x).toBeLessThan(at6(7).presentation.x);
     expect(halfway(7).presentation.x).toBeGreaterThan(at7(7).presentation.x);
     expect(halfway(7).presentation.scale).toBeGreaterThan(at6(7).presentation.scale);
     expect(halfway(7).presentation.scale).toBeLessThan(at7(7).presentation.scale);
+    expect(halfway(7).presentation.opacity).toBeGreaterThanOrEqual(0.85);
 
     expect(at7(6).distance).toBe(-1);
     expect(at7(6).presentation.anchorName).toBe("left");
@@ -204,9 +249,17 @@ describe("homepage production multi-watch hero", () => {
     const model = file("src/components/home/home-scenario-model.ts");
 
     expect(scenarios[0]?.hero.mainWatch.brandName).toBe("Tissot");
-    expect(scenarios[0]?.hero.mainWatch.href).toBe("/watches?q=T150.210.11.041.00");
+    expect(scenarios[0]?.hero.mainWatch.href).toBe("/watches?q=T150.410.16.051.00");
     expect(model).not.toContain("imports/generated");
     expect(model).not.toContain("catalog-import-preview");
+  });
+
+  it("exposes only canonical catalog detail links as watch presentation targets", () => {
+    const [matchedScenario] = buildHomeScenarios(fixtureDataset);
+    const [fallbackScenario] = buildHomeScenarios({ ...fixtureDataset, watches: [] });
+
+    expect(getHomeWatchHref(matchedScenario!.hero.slots[1]!)).toBe("/watches/tissot/t1504171104100");
+    expect(getHomeWatchHref(fallbackScenario!.hero.mainWatch)).toBeNull();
   });
 
   it("classifies assets and prevents low-resolution frame-only images from central display", () => {
@@ -215,11 +268,11 @@ describe("homepage production multi-watch hero", () => {
     for (const scenario of scenarios) {
       expect(scenario.hero.mainWatch.asset.qualityClass).not.toBe("FRAME_ONLY");
       expect(scenario.hero.mainWatch.asset.qualityClass).not.toBe("REJECTED");
-      expect(scenario.hero.mainWatch.asset.sourceWidth).toBeGreaterThanOrEqual(900);
+      expect(Math.max(scenario.hero.mainWatch.asset.sourceWidth, scenario.hero.mainWatch.asset.sourceHeight)).toBeGreaterThanOrEqual(1200);
     }
 
     expect(scenarios[2]?.hero.mainWatch.asset.qualityClass).toBe("HERO_GRADE");
-    expect(scenarios[5]?.hero.mainWatch.asset.motionMode).toBe("ORBIT_FRAME_SET");
+    expect(scenarios[5]?.hero.mainWatch.asset.motionMode).toBe("STATIC_FRONT");
   });
 
   it("keeps every visible slot matched to its own exact model image metadata", () => {
@@ -256,250 +309,44 @@ describe("homepage production multi-watch hero", () => {
     const sport = buildHomeScenarios(fixtureDataset).find((scenario) => scenario.id === "sport");
     const mtg = sport?.hero.slots.find((slot) => slot.reference === "MTG-B3000DN-1A");
 
-    expect(mtg?.asset.motionMode).toBe("PARALLAX_ONLY");
+    expect(mtg?.asset.motionMode).toBe("STATIC_FRONT");
     expect(mtg?.asset.frameCount).toBe(1);
     expect(mtg?.asset.framePaths).toHaveLength(0);
   });
 
   it("mounts the production hero on the homepage without touching design-lab routes", () => {
     const home = file("src/app/(public)/page.tsx");
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const sitemap = file("src/app/sitemap.ts");
 
     expect(home).toContain("const scenarios = buildHomeScenarios(dataset)");
+    expect(home).toContain("const editorialCuration = buildHomeEditorialCuration(dataset)");
     expect(home).toContain("const orbitWatches = buildHomeOrbitWatches(scenarios)");
-    expect(home).toContain("<HomeProductHero scenarios={scenarios} orbitWatches={orbitWatches} />");
-    expect(hero).toContain('data-home-layout="production-single-24-watch-orbit"');
-    expect(hero).toContain('data-testid="homepage-product-stage"');
-    expect(hero).toContain('params.get("heroReview") === "1"');
-    expect(sitemap).not.toContain("design-lab/home-hero");
-  });
-
-  it("uses a continuous 10 second orbit driver and keeps compact accessible orbit controls", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-
-    expect(hero).toContain("const AUTO_STEP_PERIOD_MS = 10000");
-    expect(hero).toContain("elapsedMs / currentStepPeriodMs");
-    expect(hero).toContain("window.requestAnimationFrame(step)");
-    expect(hero).toContain("setOrbitPosition");
-    expect(hero).toContain("orbitPositionRef");
-    expect(hero).not.toContain("setActiveScenarioId");
-    expect(hero).not.toContain("handleScenarioKeyDown");
-    expect(hero).not.toContain("handleHeroKeyDown");
-    expect(hero).toContain("data-home-orbit-controls");
-    expect(hero).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
-    expect(hero).toContain('window.matchMedia("(pointer: fine)")');
-    expect(hero).toContain("setAutoCycleEnabled(nextCanAnimate)");
-    expect(hero).toContain('document.addEventListener("visibilitychange"');
-    expect(hero).toContain("styles.orbitControls");
-    expect(hero).toContain("styles.reviewControls");
-    expect(hero).toContain("RESET");
-    expect(hero).toContain("PREVIOUS WATCH");
-    expect(hero).toContain("NEXT WATCH");
-    expect(hero).toContain("PLAY");
-    expect(hero).toContain("PAUSE");
-    expect(hero).toContain("SHOW REFERENCE");
-    expect(hero).toContain("SIDE BY SIDE");
-    expect(hero).toContain("/generated/home-hero/review/homepage-multi-watch-approved.png");
-    expect(hero).toContain('params.get("heroMotion") === "0"');
-  });
-
-  it("configures autoplay as one complete 10 second step period", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(hero).toContain("data-home-step-period={AUTO_STEP_PERIOD_MS}");
-    expect(hero).toContain('data-home-motion-mode="continuous-orbit"');
-    expect(hero).toContain("data-home-current-step-period={Math.round(currentStepPeriodMs)}");
-    expect(hero).toContain("manualPausedRef.current = false");
-    expect(moduleStyles).toContain("animation: homeHeroCycleProgress 10000ms linear infinite");
-  });
-
-  it("uses fractional orbit motion instead of left/top slot swapping", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(hero).toContain("const [orbitPosition, setOrbitPosition] = useState(0)");
-    expect(hero).toContain("shortestSignedCircularDistance(watch.globalIndex, orbitPosition, total)");
-    expect(hero).toContain("orbitPresentationForDistance(distance)");
-    expect(hero).toContain('data-home-orbit-position={orbitPosition.toFixed(3)}');
-    expect(hero).toContain("FAST_TRAVEL_MAX_MS = 1650");
-    expect(moduleStyles).toContain("container-type: size");
-    expect(moduleStyles).toContain("translate3d(var(--orbit-x), var(--orbit-y), 0)");
-    expect(moduleStyles).not.toContain("top 820ms");
-    expect(moduleStyles).not.toContain("left 820ms");
-  });
-
-  it("does not pause auto-cycle on normal hover and does pause on deliberate interaction", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-
-    expect(hero).not.toContain("hoverPausedRef");
-    expect(hero).not.toContain('type PauseSource = "hover"');
-    expect(hero).toContain("handleInteractivePointerDown");
-    expect(hero).toContain('draggingPausedRef.current = true');
-    expect(hero).toContain("markManualPause(WATCH_MANUAL_PAUSE_MS)");
-    expect(hero).toContain("markManualPause(SCENARIO_MANUAL_PAUSE_MS)");
-    expect(hero).toContain("fastTravelTo(targetOrbitIndexForScenario(index as HomeScenarioIndex))");
-    expect(hero).toContain('"documentHidden"');
-    expect(hero).toContain('"reducedMotion"');
-    expect(hero).toContain('"reviewPaused"');
-  });
-
-  it("keeps product meta specs in a value-label grid without generic characteristic labels", () => {
-    const model = file("src/components/home/home-scenario-model.ts");
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(model).not.toContain('label: "Характеристика"');
-    expect(model).toContain('label: "ЦИФЕРБЛАТ"');
-    expect(model).toContain('label: "БРАСЛЕТ"');
-    expect(model).toContain('label: "ДИАМЕТР"');
-    expect(hero).toContain("<strong>{spec.value}</strong>");
-    expect(hero).toContain("<span>{spec.label}</span>");
-    expect(moduleStyles).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))");
-    expect(moduleStyles).toContain("-webkit-line-clamp: 2");
-  });
-
-  it("renders real public hero images and no abstract poster primitives", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(hero).toContain("next/image");
-    expect(hero).toContain("slot.watch.imageSrc");
-    expect(hero).toContain("slotClassByName[slot.slotName]");
-    expect(hero).toContain("ВАШЕ ВРЕМЯ. ВАШ СТИЛЬ.");
-    expect(hero).toContain("Подбираем часы под ваш ритм жизни");
-    expect(hero).not.toContain("homepage-stage-plane");
-    expect(hero).not.toContain("homepage-stage-arc");
-    expect(hero).not.toContain("technical");
-    expect(moduleStyles).toContain(".centerActive");
-    expect(moduleStyles).toContain(".reviewPanel");
-  });
-
-  it("keeps mobile useful with left center and right slots", () => {
-    const styles = file("src/components/home/home-product-hero.module.css");
-
-    expect(styles).toContain("@media (max-width: 767px)");
-    expect(styles).toContain(".leftWatch");
-    expect(styles).toContain(".centerActive");
-    expect(styles).toContain(".rightWatch");
-    expect(styles).toContain(".exitLeft");
-    expect(styles).toContain(".queueNear");
-    expect(styles).toContain(".queueFar");
-    expect(styles).toContain("display: none");
-  });
-
-  it("keeps the repaired production DOM free of legacy stage copy and duplicate product meta", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(hero).toContain("data-home-hero-left-message");
-    expect(hero).toContain("data-home-product-meta");
-    expect(hero).toContain("data-home-scenario-rail");
-    expect(hero).not.toContain("home-product-hero-watch-note");
-    expect(hero).not.toContain("homepage-stage-scenario-info");
-    expect(hero).not.toContain("data-home-scenario-copy");
-    expect(hero).not.toContain("hero.sceneDescription");
-    expect(hero).not.toContain("activeScenario.criteria.map");
-    expect(hero).not.toContain("hero.accentWord");
-    expect(moduleStyles).toContain("grid-template-areas");
-    expect(moduleStyles).toContain("\"message stage\"");
-    expect(moduleStyles).toContain("\"rail rail\"");
-  });
-
-  it("defines scenario color fields, an integrated background word layer, six orbit positions, and isolated review UI", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(hero).toContain("buildVisibleSlots");
-    expect(hero).toContain('data-home-slot-count={visibleSlots.length}');
-    expect(hero).toContain("data-home-scenario-color-field");
-    expect(hero).toContain("data-home-background-word-layer");
-    expect(hero).toContain("{activeScenarioDisplay.backgroundWord}");
-    expect(hero).not.toContain("homepage-stage-accent");
-    expect(moduleStyles).toContain(".scenarioColorField");
-    expect(moduleStyles).toContain(".colorPlate");
-    expect(moduleStyles).toContain(".stageTexture");
-    expect(moduleStyles).toContain(".backgroundWordLayer");
-    expect(hero).toContain("queueNear");
-    expect(hero).toContain("queueFar");
-    expect(hero).toContain("scenarioToneStyle(activeScenarioIndex)");
-    expect(hero).toContain("scenarioWordLayoutByIndex");
-    expect(moduleStyles).toContain("--home-accent-rgb");
-    expect(moduleStyles).toContain("--home-word-x");
-    expect(moduleStyles).toContain(".referenceOverlay");
-    expect(moduleStyles).toContain(".reviewPanel");
-    expect(moduleStyles.indexOf(".reviewPanel")).toBeGreaterThan(moduleStyles.indexOf(".referenceOverlay"));
-  });
-
-  it("keeps product meta background and rail derived from the center watch", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-
-    expect(hero).toContain("const activeWatch = orbitWatches[wrapOrbitIndex(activeOrbitIndex, orbitTotal)]");
-    expect(hero).toContain('const activeOrbitIndex = travelState === "idle" ? roundedOrbitIndex : settledOrbitIndex');
-    expect(hero).toContain("const activeScenarioIndex = scenarioIndexFromOrbitIndex(activeOrbitIndex)");
-    expect(hero).toContain("const activeScenarioPosition = scenarioPositionFromOrbitIndex(activeOrbitIndex)");
-    expect(hero).toContain("{activeScenarioDisplay.backgroundWord}");
-    expect(hero).toContain("scenarioIndex === activeScenarioIndex");
-    expect(hero).toContain("{activeWatch.model}");
-  });
-
-  it("supports accelerated scenario travel and disables multi-frame asset playback in normal render", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-
-    expect(hero).toContain('const [travelState, setTravelState] = useState<TravelState>("idle")');
-    expect(hero).toContain('animateOrbitTo(target, direction, distance, fastTravelDuration(distance, speedPercent, motionForcedOff), "fast-travel")');
-    expect(hero).toContain("const direction = 1");
-    expect(hero).toContain("forwardOrbitDistance(current, target, orbitTotal)");
-    expect(hero).toContain("moveOrbitBy(-1)");
-    expect(hero).toContain("slot.watch.imageSrc");
-    expect(hero).not.toContain("framePaths");
-    expect(hero).not.toContain("ORBIT_FRAME_SET");
-  });
-
-  it("keeps normal homepage orbit controls compact while preserving scenario rail jumps", () => {
-    const hero = file("src/components/home/home-product-hero.tsx");
-    const moduleStyles = file("src/components/home/home-product-hero.module.css");
-
-    expect(hero).toContain("data-home-orbit-controls");
-    expect(hero).toContain("styles.orbitControls");
-    expect(hero).not.toContain("handleScenarioKeyDown");
-    expect(hero).not.toContain("handleHeroKeyDown");
-    expect(hero).not.toContain("handleWatchButtonClick");
-    expect(hero).not.toContain("scenarioButtonRefs");
-    expect(moduleStyles).toContain(".orbitControls");
-    expect(moduleStyles).not.toContain(".accessibleControls");
-    expect(hero).toContain("fastTravelTo(targetOrbitIndexForScenario(scenarioIndex))");
-  });
-
-  it("keeps production hero assets front-only and records rejected side or angled frames", () => {
-    const scenarios = buildHomeScenarios(fixtureDataset);
-    const orbit = buildHomeOrbitWatches(scenarios);
-
-    expect(orbit).toHaveLength(24);
-    expect(orbit.every((watch) => watch.assetView === "front")).toBe(true);
-    expect(orbit.every((watch) => watch.isExactReferenceAsset)).toBe(true);
-    expect(orbit.every((watch) => watch.isHeroApprovedAsset)).toBe(true);
-    expect(rejectedHomeHeroAssets.some((asset) => asset.reference === "T129.410.11.053.00" && asset.path.includes("frame-01"))).toBe(true);
-    expect(rejectedHomeHeroAssets.some((asset) => asset.view === "side" || asset.view === "three-quarter")).toBe(true);
-  });
-
-  it("renders the complete homepage ecosystem after the production hero", () => {
-    const home = file("src/app/(public)/page.tsx");
-
-    expect(home).toContain("<HomeProductHero scenarios={scenarios} orbitWatches={orbitWatches} />");
-    expect(home).toContain("<HomeEcosystemIntro scenarios={scenarios} />");
-    expect(home).toContain("<HomeSelectionProfile scenarios={scenarios} />");
-    expect(home).toContain("<HomeCompareStory scenarios={scenarios} />");
-    expect(home).toContain("<HomePurchaseJourney />");
-    expect(home).toContain("<HomeCollectionStory scenarios={scenarios} />");
-    expect(home).toContain("<HomeCollectionIntelligence scenarios={scenarios} />");
-    expect(home).toContain("<HomeJournalPreview articles={articles} />");
-    expect(home).toContain("<HomeFinalCall />");
+    expect(home).toContain('<HomeProductHero scenarios={scenarios} orbitWatches={orbitWatches} reviewEnabled={process.env.NODE_ENV !== "production"} />');
+    expect(home).toContain("<HomeEcosystemPath scenarios={scenarios} curation={editorialCuration} />");
+    expect(home).toContain("<HomeSelection scenarios={scenarios} curation={editorialCuration} />");
+    expect(home).toContain("<HomeComparisonPurchase scenarios={scenarios} curation={editorialCuration} />");
+    expect(home).toContain("<HomeCollectionIntelligencePanel scenarios={scenarios} curation={editorialCuration} />");
+    expect(home).toContain("<HomeJournalFinal articles={articles} scenarios={scenarios} curation={editorialCuration} />");
+    expect(home).not.toContain("HomeEcosystemIntro");
+    expect(home).not.toContain("HomeSelectionProfile");
+    expect(home).not.toContain("HomeCandidateFunnel");
+    expect(home).not.toContain("HomeFinalCall");
     expect(home).not.toContain("HomeSelectionStory");
     expect(home).not.toContain("home-service-strip");
     expect(home).not.toContain("home-scenarios-section");
     expect(home).not.toContain("home-catalog-section");
+  });
+
+  it("keeps the approved scenario rail names and removes rejected old rail labels", () => {
+    const hero = file("src/components/home/home-product-hero.tsx");
+    const model = file("src/components/home/home-scenario-model.ts");
+
+    for (const label of ["\u041d\u0430 \u043a\u0430\u0436\u0434\u044b\u0439 \u0434\u0435\u043d\u044c", "\u041f\u043e\u0434 \u0440\u0443\u0431\u0430\u0448\u043a\u0443", "\u0414\u043b\u044f \u043f\u0443\u0442\u0435\u0448\u0435\u0441\u0442\u0432\u0438\u0439", "\u041f\u0435\u0440\u0432\u0430\u044f \u043c\u0435\u0445\u0430\u043d\u0438\u043a\u0430", "\u0414\u043b\u044f \u0441\u043f\u043e\u0440\u0442\u0430", "\u0412 \u043a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u044e"]) {
+      expect(hero).toContain(`railTitle: "${label}"`);
+    }
+
+    expect(hero).not.toContain('railTitle: "\u041f\u043e\u0434 \u0440\u0430\u0431\u043e\u0442\u0443"');
+    expect(hero).not.toContain('railTitle: "\u041f\u0440\u0435\u043c\u0438\u0443\u043c"');
+    expect(model).toContain('title: "\u0412 \u043a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u044e"');
   });
 
   it("documents the 24 production hero assets and rejected non-front frames", () => {
@@ -514,7 +361,7 @@ describe("homepage production multi-watch hero", () => {
     expect(audit).toContain("three-quarter/angled, excluded");
   });
 
-  it("uses generated orbit-normalized alpha-bound assets", () => {
+  it("keeps legacy orbit-normalized assets out of the production homepage model", () => {
     const model = file("src/components/home/home-scenario-model.ts");
     const manifestPath = join(root, "public/generated/home-hero/orbit-normalized/orbit-normalized-assets-manifest.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
@@ -530,14 +377,300 @@ describe("homepage production multi-watch hero", () => {
         opticalScale: number;
       }>;
     };
+    const scenarios = buildHomeScenarios(fixtureDataset);
+    const orbit = buildHomeOrbitWatches(scenarios);
 
     expect(existsSync(manifestPath)).toBe(true);
     expect(manifest.count).toBeGreaterThanOrEqual(16);
-    expect(model).toContain("orbitNormalizedAssetPath");
-    expect(model).toContain("/generated/home-hero/orbit-normalized/");
+    expect(model).not.toContain("orbitNormalizedAssetPath");
+    expect(model).not.toContain("/generated/home-hero/orbit-normalized/");
+    expect(orbit.every((watch) => watch.imageSrc.startsWith("/generated/homepage-premium-assets/"))).toBe(true);
     expect(manifest.records.every((record) => record.noArtificialUpscale)).toBe(true);
     expect(manifest.records.every((record) => record.visibleBounds.width > 0 && record.visibleBounds.height > 0)).toBe(true);
     expect(manifest.records.some((record) => record.reference === "T129.410.11.053.00")).toBe(true);
     expect(manifest.records.some((record) => record.reference === "RA-AC0M03S10B")).toBe(true);
+  });
+
+  it("uses the homepage premium asset manifest for production hero images", () => {
+    const manifestPath = join(root, "public/generated/homepage-premium-assets/homepage-premium-assets-manifest.json");
+    const contactSheetPath = join(root, "public/generated/homepage-premium-assets/homepage-premium-assets-contact-sheet.jpg");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+      approved: Array<{ reference: string; generatedPath: string; decision: string; noArtificialUpscale: boolean }>;
+      rejected: Array<{ reference: string; decision: string }>;
+    };
+    const scenarios = buildHomeScenarios(fixtureDataset);
+    const orbit = buildHomeOrbitWatches(scenarios);
+    const approvedPaths = new Set(manifest.approved.map((record) => record.generatedPath));
+
+    expect(existsSync(manifestPath)).toBe(true);
+    expect(existsSync(contactSheetPath)).toBe(true);
+    expect(manifest.approved).toHaveLength(7);
+    expect(manifest.approved.every((record) => record.noArtificialUpscale)).toBe(true);
+    expect(orbit.every((watch) => approvedPaths.has(watch.imageSrc))).toBe(true);
+    expect(manifest.rejected.some((record) => record.reference === "GBD-H1000-1A4" && record.decision === "REJECTED_LOW_RESOLUTION")).toBe(true);
+  });
+
+  it("keeps homepage journal production preview free of debug/contact images", () => {
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+
+    expect(ecosystem).not.toContain("comparison.jpg");
+    expect(ecosystem).not.toContain("main-watch-angle-comparison");
+    expect(ecosystem).not.toContain("contact-sheet");
+    expect(ecosystem).toContain("compactTeaser(lead.dek)");
+  });
+
+  it("uses explicit homepage placement identity instead of watch reference keys", () => {
+    const home = file("src/components/home/home-ecosystem-sections.tsx");
+    const hero = file("src/components/home/home-product-hero.tsx");
+
+    expect(home).toContain("export type HomeWatchPlacement");
+    expect(home).toContain("assertUniquePlacementIds");
+    expect(home).toContain("assertNoDuplicateReferencesInComposition");
+    expect(home).toContain("data-home-placement-id={placement.instanceId}");
+    expect(hero).toContain("data-home-placement-id={placementId}");
+    expect(hero).toContain("data-home-render-key={renderKey}");
+    expect(home).not.toContain("key={watch.reference}");
+    expect(hero).not.toContain("key={watch.reference}");
+  });
+
+  it("keeps homepage polish contracts for labels, model names, and review controls", () => {
+    const hero = file("src/components/home/home-product-hero.tsx");
+    const heroCss = file("src/components/home/home-product-hero.module.css");
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+    const ecosystemCss = file("src/components/home/home-ecosystem-sections.module.css");
+
+    for (const rejectedLabel of ["DAILY-FIT", "SHIRT-FIT", "TRAVEL-FIT", "MECHANICAL-FIT"]) {
+      expect(ecosystem).not.toContain(rejectedLabel);
+    }
+    for (const approvedLabel of ["Маршрут выбора", "Компактная посадка", "Спортивная роль", "Первая механика"]) {
+      expect(ecosystem).toContain(approvedLabel);
+    }
+
+    expect(hero).toContain("Пауза");
+    expect(hero).toContain("Продолжить");
+    expect(hero).toContain("PAUSE MOTION");
+    expect(hero).toContain("RESUME MOTION");
+    expect(hero).toContain("SHOW TEXT BOUNDS");
+    expect(hero).toContain("SHOW ASSET DIMENSIONS");
+    expect(hero).toContain("SHOW FULL-BLEED BOUNDS");
+    expect(hero).toContain("SHOW MATERIAL LAYERS");
+    expect(hero).toContain("SHOW TYPOGRAPHY SCALE");
+    expect(hero).toContain("SHOW WATCH RENDER SIZE");
+    expect(hero).toContain("SHOW NATURAL SIZE");
+    expect(hero).toContain("SHOW CTA VARIANTS");
+    expect(hero).toContain("SHOW SECTION HEIGHT");
+    expect(hero).toContain("SHOW BORDER COUNT");
+    expect(hero).toContain("SHOW UPSCALE WARNINGS");
+    expect(hero).toContain("SHOW OVERFLOW ELEMENTS");
+    expect(hero).toContain("data-home-generated-dimensions");
+    expect(ecosystem).toContain("data-home-source-dimensions");
+    expect(ecosystem).toContain("data-home-generated-dimensions");
+
+    expect(heroCss).not.toContain("text-overflow: ellipsis");
+    expect(ecosystemCss).not.toContain("text-overflow: ellipsis");
+    expect(ecosystemCss).toContain("--home-watch-section-scale");
+    expect(ecosystemCss).toContain("scale(calc(var(--home-watch-section-scale) * 1.012))");
+  });
+
+  it("keeps the premium homepage reset away from boxed slide and table patterns", () => {
+    const home = file("src/app/(public)/page.tsx");
+    const heroCss = file("src/components/home/home-product-hero.module.css");
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+    const ecosystemCss = file("src/components/home/home-ecosystem-sections.module.css");
+
+    expect(home.indexOf("<HomeEcosystemPath scenarios={scenarios}")).toBeLessThan(home.indexOf("<HomeSelection scenarios={scenarios}"));
+    expect(home.indexOf("<HomeCollectionIntelligencePanel scenarios={scenarios}")).toBeLessThan(home.indexOf("<HomeJournalFinal articles={articles} scenarios={scenarios}"));
+    expect(home).not.toContain("<EditorialContainer>\n        <HomeEcosystemPath");
+    expect(home).not.toContain("<EditorialContainer>\n        <HomeCollectionIntelligencePanel");
+
+    expect(heroCss).toContain("--home-ivory: #f3f0e8");
+    expect(heroCss).toContain("--home-paper-light: #fcfbf8");
+    expect(heroCss).toContain("--home-champagne: #b98a45");
+    expect(heroCss).toContain("font-size: clamp(4.375rem, 6vw, 5.75rem)");
+
+    expect(ecosystemCss).toContain("--home-navy-light: #102f3d");
+    expect(ecosystemCss).toContain("--home-dark-line: rgb(255 255 255 / 0.14)");
+    expect(ecosystemCss).not.toContain("grid-template-columns: repeat(5");
+    expect(ecosystemCss).not.toContain("100vw");
+    expect(ecosystemCss).not.toContain("mutedCta");
+
+    expect(ecosystem).toContain("journal-final-primary-prx-gold-t137407");
+    expect(ecosystem).toContain("journal-final-secondary-citizen-nj0210");
+    expect(ecosystem).toContain("className={styles.finalWatches}");
+  });
+
+  it("locks the final homepage composition into explicit normal-flow grid areas", () => {
+    const home = file("src/app/(public)/page.tsx");
+    const hero = file("src/components/home/home-product-hero.tsx");
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+    const ecosystemCss = file("src/components/home/home-ecosystem-sections.module.css");
+    const ruleBody = (className: string) => ecosystemCss.match(new RegExp(`\\.${className}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+
+    expect(home.indexOf("<HomeEcosystemPath")).toBeLessThan(home.indexOf("<HomeSelection"));
+    expect(home.indexOf("<HomeSelection")).toBeLessThan(home.indexOf("<HomeComparisonPurchase"));
+    expect(home.indexOf("<HomeComparisonPurchase")).toBeLessThan(home.indexOf("<HomeCollectionIntelligencePanel"));
+    expect(home.indexOf("<HomeCollectionIntelligencePanel")).toBeLessThan(home.indexOf("<HomeJournalFinal"));
+
+    expect(hero).toContain("if (distance < -2.01 || distance > 2.01) return null");
+    expect(hero).toContain("const AUTO_STEP_PERIOD_MS = 10000");
+    expect(hero).toContain("SHOW COMPOSITION GRID");
+    expect(hero).toContain("SHOW GRID AREAS");
+    expect(hero).toContain("SHOW TEXT FLOW");
+    expect(hero).toContain("SHOW WATCH STAGES");
+    expect(hero).toContain("SHOW WATCH BASELINES");
+    expect(hero).toContain("SHOW NEXT WATCH CONTAINER");
+    expect(hero).toContain("SHOW OVERLAPS");
+    expect(hero).toContain("SHOW OVERFLOW ELEMENT");
+    expect(hero).toContain("SHOW TEXTURE OPACITY");
+    expect(hero).toContain("SHOW SECTION HEIGHTS");
+
+    expect(ecosystem).toContain("className={styles.pathSteps}");
+    expect(ecosystem).toContain("className={styles.selectionProfile}");
+    expect(ecosystem).toContain("className={styles.comparisonModels}");
+    expect(ecosystem).toContain("comparison-purchase-pr100-34-t150210");
+    expect(ecosystem).toContain("comparison-purchase-finalist-t150410");
+    expect(ecosystem).toContain("comparison-purchase-seastar-t120417");
+    expect(ecosystem).toContain("className={styles.comparisonRows}");
+    expect(ecosystem).toContain("className={styles.purchaseJourney}");
+    expect(ecosystem).toContain("className={styles.collectionCopy}");
+    expect(ecosystem).toContain("className={styles.collectionAction}");
+    expect(ecosystem).toContain("className={styles.collectionOwnedRow}");
+    expect(ecosystem).toContain("className={styles.collectionGap}");
+    expect(ecosystem).toContain("className={styles.collectionNext}");
+    expect(ecosystem).not.toContain("className={styles.collectionNextRow}");
+    expect(ecosystem).toContain("data-home-next-watch-container");
+    expect(ecosystem).toContain('data-home-grid-area="collection-insights"');
+    expect(ecosystem).toContain("className={styles.journalLeadVisual}");
+    expect(ecosystem).toContain("className={`${styles.homeContent} ${styles.finalInner}`}");
+    expect(ecosystem).not.toContain("className={styles.collectionRail}");
+    expect(ecosystem).not.toContain("className={styles.pathPanel}");
+
+    expect(ecosystemCss).toContain("--home-content-max: 1440px");
+    expect(ecosystemCss).toContain("--home-gutter: clamp(24px, 3vw, 48px)");
+    expect(ecosystemCss).toContain("--home-gap: clamp(20px, 2.1vw, 32px)");
+    expect(ecosystemCss).not.toContain("repeat(5");
+    expect(ecosystemCss).not.toContain("100vw");
+    expect(ecosystemCss).not.toContain("text-overflow: ellipsis");
+    expect(ecosystemCss).not.toContain("linear-gradient(104deg");
+    expect(ruleBody("collectionCopy")).not.toContain("position: absolute");
+    expect(ruleBody("collectionNext")).not.toContain("position: absolute");
+    expect(ruleBody("comparisonRows")).not.toContain("position: absolute");
+  });
+
+  it("keeps production homepage independent from dev image endpoints", () => {
+    const home = file("src/app/(public)/page.tsx");
+    const hero = file("src/components/home/home-product-hero.tsx");
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+
+    expect(home).not.toContain("/api/catalog/dev-images");
+    expect(hero).not.toContain("/api/catalog/dev-images");
+    expect(ecosystem).not.toContain("/api/catalog/dev-images");
+  });
+
+  it("compresses homepage copy while preserving the approved product journey", () => {
+    const home = file("src/app/(public)/page.tsx");
+    const hero = file("src/components/home/home-product-hero.tsx");
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+    const cyrillicWords = ecosystem.match(/[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*/g) ?? [];
+
+    const orderedSections = [
+      "<HomeProductHero",
+      "<HomeEcosystemPath",
+      "<HomeSelection",
+      "<HomeComparisonPurchase",
+      "<HomeCollectionIntelligencePanel",
+      "<HomeJournalFinal",
+    ];
+    orderedSections.forEach((section, index) => {
+      if (index === 0) return;
+      expect(home.indexOf(orderedSections[index - 1] ?? "")).toBeLessThan(home.indexOf(section));
+    });
+
+    expect(cyrillicWords.length).toBeLessThanOrEqual(290);
+    expect(hero).toContain("Подбираем часы под ваш ритм,");
+    expect(hero).toContain("стиль и будущую коллекцию.");
+    for (const approvedCopy of [
+      "Подбор, сравнение, покупка",
+      "Учитываем образ жизни,",
+      "Сравниваем",
+      "главные различия",
+      "Коллекция",
+      "подсказывает",
+      "следующий шаг",
+      "Понять часы.",
+      "Потом выбрать.",
+    ]) {
+      expect(ecosystem).toContain(approvedCopy);
+    }
+    for (const rejectedCopy of [
+      "Сравниваем не шум",
+      "Коллекция показывает, чего ей не хватает",
+      "Eternal Time соединяет подбор, каталог",
+    ]) {
+      expect(ecosystem).not.toContain(rejectedCopy);
+    }
+  });
+
+  it("reveals critical homepage content early without empty reserved media", () => {
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+    const ecosystemCss = file("src/components/home/home-ecosystem-sections.module.css");
+    const orchestrator = file("src/components/home/home-motion-orchestrator.tsx");
+    const motionCss = file("src/components/home/home-motion-orchestrator.module.css");
+
+    expect(orchestrator).toContain('threshold: 0.06, rootMargin: "0px 0px 18% 0px"');
+    expect(orchestrator).toContain("observer.unobserve(target)");
+    expect(motionCss).toContain("--home-reveal-initial-opacity: 0.62");
+    expect(motionCss).toContain('[data-home-reveal="watch"]');
+    expect(motionCss).toContain("--home-reveal-initial-opacity: 0.36");
+    expect(motionCss).toContain("--home-reveal-initial-opacity: 0.55");
+    expect(motionCss).toContain("--home-reveal-initial-opacity: 0.7");
+    expect(motionCss).toContain("--home-reveal-duration: 760ms");
+    expect(motionCss).toContain("--home-reveal-delay: 60ms");
+    expect(motionCss).toContain(':global([data-home-reveal="line-y"]) { --home-reveal-duration: 650ms; }');
+    expect(motionCss).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(motionCss).toContain("opacity: 1 !important");
+
+    const selectionWatch = ecosystem.indexOf('className={styles.profileWatch} data-home-reveal="watch"');
+    const comparisonIdentity = ecosystem.indexOf('className={styles.comparisonIdentity} data-home-reveal="caption"');
+    expect(selectionWatch).toBeGreaterThan(ecosystem.indexOf('data-home-section="selection"'));
+    expect(comparisonIdentity).toBeGreaterThan(ecosystem.indexOf('data-home-section="comparison-purchase"'));
+    expect(ecosystem).toContain('data-home-reveal="journal-lead" data-home-reveal-index="1"');
+    expect(ecosystemCss).toContain("transparent 36px");
+    expect(ecosystemCss).not.toContain("height: 108px");
+    expect(ecosystemCss).not.toContain("100vw");
+    expect(ecosystemCss.match(/\.nextWatch\s*\{[\s\S]*?\}/)?.[0] ?? "").not.toContain("100vh");
+  });
+
+  it("keeps the final CTA concise and exposes density diagnostics in review mode", () => {
+    const ecosystem = file("src/components/home/home-ecosystem-sections.tsx");
+    const hero = file("src/components/home/home-product-hero.tsx");
+    const finalCta = ecosystem.slice(ecosystem.indexOf('data-home-grid-area="final-cta"'));
+
+    expect(finalCta).not.toContain('data-home-reveal="body"');
+    for (const control of [
+      "SHOW COPY LENGTH",
+      "SHOW LINE COUNT",
+      "SHOW VERTICAL PADDING",
+      "SHOW EMPTY AREA ESTIMATE",
+      "SHOW REVEAL INITIAL OPACITY",
+      "SHOW REVEAL TRIGGER POINT",
+      "SHOW TRANSITION ZONES",
+      "SHOW DOCUMENT VIEWPORT COUNT",
+      "SHOW LATE CONTENT",
+      "SHOW INVISIBLE RESERVED SPACE",
+    ]) {
+      expect(hero).toContain(control);
+    }
+    for (const metric of [
+      "homepage words",
+      "body-copy words",
+      "document / viewport",
+      "transition zones",
+      "vertical padding",
+      "largest empty gap",
+      "invisible reserved space",
+    ]) {
+      expect(hero).toContain(metric);
+    }
   });
 });

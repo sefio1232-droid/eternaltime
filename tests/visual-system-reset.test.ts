@@ -90,10 +90,10 @@ describe("editorial art direction and layout refinement", () => {
     const styles = file("src/app/globals.css");
 
     expect(home).toContain("HomeProductHero");
-    expect(home).toContain("HomeEcosystemIntro");
-    expect(home).toContain("HomeSelectionProfile");
-    expect(home).toContain("HomeCompareStory");
-    expect(home).toContain("HomeCollectionIntelligence");
+    expect(home).toContain("HomeEcosystemPath");
+    expect(home).toContain("HomeSelection");
+    expect(home).toContain("HomeComparisonPurchase");
+    expect(home).toContain("HomeCollectionIntelligencePanel");
     expect(home).not.toContain("HomeSelectionStory");
     expect(home).not.toContain("HomeScenarioOverview");
     expect(home).not.toContain("home-route-list");

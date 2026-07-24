@@ -1,0 +1,155 @@
+{
+  "generatedAt": "2026-07-22T09:39:09.844Z",
+  "policy": "Homepage production uses only approved homepage-premium-assets; rejected/debug/contact images are excluded from production render paths.",
+  "approved": [
+    {
+      "reference": "T150.410.16.051.00",
+      "slug": "t1504101605100",
+      "title": "Tissot PR 100 40mm",
+      "decision": "APPROVED_HERO",
+      "sourcePath": "/generated/home-hero/orbit-normalized/candidates/02-under-shirt/main-01.png",
+      "notes": "Front-facing, clean transparent asset, strong enough for hero center.",
+      "generatedPath": "/generated/homepage-premium-assets/t1504101605100.png",
+      "sourceWidth": 796,
+      "sourceHeight": 1250,
+      "generatedWidth": 767,
+      "generatedHeight": 1220,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T120.417.11.041.03",
+      "slug": "t1204171104103",
+      "title": "Tissot Seastar 1000 Chronograph",
+      "decision": "APPROVED_HERO",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/t1204171104103/frame-03.png",
+      "notes": "High-resolution front asset from final user-supplied set.",
+      "generatedPath": "/generated/homepage-premium-assets/t1204171104103.png",
+      "sourceWidth": 1050,
+      "sourceHeight": 1468,
+      "generatedWidth": 1008,
+      "generatedHeight": 1424,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T137.407.33.051.00",
+      "slug": "t1374073305100",
+      "title": "Tissot PRX Powermatic Gold",
+      "decision": "APPROVED_HERO",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/t1374073305100/frame-02.png",
+      "notes": "High-resolution front asset with full bracelet silhouette.",
+      "generatedPath": "/generated/homepage-premium-assets/t1374073305100.png",
+      "sourceWidth": 1006,
+      "sourceHeight": 1579,
+      "generatedWidth": 954,
+      "generatedHeight": 1527,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "EFK-100D-2A",
+      "slug": "efk100d2a",
+      "title": "Casio Edifice Automatic",
+      "decision": "APPROVED_HERO",
+      "sourcePath": "/generated/home-hero/orbit-normalized/candidates/04-first-mechanical/main-01.png",
+      "notes": "Confirmed front asset, sharp enough for hero and supporting scenes.",
+      "generatedPath": "/generated/homepage-premium-assets/efk100d2a.png",
+      "sourceWidth": 1026,
+      "sourceHeight": 1606,
+      "generatedWidth": 972,
+      "generatedHeight": 1552,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T150.210.11.041.00",
+      "slug": "t1502101104100",
+      "title": "Tissot PR 100 34mm",
+      "decision": "APPROVED_LARGE_SECTION",
+      "sourcePath": "/generated/home-hero/orbit-normalized/candidates/01-everyday/alt-01.png",
+      "notes": "Good clean front asset, kept slightly smaller than hero-center watches.",
+      "generatedPath": "/generated/homepage-premium-assets/t1502101104100.png",
+      "sourceWidth": 650,
+      "sourceHeight": 1164,
+      "generatedWidth": 626,
+      "generatedHeight": 1141,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "T150.417.11.041.00",
+      "slug": "t1504171104100",
+      "title": "Tissot PR 100 Chronograph",
+      "decision": "APPROVED_LARGE_SECTION",
+      "sourcePath": "/generated/home-hero/orbit-normalized/candidates/01-everyday/secondary-01.png",
+      "notes": "Clean product image for large sections and orbit alternatives.",
+      "generatedPath": "/generated/homepage-premium-assets/t1504171104100.png",
+      "sourceWidth": 1038,
+      "sourceHeight": 1164,
+      "generatedWidth": 1014,
+      "generatedHeight": 1143,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    },
+    {
+      "reference": "MTG-B3000DN-1A",
+      "slug": "mtgb3000dn1a",
+      "title": "Casio G-Shock MT-G",
+      "decision": "APPROVED_LARGE_SECTION",
+      "sourcePath": "/generated/home-hero/orbit-normalized/candidates/05-sport/alt-01.png",
+      "notes": "Strong sport visual; used as supporting hero/orbit alternative.",
+      "generatedPath": "/generated/homepage-premium-assets/mtgb3000dn1a.png",
+      "sourceWidth": 1065,
+      "sourceHeight": 1406,
+      "generatedWidth": 1027,
+      "generatedHeight": 1368,
+      "hasAlpha": true,
+      "noArtificialUpscale": true
+    }
+  ],
+  "rejected": [
+    {
+      "reference": "T129.410.11.053.00",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/t1294101105300/frame-02.png",
+      "decision": "REJECTED_LOW_RESOLUTION",
+      "notes": "228x341 source is not safe for production homepage enlargement."
+    },
+    {
+      "reference": "RA-AC0M03S10B",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/raac0m03s10b/frame-01.png",
+      "decision": "REJECTED_LOW_RESOLUTION",
+      "notes": "229x342 source remains thumbnail-only until a better Bambino asset is available."
+    },
+    {
+      "reference": "RA-AC0Q03S10B",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/raac0q03s10b/frame-01.png",
+      "decision": "REJECTED_LOW_RESOLUTION",
+      "notes": "Source is too small for premium homepage use."
+    },
+    {
+      "reference": "GBD-H1000-1A4",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/gbdh10001a4/frame-01.png",
+      "decision": "REJECTED_LOW_RESOLUTION",
+      "notes": "342x338 source reads as a thumbnail, not a hero/watch-led asset."
+    },
+    {
+      "reference": "T120.807.33.051.00",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/t1208073305100/frame-01.png",
+      "decision": "REJECTED_LOW_RESOLUTION",
+      "notes": "202x342 source would be visibly degraded in the production hero."
+    },
+    {
+      "reference": "T137.407.11.041.00",
+      "sourcePath": "/generated/home-hero/orbit-normalized/final/t1374071104100/frame-01.png",
+      "decision": "REJECTED_WRONG_ANGLE",
+      "notes": "Angled/side frame conflicts with the front-only production hero art direction."
+    },
+    {
+      "reference": "debug-contact-sheets",
+      "sourcePath": "/generated/home-hero/**/comparison.jpg",
+      "decision": "REJECTED_DEBUG_ASSET",
+      "notes": "Comparison/contact/debug images are never production homepage art."
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
+import { homepageWatchAssetDimensions, homepageWatchVisualConfigByReference } from "@/components/home/home-premium-assets";
 import type { CatalogReadDataset, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
 
 export type HomeScenarioId = "everyday" | "shirt" | "travel" | "first-mechanical" | "sport" | "next-collection";
@@ -21,7 +22,12 @@ export type HomeHeroAsset = {
   motionMode: HomeHeroMotionMode;
   framePaths: string[];
   frameCount: number;
-  source: "final_user_zip" | "catalog_candidate_asset" | "premium_candidate_asset";
+  source:
+    | "final_user_zip"
+    | "catalog_candidate_asset"
+    | "premium_candidate_asset"
+    | "homepage_premium_asset"
+    | "homepage_editorial_asset";
   sourceNote: string;
   isExactReference: boolean;
   view: HomeHeroAssetView;
@@ -50,6 +56,10 @@ export type HomeScenarioWatch = {
   isVisualFallbackFor?: string;
 };
 
+export function getHomeWatchHref(watch: Pick<HomeScenarioWatch, "href"> | Pick<OrbitWatch, "href">): string | null {
+  return watch.href.startsWith("/watches/") ? watch.href : null;
+}
+
 export type HomeScenarioHero = {
   mainWatch: HomeScenarioWatch;
   secondaryWatch: HomeScenarioWatch | null;
@@ -70,6 +80,16 @@ export type HomeScenario = {
   criteria: string[];
   catalogHref: string;
   hero: HomeScenarioHero;
+};
+
+export type HomeEditorialCuration = {
+  path: HomeScenarioWatch | null;
+  selection: HomeScenarioWatch | null;
+  comparisonSeastar: HomeScenarioWatch | null;
+  collectionOwned: HomeScenarioWatch[];
+  collectionRecommendation: HomeScenarioWatch | null;
+  journal: HomeScenarioWatch[];
+  final: HomeScenarioWatch[];
 };
 
 export type OrbitWatchSpec = {
@@ -96,6 +116,8 @@ export type OrbitWatch = {
   imageSrc: string;
   sourceWidth: number;
   sourceHeight: number;
+  generatedWidth: number;
+  generatedHeight: number;
   qualityClass: HomeHeroQualityClass;
   motionMode: HomeHeroMotionMode;
   assetView: HomeHeroAssetView;
@@ -148,169 +170,70 @@ type ScenarioDefinition = {
   slots: StaticSlot[];
 };
 
-function orbitNormalizedAssetPath(assetPath: string): string {
-  return assetPath.replace("/generated/home-hero/", "/generated/home-hero/orbit-normalized/");
-}
+const premiumAsset = (reference: string, qualityClass: HomeHeroQualityClass = "HERO_GRADE"): HomeHeroAsset => {
+  const config = homepageWatchVisualConfigByReference[reference];
+  const dimensions = homepageWatchAssetDimensions[reference];
+  if (!config || !dimensions) {
+    throw new Error(`Missing homepage premium asset config for ${reference}`);
+  }
 
-const finalAsset = (
-  referenceSlug: string,
-  frame: string,
-  sourceWidth: number,
-  sourceHeight: number,
-  qualityClass: HomeHeroQualityClass,
-  motionMode: HomeHeroMotionMode,
-  framePaths: string[] = [],
-  audit: Partial<Pick<HomeHeroAsset, "view" | "isHeroApproved" | "rejectionReason" | "sourceNote">> = {},
-): HomeHeroAsset => {
-  const path = orbitNormalizedAssetPath(`/generated/home-hero/final/${referenceSlug}/${frame}`);
   return {
-    path,
-    src: path,
-    width: 1700,
-    height: 1800,
-    sourceWidth,
-    sourceHeight,
+    path: config.assetPath,
+    src: config.assetPath,
+    width: dimensions.generatedWidth,
+    height: dimensions.generatedHeight,
+    sourceWidth: dimensions.sourceWidth,
+    sourceHeight: dimensions.sourceHeight,
     qualityClass,
-    motionMode,
-    framePaths: framePaths.map(orbitNormalizedAssetPath),
-    frameCount: framePaths.length > 0 ? framePaths.length : 1,
-    source: "final_user_zip",
-    sourceNote: audit.sourceNote ?? "Prepared from the user supplied final homepage ZIP set.",
-    isExactReference: true,
-    view: audit.view ?? "front",
-    isHeroApproved: audit.isHeroApproved ?? (audit.view === undefined || audit.view === "front"),
-    rejectionReason: audit.rejectionReason,
-  };
-};
-
-const candidateAsset = (
-  path: string,
-  sourceWidth: number,
-  sourceHeight: number,
-  qualityClass: HomeHeroQualityClass,
-  motionMode: HomeHeroMotionMode,
-  sourceNote: string,
-  audit: Partial<Pick<HomeHeroAsset, "view" | "isHeroApproved" | "isExactReference" | "rejectionReason">> = {},
-): HomeHeroAsset => {
-  const normalizedPath = orbitNormalizedAssetPath(path);
-  return {
-    path: normalizedPath,
-    src: normalizedPath,
-    width: 1700,
-    height: 1800,
-    sourceWidth,
-    sourceHeight,
-    qualityClass,
-    motionMode,
+    motionMode: "STATIC_FRONT",
     framePaths: [],
     frameCount: 1,
-    source: path.includes("/premium/") ? "premium_candidate_asset" : "catalog_candidate_asset",
-    sourceNote,
-    isExactReference: audit.isExactReference ?? true,
-    view: audit.view ?? "front",
-    isHeroApproved: audit.isHeroApproved ?? (audit.view === undefined || audit.view === "front"),
-    rejectionReason: audit.rejectionReason,
+    source: "homepage_premium_asset",
+    sourceNote: "Approved by HOMEPAGE_ASSET_CURATION for the production homepage premium visual set.",
+    isExactReference: true,
+    view: "front",
+    isHeroApproved: true,
   };
 };
 
-const homeHeroScenarioDefinitions: ScenarioDefinition[] = [
+const premiumSlot = (
+  slot: Omit<StaticSlot, "asset" | "displayScale" | "displayX" | "displayY" | "depth" | "opacity"> & {
+    qualityClass?: HomeHeroQualityClass;
+    displayScale?: number;
+    displayX?: number;
+    displayY?: number;
+    depth?: number;
+    opacity?: number;
+  },
+): StaticSlot => ({
+  ...slot,
+  asset: premiumAsset(slot.reference, slot.qualityClass ?? "HERO_GRADE"),
+  displayScale: slot.displayScale ?? 1,
+  displayX: slot.displayX ?? 0,
+  displayY: slot.displayY ?? 1,
+  depth: slot.depth ?? 1,
+  opacity: slot.opacity ?? 1,
+});
+
+const readableHomeScenarioDefinitions: ScenarioDefinition[] = [
   {
     id: "everyday",
     index: "01",
     title: "На каждый день",
     railTitle: "На каждый день",
     eyebrow: "Ваше время. Ваш стиль.",
-    description: "Универсальные часы, которые спокойно проходят офис, прогулку и обычный ритм недели.",
+    description: "Универсальные часы для ритма недели: офис, прогулка и обычный день без лишней церемонии.",
     criteria: ["читаемый циферблат", "стальной браслет", "размер около 38-40 мм"],
     catalogHref: "/watches?q=PR%20100",
     backgroundWord: "РИТМ",
     accentWord: "ПОДХОДЯТ",
-    sceneDescription: "В центре стоит PR 100 34mm: точная модель с чистым фронтальным asset, а PR 100 Chronograph остается в этом же сценарии как заметная альтернатива.",
-    reviewNote: "Reordered within the approved four-watch set: T150.417.11.041.00 has only low-resolution central sources, so exact high-quality T150.210.11.041.00 becomes centralMain.",
+    sceneDescription: "Ежедневный сценарий собран на чистых фронтальных product assets: главная роль у PR 100 40mm, рядом PR 100 Chronograph, PR 100 34mm и Edifice.",
+    reviewNote: "Low-resolution Classic Dream/G-Shock/Bambino assets removed from production everyday orbit.",
     slots: [
-      {
-        brandName: "Tissot",
-        title: "Tissot PR 100 34mm",
-        shortTitle: "PR 100 34mm",
-        reference: "T150.210.11.041.00",
-        referenceSlug: "t1502101104100",
-        slotRole: "centralMain",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/01-everyday/alt-01.png",
-          1680,
-          1680,
-          "HERO_GRADE",
-          "STATIC_FRONT",
-          "Exact high-quality frontal PR 100 34mm candidate promoted to centralMain inside the approved everyday set.",
-        ),
-        specs: ["синий циферблат", "стальной браслет", "34 мм"],
-        displayScale: 1,
-        displayX: 0,
-        displayY: 1,
-        depth: 1,
-        opacity: 1,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot PR 100 Chronograph 40mm",
-        shortTitle: "PR 100 Chronograph",
-        reference: "T150.417.11.041.00",
-        referenceSlug: "t1504171104100",
-        slotRole: "alternativeLeft",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/01-everyday/secondary-01.png",
-          800,
-          800,
-          "ALTERNATIVE_GRADE",
-          "PARALLAX_ONLY",
-          "Exact PR 100 Chronograph asset kept as alternative because it is readable but not safe for central enlargement.",
-        ),
-        specs: ["синий циферблат", "хронограф", "сталь"],
-        displayScale: 0.58,
-        displayX: -34,
-        displayY: 3,
-        depth: 3,
-        opacity: 0.34,
-      },
-      {
-        brandName: "Casio",
-        title: "Casio Edifice Automatic",
-        shortTitle: "Edifice Automatic",
-        reference: "EFK-100D-2A",
-        referenceSlug: "efk100d2a",
-        slotRole: "alternativeRight",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/04-first-mechanical/main-01.png",
-          920,
-          1500,
-          "ALTERNATIVE_GRADE",
-          "PARALLAX_ONLY",
-          "Confirmed Edifice automatic image; used small because it is not strict enough for the largest central role.",
-        ),
-        specs: ["автомат", "синий циферблат", "стальной браслет"],
-        displayScale: 0.48,
-        displayX: 31,
-        displayY: 3,
-        depth: 4,
-        opacity: 0.42,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot Classic Dream 40mm",
-        shortTitle: "Classic Dream",
-        reference: "T129.410.11.053.00",
-        referenceSlug: "t1294101105300",
-        slotRole: "alternativeRear",
-        asset: finalAsset("t1294101105300", "frame-02.png", 320, 320, "FRAME_ONLY", "STATIC_FRONT", [], {
-          sourceNote: "Front-only replacement for the rejected Classic Dream side-view frame-01.",
-        }),
-        specs: ["черный циферблат", "стальной браслет", "кварц"],
-        displayScale: 0.42,
-        displayX: 48,
-        displayY: -10,
-        depth: 5,
-        opacity: 0.2,
-      },
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 40mm", shortTitle: "PR 100 40mm", reference: "T150.410.16.051.00", referenceSlug: "t1504101605100", slotRole: "centralMain", specs: ["черный циферблат", "кожаный ремешок", "40 мм"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", shortTitle: "PR 100 Chronograph", reference: "T150.417.11.041.00", referenceSlug: "t1504171104100", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.68, displayX: -30, displayY: 3, depth: 3, opacity: 0.48, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 34mm", shortTitle: "PR 100 34mm", reference: "T150.210.11.041.00", referenceSlug: "t1502101104100", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.64, displayX: 31, displayY: 2, depth: 4, opacity: 0.5, specs: ["синий циферблат", "стальной браслет", "34 мм"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.24, specs: ["автомат", "синий циферблат", "стальной браслет"] }),
     ],
   },
   {
@@ -319,88 +242,18 @@ const homeHeroScenarioDefinitions: ScenarioDefinition[] = [
     title: "Под рубашку",
     railTitle: "Под рубашку",
     eyebrow: "Тише, тоньше, собраннее.",
-    description: "Сдержанные модели, которые не спорят с одеждой и остаются читаемыми в деловом сценарии.",
+    description: "Сдержанные часы, которые не спорят с одеждой и остаются читаемыми в деловом сценарии.",
     criteria: ["чистый циферблат", "тонкий профиль", "кожа или спокойная сталь"],
     catalogHref: "/watches?q=T150.410.16.051.00",
     backgroundWord: "КЛАССИКА",
     accentWord: "СДЕРЖАННО",
-    sceneDescription: "Здесь главный акцент на Tissot PR 100 40mm на черном ремешке: спокойная форма, темный циферблат и понятный профиль под манжету.",
-    reviewNote: "Central asset is the approved high-quality catalog candidate for T150.410.16.051.00.",
+    sceneDescription: "PR 100 на черном ремешке ведет сценарий под манжету; малые Bambino/Classic Dream thumbnails не попадают в production orbit.",
+    reviewNote: "Bambino stays out until a large front asset is available.",
     slots: [
-      {
-        brandName: "Tissot",
-        title: "Tissot PR 100 40mm",
-        shortTitle: "PR 100 40mm",
-        reference: "T150.410.16.051.00",
-        referenceSlug: "t1504101605100",
-        slotRole: "centralMain",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/02-under-shirt/main-01.png",
-          1680,
-          1680,
-          "HERO_GRADE",
-          "STATIC_FRONT",
-          "Approved high-quality frontal PR 100 shirt scenario asset.",
-        ),
-        specs: ["черный циферблат", "кожаный ремешок", "40 мм"],
-        displayScale: 0.96,
-        displayX: 0,
-        displayY: 1,
-        depth: 1,
-        opacity: 1,
-      },
-      {
-        brandName: "Orient",
-        title: "Orient Bambino 38",
-        shortTitle: "Bambino 38",
-        reference: "RA-AC0M03S10B",
-        referenceSlug: "raac0m03s10b",
-        slotRole: "alternativeLeft",
-        asset: finalAsset("raac0m03s10b", "frame-01.png", 320, 480, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["светлый циферблат", "кожаный ремешок", "автомат"],
-        displayScale: 0.5,
-        displayX: -32,
-        displayY: 1,
-        depth: 3,
-        opacity: 0.36,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot Classic Dream 40mm",
-        shortTitle: "Classic Dream",
-        reference: "T129.410.11.053.00",
-        referenceSlug: "t1294101105300",
-        slotRole: "alternativeRight",
-        asset: finalAsset("t1294101105300", "frame-02.png", 320, 320, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["черный циферблат", "стальной браслет", "40 мм"],
-        displayScale: 0.48,
-        displayX: 32,
-        displayY: 3,
-        depth: 4,
-        opacity: 0.42,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot PR 100 34mm",
-        shortTitle: "PR 100 34mm",
-        reference: "T150.210.11.041.00",
-        referenceSlug: "t1502101104100",
-        slotRole: "alternativeRear",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/01-everyday/alt-01.png",
-          1680,
-          1680,
-          "HERO_GRADE",
-          "PARALLAX_ONLY",
-          "High-quality frontal PR 100 34mm candidate reused as a rear small alternative.",
-        ),
-        specs: ["синий циферблат", "стальной браслет", "34 мм"],
-        displayScale: 0.36,
-        displayX: 47,
-        displayY: -10,
-        depth: 5,
-        opacity: 0.2,
-      },
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 40mm", shortTitle: "PR 100 40mm", reference: "T150.410.16.051.00", referenceSlug: "t1504101605100", slotRole: "centralMain", specs: ["черный циферблат", "кожаный ремешок", "40 мм"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 34mm", shortTitle: "PR 100 34mm", reference: "T150.210.11.041.00", referenceSlug: "t1502101104100", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: -32, displayY: 2, depth: 3, opacity: 0.42, specs: ["синий циферблат", "стальной браслет", "34 мм"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", shortTitle: "PR 100 Chronograph", reference: "T150.417.11.041.00", referenceSlug: "t1504171104100", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "сталь"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.46, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["автомат", "синий циферблат", "стальной браслет"] }),
     ],
   },
   {
@@ -409,80 +262,18 @@ const homeHeroScenarioDefinitions: ScenarioDefinition[] = [
     title: "Для путешествий",
     railTitle: "Для путешествий",
     eyebrow: "Надежность в дороге.",
-    description: "Часы для смены города, воды, маршрута и расписания, когда важна читаемость и запас прочности.",
-    criteria: ["водозащита", "читаемость", "прочность корпуса"],
+    description: "Часы для смены города, воды, маршрута и расписания, когда важны читаемость и запас прочности.",
+    criteria: ["водозащита", "читаемость", "прочный корпус"],
     catalogHref: "/watches?q=Seastar%201000",
     backgroundWord: "ДВИЖЕНИЕ",
     accentWord: "ГОТОВЫ",
-    sceneDescription: "Tissot Seastar 1000 Chronograph получает главный размер сцены: из пользовательского ZIP есть high-res фронтальный кадр.",
-    reviewNote: "T120.417.11.041.03 frame-03 is a high-resolution final user-supplied frame and is allowed as central main.",
+    sceneDescription: "Seastar Chronograph ведет дорожный сценарий; G-Shock thumbnail заменен качественным MT-G asset.",
+    reviewNote: "GBD-H1000 stays rejected for production homepage because source is low-resolution.",
     slots: [
-      {
-        brandName: "Tissot",
-        title: "Tissot Seastar 1000 Chronograph 45.5mm",
-        shortTitle: "Seastar Chronograph",
-        reference: "T120.417.11.041.03",
-        referenceSlug: "t1204171104103",
-        slotRole: "centralMain",
-        asset: finalAsset("t1204171104103", "frame-03.png", 1275, 1700, "HERO_GRADE", "STATIC_FRONT", [
-          "/generated/home-hero/final/t1204171104103/frame-01.png",
-          "/generated/home-hero/final/t1204171104103/frame-02.png",
-          "/generated/home-hero/final/t1204171104103/frame-03.png",
-        ]),
-        specs: ["синий циферблат", "хронограф", "стальной браслет"],
-        displayScale: 1,
-        displayX: 0,
-        displayY: 1,
-        depth: 1,
-        opacity: 1,
-      },
-      {
-        brandName: "Casio",
-        title: "Casio G-Shock",
-        shortTitle: "G-Shock",
-        reference: "GBD-H1000-1A4",
-        referenceSlug: "gbdh10001a4",
-        slotRole: "alternativeLeft",
-        asset: finalAsset("gbdh10001a4", "frame-01.png", 320, 320, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["черно-оранжевый корпус", "датчики", "спорт"],
-        displayScale: 0.46,
-        displayX: -33,
-        displayY: 3,
-        depth: 3,
-        opacity: 0.38,
-      },
-      {
-        brandName: "Orient",
-        title: "Orient Mako 40",
-        shortTitle: "Mako 40",
-        reference: "RA-AC0Q03S10B",
-        referenceSlug: "raac0q03s10b",
-        slotRole: "alternativeRight",
-        asset: finalAsset("raac0q03s10b", "frame-01.png", 320, 480, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["светлый циферблат", "стальной браслет", "автомат"],
-        displayScale: 0.5,
-        displayX: 33,
-        displayY: 1,
-        depth: 4,
-        opacity: 0.42,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot Seastar 1000 Chronograph 45.5mm",
-        shortTitle: "Seastar Black",
-        reference: "T120.417.17.051.02",
-        referenceSlug: "t1204171705102",
-        slotRole: "alternativeRear",
-        asset: finalAsset("t1204171705102", "frame-02.png", 320, 480, "FRAME_ONLY", "STATIC_FRONT", [], {
-          sourceNote: "Front-only replacement for rejected side-view Seastar Black frame-01.",
-        }),
-        specs: ["черный циферблат", "черный ремешок", "хронограф"],
-        displayScale: 0.4,
-        displayX: 48,
-        displayY: -10,
-        depth: 5,
-        opacity: 0.2,
-      },
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "centralMain", specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio G-Shock MT-G", shortTitle: "G-Shock MT-G", reference: "MTG-B3000DN-1A", referenceSlug: "mtgb3000dn1a", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: -32, displayY: 2, depth: 3, opacity: 0.44, specs: ["защита", "металл", "акцент"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: 32, displayY: 2, depth: 4, opacity: 0.46, specs: ["автомат", "синий циферблат", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", shortTitle: "PR 100 Chronograph", reference: "T150.417.11.041.00", referenceSlug: "t1504171104100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["синий циферблат", "хронограф", "сталь"] }),
     ],
   },
   {
@@ -490,86 +281,19 @@ const homeHeroScenarioDefinitions: ScenarioDefinition[] = [
     index: "04",
     title: "Первая механика",
     railTitle: "Первая механика",
-    eyebrow: "Вход в механику без шума.",
-    description: "Понятные автоматические модели, где виден смысл механики и нет лишней театральности.",
-    criteria: ["автоматический механизм", "универсальный размер", "понятная посадка"],
-    catalogHref: "/watches?q=automatic",
+    eyebrow: "Автомат без лишней драмы.",
+    description: "Понятный вход в механические часы: читаемый циферблат, надежная посадка и современный повседневный образ.",
+    criteria: ["автоматический механизм", "стальной браслет", "понятная эксплуатация"],
+    catalogHref: "/watches?q=EFK-100D-2A",
     backgroundWord: "МЕХАНИЗМ",
-    accentWord: "ДВИЖЕНИЕ",
-    sceneDescription: "Casio Edifice Automatic остается главным смысловым выбором; крупная сцена использует лучший доступный реальный asset без искусственного skew.",
-    reviewNote: "EFK-100D-2A final frames are low-res; the older catalog candidate is the safest available large visual but is classified as ALTERNATIVE_GRADE.",
+    accentWord: "ЖИВОЙ",
+    sceneDescription: "Edifice Automatic получает главную механическую роль; малые исходные Orient thumbnails не используются в production.",
+    reviewNote: "Orient Bambino and Mako are excluded until better front assets exist.",
     slots: [
-      {
-        brandName: "Casio",
-        title: "Casio Edifice Automatic",
-        shortTitle: "Edifice Automatic",
-        reference: "EFK-100D-2A",
-        referenceSlug: "efk100d2a",
-        slotRole: "centralMain",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/04-first-mechanical/main-01.png",
-          920,
-          1500,
-          "ALTERNATIVE_GRADE",
-          "PARALLAX_ONLY",
-          "Best available real Edifice asset; allowed central with explicit quality review note because final frames are too small.",
-        ),
-        specs: ["автомат", "синий циферблат", "стальной браслет"],
-        displayScale: 0.9,
-        displayX: 0,
-        displayY: 1,
-        depth: 1,
-        opacity: 1,
-      },
-      {
-        brandName: "Orient",
-        title: "Orient Bambino 38",
-        shortTitle: "Bambino 38",
-        reference: "RA-AC0M03S10B",
-        referenceSlug: "raac0m03s10b",
-        slotRole: "alternativeLeft",
-        asset: finalAsset("raac0m03s10b", "frame-02.png", 320, 480, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["светлый циферблат", "кожа", "автомат"],
-        displayScale: 0.48,
-        displayX: -33,
-        displayY: 3,
-        depth: 3,
-        opacity: 0.38,
-      },
-      {
-        brandName: "Orient",
-        title: "Orient Mako 40",
-        shortTitle: "Mako 40",
-        reference: "RA-AC0Q03S10B",
-        referenceSlug: "raac0q03s10b",
-        slotRole: "alternativeRight",
-        asset: finalAsset("raac0q03s10b", "frame-01.png", 320, 480, "FRAME_ONLY", "STATIC_FRONT", [], {
-          sourceNote: "Front-only Mako frame selected; frame-02 is held out of normal hero because it reads as side-view.",
-        }),
-        specs: ["светлый циферблат", "стальной браслет", "автомат"],
-        displayScale: 0.48,
-        displayX: 33,
-        displayY: 2,
-        depth: 4,
-        opacity: 0.42,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot PRX Powermatic 80 40mm",
-        shortTitle: "PRX Powermatic",
-        reference: "T137.407.11.041.00",
-        referenceSlug: "t1374071104100",
-        slotRole: "alternativeRear",
-        asset: finalAsset("t1374071104100", "frame-03.png", 270, 320, "FRAME_ONLY", "STATIC_FRONT", [], {
-          sourceNote: "Front-only PRX blue frame selected; side-view frames remain rejected for normal hero.",
-        }),
-        specs: ["синий циферблат", "стальной браслет", "Powermatic 80"],
-        displayScale: 0.4,
-        displayX: 48,
-        displayY: -10,
-        depth: 5,
-        opacity: 0.2,
-      },
+      premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "centralMain", specs: ["автомат", "синий циферблат", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PRX Powermatic 80 40mm Gold", shortTitle: "PRX Powermatic Gold", reference: "T137.407.33.051.00", referenceSlug: "t1374073305100", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: -32, displayY: 2, depth: 3, opacity: 0.44, specs: ["Powermatic 80", "золотой корпус", "черный циферблат"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 40mm", shortTitle: "PR 100 40mm", reference: "T150.410.16.051.00", referenceSlug: "t1504101605100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["черный циферблат", "кожаный ремешок", "40 мм"] }),
     ],
   },
   {
@@ -577,177 +301,44 @@ const homeHeroScenarioDefinitions: ScenarioDefinition[] = [
     index: "05",
     title: "Для спорта",
     railTitle: "Для спорта",
-    eyebrow: "Функция и запас прочности.",
-    description: "Модели, которые спокойно переживают воду, нагрузку и активный день без хрупкости.",
-    criteria: ["водозащита", "быстрое считывание", "защищенный корпус"],
-    catalogHref: "/watches?q=G-Shock%20Seastar",
+    eyebrow: "Функция и точность.",
+    description: "Сценарий для активности, воды и плотного графика без хрупких или случайных визуальных компромиссов.",
+    criteria: ["прочность", "водозащита", "легкая читаемость"],
+    catalogHref: "/watches?q=Seastar%201000",
     backgroundWord: "ЭНЕРГИЯ",
-    accentWord: "НАДЕЖНО",
-    sceneDescription: "В центре спортивного сценария Seastar Chronograph с точным high-res фронтальным asset; low-resolution Seastar 40mm остается в наборе как малая альтернатива.",
-    reviewNote: "Reordered within the approved sport set: T120.807.33.051.00 has only low-resolution final frames, so exact high-quality T120.417.11.041.03 becomes centralMain.",
+    accentWord: "ТОЧНОСТЬ",
+    sceneDescription: "Sport scenario uses Seastar and MT-G quality assets instead of the low-resolution Seastar 40/G-Shock thumbnails.",
+    reviewNote: "T120.807.33.051.00 and GBD-H1000-1A4 remain rejected until better exact front assets exist.",
     slots: [
-      {
-        brandName: "Tissot",
-        title: "Tissot Seastar 1000 Chronograph 45.5mm",
-        shortTitle: "Seastar Chronograph",
-        reference: "T120.417.11.041.03",
-        referenceSlug: "t1204171104103",
-        slotRole: "centralMain",
-        asset: finalAsset("t1204171104103", "frame-03.png", 1275, 1700, "HERO_GRADE", "STATIC_FRONT"),
-        specs: ["синий циферблат", "хронограф", "сталь"],
-        displayScale: 1,
-        displayX: 0,
-        displayY: 1,
-        depth: 1,
-        opacity: 1,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot Seastar 1000 40mm",
-        shortTitle: "Seastar 1000",
-        reference: "T120.807.33.051.00",
-        referenceSlug: "t1208073305100",
-        slotRole: "alternativeLeft",
-        asset: finalAsset("t1208073305100", "frame-01.png", 180, 320, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["дайверская логика", "зеленый акцент", "стальной браслет"],
-        displayScale: 0.46,
-        displayX: -33,
-        displayY: 2,
-        depth: 3,
-        opacity: 0.38,
-      },
-      {
-        brandName: "Casio",
-        title: "Casio G-Shock MT-G",
-        shortTitle: "G-Shock MT-G",
-        reference: "MTG-B3000DN-1A",
-        referenceSlug: "mtgb3000dn1a",
-        slotRole: "alternativeRight",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/05-sport/alt-01.png",
-          2000,
-          2000,
-          "ALTERNATIVE_GRADE",
-          "PARALLAX_ONLY",
-          "Existing MT-G candidate; no invented final orbit frames because no final MTG ZIP was supplied.",
-        ),
-        specs: ["защита", "металл", "акцент"],
-        displayScale: 0.46,
-        displayX: 33,
-        displayY: 2,
-        depth: 4,
-        opacity: 0.42,
-      },
-      {
-        brandName: "Casio",
-        title: "Casio G-Shock",
-        shortTitle: "G-Shock",
-        reference: "GBD-H1000-1A4",
-        referenceSlug: "gbdh10001a4",
-        slotRole: "alternativeRear",
-        asset: finalAsset("gbdh10001a4", "frame-01.png", 320, 320, "FRAME_ONLY", "STATIC_FRONT", [], {
-          sourceNote: "Front-only G-Shock frame selected for normal hero.",
-        }),
-        specs: ["датчики", "ударопрочность", "спорт"],
-        displayScale: 0.4,
-        displayX: 48,
-        displayY: -10,
-        depth: 5,
-        opacity: 0.2,
-      },
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "centralMain", specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio G-Shock MT-G", shortTitle: "G-Shock MT-G", reference: "MTG-B3000DN-1A", referenceSlug: "mtgb3000dn1a", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: -32, displayY: 2, depth: 3, opacity: 0.46, specs: ["защита", "металл", "акцент"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["автомат", "синий циферблат", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", shortTitle: "PR 100 Chronograph", reference: "T150.417.11.041.00", referenceSlug: "t1504171104100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["синий циферблат", "хронограф", "сталь"] }),
     ],
   },
   {
     id: "next-collection",
     index: "06",
-    title: "Следующее дополнение в коллекцию",
+    title: "В коллекцию",
     railTitle: "В коллекцию",
     eyebrow: "Когда база уже есть.",
-    description: "Часы с характером: другой металл, интегрированный браслет или новая роль в коллекции.",
-    criteria: ["отличается от базы", "сильная форма", "есть отдельный сценарий носки"],
+    description: "Часы с отдельной ролью: другой металл, более сильная форма или новый сценарий внутри личной коллекции.",
+    criteria: ["не дублирует базу", "сильная форма", "понятная роль"],
     catalogHref: "/watches?q=PRX%20Powermatic",
     backgroundWord: "ХАРАКТЕР",
     accentWord: "ХАРАКТЕР",
-    sceneDescription: "Золотой PRX Powermatic получает центральную роль: из финального ZIP есть high-res кадры для аккуратного motion frame set.",
-    reviewNote: "T137.407.33.051.00 has two high-resolution final frames; MTG remains a non-orbit small alternative because no final MTG ZIP was supplied.",
+    sceneDescription: "Gold PRX leads the collection scenario; supporting watches stay within the audited premium asset set.",
+    reviewNote: "PRX Blue remains out because available source frames are too small/angled for production hero use.",
     slots: [
-      {
-        brandName: "Tissot",
-        title: "Tissot PRX Powermatic 80 40mm Gold",
-        shortTitle: "PRX Powermatic Gold",
-        reference: "T137.407.33.051.00",
-        referenceSlug: "t1374073305100",
-        slotRole: "centralMain",
-        asset: finalAsset("t1374073305100", "frame-02.png", 917, 1500, "HERO_GRADE", "ORBIT_FRAME_SET", [
-          "/generated/home-hero/final/t1374073305100/frame-01.png",
-          "/generated/home-hero/final/t1374073305100/frame-02.png",
-        ]),
-        specs: ["золотой корпус", "черный циферблат", "Powermatic 80"],
-        displayScale: 1,
-        displayX: 0,
-        displayY: 1,
-        depth: 1,
-        opacity: 1,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot PRX Powermatic 80 40mm Blue",
-        shortTitle: "PRX Powermatic Blue",
-        reference: "T137.407.11.041.00",
-        referenceSlug: "t1374071104100",
-        slotRole: "alternativeLeft",
-        asset: finalAsset("t1374071104100", "frame-03.png", 270, 320, "FRAME_ONLY", "STATIC_FRONT", [], {
-          sourceNote: "Front-only PRX blue frame selected; side-view frames remain rejected for normal hero.",
-        }),
-        specs: ["синий циферблат", "стальной браслет", "Powermatic 80"],
-        displayScale: 0.48,
-        displayX: -33,
-        displayY: 2,
-        depth: 3,
-        opacity: 0.38,
-      },
-      {
-        brandName: "Casio",
-        title: "Casio G-Shock MT-G",
-        shortTitle: "G-Shock MT-G",
-        reference: "MTG-B3000DN-1A",
-        referenceSlug: "mtgb3000dn1a",
-        slotRole: "alternativeRight",
-        asset: candidateAsset(
-          "/generated/home-hero/candidates/06-collection/alt-01.png",
-          2000,
-          2000,
-          "ALTERNATIVE_GRADE",
-          "PARALLAX_ONLY",
-          "Exact MT-G candidate restored as a visible collection alternative; no final orbit frames are invented.",
-        ),
-        specs: ["металл", "защита", "акцент"],
-        displayScale: 0.44,
-        displayX: 33,
-        displayY: 2,
-        depth: 4,
-        opacity: 0.42,
-      },
-      {
-        brandName: "Tissot",
-        title: "Tissot Seastar 1000 Chronograph 45.5mm",
-        shortTitle: "Seastar Black",
-        reference: "T120.417.17.051.02",
-        referenceSlug: "t1204171705102",
-        slotRole: "alternativeRear",
-        asset: finalAsset("t1204171705102", "frame-02.png", 320, 480, "FRAME_ONLY", "STATIC_FRONT"),
-        specs: ["черный циферблат", "черный ремешок", "хронограф"],
-        displayScale: 0.4,
-        displayX: 48,
-        displayY: -10,
-        depth: 5,
-        opacity: 0.2,
-      },
+      premiumSlot({ brandName: "Tissot", title: "Tissot PRX Powermatic 80 40mm Gold", shortTitle: "PRX Powermatic Gold", reference: "T137.407.33.051.00", referenceSlug: "t1374073305100", slotRole: "centralMain", specs: ["Powermatic 80", "золотой корпус", "черный циферблат"] }),
+      premiumSlot({ brandName: "Casio", title: "Casio G-Shock MT-G", shortTitle: "G-Shock MT-G", reference: "MTG-B3000DN-1A", referenceSlug: "mtgb3000dn1a", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: -32, displayY: 2, depth: 3, opacity: 0.46, specs: ["защита", "металл", "акцент"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 40mm", shortTitle: "PR 100 40mm", reference: "T150.410.16.051.00", referenceSlug: "t1504101605100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["черный циферблат", "кожаный ремешок", "40 мм"] }),
     ],
   },
 ];
 
-export const homeScenarioDefinitions = homeHeroScenarioDefinitions;
+export const homeScenarioDefinitions = readableHomeScenarioDefinitions;
 
 export const rejectedHomeHeroAssets = [
   {
@@ -791,6 +382,198 @@ function findCatalogWatch(dataset: CatalogReadDataset | null, reference: string)
   return dataset?.watches.find((watch) => watch.referenceSlug === referenceSlug || normalizeReferenceSlug(watch.referenceDisplay) === referenceSlug) ?? null;
 }
 
+type EditorialWatchDefinition = {
+  reference: string;
+  shortTitle: string;
+  assetPath: string;
+  width: number;
+  height: number;
+  specs: string[];
+};
+
+const editorialWatchDefinitions = {
+  path: {
+    reference: "T150.417.11.041.00",
+    shortTitle: "PR 100 Chronograph",
+    assetPath: "/generated/homepage-premium-assets/t1504171104100.png",
+    width: 1014,
+    height: 1143,
+    specs: ["40 мм", "хронограф", "стальной браслет"],
+  },
+  selection: {
+    reference: "EFK-100D-2A",
+    shortTitle: "Edifice Automatic",
+    assetPath: "/generated/homepage-premium-assets/efk100d2a.png",
+    width: 972,
+    height: 1552,
+    specs: ["автоматический механизм", "синий циферблат", "стальной браслет"],
+  },
+  comparisonSeastar: {
+    reference: "T120.417.17.051.03",
+    shortTitle: "Seastar Chronograph",
+    assetPath: "/generated/homepage-editorial-assets/tissot-seastar-t1204171705103.png",
+    width: 1680,
+    height: 1680,
+    specs: ["45,5 мм", "хронограф", "каучуковый ремень"],
+  },
+  collectionOwned: [
+    {
+      reference: "T150.417.11.041.00",
+      shortTitle: "PR 100 Chronograph",
+      assetPath: "/generated/homepage-premium-assets/t1504171104100.png",
+      width: 1014,
+      height: 1143,
+      specs: ["40 мм", "хронограф", "стальной браслет"],
+    },
+    {
+      reference: "EFK-100D-2A",
+      shortTitle: "Edifice Automatic",
+      assetPath: "/generated/homepage-premium-assets/efk100d2a.png",
+      width: 972,
+      height: 1552,
+      specs: ["автомат", "синий циферблат", "сталь"],
+    },
+    {
+      reference: "RA-AC0018E30B",
+      shortTitle: "Classic Green",
+      assetPath: "/generated/homepage-editorial-assets/orient-classic-raac0018e30b-cutout.png",
+      width: 328,
+      height: 492,
+      specs: ["автомат", "зеленый циферблат", "миланский браслет"],
+    },
+    {
+      reference: "NJ0210-13L",
+      shortTitle: "Automatic Dress",
+      assetPath: "/generated/homepage-editorial-assets/citizen-nj0210-13l.webp",
+      width: 1400,
+      height: 1400,
+      specs: ["автомат", "синий циферблат", "кожаный ремень"],
+    },
+  ],
+  collectionRecommendation: {
+    reference: "RA-AA0811E19B",
+    shortTitle: "Mako III Green",
+    assetPath: "/generated/homepage-editorial-assets/orient-mako-raaa0811e19b-cutout.png",
+    width: 328,
+    height: 492,
+    specs: ["автомат", "зеленый циферблат", "20 бар"],
+  },
+  journal: [
+    {
+      reference: "MTG-B3000DN-1A",
+      shortTitle: "G-Shock MT-G",
+      assetPath: "/generated/homepage-premium-assets/mtgb3000dn1a.png",
+      width: 1027,
+      height: 1368,
+      specs: ["защищенный корпус", "металл", "спортивная роль"],
+    },
+    {
+      reference: "RA-AC0022S30B",
+      shortTitle: "Classic White",
+      assetPath: "/generated/homepage-editorial-assets/orient-classic-raac0022s30b-cutout.png",
+      width: 317,
+      height: 466,
+      specs: ["автомат", "светлый циферблат", "кожаный ремень"],
+    },
+    {
+      reference: "NJ0210-56A",
+      shortTitle: "Automatic Dress",
+      assetPath: "/generated/homepage-editorial-assets/citizen-nj0210-56a.webp",
+      width: 1400,
+      height: 1400,
+      specs: ["автомат", "светлый циферблат", "стальной браслет"],
+    },
+  ],
+  final: [
+    {
+      reference: "T137.407.33.051.00",
+      shortTitle: "PRX Powermatic Gold",
+      assetPath: "/generated/homepage-premium-assets/t1374073305100.png",
+      width: 954,
+      height: 1527,
+      specs: ["Powermatic 80", "золотой корпус", "черный циферблат"],
+    },
+    {
+      reference: "NJ0210-13L",
+      shortTitle: "Automatic Dress",
+      assetPath: "/generated/homepage-editorial-assets/citizen-nj0210-13l.webp",
+      width: 1400,
+      height: 1400,
+      specs: ["автомат", "синий циферблат", "кожаный ремень"],
+    },
+  ],
+} satisfies {
+  path: EditorialWatchDefinition;
+  selection: EditorialWatchDefinition;
+  comparisonSeastar: EditorialWatchDefinition;
+  collectionOwned: EditorialWatchDefinition[];
+  collectionRecommendation: EditorialWatchDefinition;
+  journal: EditorialWatchDefinition[];
+  final: EditorialWatchDefinition[];
+};
+
+function buildEditorialWatch(
+  dataset: CatalogReadDataset | null,
+  definition: EditorialWatchDefinition,
+  slotRole: HomeHeroSlotRole,
+): HomeScenarioWatch | null {
+  const matchedWatch = findCatalogWatch(dataset, definition.reference);
+  if (!matchedWatch) return null;
+
+  return {
+    id: matchedWatch.id,
+    href: matchedWatch.href,
+    brandName: matchedWatch.brandName,
+    title: matchedWatch.title,
+    shortTitle: definition.shortTitle,
+    reference: matchedWatch.referenceDisplay,
+    referenceSlug: matchedWatch.referenceSlug,
+    priceLabel: priceFor(matchedWatch),
+    catalogMatched: true,
+    slotRole,
+    asset: {
+      path: definition.assetPath,
+      src: definition.assetPath,
+      width: definition.width,
+      height: definition.height,
+      sourceWidth: definition.width,
+      sourceHeight: definition.height,
+      qualityClass: "ALTERNATIVE_GRADE",
+      motionMode: "STATIC_FRONT",
+      framePaths: [],
+      frameCount: 1,
+      source: "homepage_editorial_asset",
+      sourceNote: "Exact-reference homepage asset selected from the catalog source or official manufacturer product media.",
+      isExactReference: true,
+      view: "front",
+      isHeroApproved: false,
+    },
+    specs: definition.specs,
+    displayScale: 1,
+    displayX: 0,
+    displayY: 0,
+    depth: 1,
+    opacity: 1,
+  };
+}
+
+export function buildHomeEditorialCuration(dataset: CatalogReadDataset | null): HomeEditorialCuration {
+  const buildMany = (definitions: EditorialWatchDefinition[], slotRole: HomeHeroSlotRole) =>
+    definitions
+      .map((definition) => buildEditorialWatch(dataset, definition, slotRole))
+      .filter((watch): watch is HomeScenarioWatch => watch !== null);
+
+  return {
+    path: buildEditorialWatch(dataset, editorialWatchDefinitions.path, "alternativeRight"),
+    selection: buildEditorialWatch(dataset, editorialWatchDefinitions.selection, "centralMain"),
+    comparisonSeastar: buildEditorialWatch(dataset, editorialWatchDefinitions.comparisonSeastar, "alternativeRight"),
+    collectionOwned: buildMany(editorialWatchDefinitions.collectionOwned, "alternativeLeft"),
+    collectionRecommendation: buildEditorialWatch(dataset, editorialWatchDefinitions.collectionRecommendation, "centralMain"),
+    journal: buildMany(editorialWatchDefinitions.journal, "alternativeRight"),
+    final: buildMany(editorialWatchDefinitions.final, "centralMain"),
+  };
+}
+
 function catalogHrefFor(slot: StaticSlot, matchedWatch: CatalogWatchDetail | null): string {
   if (matchedWatch) return matchedWatch.href;
   return `/watches?q=${encodeURIComponent(slot.reference)}`;
@@ -812,7 +595,7 @@ function buildSlot(slot: StaticSlot, dataset: CatalogReadDataset | null): HomeSc
 }
 
 export function buildHomeScenarios(dataset: CatalogReadDataset | null): HomeScenario[] {
-  return homeHeroScenarioDefinitions.map((definition) => {
+  return homeScenarioDefinitions.map((definition) => {
     const slots = definition.slots.map((slot) => buildSlot(slot, dataset));
     const visibleSlots = slots.filter((slot) => slot.asset.qualityClass !== "REJECTED" && slot.opacity > 0);
     const mainWatch = visibleSlots.find((slot) => slot.slotRole === "centralMain") ?? visibleSlots[0] ?? slots[0];
@@ -892,13 +675,13 @@ export function shortestSignedCircularDistance(modelIndex: number, orbitPosition
 
 const orbitAnchorPresets: Record<number, Omit<OrbitAnchorPresentation, "anchorName">> = {
   [-3]: { x: -13, y: 61, scale: 0.2, opacity: 0, blur: 1.35, z: 3, shadowY: 0.36, shadowBlur: 0.55, shadowOpacity: 0 },
-  [-2]: { x: 5, y: 58, scale: 0.34, opacity: 0.12, blur: 1, z: 5, shadowY: 0.42, shadowBlur: 0.62, shadowOpacity: 0.012 },
-  [-1]: { x: 24, y: 55, scale: 0.66, opacity: 0.48, blur: 0.24, z: 25, shadowY: 0.86, shadowBlur: 1.08, shadowOpacity: 0.052 },
-  [0]: { x: 54, y: 50, scale: 1.08, opacity: 1, blur: 0, z: 60, shadowY: 1.95, shadowBlur: 2.45, shadowOpacity: 0.18 },
-  [1]: { x: 75, y: 48, scale: 0.72, opacity: 0.58, blur: 0.18, z: 38, shadowY: 0.92, shadowBlur: 1.18, shadowOpacity: 0.062 },
-  [2]: { x: 90, y: 42, scale: 0.52, opacity: 0.4, blur: 0.46, z: 23, shadowY: 0.62, shadowBlur: 0.9, shadowOpacity: 0.034 },
+  [-2]: { x: 5, y: 58, scale: 0.36, opacity: 0.24, blur: 0.82, z: 5, shadowY: 0.42, shadowBlur: 0.62, shadowOpacity: 0.018 },
+  [-1]: { x: 24, y: 55, scale: 0.66, opacity: 0.7, blur: 0.2, z: 25, shadowY: 0.86, shadowBlur: 1.08, shadowOpacity: 0.058 },
+  [0]: { x: 54, y: 50, scale: 1, opacity: 1, blur: 0, z: 60, shadowY: 1.95, shadowBlur: 2.45, shadowOpacity: 0.18 },
+  [1]: { x: 75, y: 48, scale: 0.72, opacity: 0.72, blur: 0.14, z: 38, shadowY: 0.92, shadowBlur: 1.18, shadowOpacity: 0.068 },
+  [2]: { x: 90, y: 42, scale: 0.52, opacity: 0.42, blur: 0.4, z: 23, shadowY: 0.62, shadowBlur: 0.9, shadowOpacity: 0.038 },
   [3]: { x: 101, y: 36, scale: 0.38, opacity: 0.25, blur: 0.82, z: 12, shadowY: 0.42, shadowBlur: 0.68, shadowOpacity: 0.018 },
-  [4]: { x: 114, y: 30, scale: 0.24, opacity: 0, blur: 1.35, z: 4, shadowY: 0.3, shadowBlur: 0.5, shadowOpacity: 0 },
+  [4]: { x: 104, y: 30, scale: 0.24, opacity: 0, blur: 1.35, z: 4, shadowY: 0.3, shadowBlur: 0.5, shadowOpacity: 0 },
 };
 
 export function orbitAnchorNameFromDistance(distance: number): OrbitAnchorName {
@@ -1007,6 +790,8 @@ export function buildHomeOrbitWatches(scenarios: HomeScenario[]): OrbitWatch[] {
       imageSrc: slot.asset.path,
       sourceWidth: slot.asset.sourceWidth,
       sourceHeight: slot.asset.sourceHeight,
+      generatedWidth: slot.asset.width,
+      generatedHeight: slot.asset.height,
       qualityClass: slot.asset.qualityClass,
       motionMode: slot.asset.motionMode,
       assetView: slot.asset.view,
