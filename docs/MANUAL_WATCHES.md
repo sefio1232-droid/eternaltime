@@ -42,6 +42,20 @@ Implementation status:
 - Missing catalog match never blocks creation.
 - Progressive technical enrichment, provisional identity assignment, and match-candidate generation remain planned.
 
+Local Phase 1 runtime status:
+
+- `/collection` and `/collection?demo=1` can run without Supabase for local QA;
+- local Quick Add requires a display name, a brand or explicit "Без бренда", and one role;
+- optional local fields cover model/reference, movement, size, dial, attachment, wear frequency, ownership status,
+  acquisition date/price/currency/source, condition, and notes;
+- users can later edit controlled analysis traits in the local detail panel;
+- local data uses a validated version-1 envelope under `eternal-time.local-user-watch-collection.v1` in browser
+  `localStorage`;
+- demo data uses a separate versioned `sessionStorage` key and never overwrites user local records;
+- malformed or structurally invalid storage falls back to a controlled empty/default state without exposing raw errors;
+- catalog-linked local records keep the canonical reference ID/href while user ownership fields remain separate;
+- local records never create public catalog rows, storage files, match candidates, or fake authentication.
+
 Flow:
 
 ```text
@@ -394,6 +408,17 @@ User watch photos:
 - May be shown in future public User Watch Collection only by explicit per-photo/per-watch visibility.
 - Must never become catalog images automatically, even after reconciliation.
 
+### Local Phase 2 Photo Boundary
+
+The browser-backed manual add flow accepts optional JPEG, PNG, or WebP images up to 1 MB. The validated data URL is
+stored only in the versioned local collection envelope and is never sent to Supabase, copied to the public catalog, or
+used as a catalog image. The UI keeps file reading in a Client Component and exposes a neutral watch silhouette when no
+photo exists.
+
+Local storage migrated from envelope version 1 to version 2. The current reader accepts the legacy envelope and the
+older array format, normalizes every record, and writes the migrated value under the v2 key. Corrupt or structurally
+invalid data falls back safely without partially loading records.
+
 ## Admin And Catalog Enrichment Signals
 
 Manual watches can produce privacy-safe catalog enrichment signals:
@@ -620,3 +645,83 @@ Future reconciliation behavior:
 
 - User can later link to a different reference.
 - Admin can review aggregate matching quality without seeing private user data.
+
+## Local Collection Phase 2.2
+
+The unauthenticated/unconfigured local collection keeps real and demo records isolated:
+
+- real local records use the versioned `localStorage` collection key;
+- `?demo=1` records use the separate versioned `sessionStorage` demo key;
+- deleting from a shelf action menu or detail confirmation mutates only the active store;
+- deletion never mutates a Catalog Reference or the Catalog Read Repository;
+- the detail action names the watch and requires an accessible native modal confirmation;
+- shelf cards expose edit, status, archive, and delete actions without placing destructive controls over the watch
+  image.
+
+One incomplete manual watch remains a valid Collection Intelligence input. Known roles and traits can produce an
+initial four-position catalog-backed set; unknown traits remain neutral and recommendation reasons cannot claim that
+an unknown value is absent.
+
+## Local Collection Phase 2.3
+
+Manual add keeps the native file input as the accessible source control, presented through a custom upload area with
+format/size guidance, preview replacement, and a visible remove action. The browser validates JPEG, PNG, and WebP
+metadata before reading the file. The image remains private browser data and is never promoted to catalog imagery.
+
+Collection shelf composition is presentation-only and depends on the visible watch count: empty onboarding, featured
+single watch, two-watch split, three-watch editorial triad, four-watch shelf, and a multi-row layout for five or more.
+No empty catalog records or placeholder User Watches are created to fill those compositions.
+
+## Local Collection Phase 2.4
+
+Catalog add is the default add mode. It reads the complete current Catalog Read Repository snapshot through the
+existing server-only adapter, then offers 24 records per page with search, brand, movement, and deterministic sorting.
+Models are not removed because price, image, optional traits, or recommendation score are missing. Manual add remains
+available as the second tab and preserves the same local-only photo and persistence boundaries.
+
+The shelf uses equal two- and three-watch columns, a dedicated three-zone single-watch composition, a four-column
+multi-row layout, and controlled media presentation categories shared by shelf, picker, recommendations, and detail.
+The detail route starts in view mode; its edit form is mounted only after an explicit edit or change-status action.
+Archive and confirmed delete remain available without opening the form.
+
+## Local Collection Phase 2.5 Presentation
+
+Catalog-linked local watches resolve their presentation image through one collection-facing selector over the
+existing Catalog Read Repository image data. Priority is a clean canonical primary image, then a clean front or
+front-three-quarter gallery image, then a neutral missing-image state. Source order alone is not proof that an image
+is suitable for primary presentation.
+
+Semantic technical roles are rejected deterministically. A small documented identity denylist covers verified source
+assets whose generic filename and alt text do not reveal that they are casebacks. These exceptions include only
+visually audited source defects and are not per-reference CSS overrides.
+
+Shelf, picker, recommendations, and detail share deterministic media categories: compact digital, standard digital,
+analog bracelet, analog strap, diver, oversized sport, rectangular, manual watch, and missing image. Each category
+controls padding, maximum visual dimensions, object position, and optical scale. A manual watch uses its uploaded
+private browser photo when present and otherwise uses the neutral silhouette; it never borrows catalog imagery.
+
+## Local Collection Phase 2.6 Runtime Resolution
+
+A persisted catalog-linked image URL is a fallback, not permanent catalog truth. On every local collection read, the
+record is reconciled with the current server-supplied Catalog Read Repository candidates by exact catalog reference
+ID, canonical route, or one unambiguous normalized brand/reference identity. The current clean canonical image wins;
+an admissible persisted URL is used only when the current candidate has no clean image.
+
+The shared runtime resolver rejects known caseback/reverse source identities and semantic technical URLs, including
+reverse straps, clasps, buckles, profile views, packaging, diagrams, macro assets, screenshots, and invalid URL
+schemes. If neither current nor persisted catalog media is suitable, the collection shows the neutral silhouette.
+Manual records remain separate: their uploaded browser photo wins and catalog reconciliation never replaces it.
+
+## Local Collection Phase 2.7 Add And Ownership Clarity
+
+Collection routes share a compact internal navigation for overview, owned watches, recommendations, and adding a
+watch. The links reuse `/collection`, stable section anchors, the existing recommendation route, and
+`/collection/new`; named demo queries remain attached before fragment identifiers.
+
+The empty state presents two ownership inputs only: choose a known Catalog Reference or create a manual User Watch.
+Selection is a contextual text path rather than a competing primary action. Manual add asks first for a name and
+primary role; optional characteristics, ownership facts, and personal notes stay in disclosures and may be completed
+later. This presentation does not change storage, matching, privacy, or catalog-promotion rules.
+
+Detail remains view-first. A linked model opens its canonical catalog page as the primary product action, while edit,
+status, history, and confirmed deletion operate only on the private User Watch record.

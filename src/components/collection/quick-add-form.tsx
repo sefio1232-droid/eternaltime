@@ -31,7 +31,7 @@ export function QuickAddForm({ hasError = false }: Readonly<{ hasError?: boolean
         </label>
       </div>
 
-      {hasError ? <p className="text-sm text-[var(--danger)]">Проверьте название и попробуйте ещё раз.</p> : null}
+      {hasError ? <p className="text-sm text-[var(--danger)]">Проверьте название и попробуйте еще раз.</p> : null}
       <p className="text-sm leading-6 text-[var(--text-muted)]">
         Технические характеристики можно добавить позднее. Эти данные остаются личными и не создают публичную карточку часов.
       </p>

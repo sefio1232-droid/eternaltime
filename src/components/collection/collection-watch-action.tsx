@@ -23,7 +23,7 @@ export async function CollectionWatchAction({
       <div className="grid gap-3">
         <ButtonLink href={`/login?returnTo=${encodeURIComponent(returnTo)}`}>Добавить в коллекцию</ButtonLink>
         <p className="text-sm leading-6 text-[var(--text-muted)]">
-          После входа вы вернётесь к этой модели. Добавление произойдёт только после подтверждённой записи.
+          После входа вы вернетесь к этой модели. Добавление произойдет только после подтвержденной записи.
         </p>
       </div>
     );

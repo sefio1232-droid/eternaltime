@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CollectionWatchMedia } from "@/components/collection/collection-watch-media";
+import { CollectionWatchStage } from "@/components/collection/collection-watch-stage";
 import { Button } from "@/components/ui/button";
 import { deleteUserWatchAction, updateUserWatchAction } from "@/modules/user-watch-collection/application/actions";
 import type { UserWatchDetail } from "@/modules/user-watch-collection/domain/types";
@@ -28,7 +28,12 @@ export function UserWatchDetailView({
       </nav>
 
       <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <CollectionWatchMedia imageUrl={watch.primaryImageUrl} alt={watch.displayName} className="max-h-[560px] aspect-square" />
+        <CollectionWatchStage
+          variant="detail"
+          imageUrl={watch.primaryImageUrl}
+          alt={watch.displayName}
+          className="max-h-[560px] aspect-square"
+        />
         <div className="grid gap-6 border-t border-[var(--border-strong)] pt-6">
           <div>
             <p className="type-meta">
@@ -49,7 +54,7 @@ export function UserWatchDetailView({
           {created ? <p className="text-sm">Часы добавлены в коллекцию.</p> : null}
           {updated ? <p className="text-sm">Данные владения обновлены.</p> : null}
           {photoError ? <p className="text-sm text-[var(--danger)]">Часы добавлены, но фотографию загрузить не удалось.</p> : null}
-          {updateError ? <p className="text-sm text-[var(--danger)]">Проверьте данные владения и попробуйте ещё раз.</p> : null}
+          {updateError ? <p className="text-sm text-[var(--danger)]">Проверьте данные владения и попробуйте еще раз.</p> : null}
         </div>
       </section>
 

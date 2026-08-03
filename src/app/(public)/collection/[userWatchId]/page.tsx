@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { LocalCollectionCoreExperience } from "@/components/collection/local-collection-core-experience";
 import { UserWatchDetailView } from "@/components/collection/user-watch-detail-view";
 import { Container } from "@/components/ui/container";
 import { getCurrentUser } from "@/modules/auth/server";
 import { getUserWatch } from "@/modules/user-watch-collection/application/collection-service";
 import { createUserWatchCollectionRepository } from "@/modules/user-watch-collection/infrastructure/user-watch-repository.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { loadLocalCollectionCatalogCandidates } from "@/modules/user-watch-collection/application/local-collection-catalog.server";
+import { parseLocalCollectionDemoScenario } from "@/modules/user-watch-collection/application/local-collection";
 
 export const metadata: Metadata = {
-  title: "Часы в моей коллекции",
+  title: "Часы из коллекции",
   robots: { index: false, follow: false },
 };
 
@@ -21,9 +24,22 @@ type UserWatchPageProps = Readonly<{
 
 export default async function UserWatchPage({ params, searchParams }: UserWatchPageProps) {
   const { userWatchId } = await params;
+  const query = await searchParams;
   const currentUser = await getCurrentUser();
-  if (!currentUser.user) {
-    redirect(`/login?returnTo=${encodeURIComponent(`/collection/${userWatchId}`)}`);
+  const demoScenario = parseLocalCollectionDemoScenario(query.demo);
+
+  if (demoScenario || currentUser.status === "unconfigured" || !currentUser.user) {
+    const catalogCandidates = await loadLocalCollectionCatalogCandidates();
+    return (
+      <Container className="public-page">
+        <LocalCollectionCoreExperience
+          initialMode={demoScenario ? "demo" : "empty"}
+          initialDemoScenario={demoScenario}
+          initialSelectedId={userWatchId}
+          catalogCandidates={catalogCandidates}
+        />
+      </Container>
+    );
   }
 
   const supabase = await createSupabaseServerClient();
@@ -39,8 +55,6 @@ export default async function UserWatchPage({ params, searchParams }: UserWatchP
   if (!watch) {
     notFound();
   }
-
-  const query = await searchParams;
 
   return (
     <Container className="public-page">

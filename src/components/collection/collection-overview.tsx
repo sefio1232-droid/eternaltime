@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CollectionWatchMedia } from "@/components/collection/collection-watch-media";
+import { CollectionWatchStage } from "@/components/collection/collection-watch-stage";
 import { ButtonLink } from "@/components/ui/button";
 import type { UserWatchSummary } from "@/modules/user-watch-collection/domain/types";
 
@@ -19,7 +19,7 @@ export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSum
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-[var(--border)] pb-6">
         <div>
           <p className="type-label">Моя коллекция</p>
-          <h1 className="public-heading mt-3">Часы, которыми вы владеете</h1>
+          <h1 className="public-heading mt-3">Часы в вашей коллекции</h1>
           <p className="type-body mt-3 max-w-2xl text-[var(--text-muted)]">
             Личное пространство для реальных часов, истории приобретения и заметок.
           </p>
@@ -30,7 +30,12 @@ export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSum
       {lead ? (
         <section className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
           <Link href={`/collection/${lead.id}`} className="block">
-            <CollectionWatchMedia imageUrl={lead.primaryImageUrl} alt={lead.displayName} className="max-h-[460px] aspect-[1.45/1]" />
+            <CollectionWatchStage
+              variant="shelf"
+              imageUrl={lead.primaryImageUrl}
+              alt={lead.displayName}
+              className="max-h-[460px] aspect-[1.45/1]"
+            />
           </Link>
           <div className="border-t border-[var(--border-strong)] pt-5">
             <p className="type-meta">{sourceLabel(lead.sourceKind)} / {ownershipLabel(lead.ownershipStatus)}</p>
@@ -53,7 +58,12 @@ export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSum
               href={`/collection/${watch.id}`}
               className="collection-watch-row grid gap-4 border-b border-[var(--border)] py-5 sm:grid-cols-[72px_minmax(0,1fr)_auto] sm:items-center"
             >
-              <CollectionWatchMedia imageUrl={watch.primaryImageUrl} alt={watch.displayName} className="aspect-square" />
+              <CollectionWatchStage
+                variant="shelf"
+                imageUrl={watch.primaryImageUrl}
+                alt={watch.displayName}
+                className="aspect-square"
+              />
               <span className="min-w-0">
                 <span className="type-meta">{String(index + 2).padStart(2, "0")} / {sourceLabel(watch.sourceKind)}</span>
                 <span className="mt-1 block text-xl font-semibold leading-tight">{watch.displayName}</span>

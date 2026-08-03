@@ -2,7 +2,119 @@
 
 Collection Intelligence is a deterministic module that analyzes a User Watch Collection and suggests logical development directions. It must work without AI.
 
-Current implementation boundary: User Watch Collection now persists catalog-linked and manual User Watches, raw manual source data, empty/partial analysis-trait rows, and collection-version invalidation. Profile extraction, role calculation, gap detection, Recommendation Scenarios, candidate scoring, result snapshots, and user-facing analysis are not implemented yet and must not be simulated in the UI.
+Current implementation boundary: User Watch Collection now persists catalog-linked and manual User Watches, raw manual source data, empty/partial analysis-trait rows, and collection-version invalidation. A local Phase 1 runtime also exposes deterministic in-browser Collection Intelligence for `/collection` when Supabase/auth is unavailable or `?demo=1` is used. User-created local records stay in browser `localStorage`; demo records use isolated `sessionStorage`. Neither mode writes analysis snapshots to Supabase.
+
+Implemented Phase 1 local rules:
+
+- active analysis includes only `owned` User Watches;
+- `previously_owned` watches remain visible but are excluded from active profile, gaps, and recommendations;
+- manual watches with unknown traits contribute only known dimensions;
+- profile completeness controls confidence wording but does not suppress a safe catalog-backed cold-start set;
+- gaps cover business/formal role, travel role, light dial diversity, mechanism diversity, size diversity, and water-ready coverage;
+- candidate traits are mapped deterministically from eligible Catalog Read Repository records on the server;
+- recommendation candidates exclude already-owned catalog reference IDs and appear only when a typed rule produces a positive match;
+- the result has explicit `empty` and `ready` states plus `initial`, `medium`, and `high` confidence;
+- overlap detection uses repeated roles and known traits, never brand equality by itself;
+- no market price, investment value, rarity, production facts, or AI-generated claims are produced.
+
+Persisted Supabase analysis runs, result snapshots, and cross-surface collection-fit services remain future work.
+
+## Local Phase 2 Product Rules
+
+The browser-backed Collection Core now uses the same deterministic domain boundary for its profile, next direction,
+four-model growth set, and full recommendation route. This remains a local product experience and does not
+write analysis snapshots to Supabase.
+
+The active profile uses only currently owned watches and only known facts. It covers:
+
+- scenarios and roles;
+- movement type;
+- size band;
+- dial color family;
+- attachment type;
+- material family;
+- brand distribution;
+- wear frequency;
+- user-entered acquisition prices in RUB when at least two are known.
+
+Unknown values reduce profile completeness but are not interpreted as negative evidence. Previously owned watches stay
+in the practical history and are excluded from current gaps, direction selection, and candidate scoring.
+
+The next direction is chosen before concrete models. The controlled intents are `travel`, `sport`, `formal`,
+`first-mechanical`, `colorful-accent`, `strap-diversity`, and `everyday-upgrade`. Direction priority combines scenario
+coverage with movement, attachment, color, size, and brand concentration. A missing role is never the only available
+factor.
+
+Collection recommendations apply these commercial presentation rules without changing the catalog:
+
+- valid RUB public price of at least 15,000 RUB;
+- canonical `/watches/...` route;
+- usable product image;
+- sufficient confirmed catalog traits;
+- no currently owned Manufacturer Reference;
+- default preference for candidates at or below the eligible-catalog P90 price;
+- P40, P70, and P90 boundaries calculated from the current eligible price distribution;
+- rational, balanced, and upper recommendation segments;
+- soft purchase-price comfort scoring only when the user entered at least two RUB acquisition prices.
+
+Scoring is deterministic. It rewards the selected intent, secondary role coverage, a new movement, attachment, size,
+color, brand, data completeness, and price comfort. It penalizes an owned reference, exact model, close reference
+family, repeated role/movement/color core, concentrated brand, and an above-P90 extreme. The UI renders controlled
+reason strings from the score breakdown; it does not use AI or random ordering.
+
+Phase 2.1 adds deterministic set-level curation after individual scoring:
+
+- the server adapter builds a round-robin candidate pool across available brands instead of truncating a
+  brand-sorted catalog slice;
+- travel may be interpreted as confirmed world-time, a water-ready diver/sport watch, or a reliable quartz/solar
+  everyday watch; every interpretation remains based on known catalog traits;
+- the three-model core prefers rational, balanced, and upper segments, then brand, interpretation, attachment,
+  movement/display, dial color, and case-style diversity;
+- one set contains at most one exact reference family, no duplicate normalized model, and at most two models from one
+  brand;
+- repeated case style and the same movement/attachment/color core receive pairwise penalties;
+- the full intent page preserves the curated three-model core before deterministic secondary results;
+- if the available pool cannot satisfy the identity and brand constraints, the set may contain only two models;
+  irrelevant filler is not added;
+- recommendation and catalog-add images pass the existing prominent-image policy plus a collection-specific denylist
+  for confirmed caseback and broken remote sources; technical-only records use the neutral missing-image state.
+
+Phase 2.2 adds non-blocking cold-start behavior:
+
+- one active watch is enough to select an initial direction from confirmed roles and known traits;
+- unknown movement, attachment, size, color, water readiness, or brand remains neutral and never becomes evidence of
+  absence;
+- confidence is `initial` for a sparse first watch, `medium` for two watches or one well-described watch, and `high`
+  only for at least three sufficiently complete active watches;
+- the embedded growth set contains up to four candidates: two exact complements for the primary intent and two
+  exploratory candidates from different controlled intents;
+- set-level curation keeps the 15,000 RUB floor, eligible canonical routes, front-image eligibility, P90 ceiling,
+  reference-family exclusion, normalized-model exclusion, maximum two models per brand, and deterministic ordering;
+- exploratory candidates are selected by the same score and diversity vector, not by random rotation or AI;
+- the UI may soften explanation copy at initial confidence, but it still shows safe candidates when the catalog
+  contains them.
+
+Phase 2.3 changes presentation and scenario verification without changing scoring:
+
+- zero active watches show onboarding paths and no fabricated personal analysis;
+- one active watch still receives the initial catalog-backed recommendation set;
+- two watches use medium-confidence wording when evidence allows it;
+- three or more sufficiently complete active watches use high-confidence wording;
+- manual and catalog-linked watches contribute equally through known traits;
+- `previously_owned` demo fixtures remain visible in records but stay outside the active profile and recommendation
+  input;
+- named demo scenarios use isolated `sessionStorage` keys, while the real local collection keeps its existing
+  `localStorage` boundary.
+
+Phase 2.4 separates catalog picking from recommendation eligibility:
+
+- `/collection/new` receives one complete, server-built Catalog Read Repository snapshot and passes that same
+  serialized order to the first Client Component render;
+- the picker does not apply recommendation price, image, completeness, or score gates;
+- deterministic quality-first ordering uses normalized code-point comparison rather than runtime-sensitive collation;
+- search, brand, movement, and sort operate over the full snapshot and paginate 24 models at a time;
+- recommendation sets keep their stricter commercial and image eligibility rules and remain four equal positions in
+  presentation.
 
 ## Pipeline
 
@@ -193,13 +305,13 @@ Allowed: contribute to movement, dial color, attachment/material.
 Not allowed: declare the watch formal, sport, travel-ready, or business-ready without more evidence.
 ```
 
-Recommended thresholds:
+Current local confidence policy:
 
-- `profile_completeness < 0.35`: suppress broad collection-balance recommendations and ask for enrichment.
-- `0.35 <= profile_completeness < 0.65`: allow cautious recommendations with uncertainty wording.
-- `profile_completeness >= 0.65`: normal recommendation wording if scenario evidence is sufficient.
+- a sparse first watch produces `initial` confidence and a cautious cold-start set;
+- two active watches or one watch with at least `0.60` completeness produce `medium` confidence;
+- at least three active watches with at least `0.50` completeness produce `high` confidence.
 
-These thresholds are starting architecture guidance, not final product tuning.
+These levels change wording and evidence strength, not catalog identity, price, route, or image-quality filters.
 
 ## Pragmatic MVP Rule Architecture
 
@@ -672,3 +784,40 @@ Detected gaps:
 Final recommendation type:
 
 - Recommendation can be produced, with caveat: some manual watch dimensions are unknown.
+
+## Local Collection Phase 2.5 Image Eligibility
+
+Collection recommendation scoring remains deterministic, but a candidate is commercially presentable only when the
+collection-facing catalog adapter resolves a clean product image. Casebacks, reverse straps, clasps, buckles,
+technical views, broken sources, and confirmed incorrectly ordered source assets resolve to no recommendation image.
+The embedded recommendation set then continues through the ranked pool and uses the next eligible clean-image
+candidate; it does not weaken score, route, price, or data-completeness requirements to fill four positions.
+
+This image eligibility affects recommendation presentation only. It does not remove the Catalog Reference from the
+catalog or picker, and it does not modify catalog data.
+
+## Local Collection Phase 2.6 Image Consistency
+
+Recommendation analysis receives the same reconciled local collection records used by shelf and detail. Current
+Catalog Read Repository candidates remain the source for picker and recommendation product media, while persisted
+catalog-linked records are refreshed through exact identity matching before analysis. This prevents an older
+technical image URL from surviving in the shelf or detail while the recommendation surface uses a newer canonical
+front image. Image reconciliation changes presentation only; scores, traits, gaps, price boundaries, and candidate
+ordering are unchanged.
+
+## Local Collection Phase 2.7 Product Clarity
+
+The collection overview now exposes a deterministic editorial summary in addition to the dimension matrix. Empty
+collections have no summary. One active watch receives cautious `Начальный профиль` wording; two or three watches
+receive `Первые закономерности`; larger collections receive `Профиль коллекции`. Summary facts come only from known
+role, movement, and attachment distributions plus the already selected deterministic direction. Unknown values are
+never described as missing facts, and no AI or free-form inference participates.
+
+Recommendation reasons name the candidate's actual known contribution, such as a formal scenario, automatic
+movement, leather strap, compact case, or green dial. Generic diversity wording is not used when a controlled value
+is available. The scoring values, candidate gates, price floor, set curation, and deterministic ordering remain
+unchanged.
+
+Collection-facing image eligibility additionally rejects audited low-contrast primary assets and clearly named
+lifestyle or wrist frames. Priority remains clean canonical primary, clean front gallery frame, admissible local
+archive frame, then the neutral silhouette. A rejected image never changes catalog identity or recommendation score.

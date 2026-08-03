@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { NavigationItem } from "@/config/navigation";
 import { SearchDialog } from "@/components/shell/search-dialog";
+import { ProfileMenu } from "@/components/shell/profile-menu";
 
 export function MobileNavigation({
   primaryItems,
@@ -17,6 +18,7 @@ export function MobileNavigation({
   return (
     <div className="ml-auto flex items-center gap-2 md:hidden">
       <SearchDialog compact />
+      <ProfileMenu mobile />
       <button
         type="button"
         className="inline-flex h-9 w-9 items-center justify-center text-sm"

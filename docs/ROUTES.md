@@ -243,6 +243,7 @@ Current implemented public routes include:
 /collection
 /collection/new
 /collection/{userWatchId}
+/collection/recommendations/{intent}
 /login
 /auth/callback
 ```
@@ -254,6 +255,60 @@ Current implemented public routes include:
 - Watch Detail uses `/login?returnTo=...` when authentication is required and returns to the same Manufacturer Reference.
 
 The previous public `/collection` explanation page has been replaced by the real ownership experience. Collection Profile/gaps/recommendations are not routed or rendered until deterministic Collection Intelligence exists.
+
+Phase 1 local runtime:
+
+- `/collection` renders the local browser-backed collection core when the user is unauthenticated or Supabase is not configured;
+- `/collection?demo=1` loads a meaningful demo collection and deterministic local analysis;
+- `/collection/new` and `/collection/new?demo=1` open local Quick Add without authentication and accept existing
+  `reference` or `catalogReferenceId` hints;
+- `/collection/{userWatchId}` and `/collection/{userWatchId}?demo=1` open the matching local detail record and show a
+  controlled not-found state for unknown IDs;
+- `/collection/recommendations/{intent}` is a noindex collection-domain route for the controlled intents `travel`,
+  `sport`, `formal`, `first-mechanical`, `colorful-accent`, `strap-diversity`, and `everyday-upgrade`; it reads the
+  current local collection, receives eligible records through the server-only Catalog Read Repository adapter, and
+  renders 6-12 deterministic candidates when enough exact matches exist;
+- local collection routes receive eligible catalog candidates through the server-only Catalog Read Repository; Client
+  Components never read import preview files;
+- `/account/collection` remains a redirect to `/collection`;
+- local runtime routes are noindex; authenticated owner-scoped Supabase behavior remains unchanged.
+
+Phase 2.2 route behavior:
+
+- `/collection` embeds up to four deterministic catalog recommendations as two exact complements and two exploratory
+  directions whenever at least one active local watch exists;
+- one-watch collections use initial-confidence copy rather than a blocking insufficient-data section;
+- each local shelf record exposes an accessible action menu; delete opens confirmation on the current route;
+- `/collection/{userWatchId}` exposes a visible secondary destructive action before the edit form and returns to
+  `/collection` after confirmed local or demo deletion;
+- `/collection/new` keeps manual/catalog tabs and a compact persistent form action footer without changing route or
+  persistence boundaries.
+
+Phase 2.3 demo harness:
+
+```text
+/collection?demo=empty
+/collection?demo=one
+/collection?demo=two
+/collection?demo=three
+/collection?demo=many
+/collection?demo=mixed
+/collection?demo=archived
+```
+
+`?demo=1` remains an alias for `many`. Named scenarios are deterministic, use separate `sessionStorage` keys, preserve
+their scenario query across collection detail/add/recommendation links, and never read or write the ordinary local
+collection key. Catalog-linked fixture watches still come through the server-only Catalog Read Repository adapter.
+
+Phase 2.4 route behavior:
+
+- `/collection/new` defaults to catalog mode unless `mode=manual` is explicit;
+- the server-only adapter supplies the complete current Catalog Read Repository snapshot; the Client Component never
+  reads generated import files;
+- the unfiltered picker count is derived from the repository, not hardcoded, and pages results in groups of 24;
+- query controls reset pagination while preserving canonical `/watches/{brand}/{reference}` links;
+- `/collection/{userWatchId}` renders view mode first and opens edit or status controls only after an explicit action;
+- all named demo routes use the same deterministic server snapshot and retain isolated session persistence.
 
 ## Product Navigation Decision
 
@@ -272,3 +327,35 @@ Utility navigation target:
 - `/cart` with a commerce-specific indicator.
 
 Brand discovery remains available through `/brands`, catalog navigation, and search but does not require equal primary-header weight once the User Watch Collection is functional. Cart and Collection must remain visually and semantically distinct.
+
+## Collection Phase 2.5 Route Behavior
+
+- `/collection`, `/collection/new`, `/collection/{userWatchId}`, and recommendation surfaces use the same
+  collection-facing primary-image curation and media-presentation policy.
+- Catalog-linked records retain canonical `/watches/{brand}/{reference}` routes while technical-only image sets fall
+  back to a neutral missing-image state.
+- Named demo scenarios remain storage-isolated and exercise the same image policy and adaptive shelf compositions.
+- No route reads import preview files on the client, and no public catalog or homepage route behavior changes.
+
+## Collection Phase 2.6 Route Behavior
+
+- `/collection` and `/collection/{userWatchId}` reconcile previously persisted catalog-linked media with the current
+  server-provided canonical candidate before rendering shelf or detail.
+- `/collection/new` keeps the same catalog/manual tabs and complete repository snapshot, with a compact route-local
+  layout that brings controls and the first product row into the initial desktop viewport.
+- Shelf count variants, profile, recommendations, and empty onboarding retain their existing route and persistence
+  behavior while using denser section rhythm and category-aware watch sizing.
+- Manual photos, named demo storage isolation, noindex behavior, and the 24-item picker pagination contract remain
+  unchanged.
+
+## Collection Phase 2.7 Navigation And Hydration
+
+- Collection-local navigation resolves to `/collection`, `/collection#collection-shelf`,
+  `/collection#collection-recommendations`, and `/collection/new`.
+- The recommendations route marks its collection-local entry active; detail marks `Мои часы`; add marks
+  `Добавить часы`.
+- Section anchors use sticky-header scroll margins and the navigation becomes horizontally scrollable on narrow
+  viewports without truncating labels.
+- `/collection/new` uses the same unconditional root class on SSR and the first client render. Its add-specific
+  spacing is structural CSS, while browser storage remains deferred until after hydration.
+- No new public route, catalog route, authenticated backend, or indexation behavior is introduced.

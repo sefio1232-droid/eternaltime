@@ -2,15 +2,12 @@ import Link from "next/link";
 import { publicNavigation, utilityNavigation } from "@/config/navigation";
 import { MobileNavigation } from "@/components/shell/mobile-navigation";
 import { PublicNavLink } from "@/components/shell/public-nav-link";
+import { ProfileMenu } from "@/components/shell/profile-menu";
 import { SearchDialog } from "@/components/shell/search-dialog";
 import { EditorialContainer, IconAction } from "@/components/ui/editorial-primitives";
 
 function HeartIcon() {
   return <span className="icon-heart" />;
-}
-
-function AccountIcon() {
-  return <span className="icon-account" />;
 }
 
 export function PublicShell({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -33,7 +30,7 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
           <div className="public-actions">
             <SearchDialog compact />
             <IconAction href="/account/favorites" label="Избранное" icon={<HeartIcon />} />
-            <IconAction href="/account" label={utilityNavigation.find((item) => item.href === "/account")?.label ?? "Профиль"} icon={<AccountIcon />} />
+            <ProfileMenu />
           </div>
 
           <MobileNavigation primaryItems={publicNavigation} utilityItems={utilityNavigation} />

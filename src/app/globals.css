@@ -286,14 +286,184 @@ select {
 }
 
 .collection-watch-media {
+  --collection-media-padding: 7%;
+  --collection-media-max-width: 86%;
+  --collection-media-max-height: 90%;
+  --collection-watch-scale: 1;
+  --collection-object-position: center;
   display: flex;
   min-width: 0;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: var(--collection-media-padding);
+  background: var(--surface-cool);
+}
+
+.collection-watch-media img {
+  width: auto;
+  height: auto;
+  max-width: var(--collection-media-max-width);
+  max-height: var(--collection-media-max-height);
+  object-fit: contain;
+  object-position: var(--collection-object-position);
+  transform: scale(var(--collection-watch-scale));
+  transform-origin: center;
+  transition: transform 320ms ease;
+}
+
+.collection-watch-media[data-presentation="compact-digital"] {
+  --collection-media-padding: 12%;
+  --collection-media-max-width: 72%;
+  --collection-media-max-height: 72%;
+  --collection-watch-scale: 0.98;
+}
+
+.collection-watch-media[data-presentation="standard-digital"] {
+  --collection-media-padding: 10%;
+  --collection-media-max-width: 78%;
+  --collection-media-max-height: 76%;
+  --collection-watch-scale: 0.99;
+}
+
+.collection-watch-media[data-presentation="analog-bracelet"] {
+  --collection-media-padding: 7%;
+  --collection-media-max-width: 84%;
+  --collection-media-max-height: 84%;
+}
+
+.collection-watch-media[data-presentation="analog-strap"] {
+  --collection-media-padding: 7%;
+  --collection-media-max-width: 80%;
+  --collection-media-max-height: 84%;
+}
+
+.collection-watch-media[data-presentation="diver"] {
+  --collection-media-padding: 8%;
+  --collection-media-max-width: 82%;
+  --collection-media-max-height: 82%;
+}
+
+.collection-watch-media[data-presentation="oversized-sport"] {
+  --collection-media-padding: 11%;
+  --collection-media-max-width: 76%;
+  --collection-media-max-height: 78%;
+  --collection-watch-scale: 0.98;
+}
+
+.collection-watch-media[data-presentation="rectangular"] {
+  --collection-media-padding: 7%;
+  --collection-media-max-width: 74%;
+  --collection-media-max-height: 90%;
+}
+
+.collection-watch-media[data-presentation="manual-watch"] {
+  --collection-media-padding: 6%;
+  --collection-media-max-width: 88%;
+  --collection-media-max-height: 90%;
+}
+
+.collection-watch-media[data-presentation="missing-image"] {
+  --collection-media-padding: 12%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-watch-media img {
+    transition: none;
+  }
+}
+
+.media-placeholder-watch {
+  position: relative;
+  width: min(42%, 9rem);
+  aspect-ratio: 0.44;
+  border-radius: 2.5rem;
   background:
-    linear-gradient(150deg, rgb(255 255 255 / 88%), rgb(231 237 241 / 76%)),
-    var(--surface-cool);
+    linear-gradient(90deg, transparent 45%, rgb(16 26 41 / 8%) 46% 54%, transparent 55%),
+    linear-gradient(180deg, rgb(255 255 255 / 50%), rgb(16 26 41 / 3%));
+}
+
+.media-placeholder-watch::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 122%;
+  aspect-ratio: 1;
+  border: 2px solid rgb(16 26 41 / 26%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 52%, rgb(16 26 41 / 5%) 53% 54%, transparent 55%),
+    #f7f6f2;
+  box-shadow: 0 0.7rem 2rem rgb(16 26 41 / 8%);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.media-placeholder-watch::after {
+  position: absolute;
+  z-index: 2;
+  top: 49%;
+  right: -18%;
+  width: 12%;
+  height: 9%;
+  border: 1px solid rgb(16 26 41 / 25%);
+  background: #e9e8e3;
+  content: "";
+  transform: translateY(-50%);
+}
+
+.media-placeholder-watch i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 80%;
+  aspect-ratio: 1;
+  border: 1px solid rgb(199 164 106 / 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.media-placeholder-watch i::before,
+.media-placeholder-watch i::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32%;
+  height: 1px;
+  background: rgb(16 26 41 / 58%);
+  content: "";
+  transform-origin: left center;
+}
+
+.media-placeholder-watch i::before {
+  transform: rotate(-56deg);
+}
+
+.media-placeholder-watch i::after {
+  width: 24%;
+  transform: rotate(26deg);
+}
+
+.media-placeholder-watch b,
+.media-placeholder-watch em {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  width: 8%;
+  height: 8%;
+  border-radius: 50%;
+  background: rgb(16 26 41 / 48%);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.media-placeholder-watch b {
+  top: 43%;
+}
+
+.media-placeholder-watch em {
+  bottom: 43%;
 }
 
 .collection-watch-row {

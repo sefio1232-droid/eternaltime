@@ -1,0 +1,156 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  position: relative;
+  width: 2.45rem;
+  height: 2.45rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.trigger::after {
+  position: absolute;
+  right: 0.15rem;
+  bottom: 0.15rem;
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 50%;
+  background: transparent;
+  content: "";
+}
+
+.trigger[data-collection-active]::after {
+  background: #c7a46a;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid #c7a46a;
+  outline-offset: 2px;
+}
+
+.icon {
+  position: relative;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.icon::before {
+  position: absolute;
+  top: 0.16rem;
+  left: 50%;
+  width: 0.32rem;
+  height: 0.32rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.icon::after {
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.13rem;
+  left: 0.2rem;
+  height: 0.3rem;
+  border: 1px solid currentColor;
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  content: "";
+}
+
+.popover {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.85rem);
+  right: 0;
+  width: min(21rem, calc(100vw - 2rem));
+  padding: 0.85rem;
+  border: 1px solid rgb(16 26 41 / 14%);
+  background: #f8f5ee;
+  box-shadow: 0 1.1rem 2.8rem rgb(16 26 41 / 12%);
+  color: #101a29;
+}
+
+.heading {
+  padding: 0.55rem 0.65rem 0.85rem;
+  color: #8a6a37;
+  font-size: 0.62rem;
+  font-weight: 760;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.popover nav {
+  display: grid;
+  border-top: 1px solid rgb(16 26 41 / 12%);
+}
+
+.item {
+  position: relative;
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.85rem 0.65rem;
+  border-bottom: 1px solid rgb(16 26 41 / 10%);
+  color: inherit;
+  text-decoration: none;
+}
+
+.item::after {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  color: #c7a46a;
+  content: "→";
+  transform: translateY(-50%);
+}
+
+.item strong {
+  padding-right: 1.5rem;
+  font-size: 0.8rem;
+}
+
+.item span {
+  color: #6f747b;
+  font-size: 0.68rem;
+}
+
+.item:hover,
+.item[aria-current="page"] {
+  background: rgb(199 164 106 / 10%);
+}
+
+.item:focus-visible {
+  outline: 2px solid #c7a46a;
+  outline-offset: -2px;
+}
+
+.mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .desktop {
+    display: none;
+  }
+
+  .mobile {
+    display: block;
+    margin-left: auto;
+  }
+
+  .popover {
+    position: fixed;
+    top: 4.25rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+  }
+}
