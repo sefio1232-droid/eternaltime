@@ -38,6 +38,7 @@ storage/
 supabase/.temp/
 
 # catalog import local sources and generated artifacts
+incoming/
 imports/raw/catalog/
 imports/raw/home-hero/
 imports/generated/

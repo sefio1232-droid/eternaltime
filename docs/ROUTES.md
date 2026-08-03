@@ -93,11 +93,13 @@ The route is private to its user or server-managed guest session and is always n
 
 ```text
 app/(shop)/selection/page.tsx
-app/(shop)/selection/[sessionId]/page.tsx
-app/(shop)/selection/[sessionId]/results/page.tsx
 ```
 
-Selection is structured and deterministic. It should not require AI.
+Selection is structured and deterministic and does not require AI. The prelude, seven questions, and results all use
+`/selection` with validated query-string state (`step` plus the answered fields). Results read the shared Catalog Read
+Repository, apply deterministic hard constraints and ranking, and link directly to canonical
+`/watches/{brandSlug}/{referenceSlug}` detail routes. There are no session or duplicate results routes in the current
+implementation.
 
 ## Cart And Checkout Routes
 
@@ -233,7 +235,9 @@ Current implemented public routes include:
 /collection
 ```
 
-`/selection` and `/collection` are public product explanation routes only. They do not create fake quiz results, fake recommendations, fake user collections, or authentication requirements.
+`/selection` is the implemented URL-state selection flow. `/collection` is the ownership experience and falls back to
+the deterministic browser-local runtime when authentication or Supabase is unavailable. Neither route fabricates
+backend persistence or authentication.
 
 `/journal` exposes only published Journal articles from the Journal read repository. Draft articles are excluded from public route resolution and sitemap generation.
 
@@ -291,6 +295,7 @@ Phase 2.3 demo harness:
 /collection?demo=one
 /collection?demo=two
 /collection?demo=three
+/collection?demo=four
 /collection?demo=many
 /collection?demo=mixed
 /collection?demo=archived

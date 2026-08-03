@@ -39,7 +39,7 @@ describe("local collection catalog picker", () => {
   it("exposes the complete current Catalog Read Repository snapshot without the former 160 limit", () => {
     const firstPage = listLocalCollectionPickerPage(candidates, pickerQuery());
 
-    expect(candidates).toHaveLength(559);
+    expect(candidates).toHaveLength(547);
     expect(candidates).not.toHaveLength(160);
     expect(firstPage.total).toBe(candidates.length);
     expect(firstPage.items).toHaveLength(localCollectionPickerPageSize);

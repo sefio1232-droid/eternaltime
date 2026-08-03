@@ -146,13 +146,13 @@ function SelectionSummary(props: Readonly<{
       <aside className={styles.summaryDesktop} aria-label="Ваши ответы">
         <p className={styles.summaryTitle}>Ваши ответы</p>
         <AnswerSummaryList {...props} />
-        <Link href="/catalog" className={styles.catalogLink}>Открыть весь каталог</Link>
+        <Link href="/watches" className={styles.catalogLink}>Открыть весь каталог</Link>
       </aside>
       <details className={styles.summaryMobile}>
         <summary>Ваши ответы <span>{props.answeredKeys.length} из 7</span></summary>
         <div className={styles.summaryMobilePanel}>
           <AnswerSummaryList {...props} />
-          <Link href="/catalog" className={styles.catalogLink}>Открыть весь каталог</Link>
+          <Link href="/watches" className={styles.catalogLink}>Открыть весь каталог</Link>
         </div>
       </details>
     </>
