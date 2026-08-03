@@ -4,6 +4,13 @@ export type CatalogReadSourceKind = "database" | "preview";
 
 export type CatalogSortKey = "default" | "price_asc" | "price_desc" | "name_asc";
 
+/**
+ * Top-level catalog tab state. "recommended" is the default `/watches` experience (curated,
+ * price-floored); "all" shows the full unfiltered catalog. Orthogonal to `brandSlug` — a brand
+ * tab (`?brand=casio`) always behaves like "all" scoped to that brand, regardless of `view`.
+ */
+export type CatalogViewKey = "recommended" | "all";
+
 export type CatalogSpecificationGroup =
   | "mechanism"
   | "case"
@@ -109,6 +116,7 @@ export type CatalogReadQuery = {
   minPriceMinor: number | null;
   maxPriceMinor: number | null;
   sort: CatalogSortKey;
+  view: CatalogViewKey;
   page: number;
   pageSize: number;
 };

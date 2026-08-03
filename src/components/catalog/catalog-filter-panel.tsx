@@ -1,52 +1,159 @@
 import Link from "next/link";
 import { catalogQueryHref, rubMinorToQueryValue } from "@/modules/catalog/application/catalog-read-query";
-import type { CatalogFilterFacets, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
+import { formatCatalogCount } from "@/modules/catalog/application/catalog-format";
+import { mechanismGroupLabels, mechanismGroupOrder } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
+import type { CatalogFilterFacets, CatalogFilterOption, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
+import styles from "@/components/catalog/catalog-filter-panel.module.css";
 
-function controlClassName() {
-  return "catalog-filter-control";
+type SortValue = CatalogReadQuery["sort"];
+
+/** Thousands-separated placeholder ("15 000"), not a raw digit string, so the price fields read
+ * as real money the way the rest of the catalog already formats it. */
+function formatPriceFieldPlaceholder(amountMinor: number | null): string | null {
+  const rub = rubMinorToQueryValue(amountMinor);
+  return rub ? formatCatalogCount(Number(rub)) : null;
 }
 
-function FilterIcon({ kind }: Readonly<{ kind: "brand" | "collection" | "movement" | "material" | "glass" | "price" | "sort" | "search" }>) {
-  return <span aria-hidden="true" className={`catalog-filter-icon catalog-filter-icon-${kind}`} />;
+/** "default" reads as "Рекомендуемые" on the curated tab, "По умолчанию" everywhere else. */
+export function sortOptionsFor(view: CatalogReadQuery["view"]): Array<{ value: SortValue; label: string }> {
+  return [
+    { value: "default", label: view === "recommended" ? "Рекомендуемые" : "По умолчанию" },
+    { value: "price_asc", label: "Сначала дешевле" },
+    { value: "price_desc", label: "Сначала дороже" },
+    { value: "name_asc", label: "По названию" },
+  ];
 }
 
-function SelectField({ label, name, value, options, icon }: Readonly<{
+function SelectField({
+  label,
+  name,
+  value,
+  options,
+  className = "",
+}: Readonly<{
   label: string;
   name: string;
   value: string | null;
   options: Array<{ value: string; label: string; count: number }>;
-  icon: "brand" | "collection" | "movement" | "material" | "glass" | "sort";
+  className?: string;
 }>) {
   return (
-    <label className="catalog-filter-item">
-      <FilterIcon kind={icon} />
-      <span>{label}</span>
-      <select name={name} defaultValue={value ?? ""} className={controlClassName()}>
+    <label className={`${styles.field} ${className}`}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <select name={name} defaultValue={value ?? ""} className={styles.control}>
         <option value="">Все</option>
-        {options.map((option) => <option key={option.value} value={option.value}>{option.label} ({option.count})</option>)}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label} ({option.count})
+          </option>
+        ))}
       </select>
     </label>
   );
 }
 
-export function CatalogFilterPanel({ facets, query, pathname, includeBrandFilter }: Readonly<{
+type ActiveChip = { key: string; label: string; removeHref: string };
+
+function optionLabel(options: CatalogFilterOption[], value: string): string {
+  return options.find((option) => option.value === value)?.label ?? value;
+}
+
+function buildActiveChips(input: {
   facets: CatalogFilterFacets;
   query: CatalogReadQuery;
   pathname: string;
   includeBrandFilter: boolean;
-}>) {
-  const activeFilterCount = [
-    query.search,
-    includeBrandFilter ? query.brandSlug : null,
-    query.brandCollection,
-    query.movement,
-    query.waterResistance,
-    query.caseMaterial,
-    query.crystal,
-    query.minPriceMinor,
-    query.maxPriceMinor,
-  ].filter((value) => value !== null && value !== "").length;
-  const resetHref = catalogQueryHref(pathname, query, {
+}): ActiveChip[] {
+  const { facets, query, pathname, includeBrandFilter } = input;
+  const chips: ActiveChip[] = [];
+
+  if (query.search) {
+    chips.push({
+      key: "q",
+      label: `«${query.search}»`,
+      removeHref: catalogQueryHref(pathname, query, { search: "", page: 1 }),
+    });
+  }
+
+  if (includeBrandFilter && query.brandSlug) {
+    chips.push({
+      key: "brand",
+      label: optionLabel(facets.brands, query.brandSlug),
+      removeHref: catalogQueryHref(pathname, query, { brandSlug: null, page: 1 }),
+    });
+  }
+
+  if (query.brandCollection) {
+    chips.push({
+      key: "collection",
+      label: optionLabel(facets.brandCollections, query.brandCollection),
+      removeHref: catalogQueryHref(pathname, query, { brandCollection: null, page: 1 }),
+    });
+  }
+
+  if (query.movement) {
+    chips.push({
+      key: "movement",
+      label: mechanismGroupLabels[query.movement as keyof typeof mechanismGroupLabels] ?? optionLabel(facets.movements, query.movement),
+      removeHref: catalogQueryHref(pathname, query, { movement: null, page: 1 }),
+    });
+  }
+
+  if (query.waterResistance) {
+    chips.push({
+      key: "water",
+      label: optionLabel(facets.waterResistance, query.waterResistance),
+      removeHref: catalogQueryHref(pathname, query, { waterResistance: null, page: 1 }),
+    });
+  }
+
+  if (query.caseMaterial) {
+    chips.push({
+      key: "caseMaterial",
+      label: optionLabel(facets.caseMaterials, query.caseMaterial),
+      removeHref: catalogQueryHref(pathname, query, { caseMaterial: null, page: 1 }),
+    });
+  }
+
+  if (query.crystal) {
+    chips.push({
+      key: "crystal",
+      label: optionLabel(facets.crystalTypes, query.crystal),
+      removeHref: catalogQueryHref(pathname, query, { crystal: null, page: 1 }),
+    });
+  }
+
+  if (query.minPriceMinor !== null || query.maxPriceMinor !== null) {
+    const min = rubMinorToQueryValue(query.minPriceMinor);
+    const max = rubMinorToQueryValue(query.maxPriceMinor);
+    const label = min && max ? `${min}–${max} ₽` : min ? `от ${min} ₽` : `до ${max} ₽`;
+
+    chips.push({
+      key: "price",
+      label,
+      removeHref: catalogQueryHref(pathname, query, { minPriceMinor: null, maxPriceMinor: null, page: 1 }),
+    });
+  }
+
+  return chips;
+}
+
+/** Counts how many *expanded-panel* dimensions are active, for the "Фильтры · N" toggle label —
+ * search has its own always-visible field and isn't counted here. */
+function countExpandedFilters(query: CatalogReadQuery, includeBrandFilter: boolean): number {
+  let count = 0;
+  if (includeBrandFilter && query.brandSlug) count += 1;
+  if (query.brandCollection) count += 1;
+  if (query.movement) count += 1;
+  if (query.waterResistance) count += 1;
+  if (query.caseMaterial) count += 1;
+  if (query.crystal) count += 1;
+  if (query.minPriceMinor !== null || query.maxPriceMinor !== null) count += 1;
+  return count;
+}
+
+export function catalogFilterResetHref(pathname: string, query: CatalogReadQuery): string {
+  return catalogQueryHref(pathname, query, {
     search: "",
     brandSlug: null,
     brandCollection: null,
@@ -59,51 +166,218 @@ export function CatalogFilterPanel({ facets, query, pathname, includeBrandFilter
     sort: "default",
     page: 1,
   });
+}
 
+/**
+ * The catalog control bar's search field — always visible, never collapses. Standalone (not
+ * grouped with sort) so the persistent control bar can place it on the left, next to the result
+ * count, while sort and the filter-dialog trigger sit on the right
+ * (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 control bar").
+ */
+function CatalogFilterSearchField({ query, idPrefix = "catalog" }: Readonly<{ query: CatalogReadQuery; idPrefix?: string }>) {
+  const searchInputId = `${idPrefix}-search-input`;
   return (
-    <form action={pathname} className="catalog-filter-bar" data-catalog-filter-count={activeFilterCount}>
-      <div className="catalog-filter-primary-row">
-        <label className="catalog-filter-item catalog-filter-search">
-          <FilterIcon kind="search" />
-          <span>Поиск</span>
-          <input name="q" defaultValue={query.search} placeholder="Бренд, модель или артикул" className={controlClassName()} />
-        </label>
-        {includeBrandFilter ? <SelectField label="Бренды" name="brand" value={query.brandSlug} options={facets.brands} icon="brand" /> : null}
-        <SelectField label="Коллекции" name="collection" value={query.brandCollection} options={facets.brandCollections} icon="collection" />
-        <SelectField label="Механизм" name="movement" value={query.movement} options={facets.movements.slice(0, 80)} icon="movement" />
-        <label className="catalog-filter-item">
-          <FilterIcon kind="sort" />
-          <span>Сортировка</span>
-          <select name="sort" defaultValue={query.sort} className={controlClassName()}>
-            <option value="default">По умолчанию</option>
-            <option value="price_asc">Сначала дешевле</option>
-            <option value="price_desc">Сначала дороже</option>
-            <option value="name_asc">По названию</option>
-          </select>
-        </label>
-        <button type="submit" className="catalog-filter-submit">Применить</button>
-      </div>
-
-      <details className="catalog-filter-more">
-        <summary>
-          <FilterIcon kind="material" />
-          Все фильтры{activeFilterCount > 0 ? ` · выбрано ${activeFilterCount}` : ""}
-        </summary>
-        <div className="catalog-filter-expanded">
-          <SelectField label="Водозащита" name="water" value={query.waterResistance} options={facets.waterResistance.slice(0, 80)} icon="material" />
-          <SelectField label="Материал" name="caseMaterial" value={query.caseMaterial} options={facets.caseMaterials.slice(0, 80)} icon="material" />
-          <SelectField label="Стекло" name="crystal" value={query.crystal} options={facets.crystalTypes.slice(0, 80)} icon="glass" />
-          <fieldset className="catalog-filter-price">
-            <legend><FilterIcon kind="price" /> Цена</legend>
-            <div>
-              <input name="priceMin" defaultValue={rubMinorToQueryValue(query.minPriceMinor) ?? ""} placeholder={rubMinorToQueryValue(facets.price.minMinor) ?? "от"} inputMode="numeric" className={controlClassName()} aria-label="Минимальная цена" />
-              <input name="priceMax" defaultValue={rubMinorToQueryValue(query.maxPriceMinor) ?? ""} placeholder={rubMinorToQueryValue(facets.price.maxMinor) ?? "до"} inputMode="numeric" className={controlClassName()} aria-label="Максимальная цена" />
-            </div>
-          </fieldset>
-        </div>
-      </details>
-
-      {activeFilterCount > 0 ? <Link href={resetHref} className="catalog-filter-reset">Сбросить выбранные фильтры</Link> : null}
-    </form>
+    <div className={styles.searchField}>
+      <label className={styles.srOnly} htmlFor={searchInputId}>
+        Поиск по бренду, модели или артикулу
+      </label>
+      <input
+        id={searchInputId}
+        name="q"
+        defaultValue={query.search}
+        placeholder="Бренд, модель или артикул"
+        className={styles.searchInput}
+      />
+      <button type="submit" className={styles.searchSubmit} aria-label="Найти">
+        <span aria-hidden="true" className={styles.searchIcon} />
+      </button>
+    </div>
   );
 }
+
+/** The control bar's sort field — a plain select, standalone (see `CatalogFilterSearchField`). */
+function CatalogFilterSortField({ query, idPrefix = "catalog" }: Readonly<{ query: CatalogReadQuery; idPrefix?: string }>) {
+  const sortId = `${idPrefix}-sort-select`;
+  return (
+    <label className={styles.sortField} htmlFor={sortId}>
+      <span className={styles.srOnly}>Сортировка</span>
+      <select id={sortId} name="sort" defaultValue={query.sort} className={styles.control}>
+        {sortOptionsFor(query.view).map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+/**
+ * Everything behind the "Расширенные фильтры" toggle: brand/collection (where relevant),
+ * mechanism as a real radio group over the normalized taxonomy (never raw import strings — see
+ * catalog-mechanism-taxonomy.ts), price bounds, and the other traits that are already reliably
+ * normalized (water resistance, case material, crystal). No filter is added here for data that
+ * isn't already normalized (no strap/color/display-type filter yet).
+ */
+function CatalogFilterExpandedFields({
+  facets,
+  query,
+  includeBrandFilter,
+  totalRecords,
+  idPrefix = "catalog",
+  showFooter = true,
+}: Readonly<{
+  facets: CatalogFilterFacets;
+  query: CatalogReadQuery;
+  includeBrandFilter: boolean;
+  totalRecords: number;
+  idPrefix?: string;
+  showFooter?: boolean;
+}>) {
+  const showCollectionFilter = facets.brandCollections.length > 1;
+
+  return (
+    <div id={`${idPrefix}-expanded-filters`} className={styles.expandedPanel}>
+      <div className={styles.expandedGrid}>
+        <fieldset className={styles.mechanismField}>
+          <legend className={styles.fieldLabel}>Механизм</legend>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioOption}>
+              <input type="radio" name="movement" value="" defaultChecked={!query.movement} />
+              <span>Любой</span>
+            </label>
+            {mechanismGroupOrder.map((group) => {
+              const option = facets.movements.find((entry) => entry.value === group);
+              if (!option || option.count === 0) return null;
+              return (
+                <label key={group} className={styles.radioOption}>
+                  <input type="radio" name="movement" value={group} defaultChecked={query.movement === group} />
+                  <span>
+                    {mechanismGroupLabels[group]} ({option.count})
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <fieldset className={styles.priceField}>
+          <legend className={styles.fieldLabel}>Цена, ₽</legend>
+          <div className={styles.priceGroup}>
+            <input
+              name="priceMin"
+              defaultValue={rubMinorToQueryValue(query.minPriceMinor) ?? ""}
+              placeholder={formatPriceFieldPlaceholder(facets.price.minMinor) ?? "от"}
+              inputMode="numeric"
+              className={styles.priceInput}
+              aria-label="Минимальная цена"
+            />
+            <span aria-hidden="true" className={styles.priceDash}>
+
+            </span>
+            <input
+              name="priceMax"
+              defaultValue={rubMinorToQueryValue(query.maxPriceMinor) ?? ""}
+              placeholder={formatPriceFieldPlaceholder(facets.price.maxMinor) ?? "до"}
+              inputMode="numeric"
+              className={styles.priceInput}
+              aria-label="Максимальная цена"
+            />
+          </div>
+        </fieldset>
+
+        {includeBrandFilter ? (
+          <SelectField label="Бренд" name="brand" value={query.brandSlug} options={facets.brands} className={styles.moreField} />
+        ) : null}
+        {showCollectionFilter ? (
+          <SelectField
+            label="Коллекция"
+            name="collection"
+            value={query.brandCollection}
+            options={facets.brandCollections.slice(0, 80)}
+            className={styles.moreField}
+          />
+        ) : null}
+        <SelectField
+          label="Водозащита"
+          name="water"
+          value={query.waterResistance}
+          options={facets.waterResistance.slice(0, 80)}
+          className={styles.moreField}
+        />
+        <SelectField
+          label="Материал корпуса"
+          name="caseMaterial"
+          value={query.caseMaterial}
+          options={facets.caseMaterials.slice(0, 80)}
+          className={styles.moreField}
+        />
+        <SelectField
+          label="Стекло"
+          name="crystal"
+          value={query.crystal}
+          options={facets.crystalTypes.slice(0, 80)}
+          className={styles.moreField}
+        />
+      </div>
+
+      {showFooter ? (
+        <div className={styles.expandedFooter}>
+          <button type="submit" className={styles.applyButton}>
+            Применить
+          </button>
+          <span className={styles.expandedCount}>{formatCatalogCount(totalRecords)} моделей</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Active-filter chips row — a plain list of links, rendered directly under the control bar by
+ * `catalog-list-page.tsx` (not inside the filter dialog) so what's filtered stays visible even
+ * while the dialog itself is closed. */
+function CatalogFilterChipsRow({
+  facets,
+  query,
+  pathname,
+  includeBrandFilter,
+}: Readonly<{
+  facets: CatalogFilterFacets;
+  query: CatalogReadQuery;
+  pathname: string;
+  includeBrandFilter: boolean;
+}>) {
+  const activeChips = buildActiveChips({ facets, query, pathname, includeBrandFilter });
+  if (activeChips.length === 0) {
+    return null;
+  }
+
+  const resetHref = catalogFilterResetHref(pathname, query);
+
+  return (
+    <div className={styles.chipRow}>
+      <ul className={styles.chipList}>
+        {activeChips.map((chip) => (
+          <li key={chip.key}>
+            <Link href={chip.removeHref} className={styles.chip}>
+              {chip.label}
+              <span aria-hidden="true" className={styles.chipRemove}>×</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link href={resetHref} className={styles.resetAll}>
+        Сбросить все
+      </Link>
+    </div>
+  );
+}
+
+export {
+  CatalogFilterSearchField,
+  CatalogFilterSortField,
+  CatalogFilterExpandedFields,
+  CatalogFilterChipsRow,
+  buildActiveChips,
+  countExpandedFilters,
+};

@@ -1,0 +1,113 @@
+/*
+ * Catalog list loading skeleton. Dimensions are matched to the real intro/toolbar/grid so no
+ * layout shift occurs when real content replaces it. A single, calm opacity pulse — no shimmer
+ * sweep — and it is disabled entirely for prefers-reduced-motion.
+ */
+
+.shell {
+  display: grid;
+  gap: clamp(2rem, 3.4vw, 2.75rem);
+}
+
+.block {
+  background: #ece9e2;
+  animation: catalog-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+  }
+}
+
+@keyframes catalog-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.intro {
+  display: grid;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(16, 22, 26, 0.12);
+  padding-bottom: clamp(1.25rem, 2.4vw, 1.75rem);
+}
+
+.eyebrow {
+  height: 12px;
+  width: 140px;
+}
+
+.title {
+  height: 48px;
+  width: min(480px, 70%);
+}
+
+.lead {
+  height: 20px;
+  width: min(420px, 60%);
+}
+
+.toolbar {
+  height: 58px;
+  border-top: 1px solid rgba(16, 22, 26, 0.12);
+  border-bottom: 1px solid rgba(16, 22, 26, 0.12);
+  background: transparent;
+  animation: none;
+}
+
+.resultsHead {
+  height: 16px;
+  width: 160px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
+
+@media (min-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 26px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+  }
+}
+
+.card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.media {
+  aspect-ratio: 1 / 1.08;
+}
+
+.line {
+  height: 12px;
+  width: 70%;
+}
+
+.lineWide {
+  height: 18px;
+  width: 85%;
+}

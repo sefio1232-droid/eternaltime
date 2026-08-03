@@ -14,6 +14,8 @@ export type CatalogImageSourceQuality = "strong" | "standard" | "weak" | "techni
 export type CatalogImageCompositionSlot =
   | "catalog-card"
   | "catalog-feature"
+  | "catalog-hero-primary"
+  | "catalog-hero-secondary"
   | "detail-hero"
   | "detail-gallery"
   | "home-hero-main"
@@ -35,10 +37,14 @@ export type CatalogResolvedImagePresentation = {
 
 type PresentationOverride = Partial<CatalogResolvedImagePresentation>;
 
+// Focal-point-only overrides (no forced `scale`): a hardcoded scale here would apply across every
+// slot this image is used in, including tightly-clipped catalog cards, and previously caused
+// exactly the overflow-cropping bug reported for A130WE-7ADF (see catalog-card's own scale fix
+// below). Each slot's own base scale in `basePresentation()` is the right place to control zoom.
 const imageKeyOverrides: Record<string, PresentationOverride> = {
-  "367aaa9e3c1b8f6a145057501b35493a": { focalX: 50, focalY: 46, scale: 1.2 },
-  "4cb66e52d72a13a0c09e09edb70f727e": { focalX: 50, focalY: 45, scale: 1.22 },
-  "22e784202d81f95b817f791807ced5f6": { focalX: 51, focalY: 45, scale: 1.18 },
+  "367aaa9e3c1b8f6a145057501b35493a": { focalX: 50, focalY: 46 },
+  "4cb66e52d72a13a0c09e09edb70f727e": { focalX: 50, focalY: 45 },
+  "22e784202d81f95b817f791807ced5f6": { focalX: 51, focalY: 45 },
 };
 
 function clampPercent(value: number): number {
@@ -69,9 +75,25 @@ function imageText(image: CatalogImagePresentation): string {
     .toLocaleLowerCase("ru");
 }
 
+// Source filenames/alt text carry no view-type signal for most of the catalog (e.g.
+// "A168WA-1WDF_1.jpg" gives no hint it's a caseback shot), so text heuristics below miss cases
+// text can't see. This is a targeted denylist of specific image keys visually confirmed during
+// Phase 2.2 to be a back/caseback/clasp view masquerading as gallery position 1 — not a general
+// classifier. Extend only after visually confirming a specific imageKey; a full-catalog fix needs
+// either enriched import metadata or a real vision-based audit pass (see
+// docs/CATALOG_PREMIUM_EDITORIAL_REBUILD.md "Known limitations").
+const knownTechnicalAngleImageKeys = new Set<string>([
+  "4b660c3862bda8abce31d75ac8f41473", // Casio A168WA-1WDF, gallery position 1 — caseback/clasp view
+  "18ed5922d050fad407b9b2ddc9fe3cc8", // Casio AE-1200WH-1BV, gallery position 1 — caseback/buckle view
+]);
+
 export function isLikelyTechnicalAngle(image: CatalogImagePresentation, imageIndex = 0): boolean {
   if (image.kind === "none") {
     return false;
+  }
+
+  if (image.kind === "development_zip" && knownTechnicalAngleImageKeys.has(image.imageKey)) {
+    return true;
   }
 
   const text = imageText(image);
@@ -81,6 +103,68 @@ export function isLikelyTechnicalAngle(image: CatalogImagePresentation, imageInd
 
   const order = imageOrderFromAlt(image) ?? imageIndex + 1;
   return order >= 4;
+}
+
+/**
+ * Recommended-tab-only rejection categories (docs/CATALOG_SHOWROOM_RECOVERY.md "Image quality
+ * policy"). Broader than `isLikelyTechnicalAngle` (which governs hero-image *selection* for every
+ * surface) — this governs *eligibility for the curated Recommended tab specifically*. All/brand
+ * tabs still show these watches; only Recommended excludes them, per the explicit requirement
+ * that Recommended never contain a missing-image, caseback, or unreadable-dial card.
+ */
+export type CatalogImageRejectionReason =
+  | "missing"
+  | "caseback"
+  | "technical-angle"
+  | "contaminated-ui"
+  | "low-contrast"
+  | "crop-risk";
+
+// Visually verified during Phase 3.1 (fetched and inspected the actual served bytes — see
+// docs/CATALOG_SHOWROOM_RECOVERY.md). Matched against the combined alt+url text, not an exact
+// key, since remote URLs carry encoded query params that vary between where they're read. Extend
+// only after visually confirming a specific image; a full-catalog darkness/contamination
+// classifier needs real vision analysis, out of scope here (see "Known limitations").
+const knownLowContrastPatterns: RegExp[] = [
+  /T151-422-36-051-00_Shadow/i, // Tissot PRC 100 Solar, all-black case/dial/strap — numerals unreadable
+];
+
+// Forward-looking only: current source alt text/URLs never contain these words (both remote
+// domains are official manufacturer product-photography CDNs, sampled and confirmed clean), so
+// this has no effect on today's data — it exists so a future contaminated scrape (e.g. a
+// screenshot including a browser/viewer chrome) is caught automatically instead of silently
+// passing through as a normal photo.
+const contaminatedUiPattern = /(screenshot|browser|chrome|firefox|edge-browser|image-viewer|lightbox|devtools)/i;
+
+/**
+ * Returns the first applicable rejection reason for showing this image on the curated Recommended
+ * tab, or `null` if it's clean. Never used to hide a watch from All/brand tabs/search — see
+ * `isRecommendedImageEligible` in catalog-read-service.ts for where this is actually applied.
+ */
+export function classifyCatalogImageRejection(image: CatalogImagePresentation, imageIndex = 0): CatalogImageRejectionReason | null {
+  if (image.kind === "none") {
+    return "missing";
+  }
+
+  const text = imageText(image);
+
+  if (/(caseback|back|задн|крышк)/i.test(text) || (image.kind === "development_zip" && knownTechnicalAngleImageKeys.has(image.imageKey))) {
+    return "caseback";
+  }
+
+  if (contaminatedUiPattern.test(text)) {
+    return "contaminated-ui";
+  }
+
+  if (knownLowContrastPatterns.some((pattern) => pattern.test(text))) {
+    return "low-contrast";
+  }
+
+  if (isLikelyTechnicalAngle(image, imageIndex)) {
+    return "technical-angle";
+  }
+
+  return null;
 }
 
 function sourceQualityFor(image: CatalogImagePresentation, imageIndex: number): CatalogImageSourceQuality {
@@ -142,18 +226,31 @@ function basePresentation(input: {
     case "home-scenario":
       return { mode: "product-contained", focalX: 50, focalY: 46, scale: 1.18, translateX: 0, translateY: 0, sourceQuality, caption: null };
     case "catalog-card":
+      // `product-contained` (never `product-crop`) and scale 1 — object-fit: contain already
+      // sizes the image to the largest fit within its box; any transform scale beyond 1 on top
+      // of that pushes the bound axis outside an overflow-hidden card and crops it. This was the
+      // root cause of oversized/cropped catalog cards (e.g. A130WE-7ADF's tall bracelet shot).
       return {
-        mode: image.kind === "remote" ? "product-crop" : "product-contained",
+        mode: "product-contained",
         focalX: 50,
-        focalY: 47,
-        scale: image.kind === "remote" ? 1.1 : 1.22,
+        focalY: 50,
+        scale: 1,
         translateX: 0,
-        translateY: -1,
+        translateY: 0,
         sourceQuality,
         caption: null,
       };
     case "catalog-feature":
-      return { mode: "product-crop", focalX: 50, focalY: 45, scale: 1.18, translateX: 0, translateY: -1, sourceQuality, caption: null };
+      // `product-contained` (object-fit: contain), not `product-crop` — the editorial insert's
+      // watch must always be fully visible, never cropped by an object-fit: cover box
+      // (docs/CATALOG_SHOWROOM_RECOVERY.md "Editorial insert — full watch visible").
+      return { mode: "product-contained", focalX: 50, focalY: 44, scale: 1.14, translateX: 0, translateY: 0, sourceQuality, caption: null };
+    case "catalog-hero-primary":
+      // Always fully visible (contain) — the catalog hero's main watch occupies most of the
+      // stage's height but is never cropped (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 hero").
+      return { mode: "product-contained", focalX: 50, focalY: 42, scale: 1.22, translateX: 0, translateY: 0, sourceQuality, caption: null };
+    case "catalog-hero-secondary":
+      return { mode: "product-contained", focalX: 50, focalY: 46, scale: 1.08, translateX: 0, translateY: 0, sourceQuality, caption: null };
     case "detail-hero":
       return {
         mode: sourceQuality === "weak" ? "weak-source" : "detail-hero",
@@ -238,8 +335,51 @@ export function isProminentCatalogImage(image: CatalogImagePresentation, imageIn
   return quality !== "missing" && quality !== "technical" && quality !== "weak";
 }
 
+// Preferred when alt/filename metadata happens to say so; current source data carries no such
+// words (filenames are just "_1.jpg", "_2.jpg", ...), so this has no effect on today's selection
+// order and only helps once richer import metadata exists.
+const preferredFrontViewPattern = /(front|face|dial|main|hero|product|frontal|циферблат|спереди|главное)/i;
+
 export function selectBestCatalogHeroImage(images: CatalogImagePresentation[]): CatalogImagePresentation {
-  return images.find((image, index) => isProminentCatalogImage(image, index)) ?? images[0] ?? { kind: "none", alt: "Изображение недоступно" };
+  const prominent = images.map((image, index) => ({ image, index })).filter(({ image, index }) => isProminentCatalogImage(image, index));
+
+  if (prominent.length === 0) {
+    return images[0] ?? { kind: "none", alt: "Изображение недоступно" };
+  }
+
+  const preferred = prominent.find(({ image }) => preferredFrontViewPattern.test(imageText(image)));
+  return (preferred ?? prominent[0]).image;
+}
+
+/**
+ * Orders a detail-page gallery as a front-to-back editorial sequence: the chosen hero image
+ * first, then every other clean/prominent image, then known technical angles (caseback/clasp/
+ * side — see `isLikelyTechnicalAngle`) last. Deliberately does not attempt a finer "dial
+ * close-up" vs "lifestyle" vs "macro" split — source alt text/filenames carry no reliable signal
+ * for that distinction across most of the catalog (see this file's other doc comments), and
+ * guessing would risk mislabeling a real photo. Promoting clean images ahead of technical ones is
+ * the one distinction the data actually supports (docs/CATALOG_SHOWROOM_RECOVERY.md
+ * "Gallery sequencing").
+ */
+export function sequenceCatalogGalleryImages(
+  gallery: CatalogImagePresentation[],
+  heroImage: CatalogImagePresentation,
+): CatalogImagePresentation[] {
+  const heroIdentity = heroImage.kind === "none" ? null : imageIdentity(heroImage);
+  const rest = gallery.filter((image) => image.kind === "none" || heroIdentity === null || imageIdentity(image) !== heroIdentity);
+
+  const clean: CatalogImagePresentation[] = [];
+  const technical: CatalogImagePresentation[] = [];
+
+  rest.forEach((image, index) => {
+    if (image.kind !== "none" && isLikelyTechnicalAngle(image, index)) {
+      technical.push(image);
+    } else {
+      clean.push(image);
+    }
+  });
+
+  return [heroImage, ...clean, ...technical];
 }
 
 export type CatalogImageQualityPresentation = CatalogImagePresentationMode;

@@ -1,0 +1,67 @@
+.wrap {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: start;
+  border-top: 1px solid rgba(16, 22, 26, 0.12);
+  padding-block: clamp(3rem, 6vw, 5rem);
+  text-align: left;
+}
+
+.title {
+  color: #10161a;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+  font-weight: 500;
+}
+
+.body {
+  max-width: 42ch;
+  color: #747b7f;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.retryButton {
+  border: 1px solid #10161a;
+  background: #10161a;
+  padding: 0.65rem 1.1rem;
+  color: #fbfaf7;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.retryButton:hover {
+  opacity: 0.85;
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid #315e74;
+  outline-offset: 2px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(16, 22, 26, 0.22);
+  padding: 0.65rem 1.1rem;
+  color: #2b3338;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.backLink:hover {
+  border-color: #10161a;
+  color: #10161a;
+}
+
+.backLink:focus-visible {
+  outline: 2px solid #315e74;
+  outline-offset: 2px;
+}

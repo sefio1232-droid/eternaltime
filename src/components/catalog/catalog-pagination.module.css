@@ -1,0 +1,92 @@
+/*
+ * Catalog pagination — Phase 2 visual redesign.
+ * Reads catalog design tokens declared on the ancestor `.shell` in catalog-list-page.module.css.
+ */
+
+.wrap {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  border-top: 1px solid var(--catalog-line, rgba(16, 23, 27, 0.14));
+  padding-top: 1.5rem;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.step {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 0.85rem;
+  color: var(--catalog-graphite, #2b3338);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 160ms ease;
+}
+
+.step:hover {
+  color: var(--catalog-blue, #315e74);
+}
+
+.step:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.stepDisabled {
+  color: var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+  pointer-events: none;
+}
+
+.divider {
+  height: 20px;
+  width: 1px;
+  background: var(--catalog-line, rgba(16, 22, 26, 0.12));
+}
+
+.pageLink {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 40px;
+  align-items: center;
+  justify-content: center;
+  color: var(--catalog-muted, #747b7f);
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pageLink:hover {
+  color: var(--catalog-ink, #10161a);
+}
+
+.pageLink:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.pageLinkActive {
+  border-bottom: 2px solid var(--catalog-champagne, #b98334);
+  color: var(--catalog-ink, #10171b);
+  font-weight: 650;
+}
+
+.gap {
+  display: inline-flex;
+  min-width: 20px;
+  align-items: center;
+  justify-content: center;
+  color: var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+}
+
+.context {
+  color: var(--catalog-muted, #747b7f);
+  font-size: 0.78rem;
+}

@@ -1,0 +1,453 @@
+/*
+ * Watch detail page — moved verbatim from src/app/globals.css (Phase 1 style isolation).
+ * Rule bodies are unchanged; only selectors were rescoped to this CSS Module and kept in the
+ * same relative source order so cascade/override behavior stays identical. Rules coupled to
+ * the shared image/product-stage system (.product-stage-detail, .catalog-image--composed) and
+ * shared typography/utility classes (.type-label, .inline-flex) keep those references via
+ * :global(). The oversized 7.6rem title and near-full-viewport 690px hero min-height are
+ * intentionally preserved unchanged in this phase — see "Known visual issues intentionally
+ * not fixed" in docs/CATALOG_STYLE_ISOLATION.md and Phase 1 of docs/CATALOG_CLAUDE_AUDIT.md.
+ */
+
+.detailMedia {
+  min-height: 360px;
+  max-height: 650px;
+  aspect-ratio: 1.15 / 1;
+}
+
+@media (max-width: 767px) {
+  .detailMedia {
+    min-height: 300px;
+    max-height: 430px;
+  }
+}
+
+.detailPage {
+  padding-top: 1.25rem;
+}
+
+.hero {
+  display: grid;
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0.85rem;
+  max-width: 520px;
+}
+
+.title {
+  font-family: var(--font-editorial);
+  font-size: clamp(2.75rem, 4vw, 4.75rem);
+  font-weight: 500;
+  line-height: 1.04;
+}
+
+.reference {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-reference, ui-monospace, monospace);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.deck {
+  max-width: 470px;
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.priceRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.actions {
+  display: grid;
+  gap: 1rem;
+  max-width: 360px;
+  margin-top: 0.3rem;
+}
+
+.actions form,
+.actions > div {
+  min-width: 0;
+}
+
+.mediaShell {
+  min-width: 0;
+}
+
+.hero[data-image-presentation="premium_scene"] :global(.product-stage-detail) {
+  background: #f0ede8;
+}
+
+.hero[data-image-presentation="product_contained"] :global(.product-stage-detail),
+.hero[data-image-presentation="compact_editorial"] :global(.product-stage-detail),
+.hero[data-image-presentation="missing"] :global(.product-stage-detail) {
+  background: #f4f2ee;
+}
+
+/* Compact in-column key facts (docs/CATALOG_SHOWROOM_RECOVERY.md "Detail hero rebuild") — lives
+   inside .heroCopy itself, not a separate full-bleed strip below the hero, so it never reads as a
+   detached data table. At most 4 short, already-normalized traits (see `highlights()` in
+   catalog-watch-detail-page.tsx and `formatCatalogCardTrait`). */
+.keySpecsInline {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.6rem;
+  row-gap: 0.85rem;
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 0;
+}
+
+.keySpecsInline div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 6rem;
+}
+
+.keySpecsInline dt {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.keySpecsInline dd {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.tabs {
+  position: sticky;
+  top: 74px;
+  z-index: 15;
+  display: flex;
+  gap: clamp(1.4rem, 4vw, 4.2rem);
+  overflow-x: auto;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 767px) {
+  .tabs {
+    top: 64px;
+  }
+}
+
+.tabs a {
+  flex: 0 0 auto;
+  padding: 1.25rem 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 720;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition: color 200ms ease;
+}
+
+.tabs a:hover {
+  color: var(--text);
+}
+
+.tabs a:focus-visible {
+  outline: 2px solid var(--surface-graphite);
+  outline-offset: 2px;
+}
+
+/* Active section (docs/CATALOG_SHOWROOM_RECOVERY.md "Sticky section navigation") — a champagne
+ * underline echoing the same active-tab language already used on the catalog list page's brand
+ * tabs, so the two pages read as one system. */
+.tabActive {
+  position: relative;
+  color: var(--text) !important;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--catalog-champagne, #b98a45);
+}
+
+.overviewSection {
+  display: grid;
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.overviewCopy {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.overviewCopy p {
+  /* ~58-72 character measure (docs/CATALOG_SHOWROOM_RECOVERY.md "Description rebuild") — a `ch`
+     unit hits the target directly instead of guessing a pixel width against the body font size. */
+  max-width: 66ch;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.gallerySection {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.gallerySection figure {
+  min-height: 240px;
+  padding: 1.5rem;
+  transition: transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.gallerySection figure:hover {
+  transform: scale(1.01);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallerySection figure {
+    transition: none;
+  }
+
+  .gallerySection figure:hover {
+    transform: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero {
+    grid-template-columns: minmax(320px, 0.45fr) minmax(0, 0.55fr);
+  }
+
+  .overviewSection {
+    grid-template-columns: minmax(260px, 0.38fr) minmax(0, 0.62fr);
+  }
+
+  /* Asymmetric editorial spread — lead 7/5, reversed 5/7, then any 5th image full width — rather
+     than a uniform repeating grid (docs/CATALOG_SHOWROOM_RECOVERY.md "Gallery rebuild"). */
+  .gallerySection {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .gallerySection figure:nth-child(1) {
+    grid-column: span 7;
+  }
+
+  .gallerySection figure:nth-child(2) {
+    grid-column: span 5;
+  }
+
+  .gallerySection figure:nth-child(3) {
+    grid-column: span 5;
+  }
+
+  .gallerySection figure:nth-child(4) {
+    grid-column: span 7;
+  }
+
+  .gallerySection figure:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .title {
+    font-size: clamp(2.25rem, 9vw, 3.25rem);
+  }
+
+  /* "key facts 2×2" on phone (docs/CATALOG_SHOWROOM_RECOVERY.md "Detail hero rebuild" mobile
+     pass) — an explicit two-column grid rather than the desktop flex-wrap row. */
+  .keySpecsInline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.2rem;
+    row-gap: 0.9rem;
+  }
+}
+
+/* Second-pass composition refinement (moved from globals.css, same cascade order preserved) */
+
+.title {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.titleShort {
+  font-size: clamp(2.75rem, 4.2vw, 4.75rem);
+}
+
+.titleMedium {
+  font-size: clamp(2.375rem, 3.4vw, 3.75rem);
+  line-height: 1.02;
+}
+
+.titleLong {
+  max-width: 15ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+  font-weight: 650;
+  line-height: 1.08;
+}
+
+.actions {
+  max-width: 420px;
+}
+
+.actions :global(.inline-flex) {
+  width: 100%;
+}
+
+.deck {
+  font-size: 0.98rem;
+}
+
+.overviewSection h2 {
+  font-size: clamp(1.8rem, 3vw, 3.6rem);
+}
+
+.gallerySection figure {
+  aspect-ratio: 1.28 / 1;
+  background: #f5f3ef;
+}
+
+@media (max-width: 767px) {
+  .titleLong {
+    max-width: 100%;
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+}
+
+.detailMedia :global(.catalog-image--composed[data-image-presentation-mode="detail-hero"]) {
+  max-height: 102%;
+  max-width: 102%;
+}
+
+.actions a:global(.inline-flex),
+.actions button:global(.inline-flex) {
+  border-color: var(--surface-graphite) !important;
+  background: var(--surface-graphite) !important;
+  color: var(--text-inverse) !important;
+  min-height: 48px;
+}
+
+.actions a:global(.inline-flex):empty::before,
+.actions button:global(.inline-flex):empty::before {
+  content: "Добавить в коллекцию";
+}
+
+/* ---------- Specifications — compact disclosure groups (Phase 4 rebuild) ----------
+   Replaces the old always-expanded two-column list, which read as a long technical database.
+   Each group is a native <details> (no client JS): closed by default, showing only the group
+   title and a short value preview; opening it reveals the full label/value list. Acceptance
+   criterion "characteristics do not look like a huge database" (docs/CATALOG_SHOWROOM_RECOVERY.md
+   "Phase 4 specifications"). */
+
+.specGrid {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+  .specGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.5rem;
+  }
+}
+
+.specGroup {
+  border-bottom: 1px solid var(--border);
+}
+
+.specGroupSummary {
+  display: flex;
+  cursor: pointer;
+  list-style: none;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.specGroupSummary::-webkit-details-marker {
+  display: none;
+}
+
+.specGroupSummary::after {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-left: 0.5rem;
+  color: var(--text-muted);
+  content: "+";
+  font-size: 1rem;
+}
+
+details[open] > .specGroupSummary::after {
+  content: "−";
+}
+
+.specGroupSummary:focus-visible {
+  outline: 2px solid var(--surface-graphite);
+  outline-offset: 2px;
+}
+
+.specGroupTitle {
+  flex: 0 0 auto;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.specGroupPreview {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+details[open] .specGroupPreview {
+  display: none;
+}
+
+.specList {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.specRow {
+  display: grid;
+  grid-template-columns: 40% 1fr;
+  gap: 1rem;
+  padding: 0.3rem 0;
+}
+
+.specRow dt {
+  color: var(--text-muted);
+}
+
+.specRow dd {
+  overflow-wrap: break-word;
+}

@@ -1,0 +1,235 @@
+/*
+ * Catalog list experience — Phase 3 visual reset.
+ *
+ * Design tokens are declared once on `.shell` (the outermost wrapper rendered by
+ * CatalogListPage) as CSS custom properties. They cascade to all descendants, including
+ * CatalogFilterDialog, CatalogWatchCardView, CatalogTabs, and CatalogCuratorialModule, without
+ * touching src/app/globals.css or any homepage token. `--catalog-navy`/`--catalog-champagne`
+ * intentionally match the shared header's active-nav-link colors exactly (see
+ * src/components/shell/public-nav-link.module.css: #071e2a / #b98a45) so the catalog visually
+ * continues the header rather than introducing a second accent language. See
+ * docs/CATALOG_VISUAL_RESET.md.
+ */
+
+.shell {
+  --catalog-paper: #f4f1ea;
+  --catalog-paper-light: #fbfaf6;
+  --catalog-surface: #eeece6;
+  --catalog-image-stage: #eef1f1;
+  --catalog-image-stage-light: #f4f6f6;
+  --catalog-ink: #10171b;
+  --catalog-graphite: #2b3338;
+  --catalog-muted: #748087;
+  --catalog-steel: #83949d;
+  --catalog-blue: #255f85;
+  --catalog-blue-soft: #dce7eb;
+  --catalog-champagne: #b98a45;
+  --catalog-navy: #071e2a;
+  --catalog-navy-deep: #051620;
+  --catalog-line: rgba(16, 23, 27, 0.14);
+  --catalog-line-strong: rgba(16, 23, 27, 0.24);
+  --catalog-focus: #255f85;
+
+  display: grid;
+  gap: clamp(1.25rem, 1.8vw, 1.75rem);
+  padding-bottom: clamp(3rem, 5vw, 4.5rem);
+  color: var(--catalog-graphite);
+}
+
+/* ---------- Control bar (Phase 4 rebuild) ---------- */
+
+.toolbarWrap {
+  position: sticky;
+  top: 64px;
+  z-index: 20;
+  background: var(--catalog-paper-light);
+  border-top: 1px solid var(--catalog-line);
+  border-bottom: 1px solid var(--catalog-line);
+}
+
+@media (min-width: 768px) {
+  .toolbarWrap {
+    top: 74px;
+  }
+}
+
+/* One compact instrument, 64-72px tall, search+count on the left, filter trigger+sort on the
+   right (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 control bar"). The filter dialog itself is
+   `position: fixed` (see catalog-filter-dialog.module.css), so opening it never grows this bar or
+   pushes the grid below it. */
+.controlBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  min-height: 64px;
+  padding-block: 0.6rem;
+}
+
+@media (min-width: 768px) {
+  .controlBar {
+    min-height: 72px;
+    flex-wrap: nowrap;
+  }
+}
+
+.controlBarLeft {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.controlBarCount {
+  flex: 0 0 auto;
+  color: var(--catalog-steel);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.controlBarRight {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ---------- Results head ---------- */
+
+.resultsHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--catalog-line);
+  padding-bottom: clamp(1.75rem, 2.2vw, 2.25rem);
+}
+
+.resultsHeadMain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.65rem;
+}
+
+.resultsCount {
+  color: var(--catalog-ink);
+  font-family: var(--font-editorial);
+  font-size: clamp(1.5rem, 1.6vw, 1.875rem);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.resultsRange {
+  color: var(--catalog-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultsReset {
+  color: var(--catalog-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.resultsReset:hover,
+.resultsReset:focus-visible {
+  color: var(--catalog-ink);
+}
+
+/* ---------- Product grid ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 24px;
+  row-gap: 48px;
+}
+
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 30px;
+    row-gap: 56px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.gridItem {
+  min-width: 0;
+}
+
+.insertItem {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Empty state ---------- */
+
+.emptyState {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: start;
+  border-top: 1px solid var(--catalog-line);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  padding-bottom: clamp(2rem, 4vw, 3rem);
+  text-align: left;
+}
+
+.emptyTitle {
+  color: var(--catalog-ink);
+  font-family: var(--font-editorial);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 500;
+}
+
+.emptyBody {
+  max-width: 42ch;
+  color: var(--catalog-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.emptyCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  border: 1px solid var(--catalog-ink);
+  padding: 0.65rem 1.1rem;
+  color: var(--catalog-ink);
+  font-size: 0.82rem;
+  font-weight: 650;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.emptyCta:hover,
+.emptyCta:focus-visible {
+  background: var(--catalog-ink);
+  color: var(--catalog-paper-light);
+}

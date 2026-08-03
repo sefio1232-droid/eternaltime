@@ -1,11 +1,12 @@
 import { normalizeManufacturerReference } from "@/modules/catalog/domain/reference-normalization";
-import type { CatalogReadQuery, CatalogSortKey } from "@/modules/catalog/domain/read-models";
+import type { CatalogReadQuery, CatalogSortKey, CatalogViewKey } from "@/modules/catalog/domain/read-models";
 
 export type CatalogSearchParams = Record<string, string | string[] | undefined>;
 
 export const catalogPageSize = 24;
 
 const sortKeys: CatalogSortKey[] = ["default", "price_asc", "price_desc", "name_asc"];
+const viewKeys: CatalogViewKey[] = ["recommended", "all"];
 const nonDigitPattern = /[^\d]/g;
 
 function firstParam(value: string | string[] | undefined): string | null {
@@ -55,6 +56,11 @@ function parseSort(value: string | string[] | undefined): CatalogSortKey {
   return sortKeys.includes(raw as CatalogSortKey) ? (raw as CatalogSortKey) : "default";
 }
 
+function parseView(value: string | string[] | undefined): CatalogViewKey {
+  const raw = firstParam(value);
+  return viewKeys.includes(raw as CatalogViewKey) ? (raw as CatalogViewKey) : "recommended";
+}
+
 export function parseCatalogReadQuery(input: {
   searchParams?: CatalogSearchParams;
   brandSlug?: string | null;
@@ -74,6 +80,7 @@ export function parseCatalogReadQuery(input: {
     minPriceMinor,
     maxPriceMinor,
     sort: parseSort(params.sort),
+    view: parseView(params.view),
     page: parsePage(params.page),
     pageSize: catalogPageSize,
   };
@@ -121,6 +128,7 @@ export function catalogQueryToSearchParams(
   if (nextQuery.minPriceMinor !== null) params.set("priceMin", rubMinorToQueryValue(nextQuery.minPriceMinor) ?? "");
   if (nextQuery.maxPriceMinor !== null) params.set("priceMax", rubMinorToQueryValue(nextQuery.maxPriceMinor) ?? "");
   if (nextQuery.sort !== "default") params.set("sort", nextQuery.sort);
+  if (nextQuery.view !== "recommended") params.set("view", nextQuery.view);
   if (nextQuery.page > 1) params.set("page", String(nextQuery.page));
 
   return params;

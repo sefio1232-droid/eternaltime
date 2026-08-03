@@ -399,11 +399,16 @@ describe("catalog read experience", () => {
   it("supports brand, specification, and price filtering", () => {
     const { dataset } = fixture();
 
-    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { brand: "tissot" } })).items).toHaveLength(2);
+    // view: "all" — this test is about plain filter matching, independent of the Phase 3.1
+    // Recommended tab's price floor/image-quality curation.
+    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", brand: "tissot" } })).items).toHaveLength(2);
     expect(
-      listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { movement: "Автоматический" } })).items,
+      // "automatic" — the normalized mechanism group (see catalog-mechanism-taxonomy.ts).
+      listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", movement: "automatic" } })).items,
     ).toHaveLength(2);
-    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { priceMin: "60000" } })).items).toHaveLength(2);
+    expect(
+      listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", priceMin: "60000" } })).items,
+    ).toHaveLength(2);
   });
 
   it("supports price sorting, pagination, and invalid query normalization", () => {

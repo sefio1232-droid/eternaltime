@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { publicNavigation, utilityNavigation } from "@/config/navigation";
 import { MobileNavigation } from "@/components/shell/mobile-navigation";
+import { PublicNavLink } from "@/components/shell/public-nav-link";
 import { SearchDialog } from "@/components/shell/search-dialog";
 import { EditorialContainer, IconAction } from "@/components/ui/editorial-primitives";
 
@@ -23,13 +24,9 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
 
           <nav aria-label="Основная навигация" className="public-nav">
             {publicNavigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="public-nav-link"
-              >
+              <PublicNavLink key={item.href} href={item.href} className="public-nav-link">
                 {item.label}
-              </Link>
+              </PublicNavLink>
             ))}
           </nav>
 

@@ -1,0 +1,155 @@
+/*
+ * Unified filter dialog — Phase 4 (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 filter dialog").
+ * One accessible dialog for every breakpoint: a right-side panel (~420-480px) at desktop widths,
+ * a bottom sheet on mobile. Reads catalog design tokens declared on the ancestor `.shell` in
+ * catalog-list-page.module.css.
+ */
+
+.trigger {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+  background: var(--catalog-paper-light, #fbfaf7);
+  padding: 0 0.9rem;
+  color: var(--catalog-ink, #10161a);
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+.trigger:hover {
+  border-color: var(--catalog-ink, #10161a);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(16, 22, 26, 0.45);
+}
+
+.panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-height: 88vh;
+  background: var(--catalog-paper, #f5f3ee);
+  box-shadow: 0 -12px 32px rgba(16, 22, 26, 0.18);
+}
+
+/* Right-side panel at desktop widths — never inline, never a layout shift for the grid below it
+   (docs/CATALOG_SHOWROOM_RECOVERY.md "no layout jump on open"). */
+@media (min-width: 1024px) {
+  .panel {
+    top: 0;
+    left: auto;
+    width: min(460px, 92vw);
+    max-height: none;
+    box-shadow: -16px 0 40px rgba(16, 22, 26, 0.16);
+  }
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  padding: 1.1rem 1.25rem;
+}
+
+.panelTitle {
+  color: var(--catalog-ink, #10161a);
+  font-family: var(--font-editorial);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.closeButton {
+  display: inline-flex;
+  height: 40px;
+  width: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+  color: var(--catalog-graphite, #2b3338);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  border-color: var(--catalog-ink, #10161a);
+  color: var(--catalog-ink, #10161a);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.panelBody {
+  overflow-y: auto;
+  padding: 1.1rem 1.25rem;
+}
+
+.panelFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  background: var(--catalog-paper, #f5f3ee);
+  padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.footerReset {
+  color: var(--catalog-muted, #747b7f);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-transform: uppercase;
+}
+
+.footerReset:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.footerSubmit {
+  display: inline-flex;
+  min-height: 44px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--catalog-ink, #10161a);
+  background: var(--catalog-ink, #10161a);
+  padding: 0 1.1rem;
+  color: var(--catalog-paper-light, #fbfaf7);
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 1024px) {
+  .footerSubmit {
+    flex: 0 0 auto;
+  }
+}
+
+.footerSubmit:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}

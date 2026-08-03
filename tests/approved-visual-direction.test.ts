@@ -84,13 +84,15 @@ describe("approved visual direction", () => {
     expect(journal).not.toContain("catalog-import-preview");
   });
 
-  it("keeps catalog filters/search/sort/pagination while adding the premium selection layout", () => {
+  it("keeps catalog filters/search/sort/pagination while adding the premium selection layout, with no permanent sidebar", () => {
     const list = file("src/components/catalog/catalog-list-page.tsx");
     const filters = file("src/components/catalog/catalog-filter-panel.tsx");
+    const listStyles = file("src/components/catalog/catalog-list-page.module.css");
 
-    expect(list).toContain("catalog-page-head");
-    expect(list).toContain("catalog-sidebar");
-    expect(list).toContain("catalog-feature-strip");
+    expect(list).toContain("<CatalogHero");
+    expect(list).toContain("styles.insertItem");
+    expect(list).not.toContain("styles.sidebar");
+    expect(listStyles).not.toMatch(/\.sidebar\s*\{/);
     expect(list).toContain('data-layout="catalog-grid"');
     expect(filters).toContain('name="q"');
     expect(filters).toContain('name="sort"');
@@ -100,10 +102,10 @@ describe("approved visual direction", () => {
   it("keeps watch detail focused on one product above the fold and limits first-screen facts", () => {
     const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
 
-    expect(detail).toContain("watch-detail-hero");
-    expect(detail).toContain("watch-key-specs");
+    expect(detail).toContain("styles.hero");
+    expect(detail).toContain("styles.keySpecs");
     expect(detail).toContain("if (picked.length === 4)");
-    expect(detail.indexOf("watch-detail-hero")).toBeLessThan(detail.indexOf("siblingReferences.length"));
+    expect(detail.indexOf("styles.hero")).toBeLessThan(detail.indexOf('id="collection"'));
     expect(detail).toContain("resolveCatalogImageQualityPresentation");
   });
 

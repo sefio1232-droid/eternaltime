@@ -67,21 +67,25 @@ describe("editorial art direction and layout refinement", () => {
     const listPage = file("src/components/catalog/catalog-list-page.tsx");
     const card = file("src/components/catalog/catalog-watch-card.tsx");
     const filters = file("src/components/catalog/catalog-filter-panel.tsx");
+    const filterDialog = file("src/components/catalog/catalog-filter-dialog.tsx");
 
     expect(listPage).toContain('data-layout="catalog-toolbar"');
     expect(listPage).toContain('data-layout="catalog-grid"');
     expect(listPage).toContain("catalog-toolbar");
-    expect(listPage).toContain("xl:grid-cols-4");
+    expect(listPage).toContain("styles.grid");
     expect(filters).toContain('name="water"');
-    expect(filters).toContain("<details");
-    expect(filters).toContain("activeFilterCount");
+    expect(listPage).toContain("CatalogFilterDialog");
+    expect(filterDialog).toContain('role="dialog"');
+    expect(filters).toContain("buildActiveChips");
     expect(card).toContain("watch.brandName");
-    expect(card).toContain("Код {watch.referenceDisplay}");
-    expect(card).toContain("product-card-surface");
-    expect(card).toContain("catalog-card-media");
-    expect(card).toContain("price-plate");
+    expect(card).toContain("{watch.referenceDisplay}");
+    expect(card).not.toContain("Код {watch.referenceDisplay}");
+    expect(card).toContain("styles.card");
+    expect(card).toContain("styles.media");
+    expect(card).toContain("styles.price");
     expect(card).toContain("formatCatalogMoney(watch.publicPrice)");
     expect(card).not.toContain("keySpecifications.map");
+    expect(card).not.toContain("/account/favorites");
   });
 
   it("uses product-grade stage surfaces on home and watch detail pages", () => {
@@ -99,7 +103,7 @@ describe("editorial art direction and layout refinement", () => {
     expect(home).not.toContain("home-route-list");
     expect(home).not.toContain("home-service-strip");
     expect(detail).toContain("product-stage-detail");
-    expect(detail).toContain("watch-detail-hero");
+    expect(detail).toContain("styles.hero");
     expect(detail).toContain("resolveCatalogImageQualityPresentation");
     expect(detail).toContain("price-plate");
     expect(styles).toContain(".site-frame");
@@ -134,7 +138,7 @@ describe("editorial art direction and layout refinement", () => {
     const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
     const collectionAction = file("src/components/collection/collection-watch-action.tsx");
 
-    expect(detail).toContain("Код модели {watch.referenceDisplay}");
+    expect(detail).toContain("Код модели");
     expect(detail).not.toContain("Manufacturer Reference");
     expect(detail).not.toContain("watch reference");
     expect(detail).toContain("CollectionWatchAction");
@@ -168,7 +172,8 @@ describe("editorial art direction and layout refinement", () => {
 
     expect(styles).toContain("@media (max-width: 767px)");
     expect(styles).toContain("min-width: 0");
-    expect(card).toContain('watch.primaryImage.kind === "none" ? "max-h-40"');
+    expect(card).toContain('watch.primaryImage.kind === "none"');
+    expect(card).toContain("CatalogMissingImage");
     expect(media).not.toContain("Фото готовится");
   });
 

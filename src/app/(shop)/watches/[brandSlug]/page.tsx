@@ -6,8 +6,11 @@ import { parseCatalogReadQuery, type CatalogSearchParams } from "@/modules/catal
 import {
   CatalogReadSourceError,
   getPublicCatalogBrand,
+  getPublicCatalogCuratorialPaths,
+  getPublicCatalogHeroWatches,
   listPublicCatalogWatches,
 } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import { getCatalogReviewSanitationEntries } from "@/modules/catalog/infrastructure/catalog-review-dev-data.server";
 
 type BrandPageProps = Readonly<{
   params: Promise<{ brandSlug: string }>;
@@ -49,8 +52,14 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
   const { brandSlug } = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
   const query = parseCatalogReadQuery({ searchParams: resolvedSearchParams, brandSlug });
-  const resultState = await Promise.all([getPublicCatalogBrand(brandSlug), listPublicCatalogWatches(query)])
-    .then(([brand, result]) => ({ type: "ok" as const, brand, result }))
+  const reviewMode = process.env.NODE_ENV !== "production" && resolvedSearchParams.catalogReview === "1";
+  const resultState = await Promise.all([
+    getPublicCatalogBrand(brandSlug),
+    listPublicCatalogWatches(query),
+    getPublicCatalogHeroWatches({ brandSlug }),
+    getPublicCatalogCuratorialPaths(),
+  ])
+    .then(([brand, result, heroWatches, curatorialPaths]) => ({ type: "ok" as const, brand, result, heroWatches, curatorialPaths }))
     .catch((error: unknown) => {
       if (error instanceof CatalogReadSourceError) {
         return { type: "source_error" as const };
@@ -72,6 +81,8 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
     notFound();
   }
 
+  const sanitationEntries = reviewMode ? await getCatalogReviewSanitationEntries() : [];
+
   return (
     <CatalogListPage
       result={resultState.result}
@@ -79,6 +90,10 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
       title={`Часы ${resultState.brand.name}`}
       description={`Модели ${resultState.brand.name} в Eternal Time: от повседневных кварцевых часов до механики и спортивных инструментов.`}
       includeBrandFilter={false}
+      heroWatches={resultState.heroWatches}
+      curatorialPaths={resultState.curatorialPaths}
+      reviewMode={reviewMode}
+      sanitationEntries={sanitationEntries}
     />
   );
 }

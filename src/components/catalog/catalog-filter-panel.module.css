@@ -1,0 +1,371 @@
+/*
+ * Catalog filter fields — Phase 4 (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 control bar" /
+ * "Phase 4 filter dialog"). Search and sort are standalone fields placed by the persistent control
+ * bar (catalog-list-page.tsx); everything else (mechanism/price/brand/etc) renders inside the
+ * unified filter dialog (catalog-filter-dialog.tsx). This file owns only the field markup/styles
+ * and the small pure helpers (buildActiveChips, countExpandedFilters, catalogFilterResetHref,
+ * sortOptionsFor) — no panel/disclosure chrome of its own anymore.
+ */
+
+.srOnly {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  width: 1px;
+  white-space: nowrap;
+}
+
+.field {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.fieldLabel {
+  color: var(--catalog-steel, #83949d);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.control {
+  height: 46px;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  background: transparent;
+  color: var(--catalog-graphite, #2b3338);
+  font-size: 0.86rem;
+  font-weight: 600;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 9px) 20px,
+    calc(100% - 5px) 20px;
+  background-repeat: no-repeat;
+  background-size: 4px 4px, 4px 4px;
+  padding: 0 1rem 0 0;
+  transition: border-color 160ms ease;
+}
+
+.control:hover {
+  border-color: var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+}
+
+.control:focus-visible {
+  border-color: var(--catalog-champagne, #b98a45);
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.searchField {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 420px;
+}
+
+.searchInput {
+  height: 40px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  background: transparent;
+  padding-right: 1.75rem;
+  color: var(--catalog-ink, #10161a);
+  font-size: 0.88rem;
+  transition: border-color 160ms ease;
+}
+
+.sortField {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.searchInput::placeholder {
+  color: var(--catalog-steel, #83949d);
+}
+
+.searchInput:hover {
+  border-color: var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+}
+
+.searchInput:focus-visible {
+  border-color: var(--catalog-champagne, #b98a45);
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.searchSubmit {
+  position: absolute;
+  right: 0;
+  bottom: 10px;
+  display: grid;
+  height: 26px;
+  width: 26px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--catalog-graphite, #2b3338);
+  cursor: pointer;
+}
+
+.searchSubmit:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.searchIcon {
+  position: relative;
+  display: block;
+  height: 14px;
+  width: 14px;
+}
+
+.searchIcon::before {
+  position: absolute;
+  inset: 0 3px 3px 0;
+  border: 1.4px solid currentColor;
+  border-radius: 999px;
+  content: "";
+}
+
+.searchIcon::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 1.4px;
+  width: 6px;
+  background: currentColor;
+  content: "";
+  transform: rotate(45deg);
+  transform-origin: right;
+}
+
+/* ---------- Expand toggle (native <details>, no client JS) ---------- */
+
+/* ---------- Expanded panel content (rendered inside catalog-filter-dialog.tsx) ---------- */
+
+.expandedPanel {
+  display: grid;
+  gap: 0;
+}
+
+.expandedGrid {
+  /* Panel-width grid (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 filter dialog") — the filter
+     surface is now always a narrow (420-480px) side panel or a full-width mobile sheet, never a
+     wide inline row, so two columns (not four) keeps every select/field comfortably readable. */
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.1rem;
+  row-gap: 1.1rem;
+}
+
+.mechanismField {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.4rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+
+.radioOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--catalog-graphite, #2b3338);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.radioOption:hover {
+  color: var(--catalog-ink, #10161a);
+}
+
+.radioOption input {
+  accent-color: var(--catalog-champagne, #b98a45);
+}
+
+.priceField {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.22rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.priceGroup {
+  display: flex;
+  align-items: center;
+  max-width: 260px;
+  height: 46px;
+  border-bottom: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  transition: border-color 160ms ease;
+}
+
+.priceField:hover .priceGroup {
+  border-color: var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+}
+
+.priceField:focus-within .priceGroup {
+  border-color: var(--catalog-champagne, #b98a45);
+}
+
+.priceInput {
+  height: 100%;
+  width: 0;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--catalog-graphite, #2b3338);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.priceInput::placeholder {
+  color: var(--catalog-steel, #83949d);
+}
+
+.priceInput:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.priceDash {
+  flex: 0 0 auto;
+  padding: 0 0.3rem;
+  color: var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+  font-size: 0.78rem;
+}
+
+.moreField {
+  grid-column: span 1;
+  min-width: 0;
+}
+
+.expandedFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  padding-top: 0.85rem;
+}
+
+.applyButton {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  border: 1px solid var(--catalog-ink, #10161a);
+  background: var(--catalog-ink, #10161a);
+  padding: 0 1.1rem;
+  color: var(--catalog-paper-light, #fbfaf7);
+  font-size: 0.76rem;
+  font-weight: 620;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition: opacity 160ms ease;
+}
+
+.applyButton:hover {
+  opacity: 0.85;
+}
+
+.applyButton:focus-visible {
+  outline: 2px solid var(--catalog-focus, #315e74);
+  outline-offset: 2px;
+}
+
+.expandedCount {
+  color: var(--catalog-muted, #747b7f);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Active filter chips row ---------- */
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.3rem;
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 30px;
+  border: 1px solid var(--catalog-line-strong, rgba(16, 22, 26, 0.22));
+  padding: 0 0.6rem 0 0.85rem;
+  color: var(--catalog-graphite, #2b3338);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.chip::before {
+  position: absolute;
+  left: 0;
+  content: "";
+  height: 60%;
+  width: 2px;
+  background: var(--catalog-champagne, #b98a45);
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--catalog-ink, #10161a);
+  color: var(--catalog-ink, #10161a);
+}
+
+.chipRemove {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.resetAll {
+  align-self: center;
+  color: var(--catalog-muted, #747b7f);
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.resetAll:hover,
+.resetAll:focus-visible {
+  color: var(--catalog-ink, #10161a);
+}

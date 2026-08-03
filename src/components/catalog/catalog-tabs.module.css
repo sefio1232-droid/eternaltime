@@ -1,0 +1,55 @@
+/*
+ * Catalog tabs — Phase 3. One horizontal rule, no pills, no box backgrounds. Active tab: deep
+ * navy text + champagne underline (same visual language as the header's active nav link, see
+ * src/components/shell/public-nav-link.module.css). Reads catalog tokens from the ancestor
+ * `.shell` in catalog-list-page.module.css.
+ */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--catalog-line);
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0.75rem 0.05rem;
+  color: var(--catalog-steel);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.tab:hover {
+  color: var(--catalog-ink);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--catalog-focus);
+  outline-offset: 2px;
+}
+
+.tabActive {
+  color: var(--catalog-ink);
+  font-weight: 650;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--catalog-champagne);
+}

@@ -1,0 +1,26 @@
+/*
+ * Additive active-state for the shared public header nav. Self-contained CSS Module (never
+ * touches src/app/globals.css) applied on top of the existing global `.public-nav-link` class,
+ * so base link appearance is byte-identical when inactive — only the active route gets a deep
+ * navy weight shift and a champagne underline.
+ */
+
+.link {
+  position: relative;
+  padding-bottom: 0.3rem;
+}
+
+.linkActive {
+  color: #071e2a;
+  font-weight: 650;
+}
+
+.linkActive::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #b98a45;
+}

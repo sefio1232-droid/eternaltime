@@ -4,8 +4,11 @@ import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { parseCatalogReadQuery, type CatalogSearchParams } from "@/modules/catalog/application/catalog-read-query";
 import {
   CatalogReadSourceError,
+  getPublicCatalogCuratorialPaths,
+  getPublicCatalogHeroWatches,
   listPublicCatalogWatches,
 } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import { getCatalogReviewSanitationEntries } from "@/modules/catalog/infrastructure/catalog-review-dev-data.server";
 
 export const metadata: Metadata = {
   title: "Каталог часов",
@@ -24,8 +27,9 @@ export default async function WatchesPage({
 }>) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const query = parseCatalogReadQuery({ searchParams: resolvedSearchParams });
-  const resultState = await listPublicCatalogWatches(query)
-    .then((result) => ({ type: "ok" as const, result }))
+  const reviewMode = process.env.NODE_ENV !== "production" && resolvedSearchParams.catalogReview === "1";
+  const resultState = await Promise.all([listPublicCatalogWatches(query), getPublicCatalogHeroWatches(), getPublicCatalogCuratorialPaths()])
+    .then(([result, heroWatches, curatorialPaths]) => ({ type: "ok" as const, result, heroWatches, curatorialPaths }))
     .catch((error: unknown) => {
       if (error instanceof CatalogReadSourceError) {
         return { type: "source_error" as const };
@@ -43,13 +47,19 @@ export default async function WatchesPage({
     );
   }
 
+  const sanitationEntries = reviewMode ? await getCatalogReviewSanitationEntries() : [];
+
   return (
     <CatalogListPage
       result={resultState.result}
       pathname="/watches"
       title="Каталог часов"
-      description="Реальные модели Eternal Time: фильтруйте по бренду, механизму, материалам и цене без лишнего шума."
+      description="Реальные модели, проверенные цены и понятные различия без лишнего шума."
       includeBrandFilter
+      heroWatches={resultState.heroWatches}
+      curatorialPaths={resultState.curatorialPaths}
+      reviewMode={reviewMode}
+      sanitationEntries={sanitationEntries}
     />
   );
 }

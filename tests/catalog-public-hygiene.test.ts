@@ -190,12 +190,21 @@ describe("catalog public hygiene", () => {
     });
     const dataset = catalogReadDatasetFromPreview({ preview: preview([marker, productB, productA]), imagePlan: null });
 
+    // view: "all" throughout — these fixture prices (12 000 ₽ / 67 000 ₽) and image-less watches
+    // predate the Phase 3.1 Recommended tab (15 000 ₽ floor + clean-image gate); this test is
+    // about plain hygiene/filtering behavior, not curation.
     expect(dataset.watches).toHaveLength(2);
     expect(listCatalogBrands(dataset).map((brand) => brand.name)).toEqual(["Casio", "Tissot"]);
-    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { q: "ниже" } })).totalRecords).toBe(0);
-    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { movement: "Кварцевый" } })).totalRecords).toBe(1);
-    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { sort: "price_desc" } })).items[0]?.brandName).toBe("Tissot");
-    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { page: "2" } })).page).toBe(1);
+    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", q: "ниже" } })).totalRecords).toBe(0);
+    expect(
+      // "quartz" — the normalized mechanism group, not the raw "Кварцевый" import string (see
+      // catalog-mechanism-taxonomy.ts; the movement filter matches on normalized groups now).
+      listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", movement: "quartz" } })).totalRecords,
+    ).toBe(1);
+    expect(
+      listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", sort: "price_desc" } })).items[0]?.brandName,
+    ).toBe("Tissot");
+    expect(listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", page: "2" } })).page).toBe(1);
   });
 
   it("renders a public hygiene report with only detected non-product issues", () => {

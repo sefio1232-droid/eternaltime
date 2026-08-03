@@ -1,0 +1,159 @@
+/*
+ * Dev-only catalog review drawer. Never rendered in production (gated server-side by
+ * NODE_ENV !== "production" before this component is even imported/rendered — see
+ * catalog-list-page.tsx). Fixed-position; must never affect page layout/flow.
+ */
+
+.drawer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  max-height: 70vh;
+  width: min(360px, 100vw);
+  overflow-y: auto;
+  border: 1px solid #2b3338;
+  border-right: 0;
+  border-bottom: 0;
+  background: #0d1114;
+  color: #e8ece9;
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.toggle {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 91;
+  border: 1px solid #2b3338;
+  background: #0d1114;
+  padding: 0.4rem 0.7rem;
+  color: #e8ece9;
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid #2b3338;
+  background: #0d1114;
+  padding: 0.5rem 0.7rem;
+}
+
+.headTitle {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.closeButton {
+  border: 1px solid #2b3338;
+  background: transparent;
+  padding: 0.15rem 0.5rem;
+  color: #e8ece9;
+}
+
+.section {
+  border-bottom: 1px solid #1c2226;
+  padding: 0.6rem 0.7rem;
+}
+
+.sectionTitle {
+  margin-bottom: 0.35rem;
+  color: #83949d;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.1rem 0;
+}
+
+.rowLabel {
+  color: #83949d;
+}
+
+.rowValue {
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controls {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.controlButton {
+  border: 1px solid #2b3338;
+  background: transparent;
+  padding: 0.35rem 0.5rem;
+  color: #e8ece9;
+  text-align: left;
+}
+
+.controlButtonActive {
+  border-color: #315e74;
+  background: #16232a;
+  color: #dce7eb;
+}
+
+.itemList {
+  display: grid;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.itemRow {
+  border: 1px solid #1c2226;
+  padding: 0.35rem 0.5rem;
+}
+
+.itemRef {
+  font-weight: 700;
+}
+
+.itemMeta {
+  color: #83949d;
+}
+
+/* ---------- Overlay effects toggled via data attributes on <html> ---------- */
+
+:global(html[data-catalog-review-card-bounds="1"]) :global(.catalog-card-review-outline) {
+  outline: 1px dashed #315e74 !important;
+  outline-offset: -1px;
+}
+
+:global(html[data-catalog-review-image-bounds="1"]) :global(.catalog-media-review-outline) {
+  outline: 1px dashed #b9833d !important;
+  outline-offset: -1px;
+}
+
+:global(html[data-catalog-review-grid-overlay="1"]) :global(.catalog-grid-review-overlay) {
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(49, 94, 116, 0.18) 0,
+    rgba(49, 94, 116, 0.18) 1px,
+    transparent 1px,
+    transparent calc(100% / 4)
+  );
+}
+
+:global(html[data-catalog-review-density="compact"]) :global(.catalog-grid-review-overlay) {
+  gap: 8px !important;
+}

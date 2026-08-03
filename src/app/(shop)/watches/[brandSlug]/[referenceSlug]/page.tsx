@@ -6,7 +6,9 @@ import { getPublicEnv } from "@/config/public-env";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
 import {
   CatalogReadSourceError,
+  getPublicCatalogRelatedWatches,
   getPublicCatalogWatch,
+  getPublicCatalogWatchSeoOverlay,
 } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 
 type WatchPageProps = Readonly<{
@@ -27,11 +29,18 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
       };
     }
 
+    const seoOverlay = await getPublicCatalogWatchSeoOverlay({
+      brandSlug: watch.brandSlug,
+      referenceNormalized: watch.referenceNormalized,
+    });
+
     return {
-      title: `${watch.title} ${watch.referenceDisplay}`,
-      description: `${watch.brandName} ${watch.referenceDisplay}: цена ${formatCatalogMoney(
-        watch.publicPrice,
-      )}, характеристики и изображения в каталоге Eternal Time.`,
+      title: seoOverlay?.seoTitle || `${watch.title} ${watch.referenceDisplay}`,
+      description:
+        seoOverlay?.metaDescription ||
+        `${watch.brandName} ${watch.referenceDisplay}: цена ${formatCatalogMoney(
+          watch.publicPrice,
+        )}, характеристики и изображения в каталоге Eternal Time.`,
       alternates: {
         canonical: watch.href,
       },
@@ -47,7 +56,10 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
   }
 }
 
-function productStructuredData(watch: Awaited<ReturnType<typeof getPublicCatalogWatch>>) {
+function productStructuredData(
+  watch: Awaited<ReturnType<typeof getPublicCatalogWatch>>,
+  seoOverlay: Awaited<ReturnType<typeof getPublicCatalogWatchSeoOverlay>>,
+) {
   if (!watch) {
     return null;
   }
@@ -74,6 +86,11 @@ function productStructuredData(watch: Awaited<ReturnType<typeof getPublicCatalog
 
   if (image) {
     data.image = [image];
+  }
+
+  const description = seoOverlay?.shortDescription || seoOverlay?.metaDescription;
+  if (description) {
+    data.description = description;
   }
 
   if (watch.publicPrice) {
@@ -113,7 +130,12 @@ export default async function WatchReferencePage({ params, searchParams }: Watch
     notFound();
   }
 
-  const structuredData = productStructuredData(resultState.watch);
+  const seoOverlay = await getPublicCatalogWatchSeoOverlay({
+    brandSlug: resultState.watch.brandSlug,
+    referenceNormalized: resultState.watch.referenceNormalized,
+  });
+  const relatedWatches = await getPublicCatalogRelatedWatches(resultState.watch);
+  const structuredData = productStructuredData(resultState.watch, seoOverlay);
   const query = await searchParams;
   const collectionState = typeof query.collection === "string" ? query.collection : undefined;
 
@@ -122,7 +144,12 @@ export default async function WatchReferencePage({ params, searchParams }: Watch
       {structuredData ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       ) : null}
-      <CatalogWatchDetailPage watch={resultState.watch} collectionState={collectionState} />
+      <CatalogWatchDetailPage
+        watch={resultState.watch}
+        collectionState={collectionState}
+        seoOverlay={seoOverlay}
+        relatedWatches={relatedWatches}
+      />
     </>
   );
 }

@@ -48,6 +48,9 @@ imports/tmp/
 public/generated/**/screenshots/
 public/generated/**/design-lab-screenshots/
 
+# generated dev-only catalog review artifacts (regenerate with catalog-image-audit.ts)
+public/generated/catalog-review/
+
 # OS/editor
 .DS_Store
 Thumbs.db
