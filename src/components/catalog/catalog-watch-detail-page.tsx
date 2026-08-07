@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CatalogImage } from "@/components/catalog/catalog-image";
+import { CatalogDetailGallery } from "@/components/catalog/catalog-detail-gallery";
 import { CatalogSectionNav, type CatalogSectionNavItem } from "@/components/catalog/catalog-section-nav";
 import { CatalogWatchCardView } from "@/components/catalog/catalog-watch-card";
 import { CollectionWatchAction } from "@/components/collection/collection-watch-action";
@@ -143,14 +143,14 @@ export function CatalogWatchDetailPage({
   // Only a genuinely different official name earns its own line under the title — `watchModelName`
   // is the same string as `title` for the overwhelming majority of the catalog, so showing it again
   // here would just repeat the H1 as a sentence directly below it.
-  // Only ever link to a section that actually renders for this watch — "Характеристики"/"На
-  // запястье"/"В коллекции" each have a real conditional below, and a nav item pointing at a
-  // section that never mounts is a broken anchor (docs/CATALOG_SHOWROOM_RECOVERY.md
-  // "Sticky section navigation").
+  // Only ever link to a section that actually renders for this watch — "Характеристики"/
+  // "В коллекции" each have a real conditional below, and a nav item pointing at a section that
+  // never mounts is a broken anchor (docs/CATALOG_SHOWROOM_RECOVERY.md "Sticky section
+  // navigation"). The gallery itself is no longer a separate section to jump to — it's the whole
+  // top media workspace (CatalogDetailGallery), always visible without scrolling.
   const sectionNavItems: CatalogSectionNavItem[] = [
     { href: "#overview", label: "Обзор" },
     ...(watch.specifications.length > 0 ? [{ href: "#specifications", label: "Характеристики" }] : []),
-    ...(gallery.length > 1 ? [{ href: "#fit", label: "На запястье" }] : []),
     ...(watch.siblingReferences.length > 0 ? [{ href: "#collection", label: "В коллекции" }] : []),
   ];
   const officialDisplayName =
@@ -161,16 +161,23 @@ export function CatalogWatchDetailPage({
   return (
     <EditorialContainer className={`${styles.detailPage} public-page`}>
       <div className="grid gap-10 lg:gap-12">
-        <nav aria-label="Хлебные крошки" className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-muted)]">
-          <Link href="/watches" className="hover:text-[var(--text)]">
+        <nav
+          aria-label="Хлебные крошки"
+          className="flex flex-wrap items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-[var(--text-muted)]"
+        >
+          <Link href="/watches" className="transition-colors hover:text-[var(--text)]">
             Часы
           </Link>
-          <span>/</span>
-          <Link href={`/watches/${watch.brandSlug}`} className="hover:text-[var(--text)]">
+          <span aria-hidden="true" className="opacity-40">
+            /
+          </span>
+          <Link href={`/watches/${watch.brandSlug}`} className="transition-colors hover:text-[var(--text)]">
             {watch.brandName}
           </Link>
-          <span>/</span>
-          <span className="text-[var(--text)]">{watch.referenceDisplay}</span>
+          <span aria-hidden="true" className="opacity-40">
+            /
+          </span>
+          <span className="normal-case tracking-normal text-[var(--text)]">{watch.referenceDisplay}</span>
         </nav>
 
         <section className={styles.hero} data-image-presentation={imagePresentation}>
@@ -221,15 +228,13 @@ export function CatalogWatchDetailPage({
           </div>
 
           <div className={styles.mediaShell}>
-            <div className={`product-stage product-stage-detail ${styles.detailMedia} p-6 sm:p-9`}>
-              <CatalogImage
-                image={heroImage}
-                priority
-                presentation={imagePresentation === "detail-hero" ? "full" : "guarded"}
-                compositionSlot="detail-hero"
-                galleryCount={gallery.length}
-              />
-            </div>
+            <CatalogDetailGallery
+              images={sequencedGallery.length > 0 ? sequencedGallery : [heroImage]}
+              compositionSlot="detail-hero"
+              title={displayTitle}
+              referenceDisplay={watch.referenceDisplay}
+              stageClassName={`product-stage product-stage-detail ${styles.detailMedia} p-6 sm:p-9`}
+            />
           </div>
         </section>
 
@@ -246,16 +251,6 @@ export function CatalogWatchDetailPage({
             ))}
           </div>
         </section>
-
-        {gallery.length > 1 ? (
-          <section id="fit" className={styles.gallerySection}>
-            {sequencedGallery.slice(0, 5).map((image, index) => (
-              <figure key={`${image.kind}-${image.alt}-${index}`} className="product-stage product-stage-plain">
-                <CatalogImage image={image} presentation="guarded" compositionSlot="detail-gallery" imageIndex={index} galleryCount={gallery.length} />
-              </figure>
-            ))}
-          </section>
-        ) : null}
 
         {watch.specifications.length > 0 ? (
           <section id="specifications" className="grid gap-7">

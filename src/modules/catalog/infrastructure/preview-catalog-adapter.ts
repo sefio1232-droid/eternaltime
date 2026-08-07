@@ -6,6 +6,8 @@ import { createOrientArchiveImageKey } from "@/modules/catalog/infrastructure/or
 import type { OrientManifestEntry, OrientPhotoArchiveManifest } from "@/modules/catalog/infrastructure/orient-photo-archive-types";
 import { createCasioArchiveImageKey } from "@/modules/catalog/infrastructure/casio-photo-archive-keys";
 import type { CasioManifestEntry, CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
+import { createTissotArchiveImageKey } from "@/modules/catalog/infrastructure/tissot-photo-archive-keys";
+import type { TissotManifestEntry, TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import type { CatalogSiteImportOverlayEntry, CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
 import { classifyCatalogImageRejection, selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { sanitizeCatalogPublicText } from "@/modules/catalog/application/catalog-public-sanitation";
@@ -39,6 +41,7 @@ const specificationDefinitions: Record<string, SpecificationDefinition> = {
   case_material_raw: { label: "Материал корпуса", group: "case" },
   case_shape_raw: { label: "Форма корпуса", group: "case" },
   case_diameter_raw: { label: "Диаметр корпуса", group: "dimensions" },
+  case_thickness_raw: { label: "Толщина корпуса", group: "dimensions" },
   case_dimensions_raw: { label: "Размер корпуса", group: "dimensions" },
   weight_raw: { label: "Вес", group: "dimensions" },
   dial_raw: { label: "Циферблат", group: "dial" },
@@ -60,6 +63,14 @@ const specificationDefinitions: Record<string, SpecificationDefinition> = {
   crown_raw: { label: "Заводная головка", group: "case" },
   purpose_raw: { label: "Назначение", group: "other" },
   luminescence_raw: { label: "Люминесценция", group: "other" },
+  // Added for the "*_seo_final.xlsx" overlay batch (docs/CATALOG_SHOWROOM_RECOVERY.md "Site-import
+  // overlay v2") — real fields the source data has that no existing key covered.
+  strap_color_raw: { label: "Цвет ремешка/браслета", group: "strap" },
+  strap_features_raw: { label: "Особенности браслета", group: "strap" },
+  strap_coating_raw: { label: "Покрытие браслета", group: "strap" },
+  dial_markers_raw: { label: "Индексы", group: "dial" },
+  gemstones_raw: { label: "Драгоценные камни", group: "dial" },
+  certification_raw: { label: "Сертификация", group: "mechanism" },
 };
 
 const specificationOrder = [
@@ -77,22 +88,29 @@ const specificationOrder = [
   "construction_raw",
   "case_shape_raw",
   "case_diameter_raw",
+  "case_thickness_raw",
   "case_dimensions_raw",
   "weight_raw",
   "caseback_raw",
   "crown_raw",
   "dial_raw",
   "dial_color_raw",
+  "dial_markers_raw",
+  "gemstones_raw",
   "crystal_type_raw",
   "attachment_material_raw",
   "strap_material_raw",
   "bracelet_material_raw",
+  "strap_color_raw",
+  "strap_coating_raw",
   "strap_width_raw",
   "clasp_raw",
+  "strap_features_raw",
   "water_resistance_raw",
   "functions_raw",
   "purpose_raw",
   "luminescence_raw",
+  "certification_raw",
   "watch_type_raw",
   "brand_country_raw",
 ];
@@ -296,6 +314,16 @@ function casioArchiveImagePresentation(entry: CasioManifestEntry, title: string,
   };
 }
 
+function tissotArchiveImagePresentation(entry: TissotManifestEntry, title: string, referenceDisplay: string, order: number): CatalogImagePresentation {
+  const imageKey = createTissotArchiveImageKey(entry.archiveFile, entry.zipEntry);
+  return {
+    kind: "development_zip",
+    imageKey,
+    src: `/api/catalog/dev-images/${imageKey}`,
+    alt: imageAlt(title, referenceDisplay, order),
+  };
+}
+
 /**
  * Shared upgrade logic for both brand archives. The primary image is only ever replaced when the
  * candidate's own current primary is genuinely missing or rejected by the same clean-image policy
@@ -362,10 +390,53 @@ function applyCasioArchiveUpgrade(input: {
   return applyPhotoArchiveUpgrade({ primaryImage: input.primaryImage, imageGallery: input.imageGallery, archiveImages });
 }
 
+function applyTissotArchiveUpgrade(input: {
+  brandSlug: string;
+  referenceNormalized: string;
+  title: string;
+  referenceDisplay: string;
+  primaryImage: CatalogImagePresentation;
+  imageGallery: CatalogImagePresentation[];
+  tissotManifestByReference: Map<string, TissotManifestEntry[]>;
+}): { primaryImage: CatalogImagePresentation; imageGallery: CatalogImagePresentation[] } {
+  if (input.brandSlug !== "tissot") {
+    return { primaryImage: input.primaryImage, imageGallery: input.imageGallery };
+  }
+
+  const archiveEntries = input.tissotManifestByReference.get(input.referenceNormalized) ?? [];
+  const archiveImages = archiveEntries.map((entry, index) => tissotArchiveImagePresentation(entry, input.title, input.referenceDisplay, index));
+  return applyPhotoArchiveUpgrade({ primaryImage: input.primaryImage, imageGallery: input.imageGallery, archiveImages });
+}
+
 /** Groups the Casio photo-archive manifest by catalog reference, primary image first (mirrors
  * groupOrientManifestByReference). */
 function groupCasioManifestByReference(manifest: CasioPhotoArchiveManifest | null): Map<string, CasioManifestEntry[]> {
   const grouped = new Map<string, CasioManifestEntry[]>();
+  if (!manifest) {
+    return grouped;
+  }
+
+  for (const entry of manifest.entries) {
+    if (!grouped.has(entry.referenceNormalized)) {
+      grouped.set(entry.referenceNormalized, []);
+    }
+    grouped.get(entry.referenceNormalized)!.push(entry);
+  }
+
+  for (const entries of grouped.values()) {
+    entries.sort((left, right) => {
+      if (left.position !== right.position) return left.position === "primary" ? -1 : 1;
+      return (left.galleryIndex ?? 0) - (right.galleryIndex ?? 0);
+    });
+  }
+
+  return grouped;
+}
+
+/** Groups the Tissot photo-archive manifest by catalog reference, primary image first (mirrors
+ * groupOrientManifestByReference / groupCasioManifestByReference). */
+function groupTissotManifestByReference(manifest: TissotPhotoArchiveManifest | null): Map<string, TissotManifestEntry[]> {
+  const grouped = new Map<string, TissotManifestEntry[]>();
   if (!manifest) {
     return grouped;
   }
@@ -392,6 +463,7 @@ function readModelFromCandidate(input: {
   imagePlanItems: CatalogImageUploadPlanItem[];
   orientManifestByReference: Map<string, OrientManifestEntry[]>;
   casioManifestByReference: Map<string, CasioManifestEntry[]>;
+  tissotManifestByReference: Map<string, TissotManifestEntry[]>;
   siteImportOverlayByReference: Map<string, CatalogSiteImportOverlayEntry>;
 }): Omit<CatalogWatchDetail, "siblingReferences"> | null {
   const { candidate } = input;
@@ -475,7 +547,16 @@ function readModelFromCandidate(input: {
     imageGallery: orientUpgrade.imageGallery,
     casioManifestByReference: input.casioManifestByReference,
   });
-  const primaryImage = casioUpgrade.primaryImage;
+  const tissotUpgrade = applyTissotArchiveUpgrade({
+    brandSlug,
+    referenceNormalized,
+    title,
+    referenceDisplay,
+    primaryImage: casioUpgrade.primaryImage,
+    imageGallery: casioUpgrade.imageGallery,
+    tissotManifestByReference: input.tissotManifestByReference,
+  });
+  const primaryImage = tissotUpgrade.primaryImage;
   const price = candidate.pricing.publicPriceCandidate
     ? createMoney(candidate.pricing.publicPriceCandidate.amountMinor, candidate.pricing.publicPriceCandidate.currencyCode)
     : null;
@@ -497,7 +578,7 @@ function readModelFromCandidate(input: {
     watchModelName,
     publicPrice: price,
     primaryImage,
-    imageGallery: casioUpgrade.imageGallery,
+    imageGallery: tissotUpgrade.imageGallery,
     keySpecifications: keySpecifications(specifications),
     specifications,
   };
@@ -586,6 +667,10 @@ export function catalogReadDatasetFromPreview(input: {
    * image; a working primary is always appended-to (extra gallery photos), never replaced. */
   orientPhotoManifest?: OrientPhotoArchiveManifest | null;
   casioPhotoManifest?: CasioPhotoArchiveManifest | null;
+  /** Optional — absent on every existing call site until it's explicitly passed. Same "only ever
+   * upgrades a missing/rejected primary, otherwise appends real gallery photos" rule as the Orient/
+   * Casio manifests above (docs/CATALOG_SHOWROOM_RECOVERY.md "Tissot photo gap"). */
+  tissotPhotoManifest?: TissotPhotoArchiveManifest | null;
   /** Optional — absent on every existing call site until it's explicitly passed. Merges richer,
    * pre-normalized specification values from the user-supplied site-import workbooks into the same
    * `CatalogPublicSpecification[]` shape the raw import already produces; never changes the
@@ -596,10 +681,18 @@ export function catalogReadDatasetFromPreview(input: {
   const imagePlanItems = input.imagePlan?.items ?? [];
   const orientManifestByReference = groupOrientManifestByReference(input.orientPhotoManifest ?? null);
   const casioManifestByReference = groupCasioManifestByReference(input.casioPhotoManifest ?? null);
+  const tissotManifestByReference = groupTissotManifestByReference(input.tissotPhotoManifest ?? null);
   const siteImportOverlayByReference = groupSiteImportOverlayByReference(input.siteImportOverlay ?? null);
   const baseWatches = input.preview.records
     .map((candidate) =>
-      readModelFromCandidate({ candidate, imagePlanItems, orientManifestByReference, casioManifestByReference, siteImportOverlayByReference }),
+      readModelFromCandidate({
+        candidate,
+        imagePlanItems,
+        orientManifestByReference,
+        casioManifestByReference,
+        tissotManifestByReference,
+        siteImportOverlayByReference,
+      }),
     )
     .filter((watch): watch is Omit<CatalogWatchDetail, "siblingReferences"> => watch !== null);
   const deduplicatedWatches = deduplicateByCleanReference(baseWatches);

@@ -87,14 +87,15 @@
   min-width: 0;
 }
 
-.hero[data-image-presentation="premium_scene"] :global(.product-stage-detail) {
-  background: #f0ede8;
-}
-
-.hero[data-image-presentation="product_contained"] :global(.product-stage-detail),
-.hero[data-image-presentation="compact_editorial"] :global(.product-stage-detail),
-.hero[data-image-presentation="missing"] :global(.product-stage-detail) {
-  background: #f4f2ee;
+/* Pure white, matching the source photos' own studio-white background exactly — the previous
+ * rules here keyed off `data-image-presentation` values ("premium_scene", "product_contained", …)
+ * that resolveCatalogImageQualityPresentation never actually produces (it returns hyphenated
+ * values like "product-contained"), so they never matched and the shared `.product-stage-detail`
+ * default (a warm gray, globals.css) always showed through — visible as a boxed-in photo against
+ * the page (docs/CATALOG_SHOWROOM_RECOVERY.md "White background fix"). This unconditional override
+ * actually applies regardless of presentation mode. */
+.hero :global(.product-stage-detail) {
+  background: #ffffff;
 }
 
 /* Compact in-column key facts (docs/CATALOG_SHOWROOM_RECOVERY.md "Detail hero rebuild") — lives
@@ -325,7 +326,8 @@
 
 .gallerySection figure {
   aspect-ratio: 1.28 / 1;
-  background: #f5f3ef;
+  /* Pure white — see .hero :global(.product-stage-detail) above ("White background fix"). */
+  background: #ffffff;
 }
 
 @media (max-width: 767px) {

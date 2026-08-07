@@ -6,8 +6,13 @@
  * `main()` at module scope, so nothing that loads at request time may import a value from it.
  */
 
-export const CASIO_SITE_IMPORT_XLSX_PATH = "incoming/casio_catalog_site_import_UPDATED.xlsx";
-export const ORIENT_SITE_IMPORT_XLSX_PATH = "incoming/orient_catalog_site_import_001-079.xlsx";
+// "seo_final" batch (docs/CATALOG_SHOWROOM_RECOVERY.md "Site-import overlay v2") — replaces the
+// earlier per-brand workbooks entirely (Casio explicitly re-supplied to fix issues in the older
+// file; Orient re-supplied in the same batch; Tissot supplied for the first time). One sheet per
+// workbook, one combined "Характеристики" cell per row instead of one column per field.
+export const CASIO_SITE_IMPORT_XLSX_PATH = "incoming/casio_seo_final_1.xlsx";
+export const ORIENT_SITE_IMPORT_XLSX_PATH = "incoming/orient_seo_final.xlsx";
+export const TISSOT_SITE_IMPORT_XLSX_PATH = "incoming/tissot_seo_final_1.xlsx";
 export const SITE_IMPORT_OVERLAY_OUTPUT_PATH = ".tmp/catalog-site-import-overlay/manifest.json";
 
 export type CatalogSiteImportOverlayEntry = {

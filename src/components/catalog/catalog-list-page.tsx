@@ -61,6 +61,7 @@ function hasRefinementFilters(query: CatalogReadQuery): boolean {
       query.waterResistance ||
       query.caseMaterial ||
       query.crystal ||
+      query.positioning ||
       query.minPriceMinor !== null ||
       query.maxPriceMinor !== null,
   );
@@ -72,7 +73,6 @@ export function CatalogListPage({
   title,
   description,
   includeBrandFilter,
-  heroWatches = [],
   curatorialPaths = [],
   reviewMode = false,
   sanitationEntries = [],
@@ -82,9 +82,6 @@ export function CatalogListPage({
   title: string;
   description: string;
   includeBrandFilter: boolean;
-  /** Real, clean-image watches for the hero's product composition — see
-   * `pickCatalogHeroWatches` in catalog-read-service.ts. Never invented. */
-  heroWatches?: CatalogWatchCard[];
   /** Real watches for the curatorial module — see `pickCatalogCuratorialPaths`. Never invented. */
   curatorialPaths?: CatalogCuratorialPath[];
   reviewMode?: boolean;
@@ -124,6 +121,7 @@ export function CatalogListPage({
           result.query.waterResistance ? { label: "water", value: result.query.waterResistance } : null,
           result.query.caseMaterial ? { label: "caseMaterial", value: result.query.caseMaterial } : null,
           result.query.crystal ? { label: "crystal", value: result.query.crystal } : null,
+          result.query.positioning ? { label: "positioning", value: result.query.positioning } : null,
           result.query.minPriceMinor !== null ? { label: "priceMin", value: String(result.query.minPriceMinor) } : null,
           result.query.maxPriceMinor !== null ? { label: "priceMax", value: String(result.query.maxPriceMinor) } : null,
           { label: "view", value: result.query.view },
@@ -158,14 +156,7 @@ export function CatalogListPage({
   return (
     <EditorialContainer className="public-page">
       <div className={styles.shell}>
-        <CatalogHero
-          eyebrow="Каталог Eternal Time"
-          title={title}
-          description={description}
-          totalRecords={result.totalRecords}
-          brandCount={includeBrandFilter ? result.facets.brands.length : null}
-          heroWatches={heroWatches}
-        />
+        <CatalogHero eyebrow="Каталог Eternal Time" title={title} description={description} />
 
         {includeBrandFilter ? (
           <CatalogTabs pathname={pathname} query={result.query} brands={result.facets.brands} />

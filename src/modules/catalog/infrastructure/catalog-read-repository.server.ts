@@ -10,7 +10,6 @@ import {
   listCatalogBrands,
   listCatalogWatches,
   pickCatalogCuratorialPaths,
-  pickCatalogHeroWatches,
   pickRelatedCatalogWatches,
 } from "@/modules/catalog/application/catalog-read-service";
 import { cleanImportedProseText } from "@/modules/catalog/application/catalog-display";
@@ -18,6 +17,7 @@ import { resolveCatalogReadSourcePolicy } from "@/modules/catalog/infrastructure
 import { catalogReadDatasetFromPreview, groupSiteImportOverlayByReference } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/modules/catalog/infrastructure/orient-photo-archive-types";
 import { CASIO_MANIFEST_OUTPUT_PATH, type CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
+import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
   type CatalogSiteImportOverlayManifest,
@@ -30,6 +30,7 @@ const previewPath = path.join(process.cwd(), "imports", "generated", "catalog-im
 const imagePlanPath = path.join(process.cwd(), "imports", "generated", "catalog-image-upload-plan.json");
 const orientManifestPath = path.join(process.cwd(), ORIENT_MANIFEST_OUTPUT_PATH);
 const casioManifestPath = path.join(process.cwd(), CASIO_MANIFEST_OUTPUT_PATH);
+const tissotManifestPath = path.join(process.cwd(), TISSOT_MANIFEST_OUTPUT_PATH);
 const siteImportOverlayPath = path.join(process.cwd(), SITE_IMPORT_OVERLAY_OUTPUT_PATH);
 
 export class CatalogReadSourceError extends Error {
@@ -89,8 +90,16 @@ export const getCatalogReadDataset = cache(async () => {
     // treats a missing manifest exactly like an empty one.
     const orientPhotoManifest = await readOptionalJsonFile<OrientPhotoArchiveManifest>(orientManifestPath);
     const casioPhotoManifest = await readOptionalJsonFile<CasioPhotoArchiveManifest>(casioManifestPath);
+    const tissotPhotoManifest = await readOptionalJsonFile<TissotPhotoArchiveManifest>(tissotManifestPath);
     const siteImportOverlay = await getCatalogSiteImportOverlayManifest();
-    return catalogReadDatasetFromPreview({ preview, imagePlan, orientPhotoManifest, casioPhotoManifest, siteImportOverlay });
+    return catalogReadDatasetFromPreview({
+      preview,
+      imagePlan,
+      orientPhotoManifest,
+      casioPhotoManifest,
+      tissotPhotoManifest,
+      siteImportOverlay,
+    });
   }
 
   throw new CatalogReadSourceError(
@@ -102,12 +111,6 @@ export const getCatalogReadDataset = cache(async () => {
 export async function listPublicCatalogWatches(query: CatalogReadQuery) {
   const dataset = await getCatalogReadDataset();
   return listCatalogWatches(dataset, query);
-}
-
-/** Real watches for the catalog hero's product composition — see `pickCatalogHeroWatches`. */
-export async function getPublicCatalogHeroWatches(input: { brandSlug?: string; count?: number } = {}) {
-  const dataset = await getCatalogReadDataset();
-  return pickCatalogHeroWatches(dataset, input);
 }
 
 /** Real watches for the curatorial module — see `pickCatalogCuratorialPaths`. */

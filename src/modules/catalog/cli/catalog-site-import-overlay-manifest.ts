@@ -1,16 +1,19 @@
 /**
- * Catalog site-import overlay manifest builder — reads the two user-supplied
- * `incoming/*_catalog_site_import_*.xlsx` workbooks (specifications + SEO copy) read-only and
- * matches every row to a real catalog reference by EXACT normalized-reference equality only,
- * brand-scoped (a Casio row can only match a Casio watch, an Orient row only an Orient watch) —
- * nothing approximate or family-based. Unmatched rows are recorded, never guessed at.
+ * Catalog site-import overlay manifest builder ("seo_final" batch — docs/CATALOG_SHOWROOM_
+ * RECOVERY.md "Site-import overlay v2"). Reads the three user-supplied `incoming/*_seo_final*.xlsx`
+ * workbooks (Casio, Orient, Tissot) read-only and matches every row to a real catalog reference by
+ * EXACT normalized-reference equality only, brand-scoped (a Casio row can only match a Casio
+ * watch) — nothing approximate or family-based. Unmatched rows are recorded, never guessed at.
  *
- * Each workbook has two relevant sheets sharing an "Артикул" column: "Характеристики" (one
- * normalized specification per column — mapped onto the SAME specification keys
- * `preview-catalog-adapter.ts` already understands, never a new parallel taxonomy) and
- * "Импорт_на_сайт" (SEO Title / Meta Description / short + long description). Price columns in
- * "Импорт_на_сайт" are intentionally never read here — price/inventory belong to catalog_offers,
- * not this overlay.
+ * Replaces the earlier two-sheet-per-brand format entirely. Each workbook here is one sheet, one
+ * row per reference, four columns: "Артикул", "Название для сайта" (redundant with the existing
+ * title composition — not consumed), "SEO-описание" (used as both the overview paragraph and the
+ * meta description — the source genuinely only supplies one description, not a separate short/long
+ * pair), and "Характеристики" — every specification for that model combined into one
+ * "Label: value | Label: value | ..." cell instead of one column per field. `mapCombinedSpecifications`
+ * splits and maps each label to the exact same normalized specification keys
+ * `preview-catalog-adapter.ts` already understands (never a new parallel taxonomy); a label with no
+ * known mapping is skipped and recorded, never guessed at or invented.
  *
  * Run with: npx tsx src/modules/catalog/cli/catalog-site-import-overlay-manifest.ts
  * Output: .tmp/catalog-site-import-overlay/manifest.json (gitignored; never committed).
@@ -24,6 +27,7 @@ import {
   CASIO_SITE_IMPORT_XLSX_PATH,
   ORIENT_SITE_IMPORT_XLSX_PATH,
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
+  TISSOT_SITE_IMPORT_XLSX_PATH,
   type CatalogSiteImportOverlayEntry,
   type CatalogSiteImportOverlayManifest,
   type CatalogSiteImportOverlayUnmatchedRow,
@@ -35,14 +39,14 @@ export {
   CASIO_SITE_IMPORT_XLSX_PATH,
   ORIENT_SITE_IMPORT_XLSX_PATH,
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
+  TISSOT_SITE_IMPORT_XLSX_PATH,
   type CatalogSiteImportOverlayEntry,
   type CatalogSiteImportOverlayManifest,
   type CatalogSiteImportOverlayUnmatchedRow,
 } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
 
-// Both workbooks share the same layout: 2 title/note rows, header on row index 2, data from row 3.
-const HEADER_ROW_INDEX = 2;
-const DATA_START_ROW_INDEX = 3;
+const HEADER_ROW_INDEX = 0;
+const DATA_START_ROW_INDEX = 1;
 
 type CatalogReferenceRef = { referenceDisplay: string; referenceNormalized: string; brandSlug: string };
 
@@ -64,11 +68,6 @@ function cellText(row: unknown[], col: Map<string, number>, name: string): strin
   return "";
 }
 
-/** Russian-locale decimal comma, matching the source workbook's own combined-dimension columns. */
-function millimeters(value: string): string {
-  return value ? `${value.replace(".", ",")} мм` : "";
-}
-
 function sheetRows(workbook: XLSX.WorkBook, sheetName: string): { header: unknown[]; data: unknown[][] } {
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) return { header: [], data: [] };
@@ -76,101 +75,109 @@ function sheetRows(workbook: XLSX.WorkBook, sheetName: string): { header: unknow
   return { header: rows[HEADER_ROW_INDEX] ?? [], data: rows.slice(DATA_START_ROW_INDEX) };
 }
 
-/**
- * Casio's "Характеристики" sheet already combines L×W×T into one ready "Размер корпуса" string —
- * the separate Длина/Ширина/Толщина columns are redundant with it and deliberately not mapped
- * (avoids surfacing the same measurement twice, per the "no unnecessary information" instruction).
- */
-export function mapCasioSpecifications(row: unknown[], col: Map<string, number>): Record<string, string> {
-  const specs: Record<string, string> = {};
-  const set = (key: string, value: string) => {
-    if (value) specs[key] = value;
-  };
-
-  set("movement_type_raw", cellText(row, col, "Тип механизма"));
-  set("movement_raw", cellText(row, col, "Механизм"));
-  set("display_raw", cellText(row, col, "Индикация / дисплей"));
-  set("case_material_raw", cellText(row, col, "Материал корпуса"));
-  set("bezel_material_raw", cellText(row, col, "Материал безеля"));
-  set("crystal_type_raw", cellText(row, col, "Стекло"));
-  set("attachment_material_raw", cellText(row, col, "Ремешок / браслет"));
-  set("water_resistance_raw", cellText(row, col, "Водозащита"));
-  set("construction_raw", cellText(row, col, "Конструкция"));
-  set("power_reserve_raw", cellText(row, col, "Запас хода"));
-  set("accuracy_raw", cellText(row, col, "Точность"));
-  set("functions_raw", cellText(row, col, "Функции"));
-  set("purpose_raw", cellText(row, col, "Назначение"));
-  set("caseback_raw", cellText(row, col, "Задняя крышка"));
-
-  const caseSize = cellText(row, col, "Размер корпуса");
-  if (caseSize) specs.case_dimensions_raw = caseSize;
-
-  const diameter = cellText(row, col, "Диаметр корпуса, мм");
-  if (diameter) specs.case_diameter_raw = millimeters(diameter);
-
-  const strapWidth = cellText(row, col, "Ширина ремешка, мм");
-  if (strapWidth) specs.strap_width_raw = millimeters(strapWidth);
-
-  const weight = cellText(row, col, "Вес, г");
-  if (weight) specs.weight_raw = `${weight} г`;
-
-  const batteryType = cellText(row, col, "Тип батарейки");
-  const batteryLife = cellText(row, col, "Срок службы батареи");
-  const power = [batteryType, batteryLife].filter(Boolean).join(", ");
-  if (power) specs.power_source_raw = power;
-
-  return specs;
+function normalizeSpecLabel(label: string): string {
+  return label.normalize("NFKC").trim().toLocaleLowerCase("ru").replace(/\s+/g, " ");
 }
 
-export function mapOrientSpecifications(row: unknown[], col: Map<string, number>): Record<string, string> {
-  const specs: Record<string, string> = {};
-  const set = (key: string, value: string) => {
-    if (value) specs[key] = value;
-  };
+/**
+ * Every label this batch's "Характеристики" cells were seen to use across all three brands (built
+ * from a full audit of distinct labels in each workbook), mapped to the shared canonical
+ * specification keys. Two labels for the same underlying fact (e.g. "Ремешок" / "Ремешок / Браслет"
+ * / "ремешок/браслет") intentionally collapse onto the same key — they are spelling/casing variants
+ * from the same generation batch, not distinct facts. "Модель"/"Серия" are deliberately absent —
+ * both duplicate data the main catalog import already provides (title, brand collection).
+ */
+const combinedSpecLabelMap: Record<string, string> = {
+  "диаметр корпуса": "case_diameter_raw",
+  "толщина корпуса": "case_thickness_raw",
+  "материал корпуса": "case_material_raw",
+  "корпус/безель": "case_material_raw",
+  безель: "bezel_material_raw",
+  "материал безеля": "bezel_material_raw",
+  "функция безеля": "bezel_raw",
+  "задняя крышка": "caseback_raw",
+  "особенности корпуса": "caseback_raw",
+  "заводная головка": "crown_raw",
+  стекло: "crystal_type_raw",
+  механизм: "movement_raw",
+  "тип механизма": "movement_type_raw",
+  "запас хода": "power_reserve_raw",
+  "срок службы / запас хода": "power_reserve_raw",
+  питание: "power_source_raw",
+  "тип батарейки": "power_source_raw",
+  "срок службы батареи": "power_source_raw",
+  "точность хода": "accuracy_raw",
+  точность: "accuracy_raw",
+  сертификация: "certification_raw",
+  функции: "functions_raw",
+  назначение: "purpose_raw",
+  водозащита: "water_resistance_raw",
+  водонепроницаемость: "water_resistance_raw",
+  циферблат: "dial_color_raw",
+  индексы: "dial_markers_raw",
+  "драгоценные камни": "gemstones_raw",
+  "материал ремешка/браслета": "attachment_material_raw",
+  ремешок: "attachment_material_raw",
+  "ремешок / браслет": "attachment_material_raw",
+  "ремешок/браслет": "attachment_material_raw",
+  браслет: "attachment_material_raw",
+  "цвет ремешка/браслета": "strap_color_raw",
+  "покрытие браслета": "strap_coating_raw",
+  "особенности браслета": "strap_features_raw",
+  "ширина ремешка": "strap_width_raw",
+  "ширина ушек": "strap_width_raw",
+  застёжка: "clasp_raw",
+  застежка: "clasp_raw",
+  вес: "weight_raw",
+  размер: "case_dimensions_raw",
+  "размер корпуса": "case_dimensions_raw",
+  "размер корпуса (д × ш × т)": "case_dimensions_raw",
+  "размер корпуса (ш × в × т)": "case_dimensions_raw",
+  "размер корпуса (ш × д × т)": "case_dimensions_raw",
+  дисплей: "display_raw",
+  индикация: "display_raw",
+  "тип индикации": "display_raw",
+  конструкция: "construction_raw",
+  "люминесцентное покрытие стрелок": "luminescence_raw",
+  "страна производства": "brand_country_raw",
+};
 
-  set("movement_type_raw", cellText(row, col, "Тип механизма"));
-  set("caliber_raw", cellText(row, col, "Калибр"));
-  set("power_reserve_raw", cellText(row, col, "Запас хода / питание"));
-  set("accuracy_raw", cellText(row, col, "Точность"));
-  set("functions_raw", cellText(row, col, "Функции"));
-  set("dial_color_raw", cellText(row, col, "Цвет циферблата"));
-  set("case_material_raw", cellText(row, col, "Материал корпуса"));
-  set("crystal_type_raw", cellText(row, col, "Стекло"));
-  set("attachment_material_raw", cellText(row, col, "Материал ремешка/браслета"));
-  set("clasp_raw", cellText(row, col, "Застежка"));
-  set("water_resistance_raw", cellText(row, col, "Водозащита"));
-  set("caseback_raw", cellText(row, col, "Задняя крышка"));
-  set("luminescence_raw", cellText(row, col, "Люминесценция"));
-  set("crown_raw", cellText(row, col, "Заводная головка"));
-  set("bezel_raw", cellText(row, col, "Безель"));
-  set("jewel_count_raw", cellText(row, col, "Количество камней"));
+/**
+ * Splits one "Label: value | Label: value | ..." cell into the shared canonical specification
+ * keys. An unrecognized label is skipped (never guessed at) and reported via `onUnknownLabel` for
+ * a visible, honest audit trail — it never silently disappears. When two labels in the same row map
+ * to the same canonical key (spelling variants), their values are combined rather than one
+ * overwriting the other, so no real data is ever dropped.
+ */
+export function mapCombinedSpecifications(specText: string, onUnknownLabel?: (label: string) => void): Record<string, string> {
+  const collected = new Map<string, string[]>();
 
-  const strapWidth = cellText(row, col, "Ширина ремешка, мм");
-  if (strapWidth) specs.strap_width_raw = millimeters(strapWidth);
+  for (const part of specText.split("|")) {
+    const separatorIndex = part.indexOf(":");
+    if (separatorIndex === -1) continue;
 
-  const weight = cellText(row, col, "Вес, г");
-  if (weight) specs.weight_raw = `${weight} г`;
+    const rawLabel = part.slice(0, separatorIndex).trim();
+    const rawValue = part.slice(separatorIndex + 1).trim();
+    if (!rawLabel || !rawValue) continue;
 
-  // Only combined when every dimension is present — a partial "13 мм" alone would misrepresent a
-  // three-axis case size, so an incomplete row simply contributes no combined-dimensions value.
-  const width = cellText(row, col, "Ширина корпуса, мм");
-  const height = cellText(row, col, "Высота корпуса, мм");
-  const thickness = cellText(row, col, "Толщина корпуса, мм");
-  if (width && height && thickness) {
-    specs.case_dimensions_raw = `${width.replace(".", ",")} × ${height.replace(".", ",")} × ${thickness.replace(".", ",")} мм`;
+    const key = combinedSpecLabelMap[normalizeSpecLabel(rawLabel)];
+    if (!key) {
+      onUnknownLabel?.(rawLabel);
+      continue;
+    }
+
+    const values = collected.get(key) ?? [];
+    if (!values.includes(rawValue)) {
+      values.push(rawValue);
+    }
+    collected.set(key, values);
   }
 
+  const specs: Record<string, string> = {};
+  for (const [key, values] of collected) {
+    specs[key] = values.join(", ");
+  }
   return specs;
-}
-
-function extractSeoFields(row: unknown[], col: Map<string, number>) {
-  const value = (name: string) => cellText(row, col, name) || null;
-  return {
-    seoTitle: value("SEO Title"),
-    metaDescription: value("Meta Description"),
-    shortDescription: value("Короткое описание"),
-    longDescription: value("Подробное SEO-описание"),
-  };
 }
 
 function matchReference(rawReference: string, catalogByNormalized: Map<string, CatalogReferenceRef>): CatalogReferenceRef | null {
@@ -179,56 +186,44 @@ function matchReference(rawReference: string, catalogByNormalized: Map<string, C
   return catalogByNormalized.get(normalized) ?? null;
 }
 
-function emptyEntry(match: CatalogReferenceRef): CatalogSiteImportOverlayEntry {
-  return {
-    catalogReference: match.referenceDisplay,
-    referenceNormalized: match.referenceNormalized,
-    brandSlug: match.brandSlug,
-    specifications: {},
-    seoTitle: null,
-    metaDescription: null,
-    shortDescription: null,
-    longDescription: null,
-  };
-}
-
-export function processSiteImportWorkbook(input: {
+export function processSeoFinalWorkbook(input: {
   sourceFile: string;
   workbook: XLSX.WorkBook;
+  sheetName: string;
   catalogByNormalized: Map<string, CatalogReferenceRef>;
-  mapSpecifications: (row: unknown[], col: Map<string, number>) => Record<string, string>;
+  onUnknownLabel?: (label: string) => void;
 }): { entries: Map<string, CatalogSiteImportOverlayEntry>; unmatched: CatalogSiteImportOverlayUnmatchedRow[] } {
   const entries = new Map<string, CatalogSiteImportOverlayEntry>();
   const unmatched: CatalogSiteImportOverlayUnmatchedRow[] = [];
 
-  const specSheet = sheetRows(input.workbook, "Характеристики");
-  const specCol = buildColumnIndex(specSheet.header);
-  for (const row of specSheet.data) {
-    const referenceRaw = cellText(row, specCol, "Артикул");
-    if (!referenceRaw) continue;
-    const match = matchReference(referenceRaw, input.catalogByNormalized);
-    if (!match) {
-      unmatched.push({ sourceFile: `${input.sourceFile}#Характеристики`, referenceRaw, reason: "unmatched" });
-      continue;
-    }
-    const entry = entries.get(match.referenceNormalized) ?? emptyEntry(match);
-    entry.specifications = { ...entry.specifications, ...input.mapSpecifications(row, specCol) };
-    entries.set(match.referenceNormalized, entry);
-  }
+  const { header, data } = sheetRows(input.workbook, input.sheetName);
+  const col = buildColumnIndex(header);
 
-  const seoSheet = sheetRows(input.workbook, "Импорт_на_сайт");
-  const seoCol = buildColumnIndex(seoSheet.header);
-  for (const row of seoSheet.data) {
-    const referenceRaw = cellText(row, seoCol, "Артикул");
+  for (const row of data) {
+    const referenceRaw = cellText(row, col, "Артикул");
     if (!referenceRaw) continue;
+
     const match = matchReference(referenceRaw, input.catalogByNormalized);
     if (!match) {
-      unmatched.push({ sourceFile: `${input.sourceFile}#Импорт_на_сайт`, referenceRaw, reason: "unmatched" });
+      unmatched.push({ sourceFile: input.sourceFile, referenceRaw, reason: "unmatched" });
       continue;
     }
-    const entry = entries.get(match.referenceNormalized) ?? emptyEntry(match);
-    Object.assign(entry, extractSeoFields(row, seoCol));
-    entries.set(match.referenceNormalized, entry);
+
+    const seoDescription = cellText(row, col, "SEO-описание") || null;
+    const specText = cellText(row, col, "Характеристики");
+
+    entries.set(match.referenceNormalized, {
+      catalogReference: match.referenceDisplay,
+      referenceNormalized: match.referenceNormalized,
+      brandSlug: match.brandSlug,
+      specifications: specText ? mapCombinedSpecifications(specText, input.onUnknownLabel) : {},
+      seoTitle: null,
+      // The source supplies exactly one description field — used for both the meta description
+      // and the detail page's "Обзор" paragraph rather than inventing a distinct short/long pair.
+      metaDescription: seoDescription,
+      shortDescription: null,
+      longDescription: seoDescription,
+    });
   }
 
   return { entries, unmatched };
@@ -245,34 +240,36 @@ async function main() {
   const imagePlan = await readJsonFile<CatalogImageUploadPlan>(path.join(rootDir, "imports/generated/catalog-image-upload-plan.json"));
   const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
 
-  const casioByNormalized = new Map<string, CatalogReferenceRef>(
-    dataset.watches.filter((watch) => watch.brandSlug === "casio").map((watch) => [watch.referenceNormalized, watch]),
-  );
-  const orientByNormalized = new Map<string, CatalogReferenceRef>(
-    dataset.watches.filter((watch) => watch.brandSlug === "orient").map((watch) => [watch.referenceNormalized, watch]),
-  );
+  const byBrand = (brandSlug: string) =>
+    new Map<string, CatalogReferenceRef>(dataset.watches.filter((watch) => watch.brandSlug === brandSlug).map((watch) => [watch.referenceNormalized, watch]));
 
-  const casioWorkbook = XLSX.read(await readFile(path.join(rootDir, CASIO_SITE_IMPORT_XLSX_PATH)), { type: "buffer" });
-  const orientWorkbook = XLSX.read(await readFile(path.join(rootDir, ORIENT_SITE_IMPORT_XLSX_PATH)), { type: "buffer" });
+  const brands = [
+    { brandSlug: "casio", sourceFile: CASIO_SITE_IMPORT_XLSX_PATH, sheetName: "Casio" },
+    { brandSlug: "orient", sourceFile: ORIENT_SITE_IMPORT_XLSX_PATH, sheetName: "Orient" },
+    { brandSlug: "tissot", sourceFile: TISSOT_SITE_IMPORT_XLSX_PATH, sheetName: "Tissot" },
+  ] as const;
 
-  const casioResult = processSiteImportWorkbook({
-    sourceFile: CASIO_SITE_IMPORT_XLSX_PATH,
-    workbook: casioWorkbook,
-    catalogByNormalized: casioByNormalized,
-    mapSpecifications: mapCasioSpecifications,
-  });
-  const orientResult = processSiteImportWorkbook({
-    sourceFile: ORIENT_SITE_IMPORT_XLSX_PATH,
-    workbook: orientWorkbook,
-    catalogByNormalized: orientByNormalized,
-    mapSpecifications: mapOrientSpecifications,
-  });
+  const unknownLabels = new Set<string>();
+  const results = await Promise.all(
+    brands.map(async ({ brandSlug, sourceFile, sheetName }) => {
+      const workbook = XLSX.read(await readFile(path.join(rootDir, sourceFile)), { type: "buffer" });
+      const catalogByNormalized = byBrand(brandSlug);
+      const result = processSeoFinalWorkbook({
+        sourceFile,
+        workbook,
+        sheetName,
+        catalogByNormalized,
+        onUnknownLabel: (label) => unknownLabels.add(label),
+      });
+      return { brandSlug, sourceFile, catalogRefCount: catalogByNormalized.size, ...result };
+    }),
+  );
 
   const manifest: CatalogSiteImportOverlayManifest = {
     generatedAt: new Date().toISOString(),
-    sourceFiles: [CASIO_SITE_IMPORT_XLSX_PATH, ORIENT_SITE_IMPORT_XLSX_PATH],
-    entries: [...casioResult.entries.values(), ...orientResult.entries.values()],
-    unmatchedRows: [...casioResult.unmatched, ...orientResult.unmatched],
+    sourceFiles: brands.map((brand) => brand.sourceFile),
+    entries: results.flatMap((result) => [...result.entries.values()]),
+    unmatchedRows: results.flatMap((result) => result.unmatched),
   };
 
   const outputPath = path.join(rootDir, SITE_IMPORT_OVERLAY_OUTPUT_PATH);
@@ -280,10 +277,16 @@ async function main() {
   await writeFile(outputPath, JSON.stringify(manifest, null, 2), "utf8");
 
   console.log("Site-import overlay manifest written to", SITE_IMPORT_OVERLAY_OUTPUT_PATH);
-  console.log("Casio: catalog refs", casioByNormalized.size, "| matched", casioResult.entries.size, "| unmatched rows", casioResult.unmatched.length);
-  console.log("Orient: catalog refs", orientByNormalized.size, "| matched", orientResult.entries.size, "| unmatched rows", orientResult.unmatched.length);
+  for (const result of results) {
+    console.log(
+      `${result.brandSlug}: catalog refs ${result.catalogRefCount} | matched ${result.entries.size} | unmatched rows ${result.unmatched.length}`,
+    );
+  }
   if (manifest.unmatchedRows.length > 0) {
     console.log("Unmatched rows:", manifest.unmatchedRows);
+  }
+  if (unknownLabels.size > 0) {
+    console.log("Unrecognized specification labels (skipped, never guessed):", [...unknownLabels].sort());
   }
 }
 

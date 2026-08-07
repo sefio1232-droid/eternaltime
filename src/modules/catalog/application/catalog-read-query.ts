@@ -77,6 +77,7 @@ export function parseCatalogReadQuery(input: {
     waterResistance: cleanOptionalParam(params.water),
     caseMaterial: cleanOptionalParam(params.caseMaterial),
     crystal: cleanOptionalParam(params.crystal),
+    positioning: cleanOptionalParam(params.positioning),
     minPriceMinor,
     maxPriceMinor,
     sort: parseSort(params.sort),
@@ -125,6 +126,7 @@ export function catalogQueryToSearchParams(
   if (nextQuery.waterResistance) params.set("water", nextQuery.waterResistance);
   if (nextQuery.caseMaterial) params.set("caseMaterial", nextQuery.caseMaterial);
   if (nextQuery.crystal) params.set("crystal", nextQuery.crystal);
+  if (nextQuery.positioning) params.set("positioning", nextQuery.positioning);
   if (nextQuery.minPriceMinor !== null) params.set("priceMin", rubMinorToQueryValue(nextQuery.minPriceMinor) ?? "");
   if (nextQuery.maxPriceMinor !== null) params.set("priceMax", rubMinorToQueryValue(nextQuery.maxPriceMinor) ?? "");
   if (nextQuery.sort !== "default") params.set("sort", nextQuery.sort);

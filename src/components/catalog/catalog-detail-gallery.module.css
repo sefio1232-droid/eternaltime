@@ -1,0 +1,249 @@
+/*
+ * Watch detail page gallery — the whole photo workspace (main stage, thumbnails, fullscreen
+ * viewer) lives in this one module. Replaces the old static main image plus a separate,
+ * disconnected "На запястье" wall of extra photos further down the page (docs/
+ * CATALOG_SHOWROOM_RECOVERY.md "Gallery rebuild, second pass").
+ */
+
+.workspace {
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* The main stage keeps the shared .product-stage/.product-stage-detail/.detailMedia sizing passed
+   in via `stageClassName` from the page — this module only resets button chrome and adds the zoom
+   affordance on top of that shared box. */
+.stage {
+  position: relative;
+  width: 100%;
+  border: 0;
+  margin: 0;
+  cursor: zoom-in;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  appearance: none;
+}
+
+.stage:focus-visible {
+  outline: 2px solid var(--surface-graphite, #10171b);
+  outline-offset: -3px;
+}
+
+.zoomHint {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  background: rgba(16, 23, 27, 0.82);
+  padding: 0.4rem 0.75rem 0.4rem 0.6rem;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.stage:hover .zoomHint,
+.stage:focus-visible .zoomHint {
+  opacity: 1;
+}
+
+.zoomIcon {
+  display: block;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+}
+
+.zoomIcon::after {
+  content: "";
+  position: absolute;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoomHint {
+    transition: none;
+  }
+}
+
+@media (hover: none) {
+  /* No hover on touch — the affordance stays visible so it isn't hidden behind an interaction
+     the device can't perform. */
+  .zoomHint {
+    opacity: 1;
+  }
+}
+
+/* ---------- Thumbnail strip ---------- */
+
+.thumbRow {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  scrollbar-width: thin;
+}
+
+.thumb {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1.5px solid var(--border, rgba(16, 23, 27, 0.14));
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0.3rem;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+
+.thumb:hover {
+  border-color: var(--text-muted, #748087);
+}
+
+.thumb:focus-visible {
+  outline: 2px solid var(--surface-graphite, #10171b);
+  outline-offset: 2px;
+}
+
+.thumbActive {
+  border-color: var(--catalog-champagne, #b98a45);
+  border-width: 2px;
+}
+
+@media (min-width: 480px) {
+  .thumb {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+}
+
+/* ---------- Fullscreen viewer ---------- */
+
+.viewerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(9, 12, 14, 0.92);
+  padding: clamp(0.75rem, 4vw, 2rem);
+}
+
+.viewerPanel {
+  display: grid;
+  width: min(1100px, 100%);
+  height: min(88vh, 900px);
+  grid-template-rows: auto 1fr;
+  gap: 0.75rem;
+}
+
+.viewerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.viewerIndex {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
+.viewerClose {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.viewerClose:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.viewerClose:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.viewerStage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.viewerStage :global(img) {
+  max-height: 100%;
+  max-width: 100%;
+}
+
+.viewerNav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 160ms ease;
+}
+
+.viewerNav:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.viewerNav:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.viewerPrev {
+  left: clamp(0rem, 1vw, 0.5rem);
+}
+
+.viewerNext {
+  right: clamp(0rem, 1vw, 0.5rem);
+}
+
+@media (max-width: 639px) {
+  .viewerNav {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+  }
+}

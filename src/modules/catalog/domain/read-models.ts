@@ -102,6 +102,10 @@ export type CatalogFilterFacets = {
   waterResistance: CatalogFilterOption[];
   caseMaterials: CatalogFilterOption[];
   crystalTypes: CatalogFilterOption[];
+  /** Always includes an "unknown"/"Не указано" option — most brands have no source positioning
+   * field at all (docs/CATALOG_SHOWROOM_RECOVERY.md "Positioning filter"), and hiding that low
+   * coverage would misrepresent the data. */
+  positioning: CatalogFilterOption[];
   price: CatalogPriceFacet;
 };
 
@@ -113,6 +117,7 @@ export type CatalogReadQuery = {
   waterResistance: string | null;
   caseMaterial: string | null;
   crystal: string | null;
+  positioning: string | null;
   minPriceMinor: number | null;
   maxPriceMinor: number | null;
   sort: CatalogSortKey;

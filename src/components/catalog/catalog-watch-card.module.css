@@ -26,16 +26,19 @@
 }
 
 /* Phase 4: 4:5 stage (was near-square 1/1.08) — a taller, more architectural plinth rather than a
- * generic square product photo (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 card rebuild"). */
+ * generic square product photo (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 card rebuild"). Pure
+ * white, matching the source photos' own studio-white background exactly, so the photo's edge
+ * never reads as a pasted-in white rectangle against a warm-gray page (docs/CATALOG_SHOWROOM_
+ * RECOVERY.md "White background fix" — real user feedback: a visible white box was showing up
+ * around every watch). */
 .media {
   position: relative;
   display: grid;
   aspect-ratio: 4 / 5;
   place-items: center;
   overflow: hidden;
-  background: linear-gradient(180deg, #fefefd 0%, var(--catalog-image-stage-light, #f4f6f6) 100%);
-  padding: 9%;
-  transition: background 260ms ease;
+  background: #ffffff;
+  padding: 6%;
 }
 
 /* A thin baseline that only appears on hover — the "тонкая line" the stage temperature shift
@@ -54,11 +57,6 @@
   transition: opacity 260ms ease, transform 260ms ease;
 }
 
-.link:hover .media,
-.link:focus-visible .media {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafa 100%);
-}
-
 .link:hover .media::after,
 .link:focus-visible .media::after {
   opacity: 0.55;
@@ -68,8 +66,8 @@
 .media img {
   position: relative;
   z-index: 1;
-  max-height: 80%;
-  max-width: 78%;
+  max-height: 92%;
+  max-width: 90%;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -77,24 +75,13 @@
   transition: transform 260ms cubic-bezier(0.16, 0.8, 0.24, 1);
 }
 
-/* Presentation categories (docs/CATALOG_SHOWROOM_RECOVERY.md "Image quality policy") — optical
- * scale/padding only, never which image is chosen. Compact Casio digitals get more headroom so
- * they don't look artificially blown up next to larger watches; G-Shock/Edifice-style oversized
- * sport watches and divers get tighter padding so they read as substantial, not shrunken. */
-.media[data-presentation-category="compact-digital"] img {
-  max-height: 70%;
-  max-width: 68%;
-}
-
-.media[data-presentation-category="oversized-sport"] img {
-  max-height: 76%;
-  max-width: 74%;
-}
-
-.media[data-presentation-category="diver"] img {
-  max-height: 84%;
-  max-width: 82%;
-}
+/* A per-category size differentiation used to live here (compact-digital/oversized-sport/diver
+ * each getting a different max-height/width). Removed: real user feedback caught it as an
+ * unexplained inconsistency between cards sitting side by side in the same row, which reads as a
+ * bug, not a refinement — every card now shares the exact same bounding box regardless of watch
+ * type (docs/CATALOG_SHOWROOM_RECOVERY.md "Card sizing consistency"). `classifyCatalogCardPresentation`
+ * and the `data-presentation-category` attribute are kept (harmless, no visual effect) rather than
+ * torn out across every call site for a one-line CSS change. */
 
 .link:hover .media img,
 .link:focus-visible .media img {

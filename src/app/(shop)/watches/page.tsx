@@ -5,7 +5,6 @@ import { parseCatalogReadQuery, type CatalogSearchParams } from "@/modules/catal
 import {
   CatalogReadSourceError,
   getPublicCatalogCuratorialPaths,
-  getPublicCatalogHeroWatches,
   listPublicCatalogWatches,
 } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { getCatalogReviewSanitationEntries } from "@/modules/catalog/infrastructure/catalog-review-dev-data.server";
@@ -28,8 +27,8 @@ export default async function WatchesPage({
   const resolvedSearchParams = (await searchParams) ?? {};
   const query = parseCatalogReadQuery({ searchParams: resolvedSearchParams });
   const reviewMode = process.env.NODE_ENV !== "production" && resolvedSearchParams.catalogReview === "1";
-  const resultState = await Promise.all([listPublicCatalogWatches(query), getPublicCatalogHeroWatches(), getPublicCatalogCuratorialPaths()])
-    .then(([result, heroWatches, curatorialPaths]) => ({ type: "ok" as const, result, heroWatches, curatorialPaths }))
+  const resultState = await Promise.all([listPublicCatalogWatches(query), getPublicCatalogCuratorialPaths()])
+    .then(([result, curatorialPaths]) => ({ type: "ok" as const, result, curatorialPaths }))
     .catch((error: unknown) => {
       if (error instanceof CatalogReadSourceError) {
         return { type: "source_error" as const };
@@ -56,7 +55,6 @@ export default async function WatchesPage({
       title="Каталог часов"
       description="Реальные модели, проверенные цены и понятные различия без лишнего шума."
       includeBrandFilter
-      heroWatches={resultState.heroWatches}
       curatorialPaths={resultState.curatorialPaths}
       reviewMode={reviewMode}
       sanitationEntries={sanitationEntries}

@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { CatalogAutoSubmitSelect } from "@/components/catalog/catalog-auto-submit-select";
 import { catalogQueryHref, rubMinorToQueryValue } from "@/modules/catalog/application/catalog-read-query";
 import { formatCatalogCount } from "@/modules/catalog/application/catalog-format";
 import { mechanismGroupLabels, mechanismGroupOrder } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
+import { positioningGroupLabels, positioningGroupOrder } from "@/modules/catalog/application/catalog-positioning-taxonomy";
 import type { CatalogFilterFacets, CatalogFilterOption, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
 import styles from "@/components/catalog/catalog-filter-panel.module.css";
 
@@ -123,6 +125,14 @@ function buildActiveChips(input: {
     });
   }
 
+  if (query.positioning) {
+    chips.push({
+      key: "positioning",
+      label: positioningGroupLabels[query.positioning as keyof typeof positioningGroupLabels] ?? optionLabel(facets.positioning, query.positioning),
+      removeHref: catalogQueryHref(pathname, query, { positioning: null, page: 1 }),
+    });
+  }
+
   if (query.minPriceMinor !== null || query.maxPriceMinor !== null) {
     const min = rubMinorToQueryValue(query.minPriceMinor);
     const max = rubMinorToQueryValue(query.maxPriceMinor);
@@ -148,6 +158,7 @@ function countExpandedFilters(query: CatalogReadQuery, includeBrandFilter: boole
   if (query.waterResistance) count += 1;
   if (query.caseMaterial) count += 1;
   if (query.crystal) count += 1;
+  if (query.positioning) count += 1;
   if (query.minPriceMinor !== null || query.maxPriceMinor !== null) count += 1;
   return count;
 }
@@ -161,6 +172,7 @@ export function catalogFilterResetHref(pathname: string, query: CatalogReadQuery
     waterResistance: null,
     caseMaterial: null,
     crystal: null,
+    positioning: null,
     minPriceMinor: null,
     maxPriceMinor: null,
     sort: "default",
@@ -195,19 +207,20 @@ function CatalogFilterSearchField({ query, idPrefix = "catalog" }: Readonly<{ qu
   );
 }
 
-/** The control bar's sort field — a plain select, standalone (see `CatalogFilterSearchField`). */
+/** The control bar's sort field — standalone (see `CatalogFilterSearchField`). Auto-submits on
+ * change since it has no nearby submit button of its own (see CatalogAutoSubmitSelect). */
 function CatalogFilterSortField({ query, idPrefix = "catalog" }: Readonly<{ query: CatalogReadQuery; idPrefix?: string }>) {
   const sortId = `${idPrefix}-sort-select`;
   return (
     <label className={styles.sortField} htmlFor={sortId}>
       <span className={styles.srOnly}>Сортировка</span>
-      <select id={sortId} name="sort" defaultValue={query.sort} className={styles.control}>
+      <CatalogAutoSubmitSelect id={sortId} name="sort" defaultValue={query.sort} className={styles.control}>
         {sortOptionsFor(query.view).map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </CatalogAutoSubmitSelect>
     </label>
   );
 }
@@ -261,6 +274,28 @@ function CatalogFilterExpandedFields({
           </div>
         </fieldset>
 
+        <fieldset className={styles.mechanismField}>
+          <legend className={styles.fieldLabel}>Позиционирование</legend>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioOption}>
+              <input type="radio" name="positioning" value="" defaultChecked={!query.positioning} />
+              <span>Любое</span>
+            </label>
+            {positioningGroupOrder.map((group) => {
+              const option = facets.positioning.find((entry) => entry.value === group);
+              if (!option || option.count === 0) return null;
+              return (
+                <label key={group} className={styles.radioOption}>
+                  <input type="radio" name="positioning" value={group} defaultChecked={query.positioning === group} />
+                  <span>
+                    {positioningGroupLabels[group]} ({option.count})
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <fieldset className={styles.priceField}>
           <legend className={styles.fieldLabel}>Цена, ₽</legend>
           <div className={styles.priceGroup}>
@@ -298,27 +333,37 @@ function CatalogFilterExpandedFields({
             className={styles.moreField}
           />
         ) : null}
-        <SelectField
-          label="Водозащита"
-          name="water"
-          value={query.waterResistance}
-          options={facets.waterResistance.slice(0, 80)}
-          className={styles.moreField}
-        />
-        <SelectField
-          label="Материал корпуса"
-          name="caseMaterial"
-          value={query.caseMaterial}
-          options={facets.caseMaterials.slice(0, 80)}
-          className={styles.moreField}
-        />
-        <SelectField
-          label="Стекло"
-          name="crystal"
-          value={query.crystal}
-          options={facets.crystalTypes.slice(0, 80)}
-          className={styles.moreField}
-        />
+        {/* Each field below is only rendered when the current dataset actually has more than one
+            real option for it — a select offering nothing but "Все" isn't a filter, it's dead UI
+            (real user feedback: Tissot has no usable water-resistance data at all, so that field
+            was showing up empty for the entire brand). */}
+        {facets.waterResistance.length > 1 ? (
+          <SelectField
+            label="Водозащита"
+            name="water"
+            value={query.waterResistance}
+            options={facets.waterResistance.slice(0, 80)}
+            className={styles.moreField}
+          />
+        ) : null}
+        {facets.caseMaterials.length > 1 ? (
+          <SelectField
+            label="Материал корпуса"
+            name="caseMaterial"
+            value={query.caseMaterial}
+            options={facets.caseMaterials.slice(0, 80)}
+            className={styles.moreField}
+          />
+        ) : null}
+        {facets.crystalTypes.length > 1 ? (
+          <SelectField
+            label="Стекло"
+            name="crystal"
+            value={query.crystal}
+            options={facets.crystalTypes.slice(0, 80)}
+            className={styles.moreField}
+          />
+        ) : null}
       </div>
 
       {showFooter ? (

@@ -241,33 +241,51 @@ function basePresentation(input: {
         caption: null,
       };
     case "catalog-feature":
-      // `product-contained` (object-fit: contain), not `product-crop` — the editorial insert's
-      // watch must always be fully visible, never cropped by an object-fit: cover box
-      // (docs/CATALOG_SHOWROOM_RECOVERY.md "Editorial insert — full watch visible").
-      return { mode: "product-contained", focalX: 50, focalY: 44, scale: 1.14, translateX: 0, translateY: 0, sourceQuality, caption: null };
+      // `product-contained` (object-fit: contain), not `product-crop` — the curatorial module's
+      // watch must always be fully visible, never cropped by an object-fit: cover box. scale: 1 —
+      // same fix as catalog-hero-primary/secondary: a transform scale on top of an already
+      // object-fit: contain'd image compounds with it and pushes the watch outside its box
+      // (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 hero — no compounding scale").
+      return { mode: "product-contained", focalX: 50, focalY: 44, scale: 1, translateX: 0, translateY: 0, sourceQuality, caption: null };
     case "catalog-hero-primary":
-      // Always fully visible (contain) — the catalog hero's main watch occupies most of the
-      // stage's height but is never cropped (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 hero").
-      return { mode: "product-contained", focalX: 50, focalY: 42, scale: 1.22, translateX: 0, translateY: 0, sourceQuality, caption: null };
+      // scale: 1 — sizing is fully controlled by the CSS module's fixed max-height/max-width (see
+      // catalog-hero.module.css); a scale transform on top of an already object-fit: contain'd
+      // image compounds with it and pushes the watch outside its box (the exact bug real user
+      // feedback caught: an oversized, cropped-looking primary watch — docs/CATALOG_SHOWROOM_
+      // RECOVERY.md "Phase 4 hero — no compounding scale").
+      return { mode: "product-contained", focalX: 50, focalY: 42, scale: 1, translateX: 0, translateY: 0, sourceQuality, caption: null };
     case "catalog-hero-secondary":
-      return { mode: "product-contained", focalX: 50, focalY: 46, scale: 1.08, translateX: 0, translateY: 0, sourceQuality, caption: null };
+      return { mode: "product-contained", focalX: 50, focalY: 46, scale: 1, translateX: 0, translateY: 0, sourceQuality, caption: null };
     case "detail-hero":
+      // scale: 1 — same fix as catalog-card/catalog-hero-primary/catalog-feature: the detail
+      // page's own CSS (.detailMedia :global(.catalog-image--composed[...="detail-hero"])) already
+      // caps the image at max-height/max-width: 102%, sizing it via object-fit: contain; a 1.14-
+      // 1.24x transform scale on top of that compounds and pushes the watch outside the (overflow:
+      // hidden) stage, cropping it — the same bug class real user feedback caught on the catalog
+      // hero (docs/CATALOG_SHOWROOM_RECOVERY.md "Phase 4 hero — no compounding scale").
       return {
         mode: sourceQuality === "weak" ? "weak-source" : "detail-hero",
         focalX: 50,
         focalY: 45,
-        scale: image.kind === "remote" ? 1.14 : 1.24,
+        scale: 1,
         translateX: 0,
         translateY: -1,
         sourceQuality,
         caption: null,
       };
     case "detail-gallery": {
+      // scale: 1 — same fix as every other slot in this file: the gallery figure's own base
+      // sizing already fills the box (globals.css .catalog-image is height/width: 100% before any
+      // mode-specific rule runs), and "product-crop" mode additionally uses object-fit: cover —
+      // stacking a 1.13-1.14x transform scale on top of either one compounds and crops the image
+      // hard against the figure's overflow: hidden, the same bug class real user feedback caught
+      // on the catalog hero and the detail-page main photo (docs/CATALOG_SHOWROOM_RECOVERY.md
+      // "Phase 4 hero — no compounding scale").
       const order = imageOrderFromAlt(image) ?? imageIndex + 1;
       if (order === 1) {
-        return { mode: "product-contained", focalX: 50, focalY: 46, scale: 1.13, translateX: 0, translateY: 0, sourceQuality, caption: "Фронтальный вид" };
+        return { mode: "product-contained", focalX: 50, focalY: 46, scale: 1, translateX: 0, translateY: 0, sourceQuality, caption: "Фронтальный вид" };
       }
-      return { mode: "product-crop", focalX: 50, focalY: 48, scale: 1.14, translateX: 0, translateY: 0, sourceQuality, caption: "Ракурс" };
+      return { mode: "product-crop", focalX: 50, focalY: 48, scale: 1, translateX: 0, translateY: 0, sourceQuality, caption: "Ракурс" };
     }
     case "journal-lead":
       return {

@@ -3,6 +3,8 @@ import { isOrientArchiveImageKey } from "@/modules/catalog/infrastructure/orient
 import { resolveOrientArchiveImage } from "@/modules/catalog/infrastructure/orient-photo-archive-resolver.server";
 import { isCasioArchiveImageKey } from "@/modules/catalog/infrastructure/casio-photo-archive-keys";
 import { resolveCasioArchiveImage } from "@/modules/catalog/infrastructure/casio-photo-archive-resolver.server";
+import { isTissotArchiveImageKey } from "@/modules/catalog/infrastructure/tissot-photo-archive-keys";
+import { resolveTissotArchiveImage } from "@/modules/catalog/infrastructure/tissot-photo-archive-resolver.server";
 
 async function resolveByKey(imageKey: string) {
   if (isOrientArchiveImageKey(imageKey)) {
@@ -10,6 +12,9 @@ async function resolveByKey(imageKey: string) {
   }
   if (isCasioArchiveImageKey(imageKey)) {
     return resolveCasioArchiveImage({ imageKey });
+  }
+  if (isTissotArchiveImageKey(imageKey)) {
+    return resolveTissotArchiveImage({ imageKey });
   }
   return resolveDevCatalogImage({ imageKey });
 }

@@ -7,6 +7,7 @@ import { mechanismGroupLabels, normalizeMechanismGroup } from "@/modules/catalog
 import { waterResistanceGroupLabels, normalizeWaterResistanceGroup } from "@/modules/catalog/application/catalog-water-resistance-taxonomy";
 import { caseMaterialGroupLabels, normalizeCaseMaterialGroup } from "@/modules/catalog/application/catalog-case-material-taxonomy";
 import { crystalGroupLabels, normalizeCrystalGroup } from "@/modules/catalog/application/catalog-crystal-taxonomy";
+import { positioningGroupLabels, normalizePositioningGroup } from "@/modules/catalog/application/catalog-positioning-taxonomy";
 import type {
   CatalogFilterFacets,
   CatalogFilterOption,
@@ -24,6 +25,7 @@ const filterSpecKeys = {
   waterResistance: ["water_resistance_raw"],
   caseMaterial: ["case_material_raw"],
   crystal: ["crystal_type_raw"],
+  positioning: ["watch_type_raw"],
 } as const;
 
 function findSpecificationValue(watch: CatalogWatchDetail, keys: readonly string[]): string | null {
@@ -89,6 +91,10 @@ function matchesQuery(watch: CatalogWatchDetail, query: CatalogReadQuery): boole
   }
 
   if (query.crystal && normalizeCrystalGroup(findSpecificationValue(watch, filterSpecKeys.crystal)) !== query.crystal) {
+    return false;
+  }
+
+  if (query.positioning && normalizePositioningGroup(findSpecificationValue(watch, filterSpecKeys.positioning)) !== query.positioning) {
     return false;
   }
 
@@ -443,6 +449,7 @@ function buildFacets(watches: CatalogWatchDetail[]): CatalogFilterFacets {
   const waterResistance = new Map<string, number>();
   const caseMaterials = new Map<string, number>();
   const crystalTypes = new Map<string, number>();
+  const positioning = new Map<string, number>();
   let minMinor: number | null = null;
   let maxMinor: number | null = null;
   let pricedRecordCount = 0;
@@ -459,6 +466,7 @@ function buildFacets(watches: CatalogWatchDetail[]): CatalogFilterFacets {
     increment(waterResistance, normalizeWaterResistanceGroup(findSpecificationValue(watch, filterSpecKeys.waterResistance)));
     increment(caseMaterials, normalizeCaseMaterialGroup(findSpecificationValue(watch, filterSpecKeys.caseMaterial)));
     increment(crystalTypes, normalizeCrystalGroup(findSpecificationValue(watch, filterSpecKeys.crystal)));
+    increment(positioning, normalizePositioningGroup(findSpecificationValue(watch, filterSpecKeys.positioning)));
 
     if (watch.publicPrice) {
       pricedRecordCount += 1;
@@ -483,6 +491,9 @@ function buildFacets(watches: CatalogWatchDetail[]): CatalogFilterFacets {
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "ru")),
     crystalTypes: [...crystalTypes.entries()]
       .map(([group, count]) => ({ value: group, label: crystalGroupLabels[group as keyof typeof crystalGroupLabels], count }))
+      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "ru")),
+    positioning: [...positioning.entries()]
+      .map(([group, count]) => ({ value: group, label: positioningGroupLabels[group as keyof typeof positioningGroupLabels], count }))
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "ru")),
     price: {
       minMinor,
@@ -564,12 +575,73 @@ export function getCatalogWatchByRoute(
   ) ?? null;
 }
 
+// A stable reading order for specification rows *within* one group (docs/CATALOG_SHOWROOM_
+// RECOVERY.md "Specifications ordering") — without this, rows appear in whatever order the raw
+// import workbook's columns happened to be in, which varies unpredictably per source package and
+// reads as unordered ("характеристики выглядят хорошо, но надо упорядочить" — real user feedback).
+// Mirrors the semantic key order already established for labels/groups; a key not listed here
+// keeps its original relative position, appended after every known key in its group.
+const specificationKeyOrder: string[] = [
+  "movement_raw",
+  "movement_type_raw",
+  "caliber_raw",
+  "display_raw",
+  "power_source_raw",
+  "power_reserve_raw",
+  "accuracy_raw",
+  "certification_raw",
+  "jewel_count_raw",
+  "case_material_raw",
+  "case_shape_raw",
+  "bezel_material_raw",
+  "bezel_raw",
+  "construction_raw",
+  "caseback_raw",
+  "crown_raw",
+  "case_diameter_raw",
+  "case_thickness_raw",
+  "case_dimensions_raw",
+  "weight_raw",
+  "crystal_type_raw",
+  "dial_raw",
+  "dial_color_raw",
+  "dial_markers_raw",
+  "gemstones_raw",
+  "attachment_material_raw",
+  "strap_material_raw",
+  "bracelet_material_raw",
+  "strap_color_raw",
+  "strap_coating_raw",
+  "strap_width_raw",
+  "clasp_raw",
+  "strap_features_raw",
+  "water_resistance_raw",
+  "functions_raw",
+  "watch_type_raw",
+  "purpose_raw",
+  "luminescence_raw",
+  "brand_country_raw",
+];
+
 export function groupSpecificationsByPublicSection(specifications: CatalogPublicSpecification[]) {
-  return specifications.reduce<Record<string, CatalogPublicSpecification[]>>((groups, specification) => {
-    groups[specification.group] ??= [];
-    groups[specification.group]?.push(specification);
-    return groups;
+  const groups = specifications.reduce<Record<string, CatalogPublicSpecification[]>>((acc, specification) => {
+    acc[specification.group] ??= [];
+    acc[specification.group]?.push(specification);
+    return acc;
   }, {});
+
+  for (const group of Object.values(groups)) {
+    group.sort((left, right) => {
+      const leftOrder = specificationKeyOrder.indexOf(left.key);
+      const rightOrder = specificationKeyOrder.indexOf(right.key);
+      if (leftOrder === -1 && rightOrder === -1) return 0;
+      if (leftOrder === -1) return 1;
+      if (rightOrder === -1) return -1;
+      return leftOrder - rightOrder;
+    });
+  }
+
+  return groups;
 }
 
 function movementGroupOf(specifications: CatalogPublicSpecification[]): string | null {
@@ -612,37 +684,6 @@ export function pickRelatedCatalogWatches(dataset: CatalogReadDataset, watch: Ca
     .map((entry) => toCatalogWatchCard(entry.candidate));
 }
 
-/**
- * Picks real watches for the catalog hero's product composition — the same Recommended ranking
- * already trusted for the "Рекомендуемые" tab, restricted to clean front images (never a
- * caseback/technical/contaminated pick — same bar as `selectEditorialFeature` used to apply) and
- * biased toward distinct brands so the hero doesn't show three watches from one brand. Optionally
- * scoped to a single brand (brand catalog pages). Never invents a watch; returns fewer than
- * `count` if the catalog genuinely doesn't have that many qualifying picks.
- */
-export function pickCatalogHeroWatches(dataset: CatalogReadDataset, input: { brandSlug?: string; count?: number } = {}): CatalogWatchCard[] {
-  const count = input.count ?? 3;
-  const scoped = input.brandSlug ? dataset.watches.filter((watch) => watch.brandSlug === input.brandSlug) : dataset.watches;
-  const ranked = rankRecommendedWatches(scoped);
-  const clean = ranked.filter((watch) => classifyCatalogImageRejection(watch.primaryImage, 0) === null);
-
-  const picked: CatalogWatchDetail[] = [];
-  const usedBrands = new Set<string>();
-  for (const watch of clean) {
-    if (picked.length >= count) break;
-    if (usedBrands.has(watch.brandSlug)) continue;
-    picked.push(watch);
-    usedBrands.add(watch.brandSlug);
-  }
-  for (const watch of clean) {
-    if (picked.length >= count) break;
-    if (picked.some((entry) => entry.id === watch.id)) continue;
-    picked.push(watch);
-  }
-
-  return picked.map(toCatalogWatchCard);
-}
-
 export type CatalogCuratorialPath = {
   key: "everyday" | "first-mechanical" | "travel";
   number: string;
@@ -656,8 +697,9 @@ export type CatalogCuratorialPath = {
  * RECOVERY.md "Phase 4 curatorial module") — replaces the old single-watch editorial insert.
  * Three simple, transparent, independent rules (never a recommendation model): an automatic
  * mechanism for "first mechanical", 100m+ water resistance for "travel", and any remaining
- * clean-image watch for "everyday" — each restricted to clean front images (the same bar
- * `pickCatalogHeroWatches` already applies) and never repeating a watch across paths. A path is
+ * clean-image watch for "everyday" — each restricted to clean front images (never a caseback/
+ * technical/contaminated pick — see `classifyCatalogImageRejection`) and never repeating a watch
+ * across paths. A path is
  * simply omitted if the catalog has no qualifying watch left for it — never invented or
  * substituted with an unrelated pick.
  */
@@ -665,12 +707,19 @@ export function pickCatalogCuratorialPaths(dataset: CatalogReadDataset): Catalog
   const clean = dataset.watches.filter((watch) => classifyCatalogImageRejection(watch.primaryImage, 0) === null);
   const used = new Set<string>();
 
+  // Picks the highest-priced qualifying watch, not merely the first one in source order — the
+  // curatorial module is meant to showcase something worth featuring, and source order has no
+  // relationship to that (real user feedback: the first-match rule kept surfacing whatever
+  // inexpensive watch happened to sit early in the source file). Price is the only real,
+  // structured "worth featuring" signal the data actually has — never a fabricated one.
   function take(predicate: (watch: CatalogWatchDetail) => boolean): CatalogWatchDetail | null {
-    const match = clean.find((watch) => !used.has(watch.id) && predicate(watch));
+    const matches = clean.filter((watch) => !used.has(watch.id) && predicate(watch));
+    matches.sort((left, right) => (right.publicPrice?.amountMinor ?? 0) - (left.publicPrice?.amountMinor ?? 0));
+    const match = matches[0] ?? null;
     if (match) {
       used.add(match.id);
     }
-    return match ?? null;
+    return match;
   }
 
   const firstMechanical = take((watch) => {

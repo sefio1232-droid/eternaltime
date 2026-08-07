@@ -4,9 +4,8 @@ import * as XLSX from "xlsx";
 import { describe, expect, it } from "vitest";
 import {
   buildColumnIndex,
-  mapCasioSpecifications,
-  mapOrientSpecifications,
-  processSiteImportWorkbook,
+  mapCombinedSpecifications,
+  processSeoFinalWorkbook,
 } from "@/modules/catalog/cli/catalog-site-import-overlay-manifest";
 import { catalogReadDatasetFromPreview, groupSiteImportOverlayByReference } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import type { CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
@@ -14,12 +13,12 @@ import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/da
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
 
 /**
- * Catalog site-import overlay (specifications + SEO copy sourced from the user-supplied
- * `incoming/*_catalog_site_import_*.xlsx` workbooks): exact-reference-matching-only manifest
- * building, brand-scoped lookup, specification-merge priority, and the "SEO stays out of
- * CatalogWatchDetail entirely" contract. Real-data checks load the actual generated manifest (when
- * present locally) and the real production preview/image-plan files; everything else uses small
- * synthetic fixtures for speed and determinism.
+ * Catalog site-import overlay v2 ("seo_final" batch — docs/CATALOG_SHOWROOM_RECOVERY.md
+ * "Site-import overlay v2"): one sheet per brand (Casio/Orient/Tissot), one combined
+ * "Label: value | Label: value | ..." specifications cell per row, exact-reference-matching-only
+ * manifest building, brand-scoped lookup, and the "SEO stays out of CatalogWatchDetail entirely"
+ * contract. Real-data checks load the actual generated manifest (when present locally) and the
+ * real production preview/image-plan files; everything else uses small synthetic fixtures.
  */
 
 const projectRoot = path.resolve(__dirname, "..");
@@ -29,14 +28,12 @@ function readSrc(relativePath: string): string {
 }
 
 function buildSheet(header: string[], rows: unknown[][]): unknown[][] {
-  return [["title row"], ["note row"], header, ...rows];
+  return [header, ...rows];
 }
 
-function buildWorkbook(sheets: Record<string, unknown[][]>): XLSX.WorkBook {
+function buildWorkbook(sheetName: string, rows: unknown[][]): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
-  for (const [name, rows] of Object.entries(sheets)) {
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), name);
-  }
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), sheetName);
   return workbook;
 }
 
@@ -48,7 +45,7 @@ function realOverlayManifest(): CatalogSiteImportOverlayManifest | null {
   }
 }
 
-describe("catalog site-import overlay (specifications + SEO)", () => {
+describe("catalog site-import overlay v2 (specifications + SEO)", () => {
   describe("column mapping", () => {
     it("1. buildColumnIndex maps header names to their column position, ignoring blank cells", () => {
       const index = buildColumnIndex(["№", "Артикул", "", "Стекло"]);
@@ -56,70 +53,64 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
       expect(index.get("Стекло")).toBe(3);
       expect(index.has("")).toBe(false);
     });
+  });
 
-    it("2. mapCasioSpecifications never maps the redundant individual L/W/T columns once 'Размер корпуса' already combines them", () => {
-      const header = ["Артикул", "Размер корпуса", "Длина корпуса, мм", "Ширина корпуса, мм", "Толщина корпуса, мм"];
-      const col = buildColumnIndex(header);
-      const specs = mapCasioSpecifications(["GA-700SK-1ADR", "57,5 × 53,4 × 18,4 мм", 57.5, 53.4, 18.4], col);
-      expect(specs.case_dimensions_raw).toBe("57,5 × 53,4 × 18,4 мм");
-      expect(Object.keys(specs)).not.toContain("case_length_raw");
-      expect(Object.keys(specs)).not.toContain("case_width_raw");
-      expect(Object.keys(specs)).not.toContain("case_thickness_raw");
+  describe("mapCombinedSpecifications — the pipe-delimited 'Характеристики' cell", () => {
+    it("2. splits 'Label: value | Label: value' into the shared canonical specification keys", () => {
+      const specs = mapCombinedSpecifications("Диаметр корпуса: 41.5 мм | Материал корпуса: Нержавеющая сталь | Стекло: минеральное стекло");
+      expect(specs.case_diameter_raw).toBe("41.5 мм");
+      expect(specs.case_material_raw).toBe("Нержавеющая сталь");
+      expect(specs.crystal_type_raw).toBe("минеральное стекло");
     });
 
-    it("3. mapCasioSpecifications formats sparse numeric columns (diameter, weight, strap width) with units", () => {
-      const header = ["Диаметр корпуса, мм", "Вес, г", "Ширина ремешка, мм"];
-      const col = buildColumnIndex(header);
-      const specs = mapCasioSpecifications([38.5, 52, 20], col);
-      expect(specs.case_diameter_raw).toBe("38,5 мм");
-      expect(specs.weight_raw).toBe("52 г");
-      expect(specs.strap_width_raw).toBe("20 мм");
+    it("3. label matching is case-insensitive and tolerant of the same field spelled differently across rows", () => {
+      expect(mapCombinedSpecifications("механизм: Автоматический").movement_raw).toBe("Автоматический");
+      expect(mapCombinedSpecifications("Механизм: Автоматический").movement_raw).toBe("Автоматический");
+      expect(mapCombinedSpecifications("Ремешок/браслет: Кожа").attachment_material_raw).toBe("Кожа");
+      expect(mapCombinedSpecifications("Ремешок / Браслет: Кожа").attachment_material_raw).toBe("Кожа");
     });
 
-    it("4. mapCasioSpecifications combines battery type + life into a single power_source_raw value, and skips it entirely when both are blank", () => {
-      const header = ["Тип батарейки", "Срок службы батареи"];
-      const col = buildColumnIndex(header);
-      expect(mapCasioSpecifications(["CR2016", "Около 5 лет"], col).power_source_raw).toBe("CR2016, Около 5 лет");
-      expect(mapCasioSpecifications(["", ""], col).power_source_raw).toBeUndefined();
+    it("4. an unrecognized label is skipped, never guessed at, and reported via onUnknownLabel", () => {
+      const unknown: string[] = [];
+      const specs = mapCombinedSpecifications("Совершенно новое поле: значение | Стекло: сапфировое", (label) => unknown.push(label));
+      expect(specs.crystal_type_raw).toBe("сапфировое");
+      expect(Object.keys(specs)).not.toContain("совершенно новое поле");
+      expect(unknown).toContain("Совершенно новое поле");
     });
 
-    it("5. mapOrientSpecifications only produces a combined case_dimensions_raw when width, height AND thickness are all present", () => {
-      const header = ["Ширина корпуса, мм", "Высота корпуса, мм", "Толщина корпуса, мм"];
-      const col = buildColumnIndex(header);
-      expect(mapOrientSpecifications([41.5, 47, 13], col).case_dimensions_raw).toBe("41,5 × 47 × 13 мм");
-      expect(mapOrientSpecifications([41.5, 47, ""], col).case_dimensions_raw).toBeUndefined();
+    it("5. two labels that map to the same canonical key combine their values rather than one overwriting the other", () => {
+      const specs = mapCombinedSpecifications("Тип батарейки: CR2016 | Срок службы батареи: около 5 лет");
+      expect(specs.power_source_raw).toBe("CR2016, около 5 лет");
     });
 
-    it("6. mapOrientSpecifications maps mechanism/case/strap/functional columns onto the shared specification keys", () => {
-      const header = [
-        "Тип механизма",
-        "Калибр",
-        "Количество камней",
-        "Застежка",
-        "Заводная головка",
-        "Безель",
-        "Люминесценция",
-      ];
-      const col = buildColumnIndex(header);
-      const specs = mapOrientSpecifications(
-        ["Механический с автоподзаводом", "F6922", 22, "Раскладывающаяся застежка", "Завинчивающаяся головка", "Однонаправленный безель", "Люминесцентные метки"],
-        col,
+    it("6. an empty value for a recognized label contributes nothing (never an empty-string specification)", () => {
+      const specs = mapCombinedSpecifications("Стекло:  | Механизм: Автоматический");
+      expect(specs.crystal_type_raw).toBeUndefined();
+      expect(specs.movement_raw).toBe("Автоматический");
+    });
+
+    it("7. genuinely new fields from this batch (gemstones, dial markers, strap color/coating/features, certification, thickness) map onto real canonical keys, never invented text", () => {
+      const specs = mapCombinedSpecifications(
+        "Толщина корпуса: 13 мм | Индексы: римские цифры | Драгоценные камни: тип — бриллианты | Цвет ремешка/браслета: синий | Покрытие браслета: PVD | Особенности браслета: быстросъёмный | Сертификация: COSC",
       );
-      expect(specs.movement_type_raw).toBe("Механический с автоподзаводом");
-      expect(specs.caliber_raw).toBe("F6922");
-      expect(specs.jewel_count_raw).toBe("22");
-      expect(specs.clasp_raw).toBe("Раскладывающаяся застежка");
-      expect(specs.crown_raw).toBe("Завинчивающаяся головка");
-      expect(specs.bezel_raw).toBe("Однонаправленный безель");
-      expect(specs.luminescence_raw).toBe("Люминесцентные метки");
+      expect(specs.case_thickness_raw).toBe("13 мм");
+      expect(specs.dial_markers_raw).toBe("римские цифры");
+      expect(specs.gemstones_raw).toBe("тип — бриллианты");
+      expect(specs.strap_color_raw).toBe("синий");
+      expect(specs.strap_coating_raw).toBe("PVD");
+      expect(specs.strap_features_raw).toBe("быстросъёмный");
+      expect(specs.certification_raw).toBe("COSC");
     });
 
-    it("7. neither mapper ever produces a price/inventory-shaped specification key", () => {
-      const header = ["Цена ¥", "Цена ₽", "Цена в России", "Кол-во фото", "Артикул"];
-      const col = buildColumnIndex(header);
-      const casioKeys = Object.keys(mapCasioSpecifications([629, 7548, 16300, 4, "GA-700SK-1ADR"], col));
-      const orientKeys = Object.keys(mapOrientSpecifications([629, 7548, 16300, 4, "FAA02002D9"], col));
-      for (const key of [...casioKeys, ...orientKeys]) {
+    it("8. 'Модель' and 'Серия' are deliberately never mapped — both duplicate data the main catalog import already provides", () => {
+      const unknown: string[] = [];
+      mapCombinedSpecifications("Модель: Casio GA-700 | Серия: G-Shock", (label) => unknown.push(label));
+      expect(unknown).toEqual(["Модель", "Серия"]);
+    });
+
+    it("9. never produces a price/inventory-shaped specification key", () => {
+      const keys = Object.keys(mapCombinedSpecifications("Цена ¥: 629 | Цена ₽: 7548 | Стекло: минеральное"));
+      for (const key of keys) {
         expect(key).not.toMatch(/price|цена/i);
       }
     });
@@ -130,86 +121,63 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
       ["GA700SK1ADR", { referenceDisplay: "GA-700SK-1ADR", referenceNormalized: "GA700SK1ADR", brandSlug: "casio" }],
     ]);
 
-    it("8. a row whose Артикул matches an existing catalog reference produces one merged entry with specs + SEO", () => {
-      const workbook = buildWorkbook({
-        "Характеристики": buildSheet(["Артикул", "Стекло"], [["GA-700SK-1ADR", "минеральное"]]),
-        "Импорт_на_сайт": buildSheet(
-          ["Артикул", "SEO Title", "Meta Description", "Короткое описание", "Подробное SEO-описание"],
-          [["GA-700SK-1ADR", "SEO Title", "Meta desc", "Short", "Long"]],
+    it("10. a row whose Артикул matches an existing catalog reference produces one entry with specs + description", () => {
+      const workbook = buildWorkbook(
+        "Casio",
+        buildSheet(
+          ["Артикул", "Название для сайта", "SEO-описание", "Характеристики"],
+          [["GA-700SK-1ADR", "Casio GA-700SK-1ADR", "Описание модели.", "Стекло: минеральное"]],
         ),
-      });
-      const { entries, unmatched } = processSiteImportWorkbook({
+      );
+      const { entries, unmatched } = processSeoFinalWorkbook({
         sourceFile: "test.xlsx",
         workbook,
+        sheetName: "Casio",
         catalogByNormalized,
-        mapSpecifications: mapCasioSpecifications,
       });
       expect(unmatched).toHaveLength(0);
       const entry = entries.get("GA700SK1ADR");
       expect(entry?.specifications.crystal_type_raw).toBe("минеральное");
-      expect(entry?.seoTitle).toBe("SEO Title");
-      expect(entry?.longDescription).toBe("Long");
+      expect(entry?.longDescription).toBe("Описание модели.");
+      expect(entry?.metaDescription).toBe("Описание модели.");
     });
 
-    it("9. a row whose Артикул does not exactly equal any catalog reference is recorded as unmatched, never guessed at", () => {
-      const workbook = buildWorkbook({
-        "Характеристики": buildSheet(["Артикул", "Стекло"], [["GA-700SK-1A", "минеральное"]]),
-        "Импорт_на_сайт": buildSheet(["Артикул"], [[""]]),
-      });
-      const { entries, unmatched } = processSiteImportWorkbook({
+    it("11. a row whose Артикул does not exactly equal any catalog reference is recorded as unmatched, never guessed at", () => {
+      const workbook = buildWorkbook(
+        "Casio",
+        buildSheet(["Артикул", "Характеристики"], [["GA-700SK-1A", "Стекло: минеральное"]]),
+      );
+      const { entries, unmatched } = processSeoFinalWorkbook({
         sourceFile: "test.xlsx",
         workbook,
+        sheetName: "Casio",
         catalogByNormalized,
-        mapSpecifications: mapCasioSpecifications,
       });
       expect(entries.size).toBe(0);
       expect(unmatched.map((u) => u.referenceRaw)).toContain("GA-700SK-1A");
       expect(unmatched[0]?.reason).toBe("unmatched");
     });
 
-    it("10. matching is brand-scoped: a reference only present in the Orient catalog map never matches through the Casio map", () => {
+    it("12. matching is brand-scoped: a reference only present in the Orient catalog map never matches through the Casio map", () => {
       const orientOnly = new Map([["GA700SK1ADR", { referenceDisplay: "GA-700SK-1ADR", referenceNormalized: "GA700SK1ADR", brandSlug: "orient" }]]);
-      const workbook = buildWorkbook({
-        "Характеристики": buildSheet(["Артикул"], [["GA-700SK-1ADR"]]),
-        "Импорт_на_сайт": buildSheet(["Артикул"], [[""]]),
-      });
-      const { entries } = processSiteImportWorkbook({
+      const workbook = buildWorkbook("Casio", buildSheet(["Артикул"], [["GA-700SK-1ADR"]]));
+      const { entries } = processSeoFinalWorkbook({
         sourceFile: "test.xlsx",
         workbook,
+        sheetName: "Casio",
         catalogByNormalized: orientOnly,
-        mapSpecifications: mapCasioSpecifications,
       });
       const entry = entries.get("GA700SK1ADR");
       expect(entry?.brandSlug).toBe("orient");
     });
 
-    it("11. rows in Характеристики and Импорт_на_сайт for the same reference are merged into a single entry, not two", () => {
-      const workbook = buildWorkbook({
-        "Характеристики": buildSheet(["Артикул", "Стекло"], [["GA-700SK-1ADR", "минеральное"]]),
-        "Импорт_на_сайт": buildSheet(["Артикул", "SEO Title"], [["GA-700SK-1ADR", "Title"]]),
-      });
-      const { entries } = processSiteImportWorkbook({
+    it("13. an empty Артикул cell is skipped entirely, never treated as an unmatched row", () => {
+      const workbook = buildWorkbook("Casio", buildSheet(["Артикул", "Характеристики"], [["", "Стекло: минеральное"]]));
+      const { entries, unmatched } = processSeoFinalWorkbook({
         sourceFile: "test.xlsx",
         workbook,
+        sheetName: "Casio",
         catalogByNormalized,
-        mapSpecifications: mapCasioSpecifications,
-      });
-      expect(entries.size).toBe(1);
-      const entry = entries.get("GA700SK1ADR");
-      expect(entry?.specifications.crystal_type_raw).toBe("минеральное");
-      expect(entry?.seoTitle).toBe("Title");
-    });
-
-    it("12. an empty Артикул cell is skipped entirely, never treated as an unmatched row", () => {
-      const workbook = buildWorkbook({
-        "Характеристики": buildSheet(["Артикул", "Стекло"], [["", "минеральное"]]),
-        "Импорт_на_сайт": buildSheet(["Артикул"], [[""]]),
-      });
-      const { entries, unmatched } = processSiteImportWorkbook({
-        sourceFile: "test.xlsx",
-        workbook,
-        catalogByNormalized,
-        mapSpecifications: mapCasioSpecifications,
       });
       expect(entries.size).toBe(0);
       expect(unmatched).toHaveLength(0);
@@ -217,7 +185,7 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
   });
 
   describe("preview-catalog-adapter wiring — specs merge, SEO stays out of CatalogWatchDetail", () => {
-    it("13. groupSiteImportOverlayByReference keys entries by brand-scoped normalized reference", () => {
+    it("14. groupSiteImportOverlayByReference keys entries by brand-scoped normalized reference", () => {
       const manifest: CatalogSiteImportOverlayManifest = {
         generatedAt: new Date().toISOString(),
         sourceFiles: ["a.xlsx"],
@@ -227,21 +195,21 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
             referenceNormalized: "GA700SK1ADR",
             brandSlug: "casio",
             specifications: { crystal_type_raw: "минеральное" },
-            seoTitle: "T",
-            metaDescription: null,
+            seoTitle: null,
+            metaDescription: "M",
             shortDescription: null,
-            longDescription: null,
+            longDescription: "L",
           },
         ],
         unmatchedRows: [],
       };
       const grouped = groupSiteImportOverlayByReference(manifest);
-      expect(grouped.get("casio:GA700SK1ADR")?.seoTitle).toBe("T");
+      expect(grouped.get("casio:GA700SK1ADR")?.longDescription).toBe("L");
       expect(grouped.get("orient:GA700SK1ADR")).toBeUndefined();
       expect(groupSiteImportOverlayByReference(null).size).toBe(0);
     });
 
-    it("14. an overlay specification value takes priority over the raw import's own value for the same key", () => {
+    it("15. an overlay specification value takes priority over the raw import's own value for the same key", () => {
       const preview = JSON.parse(readFileSync(path.join(projectRoot, "imports/generated/catalog-import-preview.json"), "utf8")) as CatalogImportPreview;
       const imagePlan = JSON.parse(
         readFileSync(path.join(projectRoot, "imports/generated/catalog-image-upload-plan.json"), "utf8"),
@@ -274,7 +242,7 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
       expect(overriddenWatch?.specifications.find((s) => s.key === key)?.value).toBe("ПЕРЕОПРЕДЕЛЕНО-ТЕСТ");
     });
 
-    it("15. an absent siteImportOverlay never changes the dataset (fully backward compatible)", () => {
+    it("16. an absent siteImportOverlay never changes the dataset (fully backward compatible)", () => {
       const preview = JSON.parse(readFileSync(path.join(projectRoot, "imports/generated/catalog-import-preview.json"), "utf8")) as CatalogImportPreview;
       const imagePlan = JSON.parse(
         readFileSync(path.join(projectRoot, "imports/generated/catalog-image-upload-plan.json"), "utf8"),
@@ -285,7 +253,7 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
       expect(withoutOverlayArg.watches.map((w) => w.id)).toEqual(withNullOverlay.watches.map((w) => w.id));
     });
 
-    it("16. the overlay never changes publicPrice — price/inventory stays sourced from catalog_offers only", () => {
+    it("17. the overlay never changes publicPrice — price/inventory stays sourced from catalog_offers only", () => {
       const manifest = realOverlayManifest();
       if (!manifest) return;
       const preview = JSON.parse(readFileSync(path.join(projectRoot, "imports/generated/catalog-import-preview.json"), "utf8")) as CatalogImportPreview;
@@ -300,7 +268,7 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
       }
     });
 
-    it("17. the overlay never removes a specification the raw import already had — enrichment only, never regression", () => {
+    it("18. the overlay never removes a specification the raw import already had — enrichment only, never regression", () => {
       const manifest = realOverlayManifest();
       if (!manifest) return;
       const preview = JSON.parse(readFileSync(path.join(projectRoot, "imports/generated/catalog-import-preview.json"), "utf8")) as CatalogImportPreview;
@@ -315,7 +283,7 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
       }
     });
 
-    it("18. CatalogWatchCard/CatalogWatchDetail never gain an seo/description field — SEO stays entirely out of the read-model contract", () => {
+    it("19. CatalogWatchCard/CatalogWatchDetail never gain an seo/description field — SEO stays entirely out of the read-model contract", () => {
       const readModelsSource = readSrc("src/modules/catalog/domain/read-models.ts");
       const cardTypeMatch = /export type CatalogWatchCard = \{[\s\S]*?\n\};/.exec(readModelsSource);
       const detailTypeMatch = /export type CatalogWatchDetail = CatalogWatchCard & \{[\s\S]*?\n\};/.exec(readModelsSource);
@@ -327,42 +295,60 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
   });
 
   describe("manifest builder script — exact matching only, real-data checks", () => {
-    it("19. the manifest script never does fuzzy/similarity/closest-match matching", () => {
+    it("20. the manifest script never does fuzzy/similarity/closest-match matching", () => {
       const script = readSrc("src/modules/catalog/cli/catalog-site-import-overlay-manifest.ts");
       expect(script).toContain("EXACT");
       expect(script).toContain("unmatched");
       expect(script).not.toMatch(/fuzzy|closest|levenshtein/i);
     });
 
-    it("20. the manifest script never reads a price/inventory column from the workbook", () => {
+    it("21. the manifest script never reads a price/inventory column from the workbook", () => {
       const script = readSrc("src/modules/catalog/cli/catalog-site-import-overlay-manifest.ts");
       expect(script).not.toMatch(/Цена|Разница|Ссылка поставщика/);
     });
 
-    it("21. the real generated manifest (when present locally) matches Casio 100% and reports the same single genuinely-absent Orient reference as the photo archive", () => {
+    it("22. all three brands (Casio, Orient, Tissot) are wired into the manifest builder", () => {
+      const script = readSrc("src/modules/catalog/cli/catalog-site-import-overlay-manifest.ts");
+      expect(script).toContain('brandSlug: "casio"');
+      expect(script).toContain('brandSlug: "orient"');
+      expect(script).toContain('brandSlug: "tissot"');
+    });
+
+    it("23. the real generated manifest (when present locally) matches every Casio row and every Tissot row, and reports only the known Orient Star manual-review references as unmatched", () => {
       const manifest = realOverlayManifest();
       if (!manifest) return;
       const casioUnmatched = manifest.unmatchedRows.filter((row) => row.sourceFile.includes("casio"));
+      const tissotUnmatched = manifest.unmatchedRows.filter((row) => row.sourceFile.includes("tissot"));
       expect(casioUnmatched).toHaveLength(0);
+      expect(tissotUnmatched).toHaveLength(0);
       const orientUnmatchedRefs = new Set(manifest.unmatchedRows.filter((row) => row.sourceFile.includes("orient")).map((row) => row.referenceRaw));
-      expect([...orientUnmatchedRefs]).toEqual(["RE-AU0306L00B"]);
+      for (const ref of orientUnmatchedRefs) {
+        expect(ref).toMatch(/^RE-/);
+      }
     });
 
-    it("22. every real overlay entry is either casio or orient, and every specification value is a non-empty string", () => {
+    it("24. every real overlay entry belongs to one of the three integrated brands, and every specification value is a non-empty string", () => {
       const manifest = realOverlayManifest();
       if (!manifest) return;
       for (const entry of manifest.entries) {
-        expect(["casio", "orient"]).toContain(entry.brandSlug);
+        expect(["casio", "orient", "tissot"]).toContain(entry.brandSlug);
         for (const value of Object.values(entry.specifications)) {
           expect(typeof value).toBe("string");
           expect(value.trim().length).toBeGreaterThan(0);
         }
       }
     });
+
+    it("25. the real manifest includes Tissot entries (the first brand to get this overlay)", () => {
+      const manifest = realOverlayManifest();
+      if (!manifest) return;
+      const tissotEntries = manifest.entries.filter((entry) => entry.brandSlug === "tissot");
+      expect(tissotEntries.length).toBeGreaterThan(0);
+    });
   });
 
   describe("SEO overlay contract — never part of CatalogWatchDetail, always optional", () => {
-    it("23. groupSiteImportOverlayByReference exposes SEO fields independently of specifications", () => {
+    it("26. groupSiteImportOverlayByReference exposes SEO fields independently of specifications", () => {
       const manifest: CatalogSiteImportOverlayManifest = {
         generatedAt: new Date().toISOString(),
         sourceFiles: ["a.xlsx"],
@@ -372,22 +358,20 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
             referenceNormalized: "GA700SK1ADR",
             brandSlug: "casio",
             specifications: {},
-            seoTitle: "Title",
+            seoTitle: null,
             metaDescription: "Meta",
-            shortDescription: "Short",
+            shortDescription: null,
             longDescription: "Long",
           },
         ],
         unmatchedRows: [],
       };
       const entry = groupSiteImportOverlayByReference(manifest).get("casio:GA700SK1ADR");
-      expect(entry?.seoTitle).toBe("Title");
       expect(entry?.metaDescription).toBe("Meta");
-      expect(entry?.shortDescription).toBe("Short");
       expect(entry?.longDescription).toBe("Long");
     });
 
-    it("24. a reference absent from the overlay has no entry — callers must fall back, never receive fabricated SEO text", () => {
+    it("27. a reference absent from the overlay has no entry — callers must fall back, never receive fabricated SEO text", () => {
       const grouped = groupSiteImportOverlayByReference({
         generatedAt: new Date().toISOString(),
         sourceFiles: [],
@@ -399,7 +383,7 @@ describe("catalog site-import overlay (specifications + SEO)", () => {
   });
 
   describe("determinism", () => {
-    it("25. building the real dataset with the real overlay manifest twice produces identical watch ordering", () => {
+    it("28. building the real dataset with the real overlay manifest twice produces identical watch ordering", () => {
       const manifest = realOverlayManifest();
       const preview = JSON.parse(readFileSync(path.join(projectRoot, "imports/generated/catalog-import-preview.json"), "utf8")) as CatalogImportPreview;
       const imagePlan = JSON.parse(

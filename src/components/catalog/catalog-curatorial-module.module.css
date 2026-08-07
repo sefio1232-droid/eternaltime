@@ -22,11 +22,13 @@
   }
 }
 
+/* Pure white, matching the source photos' own studio-white background — see
+ * catalog-hero.module.css "White background fix". */
 .stage {
   position: relative;
   display: grid;
   min-height: 260px;
-  background: radial-gradient(70% 85% at 50% 42%, rgba(255, 255, 255, 0.92), rgba(238, 236, 230, 0.4) 65%, transparent 100%);
+  background: #ffffff;
 }
 
 @media (min-width: 900px) {
@@ -48,8 +50,8 @@
 }
 
 .stageImage :global(img) {
-  max-height: 78%;
-  max-width: 62%;
+  max-height: 88%;
+  max-width: 74%;
 }
 
 .stageImageActive {

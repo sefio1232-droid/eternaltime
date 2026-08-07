@@ -7,7 +7,6 @@ import {
   CatalogReadSourceError,
   getPublicCatalogBrand,
   getPublicCatalogCuratorialPaths,
-  getPublicCatalogHeroWatches,
   listPublicCatalogWatches,
 } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { getCatalogReviewSanitationEntries } from "@/modules/catalog/infrastructure/catalog-review-dev-data.server";
@@ -56,10 +55,9 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
   const resultState = await Promise.all([
     getPublicCatalogBrand(brandSlug),
     listPublicCatalogWatches(query),
-    getPublicCatalogHeroWatches({ brandSlug }),
     getPublicCatalogCuratorialPaths(),
   ])
-    .then(([brand, result, heroWatches, curatorialPaths]) => ({ type: "ok" as const, brand, result, heroWatches, curatorialPaths }))
+    .then(([brand, result, curatorialPaths]) => ({ type: "ok" as const, brand, result, curatorialPaths }))
     .catch((error: unknown) => {
       if (error instanceof CatalogReadSourceError) {
         return { type: "source_error" as const };
@@ -90,7 +88,6 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
       title={`Часы ${resultState.brand.name}`}
       description={`Модели ${resultState.brand.name} в Eternal Time: от повседневных кварцевых часов до механики и спортивных инструментов.`}
       includeBrandFilter={false}
-      heroWatches={resultState.heroWatches}
       curatorialPaths={resultState.curatorialPaths}
       reviewMode={reviewMode}
       sanitationEntries={sanitationEntries}
