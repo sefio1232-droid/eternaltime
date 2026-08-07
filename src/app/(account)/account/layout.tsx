@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { accountNavigation } from "@/config/navigation";
-import { AccessRequiredState, ProtectedShell } from "@/components/shell/protected-shell";
-import { requireAuthenticatedUser } from "@/modules/auth/authorization";
+import { AccountShell } from "@/components/account/account-shell";
 
 export const metadata: Metadata = {
   robots: {
@@ -10,25 +8,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function AccountLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const access = await requireAuthenticatedUser();
-
-  if (!access.allowed) {
-    return (
-      <AccessRequiredState
-        title="Личный кабинет защищен"
-        description="Войдите, чтобы открыть персональные разделы Eternal Time."
-      />
-    );
-  }
-
-  return (
-    <ProtectedShell
-      title="Личный кабинет"
-      description="Персональная зона Eternal Time для заказов, избранного, сравнений и личной коллекции."
-      navigation={accountNavigation}
-    >
-      {children}
-    </ProtectedShell>
-  );
+export default function AccountLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <AccountShell>{children}</AccountShell>;
 }

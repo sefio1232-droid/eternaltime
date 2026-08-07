@@ -92,6 +92,8 @@ Use Client Components for:
 
 Client Components should receive already-authorized data or call server actions/routes that enforce authorization.
 
+The current comparison foundation is a bounded guest-side exception: typed local state stores only public Manufacturer Reference identity and compact display snapshots, while the `/compare` Server Component resolves all factual specifications again through the server-only Catalog Read Repository. Browser state never becomes a second source of catalog facts.
+
 ## Domain Layer
 
 The domain layer defines business concepts and rules:

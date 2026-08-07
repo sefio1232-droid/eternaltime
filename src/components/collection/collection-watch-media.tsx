@@ -1,33 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CollectionWatchMediaPresentation } from "@/modules/user-watch-collection/application/local-collection-presentation";
 
 export type { CollectionWatchMediaPresentation };
 
 export function CollectionWatchMedia({
   imageUrl,
+  imageCandidates = [],
   alt,
   className = "",
-  presentation = imageUrl ? "analog-bracelet" : "missing-image",
+  presentation = "standard",
 }: Readonly<{
   imageUrl: string | null;
+  imageCandidates?: string[];
   alt: string;
   className?: string;
   presentation?: CollectionWatchMediaPresentation;
 }>) {
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
-  const hasImage = imageUrl !== null && failedImageUrl !== imageUrl;
+  const [failedImageUrls, setFailedImageUrls] = useState<ReadonlySet<string>>(() => new Set());
+  const imageRef = useRef<HTMLImageElement>(null);
+  const sources = [imageUrl, ...imageCandidates]
+    .filter((source): source is string => Boolean(source))
+    .filter((source, index, values) => values.indexOf(source) === index);
+  const currentSource = sources.find((source) => !failedImageUrls.has(source)) ?? null;
+
+  useEffect(() => {
+    const image = imageRef.current;
+    if (!currentSource || !image?.complete || image.naturalWidth > 0) return;
+    const frame = window.requestAnimationFrame(() => {
+      setFailedImageUrls((current) => new Set(current).add(currentSource));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [currentSource]);
 
   return (
     <div className={`collection-watch-media ${className}`} data-presentation={presentation}>
-      {hasImage ? (
+      {currentSource ? (
         // eslint-disable-next-line @next/next/no-img-element -- private signed URLs and public storage URLs are runtime sources.
         <img
-          src={imageUrl}
+          ref={imageRef}
+          src={currentSource}
           alt={alt}
-          className="h-full w-full object-contain"
-          onError={() => setFailedImageUrl(imageUrl)}
+          onError={() => setFailedImageUrls((current) => new Set(current).add(currentSource))}
         />
       ) : (
         <span className="media-placeholder-watch" role="img" aria-label="Изображение часов не добавлено">

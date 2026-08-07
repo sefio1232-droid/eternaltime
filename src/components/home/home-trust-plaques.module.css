@@ -1,0 +1,75 @@
+.section {
+  border-bottom: 1px solid rgb(13 18 21 / 12%);
+  background: #f7f5ef;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  min-height: clamp(17rem, 20vw, 20rem);
+  padding-block: 1.25rem;
+  background: rgb(13 18 21 / 13%);
+}
+
+.plaque {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto 1fr auto;
+  column-gap: 1.5rem;
+  min-width: 0;
+  padding: clamp(1.45rem, 2vw, 1.9rem);
+  background: #fbfaf7;
+}
+
+.plaque:nth-child(2) { background: #e8e3d9; }
+
+.topline {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgb(13 18 21 / 16%);
+  color: #7f6131;
+  font-family: var(--font-reference);
+  font-size: 0.61rem;
+  letter-spacing: 0.09em;
+}
+
+.plaque h2 {
+  grid-column: 1 / -1;
+  max-width: 17ch;
+  margin-top: 0.9rem;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: clamp(1.9rem, 2.25vw, 2.45rem);
+  font-weight: 470;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.copy {
+  max-width: 43rem;
+  margin-top: 0.75rem;
+  color: rgb(13 18 21 / 66%);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.plaque > a {
+  align-self: end;
+  margin-top: 0.9rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid currentColor;
+  color: #6f5326;
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+  .grid { grid-template-columns: 1fr; padding-block: 1.5rem; }
+  .plaque { min-height: 17rem; padding: 1.7rem 1.4rem; }
+  .plaque h2 { font-size: clamp(2.1rem, 10vw, 2.75rem); }
+}

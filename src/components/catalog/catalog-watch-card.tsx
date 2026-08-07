@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import { CatalogMissingImage } from "@/components/catalog/catalog-missing-image";
+import { CompareToggle } from "@/components/comparison/compare-toggle";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
 import {
   classifyCatalogCardPresentation,
@@ -57,6 +58,17 @@ export function CatalogWatchCardView({
           </span>
         </div>
       </Link>
+      <CompareToggle
+        item={{
+          identity: `${watch.brandSlug}:${watch.referenceSlug}`,
+          brandName: watch.brandName,
+          brandSlug: watch.brandSlug,
+          displayName: modelHeading,
+          referenceDisplay: watch.referenceDisplay,
+          referenceSlug: watch.referenceSlug,
+          canonicalHref: watch.href,
+        }}
+      />
     </article>
   );
 }

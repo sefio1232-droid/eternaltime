@@ -13,12 +13,14 @@ export type CollectionWatchStageVariant =
 
 export function CollectionWatchStage({
   imageUrl,
+  imageCandidates,
   alt,
   presentation,
   variant,
   className = "",
 }: Readonly<{
   imageUrl: string | null;
+  imageCandidates?: string[];
   alt: string;
   presentation?: CollectionWatchMediaPresentation;
   variant: CollectionWatchStageVariant;
@@ -26,7 +28,7 @@ export function CollectionWatchStage({
 }>) {
   return (
     <div className={`${styles.watchStageSurface} ${className}`} data-watch-stage={variant}>
-      <CollectionWatchMedia imageUrl={imageUrl} alt={alt} presentation={presentation} />
+      <CollectionWatchMedia imageUrl={imageUrl} imageCandidates={imageCandidates} alt={alt} presentation={presentation} />
     </div>
   );
 }

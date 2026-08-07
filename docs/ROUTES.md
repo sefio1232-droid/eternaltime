@@ -79,6 +79,17 @@ Guest comparisons can be session-scoped. Saved comparisons are user-owned.
 
 Compare is normally entered from Watch Detail or the Candidate workspace. It does not require a permanent primary-navigation item.
 
+Current local comparison behavior:
+
+- `/compare?refs={brandSlug}:{referenceSlug},...` restores 1-4 exact references from the Catalog Read Repository;
+- the actionable comparison state is versioned in browser local storage and is also represented by the shareable query;
+- Catalog cards and Watch Detail expose isolated add/remove entry points, while the shared public shell mounts the compare tray;
+- 2-4 models form the intended analytical state; one model is retained as an honest preparation state;
+- identical rows can be collapsed, differences are emphasized, and absent values render as `Нет данных`;
+- development-only image candidates that cannot be served are rendered as an explicit neutral image fallback;
+- the route is noindex and is intentionally excluded from sitemap generation;
+- no database, auth, Candidate, Cart, or Catalog data architecture is changed by this local foundation.
+
 ## Candidate Routes
 
 ```text

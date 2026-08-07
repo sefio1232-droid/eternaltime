@@ -842,6 +842,44 @@
     linear-gradient(180deg, var(--home-paper-light), var(--home-paper));
 }
 
+/* Typographic Journal covers: source articles have no approved photography. */
+.journalLeadVisual,
+.journalStoryVisual {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  cursor: default;
+}
+
+.journalLeadVisual::before,
+.journalStoryVisual::before {
+  position: absolute;
+  right: -22%;
+  bottom: -14%;
+  z-index: -1;
+  width: 85%;
+  aspect-ratio: 1;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 999px;
+  content: "";
+}
+
+.journalLeadVisual > span,
+.journalStoryVisual > span {
+  align-self: end;
+  color: rgb(255 255 255 / 82%);
+  font-family: var(--font-reference);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.journalLeadVisual:hover,
+.journalStoryVisual:hover {
+  transform: none;
+}
+
 .selection::before,
 .comparisonPurchase::before,
 .journalFinal::before {
@@ -6306,4 +6344,17 @@
     width: 100%;
     grid-row: 3;
   }
+}
+
+/* Final source-safe override after legacy Journal layers. */
+.journalLeadVisual:hover,
+.journalStoryVisual:hover {
+  transform: none;
+}
+
+.journalLeadVisual > span,
+.journalStoryVisual > span {
+  display: block;
+  color: rgb(255 255 255 / 82%);
+  opacity: 1;
 }

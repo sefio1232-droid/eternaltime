@@ -1040,7 +1040,11 @@ export function HomeProductHero({
       >
         <div className={styles.leftMessage} data-home-hero-left-message>
           <p className={styles.eyebrow} data-home-copy-role="eyebrow">Ваше время. Ваш стиль.</p>
-          <h1 className={`${styles.permanentHeadline} text-balance`} data-home-copy-role="heading">
+          <h1
+            className={`${styles.permanentHeadline} text-balance`}
+            data-home-copy-role="heading"
+            aria-label="Часы, которые подходят именно вам"
+          >
             <span>Часы,</span>
             <span>которые</span>
             <span>подходят</span>

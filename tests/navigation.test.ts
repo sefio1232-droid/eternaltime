@@ -30,7 +30,6 @@ describe("foundation navigation", () => {
       "/watches",
       "/selection",
       "/journal",
-      "/brands",
     ]);
     expect(utilityNavigation.map((item) => item.href)).toEqual(["/collection", "/account"]);
   });

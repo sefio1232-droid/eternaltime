@@ -77,11 +77,13 @@ describe("approved visual direction", () => {
   it("uses the Catalog Read Repository boundary on public data surfaces", () => {
     const home = file("src/app/(public)/page.tsx");
     const journal = file("src/app/(public)/journal/page.tsx");
+    const article = file("src/app/(public)/journal/[slug]/page.tsx");
 
     expect(home).toContain("getCatalogReadDataset");
-    expect(journal).toContain("getCatalogReadDataset");
     expect(home).not.toContain("catalog-import-preview");
     expect(journal).not.toContain("catalog-import-preview");
+    expect(article).not.toContain("catalog-import-preview");
+    expect(article).not.toContain("relatedWatchReferences.map");
   });
 
   it("keeps catalog filters/search/sort/pagination while adding the premium selection layout, with no permanent sidebar", () => {
@@ -128,6 +130,8 @@ describe("approved visual direction", () => {
     const card = file("src/components/catalog/catalog-watch-card.tsx");
     const detail = file("src/components/catalog/catalog-watch-detail-page.tsx");
     const journal = file("src/app/(public)/journal/page.tsx");
+    const cover = file("src/components/journal/journal-typographic-cover.tsx");
+    const coverStyles = file("src/components/journal/journal-typographic-cover.module.css");
     const styles = file("src/app/globals.css");
 
     for (const hook of [
@@ -142,10 +146,11 @@ describe("approved visual direction", () => {
     expect(card).toContain('compositionSlot="catalog-card"');
     expect(detail).toContain('compositionSlot="detail-hero"');
     expect(detail).toContain("selectBestCatalogHeroImage");
-    expect(journal).toContain('data-journal-layout={hasLeadImage ? "lead-image" : "lead-text"}');
+    expect(journal).toContain("TypographicCover");
+    expect(cover).toContain("data-cover-variant");
+    expect(coverStyles).toContain('[data-cover-variant="paper"]');
     expect(styles).toContain('[data-image-presentation-mode="product-contained"]');
     expect(styles).toContain('[data-image-presentation-mode="technical-angle"]');
-    expect(styles).toContain(".journal-issue-grid-text-led");
   });
 
   it("normalizes public display titles and slash-separated values without mutating catalog data", () => {

@@ -1,13 +1,8 @@
-import { FoundationPage } from "@/components/foundation/foundation-page";
+import type { Metadata } from "next";
+import { AccountOrders } from "@/components/account/account-foundation";
+
+export const metadata: Metadata = { title: "Мои заказы" };
 
 export default function AccountOrdersPage() {
-  return (
-    <FoundationPage
-      eyebrow="Аккаунт"
-      title="Мои заказы"
-      description="История заказов появится после запуска покупки часов."
-      stateTitle="Заказов пока нет"
-      stateDescription="Пока Eternal Time работает как каталог и редакционный помощник выбора."
-    />
-  );
+  return <AccountOrders />;
 }

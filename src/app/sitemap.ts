@@ -5,13 +5,17 @@ import { listPublishedJournalArticles } from "@/modules/journal/application/jour
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const env = getPublicEnv();
-  const now = new Date();
-  const articleRoutes = listPublishedJournalArticles().map((article) => `/journal/${article.slug}`);
-
-  return [...foundationPublicRoutes, ...articleRoutes].map((route) => ({
+  const staticRoutes: MetadataRoute.Sitemap = foundationPublicRoutes.map((route) => ({
     url: `${env.appUrl}${route}`,
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: route === "/" ? 1 : 0.6,
+    changeFrequency: route === "/journal" ? "weekly" : "monthly",
+    priority: route === "/" ? 1 : route === "/journal" || route === "/faq" ? 0.7 : 0.6,
   }));
+  const articleRoutes: MetadataRoute.Sitemap = listPublishedJournalArticles().map((article) => ({
+    url: `${env.appUrl}/journal/${article.slug}`,
+    changeFrequency: "monthly",
+    priority: article.featured ? 0.7 : 0.6,
+    ...(article.updatedAt || article.publishedAt ? { lastModified: article.updatedAt ?? article.publishedAt } : {}),
+  }));
+
+  return [...staticRoutes, ...articleRoutes];
 }

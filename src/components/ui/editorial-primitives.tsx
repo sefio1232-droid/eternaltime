@@ -12,6 +12,16 @@ export function EditorialContainer({
   return <div className={`mx-auto w-full max-w-[var(--container-wide)] px-5 sm:px-6 lg:px-8 ${className}`}>{children}</div>;
 }
 
+export function EditorialWideContainer({
+  children,
+  className = "",
+}: Readonly<{
+  children: React.ReactNode;
+  className?: string;
+}>) {
+  return <div className={`editorial-wide-container ${className}`}>{children}</div>;
+}
+
 export function EditorialHeading({
   eyebrow,
   title,

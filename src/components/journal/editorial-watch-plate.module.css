@@ -1,0 +1,60 @@
+.plate { width: min(100%, 72rem); margin: clamp(4rem, 8vw, 7.5rem) auto; border-block: 1px solid rgb(16 19 22 / 16%); }
+.plate[data-surface="paper"] { background: #f7f4ed; }
+.plate[data-surface="ivory"] { background: #eee8dc; }
+.plate[data-surface="navy"] { background: #172437; color: #f7f3e9; }
+.caption { display: grid; grid-template-columns: minmax(10rem, 3fr) minmax(0, 5fr); gap: 0.7rem 2rem; padding: 1.1rem clamp(1rem, 2.5vw, 2rem); border-bottom: 1px solid rgb(16 19 22 / 14%); }
+[data-surface="navy"] .caption { border-color: rgb(247 243 233 / 18%); }
+.caption > span { color: #8a693a; font-family: var(--font-reference); font-size: 0.58rem; letter-spacing: 0.1em; }
+.caption strong { font-family: var(--journal-serif, var(--font-editorial)), Georgia, serif; font-size: clamp(1.45rem, 2vw, 2.15rem); font-weight: 400; letter-spacing: -0.018em; line-height: 1.08; }
+.caption p { grid-column: 2; max-width: 42rem; color: var(--text-muted); font-size: 0.82rem; line-height: 1.6; }
+[data-surface="navy"] .caption p { color: rgb(247 243 233 / 67%); }
+.grid { display: grid; grid-template-columns: repeat(var(--plate-count, 3), minmax(0, 1fr)); }
+.plate[data-layout="single"] .grid { --plate-count: 1; }
+.plate[data-layout="duo"] .grid { --plate-count: 2; }
+.plate[data-layout="strip"] .grid { --plate-count: 3; }
+.plate[data-layout="four-brand"] .grid { --plate-count: 4; }
+.watchCell { position: relative; min-width: 0; border-right: 1px solid rgb(16 19 22 / 12%); }
+.watchCell:last-child { border-right: 0; }
+.watch { height: 100%; }
+.plate[data-layout="single"] .watch { grid-template-columns: minmax(0, 3fr) minmax(15rem, 1fr); grid-template-rows: auto; }
+.plate[data-layout="single"] .identity { align-content: end; border-top: 0; border-left: 1px solid rgb(16 19 22 / 12%); }
+.stage { display: grid; min-height: clamp(16rem, 25vw, 23rem); place-items: center; overflow: hidden; padding: clamp(1.3rem, 3vw, 2.8rem); background: rgb(255 255 255 / 38%); }
+.watch:nth-child(2n) .stage { background: #e6e0d5; }
+.watch:nth-child(3n) .stage { background: #d8dedb; }
+[data-surface="navy"] .stage { background: #1e2d42; }
+.stage :global(.catalog-image) { width: 100%; height: 100%; max-height: 21rem; object-fit: contain; }
+.identity { display: grid; gap: 0.25rem; padding: 1rem 1.15rem 1.2rem; border-top: 1px solid rgb(16 19 22 / 12%); }
+.identity b { font-family: var(--journal-serif, var(--font-editorial)), Georgia, serif; font-size: 1.28rem; font-weight: 400; }
+.identity > span, .identity small { overflow: hidden; color: var(--text-muted); font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; }
+[data-surface="navy"] .identity > span, [data-surface="navy"] .identity small { color: rgb(247 243 233 / 62%); }
+.identity em { margin-top: 0.35rem; color: #8a693a; font-size: 0.72rem; font-style: normal; }
+.price { position: absolute; right: 1rem; bottom: 0.8rem; z-index: 3; color: #8a693a; font-size: 0.68rem; }
+.composition { position: relative; isolation: isolate; min-height: clamp(29rem, 38vw, 34rem); overflow: hidden; background: linear-gradient(90deg, #ddd6ca 0 67%, #172437 67% 100%); color: #172437; }
+.composition::before { position: absolute; z-index: -1; inset: 0 0 0 66%; background: #172437; content: ""; }
+.composition::after { position: absolute; z-index: 0; right: 18%; bottom: -17%; width: 42%; aspect-ratio: 1; border: 1px solid rgb(23 36 55 / 18%); border-radius: 50%; content: ""; }
+.composition > p { position: absolute; top: 1.4rem; left: 1.5rem; z-index: 4; color: #654d2b; font-family: var(--font-reference); font-size: 0.6rem; letter-spacing: 0.11em; text-transform: uppercase; }
+.compositionNumber { position: absolute; right: -0.03em; bottom: -0.18em; z-index: 1; color: rgb(247 243 233 / 7%); font-family: var(--journal-serif, var(--font-editorial)), Georgia, serif; font-size: clamp(14rem, 28vw, 27rem); font-weight: 400; line-height: 0.8; }
+.compositionWatch { position: absolute; z-index: 2; display: grid; place-items: center; overflow: hidden; }
+.compositionWatch[data-size="large"] { inset: 10% 42% 8% 7%; box-shadow: 0 1.4rem 3rem rgb(23 36 55 / 8%); }
+.compositionWatch[data-size="medium"] { top: 8%; right: 4%; width: 24%; height: 47%; }
+.compositionWatch[data-size="small"] { right: 27%; bottom: 7%; width: 20%; height: 30%; }
+.compositionWatch :global(.catalog-image) { width: 100%; height: 100%; object-fit: contain; }
+.compositionWatch > span { position: absolute; right: 0.65rem; bottom: 0.55rem; color: rgb(23 36 55 / 62%); font-family: var(--font-reference); font-size: 0.5rem; letter-spacing: 0.04em; }
+.compositionMarkers { position: absolute; right: 1.4rem; bottom: 1.3rem; z-index: 4; display: grid; gap: 0.35rem; justify-items: end; color: rgb(247 243 233 / 48%); font-family: var(--font-reference); font-size: 0.49rem; letter-spacing: 0.08em; }
+@media (max-width: 720px) {
+  .caption { grid-template-columns: 1fr; }
+  .caption p { grid-column: 1; }
+  .grid { grid-template-columns: 1fr !important; }
+  .watchCell { border-right: 0; border-bottom: 1px solid rgb(16 19 22 / 12%); }
+  .plate[data-layout="single"] .watch { grid-template-columns: minmax(8rem, 0.48fr) minmax(0, 0.52fr); }
+  .stage { min-height: 13rem; }
+  .composition { min-height: 32rem; }
+  .composition::before { inset: 55% 0 0 0; }
+  .compositionWatch[data-size="large"] { inset: 14% 17% 24% 5%; }
+  .compositionWatch[data-size="medium"] { top: 7%; right: 3%; width: 34%; height: 29%; }
+  .compositionWatch[data-size="small"] { right: 5%; bottom: 7%; width: 35%; height: 28%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stage :global(.catalog-image), .compositionWatch { animation: watch-in 360ms ease-out both; }
+  @keyframes watch-in { from { opacity: 0; transform: translateY(8px); } }
+}

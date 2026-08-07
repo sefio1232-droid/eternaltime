@@ -479,19 +479,6 @@ export function HomeCollectionIntelligencePanel({ scenarios, curation }: Curated
 export function HomeJournalFinal({ articles, scenarios, curation }: JournalProps) {
   const [lead, ...secondary] = articles;
   const visibleSecondary = secondary.slice(0, 2);
-  const editorialTitles = [
-    "Как выбрать размер часов под запястье",
-    "Часы под рубашку и на каждый день",
-    "Кварц или механика: в чем разница",
-  ] as const;
-  const journalWatches = curation.journal.length === 3
-    ? curation.journal
-    : [watchAt(scenarios, 2, 1), watchAt(scenarios, 3, 0), watchAt(scenarios, 0, 2)];
-  const journalPlacements = uniquePlacements("journal-editorial", [
-    { instanceId: "journal-lead-casio-mtg", watch: journalWatches[0] ?? watchAt(scenarios, 2, 1), role: "lead", label: "Инструмент" },
-    { instanceId: "journal-secondary-orient-classic", watch: journalWatches[1] ?? watchAt(scenarios, 3, 0), role: "classic", label: "Стиль" },
-    { instanceId: "journal-tertiary-citizen-dress", watch: journalWatches[2] ?? watchAt(scenarios, 0, 2), role: "mechanical", label: "Механика" },
-  ]);
   const finalWatches = curation.final.length === 2
     ? curation.final
     : [watchAt(scenarios, 5, 0), watchAt(scenarios, 3, 0)];
@@ -499,7 +486,6 @@ export function HomeJournalFinal({ articles, scenarios, curation }: JournalProps
     { instanceId: "journal-final-primary-prx-gold-t137407", watch: finalWatches[0] ?? watchAt(scenarios, 5, 0), role: "next", label: "Современная форма", tone: "next" },
     { instanceId: "journal-final-secondary-citizen-nj0210", watch: finalWatches[1] ?? watchAt(scenarios, 3, 0), role: "classic", label: "Спокойная классика", tone: "quiet" },
   ]);
-  const [journalLeadWatch, journalSecondaryWatch, journalTertiaryWatch] = journalPlacements;
 
   return (
     <section className={`${styles.section} ${styles.journalFinal}`} data-home-section="journal-final" data-home-transition="dark-light-dark">
@@ -521,44 +507,26 @@ export function HomeJournalFinal({ articles, scenarios, curation }: JournalProps
         </div>
         {lead ? (
           <article className={styles.journalLead} data-home-grid-area="journal-lead" data-home-reveal="journal-lead" data-home-reveal-index="1">
-            <Link href={`/journal/${lead.slug}`} className={styles.journalLeadText} aria-label={`Читать материал «${editorialTitles[0]}»`}>
+            <Link href={`/journal/${lead.slug}`} className={styles.journalLeadText} aria-label={`Читать материал «${lead.title}»`}>
               <span>{lead.category}</span>
-              <strong>{editorialTitles[0]}</strong>
+              <strong>{lead.title}</strong>
               <p>{compactTeaser(lead.dek)}</p>
               <em>{lead.readingTimeMinutes} мин</em>
             </Link>
-            {journalLeadWatch && getHomeWatchHref(journalLeadWatch.watch) ? (
-              <Link
-                href={getHomeWatchHref(journalLeadWatch.watch) ?? "/watches"}
-                className={styles.journalLeadVisual}
-                aria-label={`Открыть модель ${journalLeadWatch.watch.brandName} ${journalLeadWatch.watch.shortTitle}`}
-                data-home-watch-link
-                data-home-watch-link-reference={journalLeadWatch.watch.reference}
-              >
-                <Image src={journalLeadWatch.watch.asset.path} alt={`${journalLeadWatch.watch.brandName} ${journalLeadWatch.watch.shortTitle}`} width={journalLeadWatch.watch.asset.width} height={journalLeadWatch.watch.asset.height} sizes="(max-width: 767px) 68vw, 30vw" quality={92} />
-                <span>{journalLeadWatch.watch.brandName} · {journalLeadWatch.watch.shortTitle}</span>
-              </Link>
-            ) : null}
+            <span className={styles.journalLeadVisual} aria-hidden="true"><span>ET / Editorial</span></span>
           </article>
         ) : null}
         <div className={styles.journalList} data-home-grid-area="journal-supporting">
           {visibleSecondary.map((article, index) => {
-            const placement = index === 0 ? journalSecondaryWatch : journalTertiaryWatch;
-            const watchHref = placement ? getHomeWatchHref(placement.watch) : null;
             return (
               <article key={`journal-link-${article.slug}`} className={`${styles.journalStory} ${index === 0 ? styles.journalStorySteel : styles.journalStoryBurgundy}`} data-home-reveal="journal-supporting" data-home-reveal-index={index + 2}>
-                <Link href={`/journal/${article.slug}`} className={styles.journalStoryText} aria-label={`Читать материал «${editorialTitles[index + 1]}»`}>
+                <Link href={`/journal/${article.slug}`} className={styles.journalStoryText} aria-label={`Читать материал «${article.title}»`}>
                   <span>{article.category}</span>
-                  <strong>{editorialTitles[index + 1]}</strong>
+                  <strong>{article.title}</strong>
                   <p>{compactTeaser(article.dek, 12)}</p>
                   <em>{article.readingTimeMinutes} мин</em>
                 </Link>
-                {placement && watchHref ? (
-                  <Link href={watchHref} className={styles.journalStoryVisual} aria-label={`Открыть модель ${placement.watch.brandName} ${placement.watch.shortTitle}`} data-home-watch-link data-home-watch-link-reference={placement.watch.reference}>
-                    <Image src={placement.watch.asset.path} alt={`${placement.watch.brandName} ${placement.watch.shortTitle}`} width={placement.watch.asset.width} height={placement.watch.asset.height} sizes="(max-width: 767px) 42vw, 13vw" quality={92} />
-                    <span>{placement.watch.brandName}</span>
-                  </Link>
-                ) : null}
+                <span className={styles.journalStoryVisual} aria-hidden="true"><span>{article.category}</span></span>
               </article>
             );
           })}

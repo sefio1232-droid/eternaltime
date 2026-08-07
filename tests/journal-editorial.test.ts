@@ -98,17 +98,17 @@ describe("journal and editorial selections", () => {
     const articles = listPublishedJournalArticles();
     const publicJson = JSON.stringify(articles);
 
-    expect(articles.length).toBeGreaterThanOrEqual(8);
-    expect(getJournalInventory().unpublishedDraftCount).toBeGreaterThan(0);
-    expect(getPublishedJournalArticle("why-g-shock-became-cult")?.title).toContain("G-Shock");
-    expect(getPublishedJournalArticle("draft-diving-watch-history")).toBeNull();
+    expect(articles).toHaveLength(3);
+    expect(getJournalInventory()).toEqual({ publishedCount: 3, unpublishedDraftCount: 1 });
+    expect(getPublishedJournalArticle("pochemu-mekhanicheskie-chasy-populyarny")?.title).toBe("Почему механические часы до сих пор популярны");
+    expect(getPublishedJournalArticle("zakaz-chasov-iz-kitaya")).toBeNull();
     expect(getPublishedJournalArticle("unknown-slug")).toBeNull();
     expect(publicJson).not.toContain("draft");
     expect(publicJson).not.toContain("status");
   });
 
   it("calculates reading time from actual article content", () => {
-    const article = journalArticleSources.find((source) => source.slug === "quartz-vs-mechanical-real-difference");
+    const article = journalArticleSources.find((source) => source.slug === "pochemu-mekhanicheskie-chasy-populyarny");
 
     expect(article).toBeDefined();
     expect(calculateReadingTimeMinutes(article!)).toBeGreaterThanOrEqual(1);
@@ -155,12 +155,7 @@ describe("journal and editorial selections", () => {
     const articles = listPublishedJournalArticles();
     const categories = new Set(articles.map((article) => article.category));
 
-    expect(categories).toContain("Гиды");
-    expect(categories).toContain("Материалы");
-    expect(categories).toContain("Истории моделей");
-    expect(categories).toContain("Стиль");
-    expect(getPublishedJournalArticle("tissot-prx-design-return")?.relatedWatchRefs).toEqual([
-      { brandSlug: "tissot", referenceSlug: "t0062071103601" },
-    ]);
+    expect(categories).toEqual(new Set(["Механизмы", "Выбор", "Коллекционирование"]));
+    expect(articles.every((article) => getPublishedJournalArticle(article.slug)?.relatedWatchRefs.length === 0)).toBe(true);
   });
 });

@@ -93,6 +93,7 @@ export type CollectionRecommendationCandidate = {
   brandName: string;
   referenceDisplay: string;
   imageUrl: string | null;
+  imageCandidates?: string[];
   publicPriceMinor: number | null;
   currencyCode: string | null;
   roles: CollectionRole[];

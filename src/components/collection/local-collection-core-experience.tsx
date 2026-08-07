@@ -236,6 +236,18 @@ function effectiveImage(watch: LocalCollectionWatch): string | null {
   return watch.sourceKind === "manual" ? watch.photoDataUrl : watch.imageUrl;
 }
 
+function collectionCandidateImagesForWatch(
+  watch: LocalCollectionWatch,
+  candidates: CollectionRecommendationCandidate[],
+): string[] {
+  if (watch.sourceKind === "manual") return [];
+  const candidate = candidates.find((entry) =>
+    (watch.catalogReferenceId !== null && entry.catalogReferenceId === watch.catalogReferenceId) ||
+    (watch.catalogHref !== null && entry.href === watch.catalogHref),
+  );
+  return candidate?.imageCandidates ?? [];
+}
+
 function CollectionWatchActionMenu({
   watch,
   demoScenario,
@@ -625,6 +637,7 @@ export function LocalCollectionCoreExperience({
       <CollectionDetail
         ready={ready}
         watch={selectedWatch}
+        catalogCandidates={catalogCandidates}
         demoScenario={demoScenario}
         message={message || storageMessage}
         onSubmit={handleDetailSubmit}
@@ -660,6 +673,7 @@ export function LocalCollectionCoreExperience({
   return (
       <CollectionOverviewExperience
       watches={watches}
+      catalogCandidates={catalogCandidates}
       ready={ready}
       demoScenario={demoScenario}
       filter={filter}
@@ -674,6 +688,7 @@ export function LocalCollectionCoreExperience({
 
 function CollectionOverviewExperience({
   watches,
+  catalogCandidates,
   ready,
   demoScenario,
   filter,
@@ -684,6 +699,7 @@ function CollectionOverviewExperience({
   onDelete,
 }: Readonly<{
   watches: LocalCollectionWatch[];
+  catalogCandidates: CollectionRecommendationCandidate[];
   ready: boolean;
   demoScenario: LocalCollectionDemoScenario | null;
   filter: CollectionFilter;
@@ -789,6 +805,7 @@ function CollectionOverviewExperience({
                         className={styles.watchStage}
                         variant="shelf"
                         imageUrl={effectiveImage(watch)}
+                        imageCandidates={collectionCandidateImagesForWatch(watch, catalogCandidates)}
                         alt={watch.displayName}
                         presentation={collectionWatchMediaPresentation(watch)}
                       />
@@ -1043,6 +1060,7 @@ export function RecommendationCard({
           variant="recommendation"
           className={styles.recommendationStage}
           imageUrl={entry.candidate.imageUrl}
+          imageCandidates={entry.candidate.imageCandidates}
           alt=""
           presentation={collectionCandidateMediaPresentation(entry.candidate)}
         />
@@ -1364,6 +1382,7 @@ function CollectionAddExperience({
                     variant="picker"
                     className={styles.catalogResultStage}
                     imageUrl={candidate.imageUrl}
+                    imageCandidates={candidate.imageCandidates}
                     alt={candidate.displayName}
                     presentation={collectionCandidateMediaPresentation(candidate)}
                   />
@@ -1416,6 +1435,7 @@ function CollectionAddExperience({
 function CollectionDetail({
   ready,
   watch,
+  catalogCandidates,
   demoScenario,
   message,
   onSubmit,
@@ -1425,6 +1445,7 @@ function CollectionDetail({
 }: Readonly<{
   ready: boolean;
   watch: LocalCollectionWatch | null;
+  catalogCandidates: CollectionRecommendationCandidate[];
   demoScenario: LocalCollectionDemoScenario | null;
   message: string;
   onSubmit: (formData: FormData) => void;
@@ -1503,6 +1524,7 @@ function CollectionDetail({
           className={styles.detailStage}
           variant="detail"
           imageUrl={effectiveImage(watch)}
+          imageCandidates={collectionCandidateImagesForWatch(watch, catalogCandidates)}
           alt={watch.displayName}
           presentation={collectionWatchMediaPresentation(watch)}
         />

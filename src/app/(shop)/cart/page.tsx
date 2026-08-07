@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { FoundationPage } from "@/components/foundation/foundation-page";
+import { CartExperience } from "@/components/cart/cart-experience";
 
 export const metadata: Metadata = {
+  title: "Корзина",
   robots: {
     index: false,
     follow: false,
@@ -9,13 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function CartPage() {
-  return (
-    <FoundationPage
-      eyebrow="Корзина"
-      title="Покупка часов появится позже"
-      description="Сейчас Eternal Time сфокусирован на выборе, каталоге и редакционном контексте."
-      stateTitle="Корзина пока недоступна"
-      stateDescription="Можно изучить каталог, журнал и будущие сценарии подбора."
-    />
-  );
+  return <CartExperience />;
 }

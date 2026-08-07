@@ -41,6 +41,7 @@ import {
   isCleanCollectionPersistedImageUrl,
   isCleanCollectionPrimaryImage,
   resolveLocalCollectionWatchImage,
+  selectCollectionImageCandidates,
   selectCollectionPrimaryImage,
 } from "@/modules/user-watch-collection/application/local-collection-images";
 import {
@@ -980,6 +981,26 @@ describe("multi-factor collection recommendations", () => {
     expect(selected).toEqual(frontImage);
   });
 
+  it("ranks a whole front product view ahead of a three-quarter view and keeps a runtime fallback", () => {
+    const threeQuarter = {
+      kind: "remote" as const,
+      url: "https://example.test/watch-three-quarter.webp",
+      src: "https://example.test/watch-three-quarter.webp",
+      alt: "Watch three-quarter product view",
+    };
+    const front = {
+      kind: "remote" as const,
+      url: "https://example.test/watch-front.webp",
+      src: "https://example.test/watch-front.webp",
+      alt: "Watch front product view",
+    };
+    const candidates = selectCollectionImageCandidates(
+      catalogWatch({ primaryImage: threeQuarter, imageGallery: [front] }),
+    );
+
+    expect(candidates).toEqual([front, threeQuarter]);
+  });
+
   it("reconciles a persisted catalog image with the current canonical candidate", () => {
     const currentCandidate = recommendationCandidate({
       catalogReferenceId: "catalog/ae1200wh1bv",
@@ -1062,12 +1083,12 @@ describe("multi-factor collection recommendations", () => {
   });
 
   it("assigns deterministic media categories for catalog, manual, rectangular, and missing watches", () => {
-    expect(collectionCandidateMediaPresentation(formalCandidate)).toBe("analog-strap");
+    expect(collectionCandidateMediaPresentation(formalCandidate)).toBe("large");
     expect(
       collectionCandidateMediaPresentation(
         recommendationCandidate({ displayName: "Cartier Tank", modelName: "Tank", imageUrl: "/tank.webp" }),
       ),
-    ).toBe("rectangular");
+    ).toBe("wide");
     expect(
       collectionWatchMediaPresentation(
         createLocalManualWatch(
@@ -1075,7 +1096,7 @@ describe("multi-factor collection recommendations", () => {
           "2026-01-01T00:00:00.000Z",
         ),
       ),
-    ).toBe("manual-watch");
+    ).toBe("large");
     expect(
       collectionWatchMediaPresentation(
         createLocalManualWatch(
@@ -1083,7 +1104,7 @@ describe("multi-factor collection recommendations", () => {
           "2026-01-01T00:00:00.000Z",
         ),
       ),
-    ).toBe("missing-image");
+    ).toBe("large");
   });
 
   it("uses a missing-image state instead of a technical-only catalog image", () => {

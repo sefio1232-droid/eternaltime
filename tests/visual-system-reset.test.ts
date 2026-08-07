@@ -55,9 +55,10 @@ describe("editorial art direction and layout refinement", () => {
     const navigation = file("src/config/navigation.ts");
     const searchDialog = file("src/components/shell/search-dialog.tsx");
 
-    for (const href of ["/watches", "/selection", "/journal", "/brands", "/collection", "/account"]) {
+    for (const href of ["/watches", "/selection", "/journal", "/collection", "/account"]) {
       expect(navigation).toContain(`href: "${href}"`);
     }
+    expect(navigation.split("export const utilityNavigation")[0]).not.toContain('href: "/brands"');
     expect(searchDialog).toContain('action="/watches"');
     expect(searchDialog).toContain('name="q"');
     expect(searchDialog).toContain("Искать в каталоге");
@@ -114,14 +115,17 @@ describe("editorial art direction and layout refinement", () => {
   it("defines Journal as an editorial magazine surface without placeholder image copy", () => {
     const journal = file("src/app/(public)/journal/page.tsx");
 
-    expect(journal).toContain('data-journal-layout={hasLeadImage ? "lead-image" : "lead-text"}');
-    expect(journal).toContain("journal-issue-grid-text-led");
-    expect(journal).toContain("journal-issue-grid");
-    expect(journal).toContain('data-journal-layout="text-led"');
-    expect(journal).toContain('data-journal-layout="editorial-quote"');
-    expect(journal).toContain('data-journal-layout="reading-list"');
-    expect(journal).toContain("journal-sidebar");
-    expect(journal).toContain("journal-right-stack");
+    expect(journal).toContain("issueSlugs");
+    expect(journal).toContain("styles.lead");
+    expect(journal).toContain("styles.guide");
+    expect(journal).toContain("styles.investment");
+    expect(journal).toContain("TypographicCover");
+    expect(journal).toContain("JournalWatchComposition");
+    expect(journal).toContain("EditorialWatchVisual");
+    expect(journal).toContain("brandRail");
+    expect(journal).not.toContain("styles.categories");
+    expect(journal).not.toContain("journal-sidebar");
+    expect(journal).not.toContain("editorial-quote");
     expect(journal).not.toContain("Фото готовится");
   });
 
@@ -149,13 +153,15 @@ describe("editorial art direction and layout refinement", () => {
     expect(detail).not.toContain("useState");
   });
 
-  it("supports adaptive article media and guards local catalog images from fullscreen scaling", () => {
+  it("uses exact catalog editorial media with typographic fallback", () => {
     const articlePage = file("src/app/(public)/journal/[slug]/page.tsx");
     const mediaPolicy = file("src/components/journal/article-media-presentation.ts");
     const styles = file("src/app/globals.css");
 
-    expect(articlePage).toContain("data-media-presentation={mediaVariant}");
-    expect(articlePage).toContain("data-media-variant={variant}");
+    expect(articlePage).toContain('data-media-presentation="catalog-editorial"');
+    expect(articlePage).toContain("EditorialWatchPlate");
+    expect(articlePage).toContain("resolveJournalArticleEditorialWatches");
+    expect(articlePage).toContain("JournalTypographicCover");
     for (const variant of ["none", "landscape", "contained", "side", "compact"]) {
       expect(mediaPolicy).toContain(`\"${variant}\"`);
     }
@@ -177,15 +183,16 @@ describe("editorial art direction and layout refinement", () => {
     expect(media).not.toContain("Фото готовится");
   });
 
-  it("renders magazine article related blocks through factual article and watch relations", () => {
+  it("renders variant article related blocks through explicit factual relations", () => {
     const articlePage = file("src/app/(public)/journal/[slug]/page.tsx");
     const relations = file("src/modules/journal/application/journal-catalog-relations.ts");
 
-    expect(articlePage).toContain('data-article-layout="magazine-article"');
-    expect(articlePage).toContain('data-article-section="recommended-watches"');
+    expect(articlePage).toContain("data-article-layout={article.layoutVariant}");
+    expect(articlePage).not.toContain('data-article-section="recommended-watches"');
     expect(articlePage).toContain('data-article-section="related-materials"');
-    expect(articlePage).toContain('data-related-kind="same-category"');
-    expect(articlePage).toContain("candidate.category === article.category");
+    expect(articlePage).toContain('data-related-kind="explicit"');
+    expect(articlePage).toContain("article.relatedArticleSlugs");
+    expect(articlePage).not.toContain("candidate.category === article.category");
     expect(relations).toContain("article.relatedWatchRefs");
     expect(relations).toContain("watch.brandSlug === reference.brandSlug");
     expect(relations).toContain('watch.primaryImage.kind !== "none"');

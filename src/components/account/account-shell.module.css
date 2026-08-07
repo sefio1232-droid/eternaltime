@@ -1,0 +1,31 @@
+.frame { min-height: 100vh; background: #f8f6f1; color: var(--text); }
+.header { border-bottom: 1px solid rgb(16 19 22 / 16%); }
+.headerInner { min-height: 4.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+.logo { font-family: var(--font-editorial), Georgia, serif; font-size: 1.25rem; }
+.returnLink { color: #6f5326; font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.layout { display: grid; grid-template-columns: minmax(13rem, 3fr) minmax(0, 9fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; padding-block: clamp(2.5rem, 5vw, 5rem) clamp(4rem, 8vw, 8rem); }
+.sidebar { position: sticky; top: 2rem; padding-top: 1rem; border-top: 1px solid rgb(16 19 22 / 18%); }
+.eyebrow { color: #826333; font-family: var(--font-reference); font-size: 0.62rem; letter-spacing: 0.1em; }
+.sidebarTitle { margin-top: 0.75rem; font-family: var(--font-editorial), Georgia, serif; font-size: 1.7rem; }
+.navigation { display: grid; margin-top: 2rem; border-top: 1px solid rgb(16 19 22 / 14%); }
+.navigation a { padding-block: 0.9rem; border-bottom: 1px solid rgb(16 19 22 / 12%); color: var(--text-muted); font-size: 0.78rem; }
+.navigation a[aria-current="page"] { color: var(--text); }
+.navigation a[aria-current="page"]::before { margin-right: 0.55rem; color: #b9945d; content: "—"; }
+.main { min-width: 0; }
+.footer { border-top: 1px solid rgb(16 19 22 / 16%); }
+.footer > div { min-height: 5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; color: var(--text-muted); font-size: 0.72rem; }
+.footer a { color: var(--text); font-family: var(--font-editorial), Georgia, serif; font-size: 1rem; }
+
+@media (max-width: 767px) {
+  .headerInner { min-height: 4rem; }
+  .layout { display: block; padding-block: 1.5rem 5rem; }
+  .sidebar { position: static; padding-top: 0; border-top: 0; }
+  .sidebarTitle { display: none; }
+  .navigation { display: flex; gap: 1.25rem; overflow-x: auto; margin: 1rem -1.25rem 0; padding-inline: 1.25rem; border-block: 1px solid rgb(16 19 22 / 14%); scrollbar-width: none; }
+  .navigation a { flex: 0 0 auto; border: 0; }
+  .navigation a[aria-current="page"]::before { display: none; }
+  .main { padding-top: 2.5rem; }
+  .returnLink { font-size: 0; }
+  .returnLink::after { content: "На сайт →"; font-size: 0.65rem; }
+  .footer > div { align-items: flex-start; flex-direction: column; justify-content: center; padding-block: 1.5rem; }
+}

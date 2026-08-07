@@ -167,6 +167,27 @@ export function isCleanCollectionPrimaryImage(
 export function selectCollectionPrimaryImage(
   watch: Pick<CatalogWatchDetail, "primaryImage" | "imageGallery">,
 ): CatalogImagePresentation {
+  return selectCollectionImageCandidates(watch)[0] ?? {
+    kind: "none",
+    alt: "Изображение часов недоступно",
+  };
+}
+
+const frontViewPattern = /(?:front|frontal|face|dial|hero|main|вид\s*спереди|циферблат)/i;
+const threeQuarterPattern = /(?:three.?quarter|3.?4|angled|perspective|три\s*четверти|ракурс)/i;
+const wholeWatchPattern = /(?:watch|wristwatch|product|часы|модель|reference|артикул)/i;
+
+function collectionImagePriority(image: CatalogImagePresentation, originalIndex: number): number {
+  const text = collectionCatalogImageText(image);
+  if (frontViewPattern.test(text)) return 400 - originalIndex;
+  if (threeQuarterPattern.test(text)) return 300 - originalIndex;
+  if (wholeWatchPattern.test(text)) return 200 - originalIndex;
+  return 100 - originalIndex;
+}
+
+export function selectCollectionImageCandidates(
+  watch: Pick<CatalogWatchDetail, "primaryImage" | "imageGallery">,
+): CatalogImagePresentation[] {
   const seen = new Set<string>();
   const images = [watch.primaryImage, ...watch.imageGallery].filter((image) => {
     const identity = collectionCatalogImageIdentity(image);
@@ -176,10 +197,14 @@ export function selectCollectionPrimaryImage(
     return true;
   });
 
-  return images.find((image, index) => isCleanCollectionPrimaryImage(image, index)) ?? {
-    kind: "none",
-    alt: "Изображение часов недоступно",
-  };
+  return images
+    .map((image, index) => ({ image, index }))
+    .filter(({ image, index }) => isCleanCollectionPrimaryImage(image, index))
+    .sort((left, right) =>
+      collectionImagePriority(right.image, right.index) - collectionImagePriority(left.image, left.index) ||
+      left.index - right.index,
+    )
+    .map(({ image }) => image);
 }
 
 export function collectionPrimaryImageUrl(
@@ -187,4 +212,10 @@ export function collectionPrimaryImageUrl(
 ): string | null {
   const image = selectCollectionPrimaryImage(watch);
   return image.kind === "none" ? null : image.src;
+}
+
+export function collectionImageCandidateUrls(
+  watch: Pick<CatalogWatchDetail, "primaryImage" | "imageGallery">,
+): string[] {
+  return selectCollectionImageCandidates(watch).flatMap((image) => image.kind === "none" ? [] : [image.src]);
 }

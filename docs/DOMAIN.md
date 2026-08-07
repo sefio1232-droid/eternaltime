@@ -136,6 +136,15 @@ A structured user flow for finding watches. It stores answers, constraints, cand
 
 A saved set of Manufacturer References or order snapshots compared by a user or guest. Comparisons should store item identity and preserve enough context to restore the comparison later.
 
+Current browser-local foundation:
+
+- comparison identity is an exact Brand-scoped Manufacturer Reference (`brandSlug:referenceSlug`);
+- one comparison contains 2-4 references and preserves stable item order;
+- the versioned local repository is guest-safe and never implies authentication or Supabase persistence;
+- `/compare?refs=...` is the shareable/restorable representation for the current phase;
+- missing catalog characteristics remain explicit unknown values and are never inferred;
+- current public compare URLs are noindex; an eventual saved comparison ID requires owner/session persistence and a separate publication decision.
+
 ### Candidate List
 
 A user/session-owned consideration workspace between interest and purchase. It can preserve the originating Selection Session or Recommendation Scenario and contains Candidate Items. MVP normally has one active default Candidate List; additional goal-specific lists require a real user workflow.

@@ -8,24 +8,19 @@ export const publicNavigation: NavigationItem[] = [
   { label: "Часы", href: "/watches" },
   { label: "Подбор", href: "/selection" },
   { label: "Журнал", href: "/journal" },
-  { label: "Бренды", href: "/brands" },
 ];
 
 export const utilityNavigation: NavigationItem[] = [
   { label: "Коллекция", href: "/collection" },
-  { label: "Войти", href: "/account" },
+  { label: "Личный кабинет", href: "/account" },
 ];
 
 export const accountNavigation: NavigationItem[] = [
   { label: "Обзор", href: "/account" },
+  { label: "Корзина", href: "/cart" },
   { label: "Заказы", href: "/account/orders" },
-  { label: "Избранное", href: "/account/favorites" },
-  { label: "Сравнения", href: "/account/comparisons" },
-  { label: "Подборы", href: "/account/selections" },
-  { label: "Моя коллекция", href: "/account/collection" },
-  { label: "Анализ коллекции", href: "/account/collection/analysis" },
-  { label: "Адреса", href: "/account/addresses" },
-  { label: "Настройки", href: "/account/settings" },
+  { label: "Коллекция", href: "/collection" },
+  { label: "Профиль", href: "/account/profile" },
 ];
 
 export const adminNavigation: NavigationItem[] = [
@@ -41,4 +36,4 @@ export const adminNavigation: NavigationItem[] = [
   { label: "Настройки", href: "/admin/settings" },
 ];
 
-export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/selection", "/collection"] as const;
+export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/faq", "/selection", "/collection"] as const;

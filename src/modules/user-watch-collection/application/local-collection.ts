@@ -13,7 +13,7 @@ import type {
   CollectionWearFrequency,
 } from "@/modules/collection-intelligence/domain/types";
 import type { CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
-import { collectionPrimaryImageUrl } from "@/modules/user-watch-collection/application/local-collection-images";
+import { collectionImageCandidateUrls } from "@/modules/user-watch-collection/application/local-collection-images";
 import { compareCollectionText } from "@/modules/user-watch-collection/application/local-collection-picker";
 
 export const localCollectionStorageKey = "eternal-time.local-user-watch-collection.v2";
@@ -344,6 +344,7 @@ export function buildLocalCollectionCatalogCandidates(
       const sizeBand = sizeFromWatch(watch);
       const displayType = displayTypeFromWatch(watch, movementType);
       const caseStyle = caseStyleFromWatch(watch, displayType);
+      const imageCandidates = collectionImageCandidateUrls(watch);
       return {
         catalogReferenceId: watch.id,
         href: watch.href,
@@ -352,7 +353,8 @@ export function buildLocalCollectionCatalogCandidates(
         familyKey: familyKey(watch.brandName, watch.watchModelName, watch.referenceDisplay),
         brandName: watch.brandName,
         referenceDisplay: watch.referenceDisplay,
-        imageUrl: collectionPrimaryImageUrl(watch),
+        imageUrl: imageCandidates[0] ?? null,
+        imageCandidates,
         publicPriceMinor: watch.publicPrice?.amountMinor ?? null,
         currencyCode: watch.publicPrice?.currencyCode ?? null,
         roles: rolesFromWatch(watch, attachmentType, waterReady),

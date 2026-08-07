@@ -1,0 +1,92 @@
+.cover {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 16rem;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  overflow: hidden;
+  padding: clamp(1.35rem, 2.6vw, 2.4rem);
+  background: #172437;
+  color: #f5f0e6;
+}
+
+.cover[data-cover-variant="paper"] { background: #e9e3d7; color: #171b21; }
+.cover[data-cover-variant="stone"] { background: #cfd0cc; color: #182028; }
+.cover[data-cover-variant="muted-accent"] { background: #6f7f83; color: #fbf7ee; }
+.cover[data-cover-size="lead"] { min-height: clamp(27rem, 38vw, 35rem); }
+.cover[data-cover-size="horizontal"] { min-height: clamp(15rem, 20vw, 19rem); }
+.cover[data-cover-size="compact"] { min-height: 11rem; }
+
+.label,
+.category,
+.number {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-reference);
+  font-size: 0.64rem;
+  font-style: normal;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.number { justify-self: end; color: currentColor; opacity: 0.72; }
+
+.cover strong {
+  position: relative;
+  z-index: 2;
+  grid-column: 1 / -1;
+  align-self: center;
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: clamp(2.8rem, 5vw, 5.6rem);
+  font-weight: 450;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+}
+
+.cover[data-cover-size="horizontal"] strong { font-size: clamp(2.6rem, 4.2vw, 4.6rem); }
+.cover[data-cover-size="compact"] strong { font-size: clamp(2rem, 3vw, 3.2rem); }
+.category { grid-column: 2; justify-self: end; align-self: end; }
+
+.motif {
+  position: absolute;
+  z-index: 1;
+  top: 12%;
+  right: -13%;
+  width: 68%;
+  aspect-ratio: 1;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.2;
+}
+
+.cover[data-cover-motif="dial"] .motif::before,
+.cover[data-cover-motif="dial"] .motif::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36%;
+  height: 1px;
+  background: currentColor;
+  content: "";
+  transform-origin: left center;
+}
+
+.cover[data-cover-motif="dial"] .motif::before { transform: rotate(-64deg); }
+.cover[data-cover-motif="dial"] .motif::after { transform: rotate(18deg); }
+
+.cover[data-cover-motif="index"] .motif {
+  top: 18%;
+  right: 8%;
+  width: 32%;
+  border-radius: 0;
+  transform: rotate(17deg);
+}
+
+@media (max-width: 640px) {
+  .cover[data-cover-size="lead"] { min-height: 23rem; }
+  .cover[data-cover-size="horizontal"] { min-height: 17rem; }
+}

@@ -7,9 +7,10 @@ import {
   HomeSelection,
 } from "@/components/home/home-ecosystem-sections";
 import { HomeProductHero } from "@/components/home/home-product-hero";
+import { HomeTrustPlaques } from "@/components/home/home-trust-plaques";
 import { HomeMotionOrchestrator } from "@/components/home/home-motion-orchestrator";
 import { buildHomeEditorialCuration, buildHomeOrbitWatches, buildHomeScenarios } from "@/components/home/home-scenario-model";
-import { EditorialContainer } from "@/components/ui/editorial-primitives";
+import { EditorialWideContainer } from "@/components/ui/editorial-primitives";
 import type { CatalogReadDataset } from "@/modules/catalog/domain/read-models";
 import { getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { listPublishedJournalArticles } from "@/modules/journal/application/journal-repository";
@@ -35,9 +36,9 @@ export default async function HomePage() {
   const orbitWatches = buildHomeOrbitWatches(scenarios);
   const publishedArticles = listPublishedJournalArticles();
   const homepageArticleSlugs = [
-    "choose-watch-size-for-wrist",
-    "watches-for-shirt-and-everyday",
-    "quartz-vs-mechanical-real-difference",
+    "pochemu-mekhanicheskie-chasy-populyarny",
+    "kak-vybrat-brend-chasov",
+    "chasy-kak-investitsiya",
   ] as const;
   const articles = homepageArticleSlugs
     .map((slug) => publishedArticles.find((article) => article.slug === slug))
@@ -47,13 +48,14 @@ export default async function HomePage() {
     <>
       <HomeMotionOrchestrator />
       <section className="home-shell">
-        <EditorialContainer>
+        <EditorialWideContainer>
           <HomeProductHero scenarios={scenarios} orbitWatches={orbitWatches} reviewEnabled={process.env.NODE_ENV !== "production"} />
-        </EditorialContainer>
+        </EditorialWideContainer>
       </section>
 
       <HomeEcosystemPath scenarios={scenarios} curation={editorialCuration} />
       <HomeSelection scenarios={scenarios} curation={editorialCuration} />
+      <HomeTrustPlaques />
       <HomeComparisonPurchase scenarios={scenarios} curation={editorialCuration} />
       <HomeCollectionIntelligencePanel scenarios={scenarios} curation={editorialCuration} />
       <HomeJournalFinal articles={articles} scenarios={scenarios} curation={editorialCuration} />

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { publicNavigation, utilityNavigation } from "@/config/navigation";
+import { publicNavigation } from "@/config/navigation";
 import { MobileNavigation } from "@/components/shell/mobile-navigation";
 import { PublicNavLink } from "@/components/shell/public-nav-link";
 import { ProfileMenu } from "@/components/shell/profile-menu";
 import { SearchDialog } from "@/components/shell/search-dialog";
+import { CompareTray } from "@/components/comparison/compare-tray";
 import { EditorialContainer, IconAction } from "@/components/ui/editorial-primitives";
 
 function HeartIcon() {
@@ -33,18 +34,20 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
             <ProfileMenu />
           </div>
 
-          <MobileNavigation primaryItems={publicNavigation} utilityItems={utilityNavigation} />
+          <MobileNavigation primaryItems={publicNavigation} />
         </EditorialContainer>
       </header>
       <main>{children}</main>
+      <CompareTray />
       <footer className="border-t border-[var(--border)] bg-[var(--canvas)]">
         <EditorialContainer className="grid gap-5 py-8 text-sm md:grid-cols-[1fr_auto]">
           <p className="max-w-xl text-[var(--text-muted)]">
             Каталог, журнал и личная коллекция для осознанного выбора часов.
           </p>
-          <Link href="/journal" className="text-[var(--accent-strong)] hover:text-[var(--text)]">
-            Читать журнал
-          </Link>
+          <nav aria-label="Информационные разделы" className="flex flex-wrap gap-5">
+            <Link href="/journal" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Читать журнал</Link>
+            <Link href="/faq" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Частые вопросы</Link>
+          </nav>
         </EditorialContainer>
       </footer>
     </div>

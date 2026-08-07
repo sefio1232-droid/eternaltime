@@ -3,6 +3,7 @@ import { CatalogImage } from "@/components/catalog/catalog-image";
 import { CatalogSectionNav, type CatalogSectionNavItem } from "@/components/catalog/catalog-section-nav";
 import { CatalogWatchCardView } from "@/components/catalog/catalog-watch-card";
 import { CollectionWatchAction } from "@/components/collection/collection-watch-action";
+import { CompareToggle } from "@/components/comparison/compare-toggle";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import {
   formatCatalogCount,
@@ -10,6 +11,7 @@ import {
 } from "@/modules/catalog/application/catalog-format";
 import {
   buildFactualWatchDescription,
+  displayWatchModelHeading,
   displayWatchTitle,
   formatCatalogCardTrait,
   formatCatalogDisplayValue,
@@ -131,7 +133,7 @@ export function CatalogWatchDetailPage({
     galleryCount: gallery.length,
   });
   const displayTitle = displayWatchTitle({ brandName: watch.brandName, title: watch.title, referenceDisplay: watch.referenceDisplay });
-  const displayModelTitle = displayWatchTitle({
+  const displayModelTitle = displayWatchModelHeading({
     brandName: watch.brandName,
     title: watch.watchModelName,
     referenceDisplay: watch.referenceDisplay,
@@ -202,6 +204,18 @@ export function CatalogWatchDetailPage({
                 displayName={displayTitle}
                 returnTo={watch.href}
                 state={collectionState}
+              />
+              <CompareToggle
+                variant="detail"
+                item={{
+                  identity: `${watch.brandSlug}:${watch.referenceSlug}`,
+                  brandName: watch.brandName,
+                  brandSlug: watch.brandSlug,
+                  displayName: displayModelTitle,
+                  referenceDisplay: watch.referenceDisplay,
+                  referenceSlug: watch.referenceSlug,
+                  canonicalHref: watch.href,
+                }}
               />
             </div>
           </div>

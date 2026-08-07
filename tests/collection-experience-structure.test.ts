@@ -9,12 +9,16 @@ function source(path: string): string {
 describe("collection experience route and navigation boundaries", () => {
   it("keeps real profile menu routes and exposes collection as the active product entry", () => {
     const menu = source("src/components/shell/profile-menu.tsx");
-    expect(menu).toContain('{ href: "/collection", label: "Моя коллекция"');
-    expect(menu).toContain('{ href: "/collection/new", label: "Добавить часы"');
-    expect(menu).toContain('{ href: "/account", label: "Профиль"');
-    expect(menu).toContain('{ href: "/login", label: "Войти или зарегистрироваться"');
+    expect(menu).toContain('{ href: "/account", label: "Обзор"');
+    expect(menu).toContain('{ href: "/cart", label: "Корзина"');
+    expect(menu).toContain('{ href: "/account/orders", label: "Заказы"');
+    expect(menu).toContain('{ href: "/collection", label: "Коллекция"');
+    expect(menu).toContain('{ href: "/account/profile", label: "Профиль"');
+    expect(menu).not.toContain('label: "Заявки"');
+    expect(menu).not.toContain('label: "Выйти"');
     expect(menu).toContain('aria-expanded={open}');
     expect(menu).toContain('event.key === "Escape"');
+    expect(menu).toContain('event.key === "ArrowDown"');
   });
 
   it("implements a real intent route backed by the Catalog Read Repository adapter", () => {
@@ -298,25 +302,19 @@ describe("collection experience route and navigation boundaries", () => {
     const presentation = source("src/modules/user-watch-collection/application/local-collection-presentation.ts");
     const media = source("src/components/collection/collection-watch-media.tsx");
 
-    expect(collection).toContain("collectionPrimaryImageUrl(watch)");
+    expect(collection).toContain("collectionImageCandidateUrls(watch)");
     expect(collection).not.toContain("imageGallery[0]");
     expect(images).toContain("isCleanCollectionPrimaryImage");
+    expect(images).toContain("selectCollectionImageCandidates");
+    expect(images).toContain("frontViewPattern");
     expect(images).toContain("confirmedNonPrimaryImageIdentities");
-    for (const category of [
-      "compact-digital",
-      "standard-digital",
-      "analog-bracelet",
-      "analog-strap",
-      "diver",
-      "oversized-sport",
-      "rectangular",
-      "manual-watch",
-      "missing-image",
-    ]) {
+    for (const category of ["compact", "standard", "large", "wide"]) {
       expect(presentation).toContain(`"${category}"`);
     }
-    expect(media).toContain("onError={() => setFailedImageUrl(imageUrl)}");
-    expect(media).toContain("failedImageUrl !== imageUrl");
+    expect(media).toContain("imageCandidates");
+    expect(media).toContain("failedImageUrls");
+    expect(media).toContain("new Set(current).add(currentSource)");
+    expect(media).toContain("image.naturalWidth > 0");
     expect(media).toContain("Изображение часов не добавлено");
   });
 

@@ -8,15 +8,13 @@ import { ProfileMenu } from "@/components/shell/profile-menu";
 
 export function MobileNavigation({
   primaryItems,
-  utilityItems,
 }: Readonly<{
   primaryItems: NavigationItem[];
-  utilityItems: NavigationItem[];
 }>) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="ml-auto flex items-center gap-2 md:hidden">
+    <div className="mobile-navigation-controls ml-auto flex items-center gap-2 md:hidden">
       <SearchDialog compact />
       <ProfileMenu mobile />
       <button
@@ -37,7 +35,7 @@ export function MobileNavigation({
           className="absolute left-0 right-0 top-14 z-40 border-b border-[var(--border)] bg-[var(--canvas)] px-5 py-4"
         >
           <nav aria-label="Мобильная навигация" className="grid">
-            {[...primaryItems, ...utilityItems].map((item) => (
+            {primaryItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
