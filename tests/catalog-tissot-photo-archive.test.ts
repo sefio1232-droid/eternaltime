@@ -122,6 +122,28 @@ describe("Tissot photo-archive manifest", () => {
       expect(manifest.catalogReferencesWithoutSourceFolder).toHaveLength(1);
       expect(manifest.catalogReferencesWithoutSourceFolder[0]?.reason).toBe("no_source_archive");
     });
+
+    it("6a. a public set reference can use an exact component reference from its own A + B identity", () => {
+      const manifest = buildTissotPhotoArchiveManifest({
+        mainArchiveFile: "test-main.zip",
+        mainArchiveEntriesByFolder: new Map([
+          ["T006.407.11.033.00", [{ zipEntry: "tissot_FULL_CATALOG/T006.407.11.033.00/x_front.jpg", filename: "x_front.jpg" }]],
+        ]),
+        supplementalArchiveFiles: new Map(),
+        tissotCatalogReferences: [
+          {
+            referenceDisplay: "T006.407.11.033.00 + T006.207.11.038.00",
+            referenceNormalized: "T0064071103300T0062071103800",
+          },
+        ],
+        dimensionsFor: () => null,
+      });
+      expect(manifest.entries).toHaveLength(1);
+      expect(manifest.entries[0]?.referenceNormalized).toBe("T0064071103300T0062071103800");
+      expect(manifest.entries[0]?.sourceReferenceNormalized).toBe("T0064071103300");
+      expect(manifest.entries[0]?.matchConfidence).toBe("component-exact");
+      expect(manifest.catalogReferencesWithoutSourceFolder).toHaveLength(0);
+    });
   });
 
   describe("image taxonomy classification (main archive)", () => {

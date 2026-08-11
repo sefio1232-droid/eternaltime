@@ -25,6 +25,7 @@ export type TissotImageType =
 export type TissotManifestEntry = {
   catalogReference: string;
   referenceNormalized: string;
+  sourceReferenceNormalized: string;
   brandSlug: "tissot";
   /** Repo-root-relative path to the zip file this entry's bytes live in — may be the main archive
    * or one of the supplemental per-reference zips. */
@@ -36,7 +37,7 @@ export type TissotManifestEntry = {
   height: number | null;
   position: "primary" | "gallery";
   galleryIndex: number | null;
-  matchConfidence: "exact";
+  matchConfidence: "exact" | "component-exact";
 };
 
 export type TissotManifestUnmatchedFolder = {

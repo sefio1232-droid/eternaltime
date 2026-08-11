@@ -83,6 +83,18 @@ function parseMainArchiveFolderName(folder: string): string | null {
   return folder;
 }
 
+type TissotCatalogReference = {
+  referenceDisplay: string;
+  referenceNormalized: string;
+};
+
+function componentReferenceKeys(ref: TissotCatalogReference): string[] {
+  return ref.referenceDisplay
+    .split(/\s*\+\s*/)
+    .map((part) => normalizeManufacturerReference(part))
+    .filter((part) => part.length > 0 && part !== ref.referenceNormalized);
+}
+
 export function selectMainArchiveImages(
   entries: Array<{ zipEntry: string; filename: string }>,
 ): {
@@ -138,27 +150,47 @@ export function buildTissotPhotoArchiveManifest(input: {
   mainArchiveFile: string;
   mainArchiveEntriesByFolder: Map<string, Array<{ zipEntry: string; filename: string }>>;
   supplementalArchiveFiles: Map<string, string[]>;
-  tissotCatalogReferences: Array<{ referenceDisplay: string; referenceNormalized: string }>;
+  tissotCatalogReferences: TissotCatalogReference[];
   dimensionsFor: (archiveFile: string, zipEntry: string) => { width: number; height: number } | null;
 }): TissotPhotoArchiveManifest {
   const catalogByNormalized = new Map(input.tissotCatalogReferences.map((ref) => [ref.referenceNormalized, ref]));
+  const mainArchiveByNormalized = new Map(
+    [...input.mainArchiveEntriesByFolder.entries()]
+      .map(([folder, folderEntries]) => {
+        const rawReference = parseMainArchiveFolderName(folder);
+        return rawReference ? [normalizeManufacturerReference(rawReference), { folder, folderEntries }] : null;
+      })
+      .filter((entry): entry is [string, { folder: string; folderEntries: Array<{ zipEntry: string; filename: string }> }] => entry !== null),
+  );
+  const supplementalArchiveByNormalized = new Map(
+    [...input.supplementalArchiveFiles.entries()]
+      .map(([archiveFile, zipEntries]) => {
+        const fileName = path.basename(archiveFile);
+        const rawReference = fileName.toLowerCase().endsWith(".zip") ? fileName.slice(0, -4) : null;
+        return rawReference ? [normalizeManufacturerReference(rawReference), { archiveFile, zipEntries }] : null;
+      })
+      .filter((entry): entry is [string, { archiveFile: string; zipEntries: string[] }] => entry !== null),
+  );
   const entries: TissotManifestEntry[] = [];
   const unmatchedFolders: TissotManifestUnmatchedFolder[] = [];
   const rejectedFiles: TissotManifestRejectedFile[] = [];
   const matchedReferences = new Set<string>();
 
   const assign = (
-    catalogMatch: { referenceDisplay: string; referenceNormalized: string },
+    catalogMatch: TissotCatalogReference,
+    sourceReferenceNormalized: string,
     archiveFile: string,
     zipEntry: string,
     imageType: TissotImageType,
     position: "primary" | "gallery",
     galleryIndex: number | null,
+    matchConfidence: TissotManifestEntry["matchConfidence"],
   ) => {
     const dimensions = input.dimensionsFor(archiveFile, zipEntry);
     entries.push({
       catalogReference: catalogMatch.referenceDisplay,
       referenceNormalized: catalogMatch.referenceNormalized,
+      sourceReferenceNormalized,
       brandSlug: "tissot",
       archiveFile,
       zipEntry,
@@ -168,7 +200,7 @@ export function buildTissotPhotoArchiveManifest(input: {
       height: dimensions?.height ?? null,
       position,
       galleryIndex,
-      matchConfidence: "exact",
+      matchConfidence,
     });
   };
 
@@ -190,9 +222,9 @@ export function buildTissotPhotoArchiveManifest(input: {
     rejectedFiles.push(...rejected);
 
     if (primary) {
-      assign(catalogMatch, input.mainArchiveFile, primary.zipEntry, primary.type, "primary", null);
+      assign(catalogMatch, normalizedReference, input.mainArchiveFile, primary.zipEntry, primary.type, "primary", null, "exact");
     }
-    gallery.forEach((file, index) => assign(catalogMatch, input.mainArchiveFile, file.zipEntry, file.type, "gallery", index));
+    gallery.forEach((file, index) => assign(catalogMatch, normalizedReference, input.mainArchiveFile, file.zipEntry, file.type, "gallery", index, "exact"));
   }
 
   // Source 2: the supplemental per-reference zips — only ever fills in a reference the main
@@ -218,9 +250,48 @@ export function buildTissotPhotoArchiveManifest(input: {
     const { primary, gallery } = selectSupplementalArchiveImages(input.supplementalArchiveFiles.get(archiveFile)!);
 
     if (primary) {
-      assign(catalogMatch, archiveFile, primary, "front", "primary", null);
+      assign(catalogMatch, normalizedReference, archiveFile, primary, "front", "primary", null, "exact");
     }
-    gallery.forEach((zipEntry, index) => assign(catalogMatch, archiveFile, zipEntry, "lifestyle", "gallery", index));
+    gallery.forEach((zipEntry, index) => assign(catalogMatch, normalizedReference, archiveFile, zipEntry, "lifestyle", "gallery", index, "exact"));
+  }
+
+  // Some public Tissot rows are deliberate pair/set records (`A + B`). The archive has one folder
+  // per individual reference, so the combined public identity will not match the folder name as a
+  // whole. Fill only those set records whose own displayed components contain an exact archive
+  // reference; never borrow a visually similar model.
+  for (const catalogMatch of input.tissotCatalogReferences) {
+    if (matchedReferences.has(catalogMatch.referenceNormalized)) continue;
+
+    for (const sourceReferenceNormalized of componentReferenceKeys(catalogMatch)) {
+      const mainArchiveMatch = mainArchiveByNormalized.get(sourceReferenceNormalized);
+      if (mainArchiveMatch) {
+        matchedReferences.add(catalogMatch.referenceNormalized);
+        const { primary, gallery, rejected } = selectMainArchiveImages(mainArchiveMatch.folderEntries);
+        rejectedFiles.push(...rejected);
+
+        if (primary) {
+          assign(catalogMatch, sourceReferenceNormalized, input.mainArchiveFile, primary.zipEntry, primary.type, "primary", null, "component-exact");
+        }
+        gallery.forEach((file, index) =>
+          assign(catalogMatch, sourceReferenceNormalized, input.mainArchiveFile, file.zipEntry, file.type, "gallery", index, "component-exact"),
+        );
+        break;
+      }
+
+      const supplementalArchiveMatch = supplementalArchiveByNormalized.get(sourceReferenceNormalized);
+      if (supplementalArchiveMatch) {
+        matchedReferences.add(catalogMatch.referenceNormalized);
+        const { primary, gallery } = selectSupplementalArchiveImages(supplementalArchiveMatch.zipEntries);
+
+        if (primary) {
+          assign(catalogMatch, sourceReferenceNormalized, supplementalArchiveMatch.archiveFile, primary, "front", "primary", null, "component-exact");
+        }
+        gallery.forEach((zipEntry, index) =>
+          assign(catalogMatch, sourceReferenceNormalized, supplementalArchiveMatch.archiveFile, zipEntry, "lifestyle", "gallery", index, "component-exact"),
+        );
+        break;
+      }
+    }
   }
 
   const catalogReferencesWithoutSourceFolder: TissotManifestCatalogGap[] = input.tissotCatalogReferences
