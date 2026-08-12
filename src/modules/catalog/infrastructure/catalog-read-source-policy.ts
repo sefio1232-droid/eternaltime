@@ -1,5 +1,3 @@
-import type { ServerEnv } from "@/config/server-env";
-
 export type CatalogReadSourcePolicy =
   | {
       allowed: true;
@@ -11,7 +9,10 @@ export type CatalogReadSourcePolicy =
       message: string;
     };
 
-export function resolveCatalogReadSourcePolicy(env: ServerEnv): CatalogReadSourcePolicy {
+export function resolveCatalogReadSourcePolicy(env: {
+  nodeEnv: "development" | "test" | "production";
+  catalogReadSource: "database" | "preview";
+}): CatalogReadSourcePolicy {
   if (env.catalogReadSource === "preview") {
     if (env.nodeEnv === "production") {
       return {

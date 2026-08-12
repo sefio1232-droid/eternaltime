@@ -3,6 +3,7 @@ import { CatalogDetailGallery } from "@/components/catalog/catalog-detail-galler
 import { CatalogSectionNav, type CatalogSectionNavItem } from "@/components/catalog/catalog-section-nav";
 import { CatalogWatchCardView } from "@/components/catalog/catalog-watch-card";
 import { CollectionWatchAction } from "@/components/collection/collection-watch-action";
+import { CommerceProductActions } from "@/components/commerce/commerce-actions";
 import { CompareToggle } from "@/components/comparison/compare-toggle";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import {
@@ -195,6 +196,23 @@ export function CatalogWatchDetailPage({
             <div className={styles.priceRow}>
               <p className="price-plate type-price text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
             </div>
+            <CommerceProductActions
+              product={{
+                brandSlug: watch.brandSlug,
+                referenceNormalized: watch.referenceNormalized,
+                referenceDisplay: watch.referenceDisplay,
+                referenceSlug: watch.referenceSlug,
+                brandName: watch.brandName,
+                displayName: displayModelTitle,
+                canonicalHref: watch.href,
+                image: watch.primaryImage,
+                publicPrice: watch.publicPrice,
+                purchasable:
+                  Boolean(watch.publicPrice) &&
+                  watch.publicPrice?.currencyCode === "RUB" &&
+                  Boolean(watch.publicPrice?.amountMinor && watch.publicPrice.amountMinor > 0),
+              }}
+            />
             {keyFacts.length > 0 ? (
               <dl className={styles.keySpecsInline} aria-label="Ключевые характеристики">
                 {keyFacts.map((specification) => (

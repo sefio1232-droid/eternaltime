@@ -13,5 +13,5 @@ export function isRoleCode(value: string): value is RoleCode {
 }
 
 export function isAdminRole(role: RoleCode): boolean {
-  return role === "admin";
+  return role === "admin" || role === "order_manager";
 }

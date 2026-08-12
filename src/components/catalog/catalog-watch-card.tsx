@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import { CatalogMissingImage } from "@/components/catalog/catalog-missing-image";
+import { CommerceCardCartButton } from "@/components/commerce/commerce-actions";
 import { CompareToggle } from "@/components/comparison/compare-toggle";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
 import {
@@ -67,6 +68,23 @@ export function CatalogWatchCardView({
           referenceDisplay: watch.referenceDisplay,
           referenceSlug: watch.referenceSlug,
           canonicalHref: watch.href,
+        }}
+      />
+      <CommerceCardCartButton
+        product={{
+          brandSlug: watch.brandSlug,
+          referenceNormalized: watch.referenceNormalized,
+          referenceDisplay: watch.referenceDisplay,
+          referenceSlug: watch.referenceSlug,
+          brandName: watch.brandName,
+          displayName: modelHeading,
+          canonicalHref: watch.href,
+          image: watch.primaryImage,
+          publicPrice: watch.publicPrice,
+          purchasable:
+            Boolean(watch.publicPrice) &&
+            watch.publicPrice?.currencyCode === "RUB" &&
+            Boolean(watch.publicPrice?.amountMinor && watch.publicPrice.amountMinor > 0),
         }}
       />
     </article>

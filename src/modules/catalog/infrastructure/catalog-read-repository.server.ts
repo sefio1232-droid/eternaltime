@@ -134,6 +134,17 @@ export async function getPublicCatalogWatch(input: { brandSlug: string; referenc
   return getCatalogWatchByRoute(dataset, input);
 }
 
+export async function getPublicCatalogWatchByIdentity(input: { brandSlug: string; referenceNormalized: string }) {
+  const dataset = await getCatalogReadDataset();
+  return (
+    dataset.watches.find(
+      (watch) =>
+        watch.brandSlug === input.brandSlug &&
+        watch.referenceNormalized === input.referenceNormalized,
+    ) ?? null
+  );
+}
+
 /**
  * "Похожие модели" for the end of the detail page — reads the same cached dataset every other
  * catalog page already reads and applies the simple, transparent brand/mechanism/price rule in

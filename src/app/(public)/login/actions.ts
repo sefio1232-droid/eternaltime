@@ -7,7 +7,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function requestMagicLinkAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const returnTo = safeReturnPath(String(formData.get("returnTo") ?? ""), "/collection");
+  const returnTo = safeReturnPath(
+    String(formData.get("next") || formData.get("returnTo") || ""),
+    "/collection",
+  );
 
   if (!/^\S+@\S+\.\S+$/.test(email)) {
     redirect(`/login?error=invalid_email&returnTo=${encodeURIComponent(returnTo)}`);

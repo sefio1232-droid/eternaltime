@@ -116,13 +116,21 @@ describe("editorial art direction and layout refinement", () => {
     const journal = file("src/app/(public)/journal/page.tsx");
 
     expect(journal).toContain("issueSlugs");
-    expect(journal).toContain("styles.lead");
-    expect(journal).toContain("styles.guide");
-    expect(journal).toContain("styles.investment");
+    expect(journal).toContain("styles.masthead");
+    expect(journal).toContain("styles.tableOfContents");
+    expect(journal).toContain("styles.leadStory");
+    expect(journal).toContain("styles.readingGrid");
+    expect(journal).toContain("styles.editorialShelf");
     expect(journal).toContain("TypographicCover");
-    expect(journal).toContain("JournalWatchComposition");
     expect(journal).toContain("EditorialWatchVisual");
-    expect(journal).toContain("brandRail");
+    expect(journal).toContain("link={false}");
+    expect(journal).toContain("Не витрина картинок");
+    expect(journal).toContain("Редакционная заметка");
+    expect(journal).toContain("Часы в контексте");
+    expect(journal).not.toContain("brand-scoped");
+    expect(journal).not.toContain("Catalog Read Repository");
+    expect(journal).not.toContain("normalized reference");
+    expect(journal).not.toContain("Object notes");
     expect(journal).not.toContain("styles.categories");
     expect(journal).not.toContain("journal-sidebar");
     expect(journal).not.toContain("editorial-quote");
@@ -136,6 +144,18 @@ describe("editorial art direction and layout refinement", () => {
     expect(brands).not.toContain("Фото готовится");
     expect(media).not.toContain("Фото готовится");
     expect(media).toContain("media-placeholder-mark");
+  });
+
+  it("keeps checkout fallback copy customer-facing before backend activation", () => {
+    const checkoutPage = file("src/app/(shop)/checkout/page.tsx");
+    const checkoutExperience = file("src/components/commerce/checkout-experience.tsx");
+    const publicCheckout = `${checkoutPage}\n${checkoutExperience}`;
+
+    expect(checkoutPage).toContain("Онлайн-оформление скоро откроется");
+    expect(checkoutPage).toContain("после подключения личного кабинета");
+    expect(publicCheckout).not.toContain("Supabase credentials");
+    expect(publicCheckout).not.toContain("YooKassa/доставки");
+    expect(publicCheckout).not.toContain("service role");
   });
 
   it("labels watch identity as an article/code instead of reference wording", () => {

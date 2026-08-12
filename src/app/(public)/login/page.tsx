@@ -19,7 +19,10 @@ type LoginPageProps = Readonly<{
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
-  const returnTo = safeReturnPath(typeof params.returnTo === "string" ? params.returnTo : null, "/collection");
+  const returnTo = safeReturnPath(
+    typeof params.next === "string" ? params.next : typeof params.returnTo === "string" ? params.returnTo : null,
+    "/collection",
+  );
   const currentUser = await getCurrentUser();
   if (currentUser.user) {
     redirect(returnTo);
@@ -47,6 +50,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ) : (
             <form action={requestMagicLinkAction} className="grid gap-4">
               <input type="hidden" name="returnTo" value={returnTo} />
+              <input type="hidden" name="next" value={returnTo} />
               <label className="grid gap-2 text-sm font-semibold">
                 Email
                 <input
@@ -58,7 +62,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   placeholder="name@example.com"
                 />
               </label>
-              <Button type="submit" className="justify-self-start">Отправить ссылку</Button>
+              <Button type="submit" className="justify-self-start">Продолжить</Button>
             </form>
           )}
 

@@ -4,6 +4,7 @@ import { MobileNavigation } from "@/components/shell/mobile-navigation";
 import { PublicNavLink } from "@/components/shell/public-nav-link";
 import { ProfileMenu } from "@/components/shell/profile-menu";
 import { SearchDialog } from "@/components/shell/search-dialog";
+import { CommerceCartIcon } from "@/components/commerce/commerce-actions";
 import { CompareTray } from "@/components/comparison/compare-tray";
 import { EditorialContainer, IconAction } from "@/components/ui/editorial-primitives";
 
@@ -30,6 +31,7 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
 
           <div className="public-actions">
             <SearchDialog compact />
+            <CommerceCartIcon />
             <IconAction href="/account/favorites" label="Избранное" icon={<HeartIcon />} />
             <ProfileMenu />
           </div>

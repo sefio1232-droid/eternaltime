@@ -23,6 +23,8 @@
 }
 
 .detailPage {
+  min-width: 0;
+  overflow-x: clip;
   padding-top: 1.25rem;
 }
 
@@ -30,6 +32,7 @@
   display: grid;
   gap: clamp(2rem, 4vw, 4rem);
   align-items: center;
+  min-width: 0;
 }
 
 .heroCopy {
@@ -37,6 +40,7 @@
   z-index: 2;
   display: grid;
   gap: 0.85rem;
+  min-width: 0;
   max-width: 520px;
 }
 
@@ -270,6 +274,28 @@
 }
 
 @media (max-width: 767px) {
+  .detailPage,
+  .hero,
+  .heroCopy,
+  .mediaShell,
+  .overviewSection,
+  .specGrid,
+  .specGroup,
+  .specGroupSummary,
+  .specList,
+  .specRow {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .detailMedia {
+    width: 100%;
+  }
+
+  .tabs {
+    max-width: 100%;
+  }
+
   .title {
     font-size: clamp(2.25rem, 9vw, 3.25rem);
   }

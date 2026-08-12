@@ -21,6 +21,7 @@ describe("database migrations", () => {
       "20260705015000_rls_policies.sql",
       "20260706010000_import_apply_operations.sql",
       "20260711010000_user_watch_collection.sql",
+      "20260811010000_commerce_orders_payments.sql",
     ]);
   });
 
@@ -62,6 +63,14 @@ describe("database migrations", () => {
       "user_watch_analysis_traits",
       "user_watch_match_candidates",
       "user_watch_files",
+      "commerce_carts",
+      "commerce_cart_items",
+      "orders",
+      "order_items",
+      "payment_attempts",
+      "payment_events",
+      "payment_refunds",
+      "order_events",
     ]) {
       expect(allSql).toContain(`alter table public.${table} enable row level security`);
     }
@@ -69,6 +78,13 @@ describe("database migrations", () => {
 
   it("does not create blanket public write policies", () => {
     expect(allSql).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
+  });
+
+  it("stores delivery provider and CDEK point snapshots on orders", () => {
+    expect(allSql).toContain("delivery_provider text not null default 'cdek'");
+    expect(allSql).toContain("delivery_quote_snapshot jsonb not null default '{}'::jsonb");
+    expect(allSql).toContain("cdek_pickup_point_code text");
+    expect(allSql).toContain("cdek_pickup_point_address text");
   });
 
   it("adds controlled import apply operation tables and transactional RPC boundary", () => {
