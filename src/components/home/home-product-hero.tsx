@@ -1045,7 +1045,7 @@ export function HomeProductHero({
             data-home-copy-role="heading"
             aria-label="Часы, которые подходят именно вам"
           >
-            <span>Часы,</span>
+            <span>Часы, </span>
             <span>которые</span>
             <span>подходят</span>
             <span>именно вам</span>

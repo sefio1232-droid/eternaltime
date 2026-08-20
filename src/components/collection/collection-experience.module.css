@@ -51,7 +51,7 @@
 .collectionSubnav a {
   position: relative;
   flex: 0 0 auto;
-  min-height: 2rem;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0;
@@ -181,6 +181,9 @@
 .textAction {
   width: max-content;
   max-width: 100%;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   white-space: normal;
   text-align: center;
   text-decoration: none;
@@ -480,7 +483,9 @@
 }
 
 .contextAction {
-  display: inline-block;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   margin-top: 0.55rem;
   color: var(--collection-navy);
   font-size: 0.72rem;
@@ -1098,6 +1103,9 @@
 }
 
 .breadcrumb a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   color: var(--collection-navy);
 }
 
@@ -1145,6 +1153,7 @@
 .tabs button {
   position: relative;
   flex: 0 0 auto;
+  min-height: 44px;
   padding: 0.75rem 0;
   border: 0;
   background: transparent;
@@ -2364,5 +2373,104 @@
 
   .watchActionPopover {
     animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .experience {
+    --collection-section-space-large: 2.5rem;
+    --collection-section-space-medium: 1.4rem;
+    gap: var(--collection-section-space-large);
+    margin-top: 0;
+  }
+
+  .mastheadCopy h1,
+  .addHeader h1,
+  .notFound h1,
+  .detailCopy h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.15rem, 9.5vw, 3.05rem);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  .sectionHeading {
+    display: grid;
+    gap: 0.9rem;
+    align-items: stretch;
+  }
+
+  .sectionHeading h2,
+  .profileIntro h2,
+  .directionSection h2,
+  .secondaryActions h2,
+  .contributionSection h2,
+  .editIntro h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 8vw, 2.35rem);
+    font-weight: 620;
+    letter-spacing: -0.03em;
+  }
+
+  .primaryAction,
+  .secondaryAction,
+  .lightAction,
+  .lightSecondaryAction {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .mastheadMetrics {
+    grid-template-columns: repeat(4, minmax(5rem, 1fr));
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .mastheadMetrics div {
+    min-width: 5rem;
+    scroll-snap-align: start;
+  }
+
+  .shelfGrid,
+  .shelfGrid[data-layout="split"],
+  .shelfGrid[data-layout="triad"],
+  .shelfGrid[data-layout="many"] {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .shelfWatch {
+    flex: 0 0 min(78vw, 22rem);
+    grid-template-rows: 14rem auto;
+    scroll-snap-align: start;
+  }
+
+  .recommendationGrid,
+  .embeddedRecommendationGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .recommendationCard {
+    width: 100%;
+    min-width: 0;
+    grid-template-rows: 14rem auto;
+  }
+
+  .watchStage,
+  .recommendationMedia {
+    min-height: 14rem;
+  }
+
+  .watchMeta,
+  .recommendationCopy {
+    min-height: auto;
+    grid-template-rows: none;
+    padding: 1rem;
   }
 }

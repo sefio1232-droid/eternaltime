@@ -1,6 +1,6 @@
 /**
- * Catalog site-import overlay manifest builder ("seo_final" batch — docs/CATALOG_SHOWROOM_
- * RECOVERY.md "Site-import overlay v2"). Reads the three user-supplied `incoming/*_seo_final*.xlsx`
+ * Catalog site-import overlay manifest builder ("FINAL_FOR_SITE_DROPIN" batch). Reads the three
+ * user-supplied `incoming/*_FINAL_FOR_SITE_DROPIN.xlsx`
  * workbooks (Casio, Orient, Tissot) read-only and matches every row to a real catalog reference by
  * EXACT normalized-reference equality only, brand-scoped (a Casio row can only match a Casio
  * watch) — nothing approximate or family-based. Unmatched rows are recorded, never guessed at.
@@ -91,6 +91,7 @@ const combinedSpecLabelMap: Record<string, string> = {
   "диаметр корпуса": "case_diameter_raw",
   "толщина корпуса": "case_thickness_raw",
   "материал корпуса": "case_material_raw",
+  "материал корпуса/безеля": "case_material_raw",
   "корпус/безель": "case_material_raw",
   безель: "bezel_material_raw",
   "материал безеля": "bezel_material_raw",
@@ -106,10 +107,12 @@ const combinedSpecLabelMap: Record<string, string> = {
   питание: "power_source_raw",
   "тип батарейки": "power_source_raw",
   "срок службы батареи": "power_source_raw",
+  автономность: "power_source_raw",
   "точность хода": "accuracy_raw",
   точность: "accuracy_raw",
   сертификация: "certification_raw",
   функции: "functions_raw",
+  связь: "functions_raw",
   назначение: "purpose_raw",
   водозащита: "water_resistance_raw",
   водонепроницаемость: "water_resistance_raw",
@@ -123,6 +126,7 @@ const combinedSpecLabelMap: Record<string, string> = {
   браслет: "attachment_material_raw",
   "цвет ремешка/браслета": "strap_color_raw",
   "покрытие браслета": "strap_coating_raw",
+  покрытие: "case_coating_raw",
   "особенности браслета": "strap_features_raw",
   "ширина ремешка": "strap_width_raw",
   "ширина ушек": "strap_width_raw",
@@ -140,6 +144,10 @@ const combinedSpecLabelMap: Record<string, string> = {
   конструкция: "construction_raw",
   "люминесцентное покрытие стрелок": "luminescence_raw",
   "страна производства": "brand_country_raw",
+  комплектация: "package_contents_raw",
+  комплект: "package_contents_raw",
+  "g-shock в комплекте": "package_contents_raw",
+  "baby-g в комплекте": "package_contents_raw",
 };
 
 /**

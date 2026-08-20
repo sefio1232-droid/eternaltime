@@ -75,7 +75,7 @@
   border: 0;
   border-bottom: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
   background: transparent;
-  padding-right: 1.75rem;
+  padding-right: 2.75rem;
   color: var(--catalog-ink, #10161a);
   font-size: 0.88rem;
   transition: border-color 160ms ease;
@@ -102,11 +102,11 @@
 
 .searchSubmit {
   position: absolute;
-  right: 0;
-  bottom: 10px;
+  right: -0.35rem;
+  bottom: -2px;
   display: grid;
-  height: 26px;
-  width: 26px;
+  height: 44px;
+  width: 44px;
   place-items: center;
   border: 0;
   background: transparent;
@@ -368,4 +368,88 @@
 .resetAll:hover,
 .resetAll:focus-visible {
   color: var(--catalog-ink, #10161a);
+}
+
+@media (max-width: 767px) {
+  .searchField {
+    max-width: none;
+  }
+
+  .searchInput {
+    height: 44px;
+    border: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+    background: rgb(255 255 255 / 0.55);
+    padding-inline: 0.85rem 3.2rem;
+    font-size: 16px;
+  }
+
+  .searchSubmit {
+    right: 0.2rem;
+    bottom: 0;
+    width: 44px;
+    height: 44px;
+  }
+
+  .sortField {
+    flex: 1;
+  }
+
+  .sortField .control {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+    background-color: rgb(255 255 255 / 0.55);
+    background-position:
+      calc(100% - 13px) 19px,
+      calc(100% - 9px) 19px;
+    padding-inline: 0.8rem 1.6rem;
+    font-size: 0.78rem;
+  }
+
+  .expandedGrid {
+    grid-template-columns: 1fr;
+    row-gap: 1rem;
+  }
+
+  .moreField {
+    grid-column: 1;
+  }
+
+  .radioGroup {
+    gap: 0.45rem;
+  }
+
+  .radioOption {
+    min-height: 38px;
+    border: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+    padding: 0.45rem 0.6rem;
+    background: rgb(255 255 255 / 0.35);
+  }
+
+  .priceGroup {
+    max-width: none;
+  }
+
+  .chipRow {
+    margin-inline: calc(-1 * var(--page-gutter));
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0.35rem var(--page-gutter) 0.45rem;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .chipList {
+    flex-wrap: nowrap;
+  }
+
+  .chip {
+    height: 34px;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+
+  .resetAll {
+    flex: 0 0 auto;
+  }
 }

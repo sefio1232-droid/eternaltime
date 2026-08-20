@@ -24,6 +24,7 @@ pnpm-debug.log*
 
 # local artifacts
 coverage/
+artifacts/
 .turbo/
 .vercel/
 .tmp/

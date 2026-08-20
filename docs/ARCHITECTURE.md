@@ -136,7 +136,7 @@ Data access should be explicit per module:
 - `manual-watch-matching/repository.server.ts` for match candidates and provisional identities.
 - `orders/repository.server.ts` for commerce records.
 
-Do not spread raw Supabase queries across UI components. Public reads, authenticated reads, admin reads, and service-role tasks should be separate functions.
+Do not spread raw Supabase queries across UI components. Public reads, authenticated reads, admin reads, and elevated admin-secret tasks should be separate functions.
 
 The catalog foundation uses explicit module boundaries under `src/modules/catalog/`:
 
@@ -177,7 +177,7 @@ Use Supabase client types intentionally:
 - User session client for authenticated user data.
 - Service role client only in server-only code for trusted jobs, imports, webhooks, and admin operations that cannot be expressed through user RLS.
 
-Service role keys must never enter client bundles.
+Supabase admin secret keys (`SUPABASE_SECRET_KEY`, `sb_secret_...`) and legacy service role keys must never enter client bundles.
 
 ## Storage
 

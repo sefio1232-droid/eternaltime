@@ -52,7 +52,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
         <header className={styles.commerceHeading}>
           <p className={styles.eyebrow}>Оформление</p>
           <h1>Онлайн-оформление скоро откроется</h1>
-          <span>Мы уже подготовили корзину, доставку и оплату. Финальное создание заказа включим после подключения личного кабинета.</span>
+          <span>Сервисы оформления не настроены для этого окружения. В production покупатель авторизуется, заполняет доставку и переходит к безопасной оплате.</span>
         </header>
       </EditorialContainer>
     );
@@ -67,7 +67,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Оформление</p>
         <h1>Оформление заказа</h1>
-        <span>Контакты, доставка и финальная проверка суммы перед переходом на страницу оплаты YooKassa.</span>
+        <span>Контакты, доставка, юридические согласия и финальная проверка суммы перед переходом к оплате через YooKassa.</span>
       </header>
       <CheckoutExperience source={source} userEmail={currentUser.user.email ?? ""} />
     </EditorialContainer>

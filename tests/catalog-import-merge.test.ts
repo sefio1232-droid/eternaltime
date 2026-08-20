@@ -129,6 +129,27 @@ describe("catalog source merge and apply eligibility", () => {
     expect(plan.proposedWatchReferenceChanges).toHaveLength(0);
   });
 
+  it("blocks worksheet notes accidentally pasted into manufacturer reference fields", () => {
+    const noteRow = normalized({
+      sourceFile: "casio.zip",
+      sourceType: "casio_package",
+      sheet: "Casio_для_IT",
+      rowNumber: 6,
+      values: {
+        "Бренд": "Casio",
+        "Название для сайта": "Casio GM-2100MF-5ADR Сылки одинаковые!!",
+        "Артикул": "GM-2100MF-5ADR Сылки одинаковые!!",
+        "Цена ₽": "12 000",
+      },
+    });
+    const [candidate] = mergeNormalizedCatalogRows([noteRow]);
+
+    expect(candidate.identity.referenceNormalized).toBe("GM2100MF5ADRСЫЛКИОДИНАКОВЫЕ");
+    expect(candidate.sourceRowClassification?.kind).toBe("source_note");
+    expect(candidate.applyEligibility.status).toBe("blocked");
+    expect(candidate.applyEligibility.referenceApplyEligible).toBe(false);
+  });
+
   it("allows informational reference staging without public price but blocks commercial apply", () => {
     const infoRow = normalized({
       sourceFile: "main.xlsx",

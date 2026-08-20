@@ -177,7 +177,7 @@ export function CatalogDetailGallery({
                 onClick={() => goTo(index)}
                 onKeyDown={(event) => handleThumbKeyDown(event, index)}
               >
-                <CatalogImage image={image} presentation="card" />
+                <CatalogImage image={image} presentation="card" priority={index < 10} />
               </button>
             );
           })}

@@ -258,7 +258,58 @@ describe("Tissot photo-archive manifest", () => {
       await fs.rm(manifestPath, { force: true });
     });
 
-    it("16. isTissotArchiveImageKey distinguishes this archive's keys from Orient/Casio/import-pipeline keys", () => {
+    it("16. serves archive images with a content type matching the actual bytes, not only the extension", async () => {
+      const fs = await import("node:fs/promises");
+      const { default: JSZip } = await import("jszip");
+      const manifestPath = path.join(projectRoot, ".tmp", "tissot-photo-import", "mime-test-manifest.json");
+      const archiveFile = ".tmp/tissot-photo-import/mime-test.zip";
+      const archivePath = path.join(projectRoot, archiveFile);
+      const zipEntry = "Tissot/test-image.webp";
+      const imageKey = createTissotArchiveImageKey(archiveFile, zipEntry);
+      const zip = new JSZip();
+
+      zip.file(zipEntry, Uint8Array.from([0xff, 0xd8, 0xff, 0xd9]));
+      await fs.mkdir(path.dirname(manifestPath), { recursive: true });
+      await fs.writeFile(archivePath, await zip.generateAsync({ type: "nodebuffer" }));
+      await fs.writeFile(
+        manifestPath,
+        JSON.stringify({
+          generatedAt: new Date().toISOString(),
+          sourceArchives: [],
+          entries: [
+            {
+              catalogReference: "X",
+              referenceNormalized: "X",
+              brandSlug: "tissot",
+              archiveFile,
+              zipEntry,
+              sourceFilename: "test-image.webp",
+              imageType: "front",
+              width: null,
+              height: null,
+              position: "primary",
+              galleryIndex: null,
+              matchConfidence: "exact",
+            },
+          ],
+          unmatchedFolders: [],
+          rejectedFiles: [],
+          catalogReferencesWithoutSourceFolder: [],
+        }),
+        "utf8",
+      );
+
+      const result = await resolveTissotArchiveImage({ imageKey, nodeEnv: "test", rootDir: projectRoot, manifestPath });
+      expect(result.status).toBe("found");
+      if (result.status === "found") {
+        expect(result.contentType).toBe("image/jpeg");
+      }
+
+      await fs.rm(manifestPath, { force: true });
+      await fs.rm(archivePath, { force: true });
+    });
+
+    it("17. isTissotArchiveImageKey distinguishes this archive's keys from Orient/Casio/import-pipeline keys", () => {
       expect(isTissotArchiveImageKey(createTissotArchiveImageKey("a.zip", "b.jpg"))).toBe(true);
       expect(isTissotArchiveImageKey("orient_abc")).toBe(false);
       expect(isTissotArchiveImageKey("casio_abc")).toBe(false);
@@ -266,7 +317,7 @@ describe("Tissot photo-archive manifest", () => {
   });
 
   describe("real catalog integration", () => {
-    it("17. after the archive manifest is applied, no watch's primaryImage.src points at another reference's archive entry", () => {
+    it("18. after the archive manifest is applied, no watch's primaryImage.src points at another reference's archive entry", () => {
       const manifestPath = path.join(projectRoot, ".tmp/tissot-photo-import/manifest.json");
       let manifest: { entries: Array<{ referenceNormalized: string; zipEntry: string }> };
       try {

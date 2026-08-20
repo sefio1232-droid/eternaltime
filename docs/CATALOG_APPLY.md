@@ -65,7 +65,7 @@ Dry run:
 - checks local Supabase project structure;
 - checks remote link state;
 - checks required environment values by presence only;
-- checks required database tables when a service-role database client is available;
+- checks required database tables when a server admin secret database client is available;
 - separates plan counts from database comparison counts;
 - reports inserts, updates, no-ops, and conflicts only when database comparison is available;
 - performs no database writes.
@@ -87,7 +87,7 @@ Actual apply is allowed only when all are true:
 - local Supabase project structure exists;
 - versioned migrations exist;
 - repository is linked to a remote Supabase project;
-- service role key is configured in the process environment;
+- `SUPABASE_SECRET_KEY` is configured in the process environment;
 - required apply/catalog tables are available;
 - dry run succeeds;
 - no apply-level conflicts exist;
@@ -105,7 +105,7 @@ public.apply_catalog_import_batch(input jsonb)
 
 The function is intended as the transactional mutation boundary for the related catalog apply group. It inserts an import batch, import rows, Brands, Brand Collections, Watch Models, `watch_references`, import-managed Catalog Offers, price history, and a safe audit log in one database function call.
 
-Execution is restricted to `service_role`.
+Execution is restricted to the Supabase/Postgres `service_role` database role. Application code should authenticate this elevated boundary with a server-only `SUPABASE_SECRET_KEY` (`sb_secret_...`), not with a browser-visible key.
 
 The function is idempotent by catalog identities:
 
@@ -184,7 +184,7 @@ Catalog images and User Watch photos remain separate storage concerns.
 
 The apply process is privileged operational code. It must not add broad public or authenticated write policies to catalog tables. Service role usage remains server/CLI-only and must not enter client bundles.
 
-Generated apply reports must not contain secrets, connection strings, service role keys, or image binaries.
+Generated apply reports must not contain secrets, connection strings, Supabase admin secret keys, legacy service role keys, or image binaries.
 
 ## Future Read Experience Boundary
 

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
+import { catalogImageNodeEnv, resolveCatalogImageAssetRoot } from "@/modules/catalog/infrastructure/catalog-image-asset-root";
 import { createCatalogDevImageKey, isCatalogDevImageKey } from "@/modules/catalog/infrastructure/dev-image-keys";
 import type {
   CatalogImageUploadPlan,
@@ -63,11 +64,7 @@ function resolveSourcePackagePath(rootDir: string, sourcePackage: string): strin
 }
 
 function envFromProcess(): "development" | "test" | "production" {
-  if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "test") {
-    return process.env.NODE_ENV;
-  }
-
-  return "development";
+  return catalogImageNodeEnv();
 }
 
 export function findDevCatalogImagePlanItem(input: {
@@ -75,8 +72,9 @@ export function findDevCatalogImagePlanItem(input: {
   preview: CatalogImportPreview;
   imagePlan: CatalogImageUploadPlan;
   nodeEnv: "development" | "test" | "production";
+  allowProductionAssets?: boolean;
 }): DevImageManifestLookup {
-  if (input.nodeEnv === "production") {
+  if (input.nodeEnv === "production" && !input.allowProductionAssets) {
     return { status: "disabled", item: null };
   }
 
@@ -109,16 +107,15 @@ export async function resolveDevCatalogImage(input: {
   previewPath?: string;
   imagePlanPath?: string;
 }): Promise<DevCatalogImageResolution> {
-  const rootDir = input.rootDir ?? process.cwd();
   const nodeEnv = input.nodeEnv ?? envFromProcess();
+  const rootDir = resolveCatalogImageAssetRoot({ rootDir: input.rootDir, nodeEnv });
+  if (!rootDir) {
+    return { status: "disabled" };
+  }
   const previewPath =
     input.previewPath ?? path.join(rootDir, "imports", "generated", "catalog-import-preview.json");
   const imagePlanPath =
     input.imagePlanPath ?? path.join(rootDir, "imports", "generated", "catalog-image-upload-plan.json");
-
-  if (nodeEnv === "production") {
-    return { status: "disabled" };
-  }
 
   const preview = await readJsonFile<CatalogImportPreview>(previewPath);
   const imagePlan = await readJsonFile<CatalogImageUploadPlan>(imagePlanPath);
@@ -127,6 +124,7 @@ export async function resolveDevCatalogImage(input: {
     preview,
     imagePlan,
     nodeEnv,
+    allowProductionAssets: true,
   });
 
   if (lookup.status !== "found" || !lookup.item?.actualZipEntry) {

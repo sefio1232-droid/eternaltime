@@ -290,7 +290,7 @@ export function HomeSelection({ scenarios, curation }: CuratedScenarioProps) {
 export function HomeComparisonPurchase({ scenarios, curation }: CuratedScenarioProps) {
   const models = uniquePlacements("comparison-purchase", [
     { instanceId: "comparison-purchase-pr100-34-t150210", watch: watchAt(scenarios, 0, 2), role: "compact", label: "Компактная посадка" },
-    { instanceId: "comparison-purchase-finalist-t150410", watch: watchAt(scenarios, 1, 0), role: "finalist", label: "Финалист", tone: "finalist" },
+    { instanceId: "comparison-purchase-finalist-t150410", watch: watchAt(scenarios, 1, 0), role: "finalist", label: "Основной вариант", tone: "finalist" },
     { instanceId: "comparison-purchase-seastar-t120417", watch: curation.comparisonSeastar ?? watchAt(scenarios, 2, 0), role: "sport", label: "Спортивная роль" },
   ]);
   const modelDetails = [
@@ -304,7 +304,7 @@ export function HomeComparisonPurchase({ scenarios, curation }: CuratedScenarioP
       ],
     },
     {
-      headerRole: "Финалист",
+      headerRole: "Основной вариант",
       specs: [
         ["Размер", "40 мм"],
         ["Механизм", "Кварц"],
@@ -322,7 +322,7 @@ export function HomeComparisonPurchase({ scenarios, curation }: CuratedScenarioP
       ],
     },
   ] as const;
-  const journey = ["Сохранен", "Финалист", "Заказ", "Доставлен", "В коллекции"] as const;
+  const journey = ["Сохранить", "Сравнить", "Оформить заказ", "Получить", "Добавить в коллекцию"] as const;
 
   return (
     <section className={`${styles.section} ${styles.comparisonPurchase}`} data-home-section="comparison-purchase" data-home-transition="light-light">
@@ -371,7 +371,7 @@ export function HomeComparisonPurchase({ scenarios, curation }: CuratedScenarioP
           </div>
           <div className={styles.purchasePanel} data-home-grid-area="comparison-criteria">
             <div className={styles.purchaseJourney}>
-              <span className={styles.purchaseJourneyLabel}>Путь модели</span>
+              <span className={styles.purchaseJourneyLabel}>Как это работает</span>
               <ol className={styles.purchasePath}>
                 <i className={styles.purchaseLine} data-home-reveal="line-x" data-home-reveal-index="5" aria-hidden="true" />
                 {journey.map((step, index) => (
@@ -399,14 +399,14 @@ export function HomeCollectionIntelligencePanel({ scenarios, curation }: Curated
     { instanceId: "collection-owned-casio-edifice", watch: curatedOwned[1], role: "mechanical", label: "Первая механика" },
     { instanceId: "collection-owned-orient-classic", watch: curatedOwned[2], role: "classic", label: "Фактура" },
     { instanceId: "collection-owned-citizen-dress", watch: curatedOwned[3], role: "classic", label: "Под рубашку" },
-    { instanceId: "collection-next-orient-mako-green", watch: recommendation, role: "next", label: "Следующий шаг", tone: "next" },
+    { instanceId: "collection-next-orient-mako-green", watch: recommendation, role: "next", label: "Что посмотреть дальше", tone: "next" },
   ]);
   const ownedPlacements = placements.slice(0, 4);
   const nextPlacement = placements[4];
   const insights = [
-    ["Сильная база", "Повседневные роли закрыты."],
-    ["Пробел", "Нет спортивного акцента."],
-    ["Следующий шаг", "Добавить цвет и водозащиту."],
+    ["Что уже хорошо закрыто", "Повседневные роли закрыты."],
+    ["Чего не хватает", "Нет спортивного акцента."],
+    ["Что посмотреть дальше", "Добавить цвет и водозащиту."],
   ] as const;
   const nextHref = getHomeWatchHref(nextPlacement.watch);
 

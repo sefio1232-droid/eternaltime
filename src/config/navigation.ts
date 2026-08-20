@@ -29,6 +29,7 @@ export const adminNavigation: NavigationItem[] = [
   { label: "Бренды", href: "/admin/brands" },
   { label: "Brand Collections", href: "/admin/brand-collections" },
   { label: "Заказы", href: "/admin/orders" },
+  { label: "Пользователи", href: "/admin/users" },
   { label: "Editorial Selections", href: "/admin/editorial-selections" },
   { label: "Контент", href: "/admin/content" },
   { label: "SEO", href: "/admin/seo" },
@@ -36,4 +37,4 @@ export const adminNavigation: NavigationItem[] = [
   { label: "Настройки", href: "/admin/settings" },
 ];
 
-export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/faq", "/selection", "/collection"] as const;
+export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/faq", "/selection", "/collection", "/legal"] as const;

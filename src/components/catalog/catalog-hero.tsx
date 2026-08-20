@@ -37,7 +37,7 @@ export function CatalogHero({
           Опишите сценарий, размер и бюджет — подберём несколько реальных моделей из каталога под конкретную задачу.
         </p>
         <Link href="/selection" className={styles.assistCta}>
-          Оставить запрос на подбор <span aria-hidden="true">→</span>
+          Пройти подбор <span aria-hidden="true">→</span>
         </Link>
       </div>
     </header>

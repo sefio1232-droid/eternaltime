@@ -7,7 +7,7 @@ const heroWatch = {
   brand: "Tissot",
   model: "PR 100 Chronograph",
   reference: "T150.417.11.041.00",
-  publicPriceRub: 45678,
+  publicPriceRub: 47500,
   assetPath: "/generated/home-hero/candidates/01-everyday/secondary-01.png",
   href: "/watches/tissot/t1504171104100",
 };

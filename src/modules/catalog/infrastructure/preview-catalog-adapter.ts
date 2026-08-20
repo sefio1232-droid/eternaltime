@@ -59,6 +59,7 @@ const specificationDefinitions: Record<string, SpecificationDefinition> = {
   bezel_material_raw: { label: "Материал безеля", group: "case" },
   bezel_raw: { label: "Безель", group: "case" },
   construction_raw: { label: "Конструкция корпуса", group: "case" },
+  case_coating_raw: { label: "Покрытие корпуса/безеля", group: "case" },
   caseback_raw: { label: "Задняя крышка", group: "case" },
   crown_raw: { label: "Заводная головка", group: "case" },
   purpose_raw: { label: "Назначение", group: "other" },
@@ -71,6 +72,7 @@ const specificationDefinitions: Record<string, SpecificationDefinition> = {
   dial_markers_raw: { label: "Индексы", group: "dial" },
   gemstones_raw: { label: "Драгоценные камни", group: "dial" },
   certification_raw: { label: "Сертификация", group: "mechanism" },
+  package_contents_raw: { label: "Комплектация", group: "other" },
 };
 
 const specificationOrder = [
@@ -86,6 +88,7 @@ const specificationOrder = [
   "bezel_material_raw",
   "bezel_raw",
   "construction_raw",
+  "case_coating_raw",
   "case_shape_raw",
   "case_diameter_raw",
   "case_thickness_raw",
@@ -111,6 +114,7 @@ const specificationOrder = [
   "purpose_raw",
   "luminescence_raw",
   "certification_raw",
+  "package_contents_raw",
   "watch_type_raw",
   "brand_country_raw",
 ];

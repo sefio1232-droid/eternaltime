@@ -15,6 +15,8 @@ import {
 import { cleanImportedProseText } from "@/modules/catalog/application/catalog-display";
 import { resolveCatalogReadSourcePolicy } from "@/modules/catalog/infrastructure/catalog-read-source-policy";
 import { catalogReadDatasetFromPreview, groupSiteImportOverlayByReference } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
+import { catalogReadDatasetFromDatabase } from "@/modules/catalog/infrastructure/database-catalog-adapter.server";
+import { resolveCatalogImageAssetRoot } from "@/modules/catalog/infrastructure/catalog-image-asset-root";
 import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/modules/catalog/infrastructure/orient-photo-archive-types";
 import { CASIO_MANIFEST_OUTPUT_PATH, type CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
 import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
@@ -26,12 +28,11 @@ import type { CatalogReadQuery, CatalogWatchDetail } from "@/modules/catalog/dom
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
 
-const previewPath = path.join(process.cwd(), "imports", "generated", "catalog-import-preview.json");
-const imagePlanPath = path.join(process.cwd(), "imports", "generated", "catalog-image-upload-plan.json");
-const orientManifestPath = path.join(process.cwd(), ORIENT_MANIFEST_OUTPUT_PATH);
-const casioManifestPath = path.join(process.cwd(), CASIO_MANIFEST_OUTPUT_PATH);
-const tissotManifestPath = path.join(process.cwd(), TISSOT_MANIFEST_OUTPUT_PATH);
-const siteImportOverlayPath = path.join(process.cwd(), SITE_IMPORT_OVERLAY_OUTPUT_PATH);
+const previewPath = path.join(/* turbopackIgnore: true */ process.cwd(), "imports", "generated", "catalog-import-preview.json");
+const imagePlanPath = path.join(/* turbopackIgnore: true */ process.cwd(), "imports", "generated", "catalog-image-upload-plan.json");
+const orientManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), ORIENT_MANIFEST_OUTPUT_PATH);
+const casioManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), CASIO_MANIFEST_OUTPUT_PATH);
+const tissotManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), TISSOT_MANIFEST_OUTPUT_PATH);
 
 export class CatalogReadSourceError extends Error {
   readonly code: "catalog_source_unavailable" | "catalog_source_not_configured";
@@ -60,11 +61,30 @@ async function readOptionalJsonFile<T>(filePath: string): Promise<T | null> {
   }
 }
 
+function catalogAssetCandidatePaths(relativePath: string): string[] {
+  const assetRoot = resolveCatalogImageAssetRoot();
+  return [
+    path.join(/* turbopackIgnore: true */ process.cwd(), relativePath),
+    ...(assetRoot ? [path.join(/* turbopackIgnore: true */ assetRoot, relativePath)] : []),
+  ];
+}
+
+async function readOptionalJsonFromCandidates<T>(filePaths: string[]): Promise<T | null> {
+  for (const filePath of filePaths) {
+    const parsed = await readOptionalJsonFile<T>(filePath);
+    if (parsed) return parsed;
+  }
+
+  return null;
+}
+
 // Best-effort: absent until `npx tsx src/modules/catalog/cli/catalog-site-import-overlay-manifest.ts`
 // has been run locally. Cached once per request so both the specification-merge path below and
-// `getPublicCatalogWatchSeoOverlay` read the same file exactly once.
+// `getPublicCatalogWatchSeoOverlay` read the same file exactly once. In production the release
+// bundle intentionally excludes `.tmp`, so the deploy workflow copies this manifest into the shared
+// catalog asset root next to the photo manifests; read both locations before falling back.
 const getCatalogSiteImportOverlayManifest = cache(async () => {
-  return readOptionalJsonFile<CatalogSiteImportOverlayManifest>(siteImportOverlayPath);
+  return readOptionalJsonFromCandidates<CatalogSiteImportOverlayManifest>(catalogAssetCandidatePaths(SITE_IMPORT_OVERLAY_OUTPUT_PATH));
 });
 
 export const getCatalogReadDataset = cache(async () => {
@@ -102,10 +122,15 @@ export const getCatalogReadDataset = cache(async () => {
     });
   }
 
-  throw new CatalogReadSourceError(
-    "catalog_source_not_configured",
-    "Production catalog read repository is not configured yet.",
-  );
+  const dataset = await catalogReadDatasetFromDatabase();
+  if (!dataset) {
+    throw new CatalogReadSourceError(
+      "catalog_source_unavailable",
+      "Catalog database read model is unavailable.",
+    );
+  }
+
+  return dataset;
 });
 
 export async function listPublicCatalogWatches(query: CatalogReadQuery) {

@@ -153,3 +153,48 @@
   outline: 2px solid var(--catalog-focus, #315e74);
   outline-offset: 2px;
 }
+
+@media (max-width: 767px) {
+  .trigger {
+    min-height: 44px;
+    flex: 1;
+    justify-content: center;
+    padding-inline: 0.8rem;
+  }
+
+  .overlay {
+    z-index: 75;
+    background: rgba(16, 22, 26, 0.54);
+  }
+
+  .panel {
+    max-height: min(88dvh, 42rem);
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .panelHead {
+    padding: 0.95rem 1rem;
+  }
+
+  .panelTitle {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 620;
+  }
+
+  .closeButton {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .panelBody {
+    padding: 0.95rem 1rem;
+  }
+
+  .panelFooter {
+    position: sticky;
+    bottom: 0;
+    padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  }
+}

@@ -83,7 +83,7 @@ AI must not:
 - Modify catalog records directly.
 - Grant roles or make authorization decisions.
 - Process private documents unless a specific user-approved workflow exists.
-- Receive service role keys, auth tokens, raw payment credentials, or webhook secrets.
+- Receive Supabase admin secret keys, legacy service role keys, auth tokens, raw payment credentials, or webhook secrets.
 
 ## Draft And Approval Flows
 

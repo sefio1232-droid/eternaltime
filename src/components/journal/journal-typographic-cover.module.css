@@ -55,8 +55,8 @@
   position: absolute;
   z-index: 1;
   top: 12%;
-  right: -13%;
-  width: 68%;
+  right: -8%;
+  width: 62%;
   aspect-ratio: 1;
   border: 1px solid currentColor;
   border-radius: 50%;
@@ -89,4 +89,9 @@
 @media (max-width: 640px) {
   .cover[data-cover-size="lead"] { min-height: 23rem; }
   .cover[data-cover-size="horizontal"] { min-height: 17rem; }
+
+  .motif {
+    right: -3%;
+    width: 58%;
+  }
 }

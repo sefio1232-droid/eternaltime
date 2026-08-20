@@ -51,6 +51,7 @@ export type DeliveryQuote =
       currencyCode: "RUB";
       tariffCode: string | null;
       freeDeliveryThresholdMinor: number | null;
+      carrierActualCostMinor?: number | null;
       snapshot: Record<string, unknown>;
     }
   | {
@@ -107,18 +108,45 @@ export type PaymentAttemptStatus =
 
 export type RefundStatus = "pending" | "succeeded" | "canceled" | "failed";
 
+export type OrderShipmentStatus =
+  | "pending_creation"
+  | "creation_in_progress"
+  | "creation_pending_retry"
+  | "creation_failed"
+  | "created"
+  | "handed_over"
+  | "in_transit"
+  | "arrived_at_pickup_point"
+  | "ready_for_pickup"
+  | "delivered"
+  | "returning"
+  | "returned"
+  | "problem";
+
 export type CheckoutContactInput = {
   recipientName: string;
   phone: string;
   email: string;
   deliveryMethod?: "cdek_courier" | "cdek_pickup";
+  cdekCityCode?: number;
   cdekPickupPointCode?: string;
+  cdekPickupPointName?: string;
   cdekPickupPointAddress?: string;
+  cdekPickupPointCity?: string;
+  cdekPickupPointPostalCode?: string;
+  cdekPickupPointLatitude?: number;
+  cdekPickupPointLongitude?: number;
+  cdekPickupPointWorkTime?: string;
+  cdekPickupPointNote?: string;
+  cdekPickupPointProviderSnapshot?: Record<string, unknown>;
   city: string;
-  postalCode: string;
-  street: string;
-  house: string;
+  postalCode?: string;
+  street?: string;
+  house?: string;
   unit?: string;
   deliveryComment?: string;
   customerComment?: string;
+  legalOfferAccepted: boolean;
+  personalDataConsentAccepted: boolean;
+  marketingConsentAccepted?: boolean;
 };

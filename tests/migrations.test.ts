@@ -22,6 +22,9 @@ describe("database migrations", () => {
       "20260706010000_import_apply_operations.sql",
       "20260711010000_user_watch_collection.sql",
       "20260811010000_commerce_orders_payments.sql",
+      "20260813010000_fix_catalog_apply_variable_scope.sql",
+      "20260813011000_catalog_public_read_projection.sql",
+      "20260813012000_cdek_order_shipments.sql",
     ]);
   });
 
@@ -54,6 +57,7 @@ describe("database migrations", () => {
       "offer_price_history",
       "inventory_events",
       "watch_images",
+      "catalog_public_read_models",
       "import_batches",
       "import_rows",
       "audit_logs",
@@ -71,6 +75,7 @@ describe("database migrations", () => {
       "payment_events",
       "payment_refunds",
       "order_events",
+      "order_shipments",
     ]) {
       expect(allSql).toContain(`alter table public.${table} enable row level security`);
     }
@@ -87,16 +92,34 @@ describe("database migrations", () => {
     expect(allSql).toContain("cdek_pickup_point_address text");
   });
 
+  it("adds private CDEK shipment snapshots with one shipment per order and RLS", () => {
+    const cdekMigration = migrations.find((migration) => migration.file === "20260813012000_cdek_order_shipments.sql")?.sql ?? "";
+
+    expect(cdekMigration).toContain("create type public.order_shipment_status");
+    expect(cdekMigration).toContain("create table if not exists public.order_shipments");
+    expect(cdekMigration).toContain("constraint order_shipments_one_per_order unique (order_id)");
+    expect(cdekMigration).toContain("customer_delivery_charge_minor bigint not null");
+    expect(cdekMigration).toContain("carrier_actual_cost_minor bigint");
+    expect(cdekMigration).toContain("cdek_order_uuid text");
+    expect(cdekMigration).toContain("tracking_number text");
+    expect(cdekMigration).toContain("alter table public.order_shipments enable row level security");
+    expect(cdekMigration).toContain("Customers read own order shipments");
+    expect(cdekMigration).toContain("Order managers manage order shipments");
+    expect(cdekMigration).not.toMatch(/to anon/i);
+  });
+
   it("adds controlled import apply operation tables and transactional RPC boundary", () => {
     expect(allSql).toContain("create table public.import_batches");
     expect(allSql).toContain("create table public.import_rows");
     expect(allSql).toContain("create table public.audit_logs");
     expect(allSql).toContain("create or replace function public.apply_catalog_import_batch(input jsonb)");
     expect(allSql).toContain("grant execute on function public.apply_catalog_import_batch(jsonb) to service_role");
+    expect(allSql).toContain("create table public.catalog_public_read_models");
+    expect(allSql).toContain("grant execute on function public.apply_catalog_public_read_models(jsonb) to service_role");
   });
 
   it("keeps catalog import apply RPC restricted to the service role", () => {
-    const applyMigration = migrations.find((migration) => migration.file === "20260706010000_import_apply_operations.sql")?.sql ?? "";
+    const applyMigration = migrations.find((migration) => migration.file === "20260813010000_fix_catalog_apply_variable_scope.sql")?.sql ?? "";
 
     expect(applyMigration).toContain("security definer");
     expect(applyMigration).toContain("set search_path = public");
@@ -106,6 +129,8 @@ describe("database migrations", () => {
     expect(applyMigration).not.toMatch(/grant execute on function public\.apply_catalog_import_batch\(jsonb\) to authenticated/i);
     expect(applyMigration).not.toMatch(/\bexecute\s+format\b/i);
     expect(applyMigration).not.toMatch(/\bexecute\s+immediate\b/i);
+    expect(applyMigration).toContain("v_brand_id");
+    expect(applyMigration).not.toMatch(/declare[\s\S]*\n\s+brand_id uuid;/i);
   });
 
   it("adds owner-scoped User Watch Collection tables and authenticated RPC boundaries", () => {

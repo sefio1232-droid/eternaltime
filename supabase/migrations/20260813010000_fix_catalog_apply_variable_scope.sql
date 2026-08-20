@@ -1,0 +1,323 @@
+create or replace function public.apply_catalog_import_batch(input jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  item jsonb;
+  v_batch_id uuid;
+  row_index integer := 0;
+  v_brand_id uuid;
+  v_collection_id uuid;
+  v_model_id uuid;
+  v_reference_id uuid;
+  v_offer_id uuid;
+  v_existing_price_minor bigint;
+  v_proposed_price_minor bigint;
+  duplicate_offer_count integer;
+  inserted_brands integer := 0;
+  inserted_collections integer := 0;
+  inserted_models integer := 0;
+  inserted_references integer := 0;
+  inserted_offers integer := 0;
+  updated_offers integer := 0;
+  inserted_prices integer := 0;
+  noop_offers integer := 0;
+  reference_display text;
+  reference_normalized text;
+  import_offer_marker constant text := 'catalog_import_pipeline_v1';
+begin
+  if coalesce(input->>'confirmation', '') <> 'APPLY_ETERNAL_TIME_CATALOG_IMPORT' then
+    raise exception 'Catalog import apply confirmation token is missing or invalid.';
+  end if;
+
+  insert into public.import_batches (source_filename, source_kind, status, mapping_json, summary_json)
+  values (
+    coalesce(input->>'sourceFilename', 'catalog-import-preview.json'),
+    'catalog_import_preview',
+    'applying',
+    jsonb_build_object('version', 1, 'strategy', 'controlled_catalog_database_apply'),
+    jsonb_build_object('startedAt', now())
+  )
+  returning id into v_batch_id;
+
+  for item in
+    select value from jsonb_array_elements(coalesce(input->'records', '[]'::jsonb))
+  loop
+    row_index := row_index + 1;
+    v_brand_id := null;
+    v_collection_id := null;
+    v_model_id := null;
+    v_reference_id := null;
+    v_offer_id := null;
+    v_existing_price_minor := null;
+    v_proposed_price_minor := null;
+    reference_display := item->>'referenceDisplay';
+    reference_normalized := public.normalize_reference_code(reference_display);
+
+    if exists (
+      select 1
+      from public.brands b
+      where b.slug = item->>'brandSlug'
+        and b.name_normalized <> public.normalize_catalog_text(item->>'brand')
+    ) then
+      raise exception 'Brand slug conflict for %', item->>'brandSlug';
+    end if;
+
+    select b.id into v_brand_id
+    from public.brands b
+    where b.name_normalized = public.normalize_catalog_text(item->>'brand')
+    limit 1;
+
+    if v_brand_id is null then
+      insert into public.brands (name, slug, status)
+      values (item->>'brand', item->>'brandSlug', 'draft')
+      returning id into v_brand_id;
+      inserted_brands := inserted_brands + 1;
+    end if;
+
+    if nullif(item->>'brandCollection', '') is not null then
+      if exists (
+        select 1
+        from public.brand_collections bc
+        where bc.brand_id = v_brand_id
+          and bc.slug = item->>'brandCollectionSlug'
+          and bc.name_normalized <> public.normalize_catalog_text(item->>'brandCollection')
+      ) then
+        raise exception 'Brand Collection slug conflict for %', item->>'brandCollectionSlug';
+      end if;
+
+      select bc.id into v_collection_id
+      from public.brand_collections bc
+      where bc.brand_id = v_brand_id
+        and bc.name_normalized = public.normalize_catalog_text(item->>'brandCollection')
+      limit 1;
+
+      if v_collection_id is null then
+        insert into public.brand_collections (brand_id, name, slug, status)
+        values (v_brand_id, item->>'brandCollection', item->>'brandCollectionSlug', 'draft')
+        returning id into v_collection_id;
+        inserted_collections := inserted_collections + 1;
+      end if;
+    end if;
+
+    if exists (
+      select 1
+      from public.watch_models wm
+      where wm.brand_id = v_brand_id
+        and wm.slug = item->>'watchModelSlug'
+        and wm.name_normalized <> public.normalize_catalog_text(item->>'watchModel')
+    ) then
+      raise exception 'Watch Model slug conflict for %', item->>'watchModelSlug';
+    end if;
+
+    select wm.id into v_model_id
+    from public.watch_models wm
+    where wm.brand_id = v_brand_id
+      and wm.name_normalized = public.normalize_catalog_text(item->>'watchModel')
+    limit 1;
+
+    if v_model_id is null then
+      insert into public.watch_models (brand_id, brand_collection_id, name, slug, model_status)
+      values (v_brand_id, v_collection_id, item->>'watchModel', item->>'watchModelSlug', 'draft')
+      returning id into v_model_id;
+      inserted_models := inserted_models + 1;
+    end if;
+
+    if exists (
+      select 1
+      from public.watch_references wr
+      where wr.brand_id = v_brand_id
+        and wr.slug = item->>'referenceSlug'
+        and wr.reference_code_normalized <> reference_normalized
+    ) then
+      raise exception 'Watch Reference slug conflict for %', item->>'referenceSlug';
+    end if;
+
+    select wr.id into v_reference_id
+    from public.watch_references wr
+    where wr.brand_id = v_brand_id
+      and wr.reference_code_normalized = reference_normalized
+    limit 1;
+
+    if v_reference_id is null then
+      insert into public.watch_references (
+        brand_id,
+        watch_model_id,
+        reference_code_display,
+        slug,
+        display_name,
+        status,
+        reference_status,
+        data_confidence
+      )
+      values (
+        v_brand_id,
+        v_model_id,
+        reference_display,
+        item->>'referenceSlug',
+        item->>'displayName',
+        'draft',
+        'unknown',
+        'imported'
+      )
+      returning id into v_reference_id;
+      inserted_references := inserted_references + 1;
+    end if;
+
+    if nullif(item->>'publicPriceMinor', '') is not null then
+      v_proposed_price_minor := (item->>'publicPriceMinor')::bigint;
+
+      select count(*) into duplicate_offer_count
+      from public.catalog_offers co
+      where co.watch_reference_id = v_reference_id
+        and co.offer_kind = 'standard'
+        and co.condition = 'new'
+        and co.seller_note = import_offer_marker;
+
+      if duplicate_offer_count > 1 then
+        raise exception 'Multiple import-managed offers found for reference %', reference_display;
+      end if;
+
+      select co.id, co.current_price_minor into v_offer_id, v_existing_price_minor
+      from public.catalog_offers co
+      where co.watch_reference_id = v_reference_id
+        and co.offer_kind = 'standard'
+        and co.condition = 'new'
+        and co.seller_note = import_offer_marker
+      limit 1;
+
+      if v_offer_id is null then
+        insert into public.catalog_offers (
+          watch_reference_id,
+          status,
+          offer_kind,
+          condition,
+          current_price_minor,
+          currency_code,
+          is_visible,
+          seller_note
+        )
+        values (
+          v_reference_id,
+          'inactive',
+          'standard',
+          'new',
+          v_proposed_price_minor,
+          'RUB',
+          false,
+          import_offer_marker
+        )
+        returning id into v_offer_id;
+        inserted_offers := inserted_offers + 1;
+
+        insert into public.offer_price_history (catalog_offer_id, price_minor, currency_code, reason)
+        values (v_offer_id, v_proposed_price_minor, 'RUB', 'catalog_import_apply');
+        inserted_prices := inserted_prices + 1;
+      elsif v_existing_price_minor = v_proposed_price_minor then
+        noop_offers := noop_offers + 1;
+      else
+        update public.offer_price_history
+        set valid_to = now()
+        where catalog_offer_id = v_offer_id
+          and valid_to is null
+          and price_minor <> v_proposed_price_minor;
+
+        update public.catalog_offers
+        set previous_price_minor = current_price_minor,
+            current_price_minor = v_proposed_price_minor,
+            currency_code = 'RUB'
+        where id = v_offer_id;
+
+        insert into public.offer_price_history (catalog_offer_id, price_minor, currency_code, reason)
+        select v_offer_id, v_proposed_price_minor, 'RUB', 'catalog_import_apply'
+        where not exists (
+          select 1
+          from public.offer_price_history oph
+          where oph.catalog_offer_id = v_offer_id
+            and oph.valid_to is null
+            and oph.price_minor = v_proposed_price_minor
+        );
+
+        updated_offers := updated_offers + 1;
+        inserted_prices := inserted_prices + 1;
+      end if;
+    end if;
+
+    insert into public.import_rows (
+      import_batch_id,
+      row_number,
+      raw_json,
+      normalized_json,
+      status,
+      warnings_json
+    )
+    values (
+      v_batch_id,
+      row_index,
+      jsonb_build_object('candidateId', item->>'candidateId'),
+      item,
+      'applied',
+      coalesce(item->'warnings', '[]'::jsonb)
+    );
+  end loop;
+
+  update public.import_batches
+  set status = 'applied',
+      applied_at = now(),
+      summary_json = jsonb_build_object(
+        'recordCount', row_index,
+        'insertedBrands', inserted_brands,
+        'insertedBrandCollections', inserted_collections,
+        'insertedWatchModels', inserted_models,
+        'insertedWatchReferences', inserted_references,
+        'insertedCatalogOffers', inserted_offers,
+        'updatedCatalogOffers', updated_offers,
+        'insertedPublicPrices', inserted_prices,
+        'noopCatalogOffers', noop_offers
+      )
+  where id = v_batch_id;
+
+  insert into public.audit_logs (action, entity_type, entity_id, safe_metadata_json)
+  values (
+    'catalog_import.apply',
+    'import_batch',
+    v_batch_id,
+    jsonb_build_object(
+      'recordCount', row_index,
+      'insertedBrands', inserted_brands,
+      'insertedBrandCollections', inserted_collections,
+      'insertedWatchModels', inserted_models,
+      'insertedWatchReferences', inserted_references,
+      'insertedCatalogOffers', inserted_offers,
+      'updatedCatalogOffers', updated_offers,
+      'insertedPublicPrices', inserted_prices,
+      'noopCatalogOffers', noop_offers
+    )
+  );
+
+  return jsonb_build_object(
+    'importBatchId', v_batch_id,
+    'recordCount', row_index,
+    'insertedBrands', inserted_brands,
+    'insertedBrandCollections', inserted_collections,
+    'insertedWatchModels', inserted_models,
+    'insertedWatchReferences', inserted_references,
+    'insertedCatalogOffers', inserted_offers,
+    'updatedCatalogOffers', updated_offers,
+    'insertedPublicPrices', inserted_prices,
+    'noopCatalogOffers', noop_offers
+  );
+exception
+  when others then
+    update public.import_batches
+    set status = 'failed',
+        summary_json = summary_json || jsonb_build_object('errorCode', sqlstate)
+    where id = v_batch_id;
+    raise;
+end;
+$$;
+
+revoke all on function public.apply_catalog_import_batch(jsonb) from public;
+grant execute on function public.apply_catalog_import_batch(jsonb) to service_role;

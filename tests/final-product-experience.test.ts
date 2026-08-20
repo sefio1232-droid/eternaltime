@@ -95,7 +95,7 @@ describe("final product experience", () => {
     expect(upcomingEditorialStories.map((story) => story.title)).toEqual([
       "Как выбрать размер часов под запястье",
       "Сапфировое или минеральное стекло",
-      "Кварц, механика или solar",
+      "Кварц, механика или солнечное питание",
     ]);
     const journal = source("src/app/(public)/journal/page.tsx");
     const sitemap = source("src/app/sitemap.ts");

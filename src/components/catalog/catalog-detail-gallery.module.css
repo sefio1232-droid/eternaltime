@@ -247,3 +247,45 @@
     font-size: 1.3rem;
   }
 }
+
+@media (max-width: 767px) {
+  .workspace {
+    gap: 0.65rem;
+  }
+
+  .stage {
+    touch-action: manipulation;
+  }
+
+  .thumbRow {
+    gap: 0.45rem;
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding-inline: var(--page-gutter);
+    scroll-padding-inline: var(--page-gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .thumb {
+    width: 58px;
+    height: 58px;
+    scroll-snap-align: start;
+  }
+
+  .viewerOverlay {
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 0.6rem)
+      0.6rem
+      calc(env(safe-area-inset-bottom, 0px) + 0.6rem);
+  }
+
+  .viewerPanel {
+    height: 100%;
+  }
+
+  .viewerClose,
+  .viewerNav {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

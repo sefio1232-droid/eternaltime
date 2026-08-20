@@ -41,19 +41,19 @@
 
 .categoryNav {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.55rem;
-  overflow-x: auto;
   padding-bottom: 0.5rem;
-  scrollbar-width: thin;
 }
 
 .categoryNav a {
   min-height: 44px;
-  flex: 0 0 auto;
+  flex: 1 1 min(10.5rem, 100%);
   border: 1px solid rgb(16 19 22 / 16%);
   padding: 0.8rem 1rem;
   font-size: 0.76rem;
   font-weight: 650;
+  text-align: center;
 }
 
 .groups {
@@ -155,6 +155,16 @@
   .group { grid-template-columns: minmax(190px, 0.32fr) minmax(0, 1fr); }
   .closing { grid-template-columns: minmax(0, 1fr) minmax(330px, 0.7fr); align-items: end; }
   .actions { justify-content: end; }
+
+  .categoryNav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .categoryNav a {
+    flex: 0 0 auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

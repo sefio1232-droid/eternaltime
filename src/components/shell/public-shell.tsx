@@ -7,6 +7,7 @@ import { SearchDialog } from "@/components/shell/search-dialog";
 import { CommerceCartIcon } from "@/components/commerce/commerce-actions";
 import { CompareTray } from "@/components/comparison/compare-tray";
 import { EditorialContainer, IconAction } from "@/components/ui/editorial-primitives";
+import { legalDocuments } from "@/content/legal";
 
 function HeartIcon() {
   return <span className="icon-heart" />;
@@ -49,6 +50,14 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
           <nav aria-label="Информационные разделы" className="flex flex-wrap gap-5">
             <Link href="/journal" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Читать журнал</Link>
             <Link href="/faq" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Частые вопросы</Link>
+            <Link href="/legal" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Юридические документы</Link>
+            {legalDocuments
+              .filter((document) => ["seller-details", "public-offer", "privacy", "terms", "returns", "delivery-and-payment"].includes(document.slug))
+              .map((document) => (
+                <Link key={document.slug} href={document.route} className="text-[var(--accent-strong)] hover:text-[var(--text)]">
+                  {document.title}
+                </Link>
+              ))}
           </nav>
         </EditorialContainer>
       </footer>

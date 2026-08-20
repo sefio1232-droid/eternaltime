@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function SearchSymbol() {
   return (
@@ -13,15 +13,38 @@ function SearchSymbol() {
 
 export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }>) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   return (
     <>
       <button
         type="button"
+        ref={triggerRef}
         className={
           compact
-            ? "inline-flex h-9 w-9 items-center justify-center text-sm"
-            : "inline-flex h-9 items-center gap-2 px-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+            ? "search-trigger search-trigger-compact inline-flex items-center justify-center text-sm"
+            : "search-trigger inline-flex items-center gap-2 px-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
         }
         aria-haspopup="dialog"
         aria-expanded={isOpen}
@@ -32,18 +55,19 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
       </button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 bg-[var(--surface-graphite)]/55 px-4 py-6" role="presentation">
+        <div className="search-overlay fixed inset-0 z-50 bg-[var(--surface-graphite)]/55 px-4 py-6" role="presentation" onClick={() => setIsOpen(false)}>
           <section
             role="dialog"
             aria-modal="true"
             aria-label="Поиск по каталогу"
-            className="mx-auto mt-16 max-w-2xl bg-[var(--surface)] p-5"
+            className="search-dialog-panel mx-auto mt-16 max-w-2xl bg-[var(--surface)] p-5"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="type-section text-xl">Поиск часов</h2>
               <button
                 type="button"
-                className="h-9 border border-[var(--border)] px-3 text-sm"
+                className="min-h-11 border border-[var(--border)] px-3 text-sm"
                 onClick={() => setIsOpen(false)}
               >
                 Закрыть
@@ -61,7 +85,7 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
               </label>
               <button
                 type="submit"
-                className="h-12 justify-self-start bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]"
+                className="min-h-12 justify-self-start bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--text-inverse)] hover:bg-[var(--accent-strong)]"
               >
                 Искать в каталоге
               </button>

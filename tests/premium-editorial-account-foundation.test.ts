@@ -69,12 +69,14 @@ describe("premium editorial and account foundation", () => {
     expect(collection).toContain('redirect("/collection")');
   });
 
-  it("uses a versioned local profile schema with validation and no server integration", () => {
+  it("keeps the local profile parser for fallback and wires the account profile to Supabase-backed persistence", () => {
     const raw = serializeLocalAccountProfile({ ...emptyLocalAccountProfile, name: "Сергей", email: "user@example.test" });
     expect(parseLocalAccountProfile(raw)).toMatchObject({ name: "Сергей", email: "user@example.test" });
     expect(parseLocalAccountProfile('{"version":2,"profile":{}}')).toBeNull();
     expect(validateLocalAccountProfile({ ...emptyLocalAccountProfile, email: "invalid" })).toEqual({ email: "Проверьте формат электронной почты." });
-    expect(file("src/components/account/account-foundation.tsx")).not.toMatch(/supabase|createUser|orderId/i);
+    expect(file("src/app/(account)/account/profile/page.tsx")).toContain("loadAccountProfile");
+    expect(file("src/components/account/account-foundation.tsx")).toContain('mode === "database"');
+    expect(file("src/modules/account/profile/profile-repository.server.ts")).toContain('.from("profiles")');
   });
 
   it("keeps account pages noindex and out of the sitemap", () => {

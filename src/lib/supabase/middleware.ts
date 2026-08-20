@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { getPublicEnv } from "@/config/public-env";
+import type { Database } from "@/lib/supabase/database.types";
 
 export async function updateSupabaseSession(request: NextRequest): Promise<NextResponse> {
   const env = getPublicEnv();
@@ -10,7 +11,7 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     return response;
   }
 
-  const supabase = createServerClient(env.supabase.url, env.supabase.publishableKey, {
+  const supabase = createServerClient<Database>(env.supabase.url, env.supabase.publishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

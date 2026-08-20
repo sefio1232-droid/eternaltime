@@ -4,8 +4,9 @@ import crypto from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getPublicEnv } from "@/config/public-env";
 import { getServerEnv } from "@/config/server-env";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { checkoutLegalDocuments } from "@/content/legal";
 import { mergeCommerceCartItems } from "@/modules/commerce/domain/cart";
 import type {
   CheckoutContactInput,
@@ -18,9 +19,19 @@ import type {
 } from "@/modules/commerce/domain/types";
 import { resolveCommerceSummary } from "@/modules/commerce/application/catalog-product-resolver.server";
 import {
+  createPendingShipmentSnapshot,
+  ensureCdekShipmentForPaidOrder,
+  getCarrierQuoteForCheckout,
+  type OrderShipmentRow,
+  validateCdekPickupPointSelection,
+} from "@/modules/commerce/infrastructure/cdek-shipping-repository.server";
+import {
   createYooKassaRefund,
   createYooKassaPayment,
+  getYooKassaRefund,
   getYooKassaPayment,
+  yookassaAmountValueToMinor,
+  type ReceiptItemInput,
   type YooKassaPayment,
 } from "@/modules/commerce/infrastructure/yookassa-client.server";
 
@@ -42,13 +53,19 @@ type OrderRow = {
   contact_name: string;
   contact_email: string;
   contact_phone: string;
-  delivery_postal_code: string;
+  delivery_postal_code: string | null;
   delivery_city: string;
-  delivery_street: string;
-  delivery_house: string;
+  delivery_street: string | null;
+  delivery_house: string | null;
   delivery_unit: string | null;
   cdek_pickup_point_code: string | null;
+  cdek_pickup_point_name: string | null;
   cdek_pickup_point_address: string | null;
+  cdek_pickup_point_city: string | null;
+  cdek_pickup_point_postal_code: string | null;
+  cdek_pickup_point_latitude: number | null;
+  cdek_pickup_point_longitude: number | null;
+  cdek_destination_city_code: number | null;
   delivery_comment: string | null;
   customer_comment: string | null;
   checkout_submission_key: string;
@@ -92,10 +109,28 @@ type PaymentAttemptRow = {
   canceled_at: string | null;
 };
 
+type PaymentRefundRow = {
+  id: string;
+  order_id: string;
+  payment_attempt_id: string;
+  provider_refund_id: string | null;
+  amount_minor: number;
+  currency: "RUB";
+  status: "pending" | "succeeded" | "canceled" | "failed";
+  reason: string | null;
+  requested_by: string | null;
+  idempotency_key: string;
+  created_at: string;
+  updated_at: string;
+  succeeded_at: string | null;
+  failed_at: string | null;
+};
+
 export type CommerceOrderDetail = {
   order: OrderRow;
   items: OrderItemRow[];
   paymentAttempts: PaymentAttemptRow[];
+  shipments: OrderShipmentRow[];
   events: Array<{
     id: string;
     event_type: string;
@@ -111,15 +146,83 @@ export type CommerceOrderDetail = {
     provider_refund_id: string | null;
     created_at: string;
     succeeded_at: string | null;
+    failed_at?: string | null;
   }>;
 };
 
 export type CommerceSetupState =
   | { ready: true; client: SupabaseClient }
-  | { ready: false; reason: "supabase_unconfigured" | "service_role_missing" | "yookassa_unconfigured" | "delivery_unconfigured" };
+  | { ready: false; reason: "supabase_unconfigured" | "admin_secret_missing" | "yookassa_unconfigured" | "delivery_unconfigured" };
 
 function checkoutItems(source: CheckoutSource): CommerceCartItemInput[] {
   return source.type === "buy_now" ? [source.item] : source.items;
+}
+
+function buildReceiptItemsFromOrderItems(items: OrderItemRow[]) {
+  return items.map((item) => ({
+    description: `${item.brand_name_snapshot} ${item.display_name_snapshot} ${item.reference_display_snapshot}`.trim(),
+    quantity: item.quantity,
+    amountMinor: item.unit_price_minor,
+  }));
+}
+
+function receiptItemsTotalMinor(items: ReceiptItemInput[]): number {
+  return items.reduce((sum, item) => sum + item.amountMinor * item.quantity, 0);
+}
+
+function buildReceiptItemsFromOrderSnapshot(order: OrderRow, items: OrderItemRow[]): ReceiptItemInput[] {
+  const receiptItems: ReceiptItemInput[] = buildReceiptItemsFromOrderItems(items);
+
+  if (order.delivery_amount_minor > 0) {
+    receiptItems.push({
+      description: "Доставка заказа Eternal Time",
+      quantity: 1,
+      amountMinor: order.delivery_amount_minor,
+      paymentSubject: "service",
+    });
+  }
+
+  if (receiptItemsTotalMinor(receiptItems) !== order.total_amount_minor) {
+    throw new Error("receipt_total_mismatch");
+  }
+
+  return receiptItems;
+}
+
+function buildPartialRefundReceiptItems(input: {
+  order: OrderRow;
+  items: OrderItemRow[];
+  amountMinor: number;
+}): ReceiptItemInput[] {
+  const receiptItems = buildReceiptItemsFromOrderSnapshot(input.order, input.items);
+  let remainingMinor = input.amountMinor;
+  const refundedItems: ReceiptItemInput[] = [];
+
+  for (const item of receiptItems) {
+    if (remainingMinor <= 0) {
+      break;
+    }
+
+    const lineTotalMinor = item.amountMinor * item.quantity;
+    const refundedLineMinor = Math.min(remainingMinor, lineTotalMinor);
+
+    refundedItems.push(
+      refundedLineMinor === lineTotalMinor
+        ? item
+        : {
+            ...item,
+            quantity: 1,
+            amountMinor: refundedLineMinor,
+          },
+    );
+    remainingMinor -= refundedLineMinor;
+  }
+
+  if (remainingMinor !== 0 || receiptItemsTotalMinor(refundedItems) !== input.amountMinor) {
+    throw new Error("refund_receipt_total_mismatch");
+  }
+
+  return refundedItems;
 }
 
 export function getCheckoutReturnUrl(orderNumber: string): string {
@@ -131,14 +234,14 @@ export function getCheckoutReturnUrl(orderNumber: string): string {
 
 export function getCommerceSetupState(requirePayment = true): CommerceSetupState {
   const serverEnv = getServerEnv();
-  const client = createSupabaseServiceRoleClient();
+  const client = createSupabaseAdminClient();
 
   if (!getPublicEnv().supabase.isConfigured) {
     return { ready: false, reason: "supabase_unconfigured" };
   }
 
   if (!client) {
-    return { ready: false, reason: "service_role_missing" };
+    return { ready: false, reason: "admin_secret_missing" };
   }
 
   if (serverEnv.commerce.deliveryPricingMode === "not_configured") {
@@ -249,7 +352,7 @@ export async function mergeServerCartForUser(userId: string, items: CommerceCart
   return { ready: true as const, items: serverItems, summary: await resolveCommerceSummary(serverItems) };
 }
 
-export async function listServerCartItems(userId: string, client = createSupabaseServiceRoleClient()): Promise<CommerceCartItemInput[]> {
+export async function listServerCartItems(userId: string, client = createSupabaseAdminClient()): Promise<CommerceCartItemInput[]> {
   if (!client) {
     return [];
   }
@@ -321,7 +424,7 @@ export async function createCheckoutOrderAndPayment(input: {
   paymentAttempt: PaymentAttemptRow | null;
   confirmationUrl: string | null;
 }> {
-  const setup = getCommerceSetupState(true);
+  const setup = getCommerceSetupState(false);
   if (!setup.ready) {
     throw new Error(setup.reason);
   }
@@ -330,6 +433,38 @@ export async function createCheckoutOrderAndPayment(input: {
   if (!summary.purchasable || summary.totalAmountMinor === null || summary.delivery.status !== "configured") {
     throw new Error(summary.issues.join(" ") || "Checkout summary is not payable.");
   }
+
+  const normalizedContact =
+    input.contact.deliveryMethod === "cdek_pickup"
+      ? await validateCdekPickupPointSelection(input.contact)
+      : input.contact;
+  const carrierQuote = await getCarrierQuoteForCheckout({
+    contact: normalizedContact,
+    quantity: summary.itemCount,
+  });
+  const carrierActualCostMinor =
+    typeof carrierQuote?.delivery_sum === "number"
+      ? Math.round(carrierQuote.delivery_sum * 100)
+      : typeof carrierQuote?.total_sum === "number"
+        ? Math.round(carrierQuote.total_sum * 100)
+        : null;
+  const deliveryQuoteSnapshot = {
+    ...summary.delivery.snapshot,
+    carrierActualCostMinor,
+    carrierCurrency: "RUB",
+    carrierQuote: carrierQuote
+      ? {
+          tariffCode: carrierQuote.tariff_code,
+          tariffName: carrierQuote.tariff_name ?? null,
+          periodMin: carrierQuote.period_min ?? null,
+          periodMax: carrierQuote.period_max ?? null,
+        }
+      : null,
+    pickupPointProviderSnapshot:
+      normalizedContact.deliveryMethod === "cdek_pickup"
+        ? normalizedContact.cdekPickupPointProviderSnapshot ?? null
+        : null,
+  };
 
   const orderPayload = {
     user_id: input.userId,
@@ -340,24 +475,56 @@ export async function createCheckoutOrderAndPayment(input: {
     product_subtotal_minor: summary.productSubtotalMinor,
     delivery_amount_minor: summary.delivery.amountMinor,
     delivery_provider: summary.delivery.provider,
-    delivery_method: input.contact.deliveryMethod ?? "cdek_courier",
+    delivery_method: normalizedContact.deliveryMethod ?? "cdek_courier",
     delivery_tariff_code: summary.delivery.tariffCode,
-    delivery_quote_snapshot: summary.delivery.snapshot,
+    delivery_quote_snapshot: deliveryQuoteSnapshot,
     total_amount_minor: summary.totalAmountMinor,
-    contact_name: input.contact.recipientName,
-    contact_email: input.contact.email,
-    contact_phone: input.contact.phone,
-    delivery_postal_code: input.contact.postalCode,
-    delivery_city: input.contact.city,
-    delivery_street: input.contact.street,
-    delivery_house: input.contact.house,
-    delivery_unit: input.contact.unit || null,
-    cdek_pickup_point_code: input.contact.cdekPickupPointCode || null,
-    cdek_pickup_point_address: input.contact.cdekPickupPointAddress || null,
-    delivery_comment: input.contact.deliveryComment || null,
-    customer_comment: input.contact.customerComment || null,
+    contact_name: normalizedContact.recipientName,
+    contact_email: normalizedContact.email,
+    contact_phone: normalizedContact.phone,
+    delivery_postal_code: normalizedContact.postalCode || null,
+    delivery_city: normalizedContact.city,
+    delivery_street: normalizedContact.street || null,
+    delivery_house: normalizedContact.house || null,
+    delivery_unit: normalizedContact.unit || null,
+    cdek_pickup_point_code: normalizedContact.cdekPickupPointCode || null,
+    cdek_pickup_point_name: normalizedContact.cdekPickupPointName || null,
+    cdek_pickup_point_address: normalizedContact.cdekPickupPointAddress || null,
+    cdek_pickup_point_city: normalizedContact.cdekPickupPointCity || null,
+    cdek_pickup_point_postal_code: normalizedContact.cdekPickupPointPostalCode || null,
+    cdek_pickup_point_latitude: normalizedContact.cdekPickupPointLatitude ?? null,
+    cdek_pickup_point_longitude: normalizedContact.cdekPickupPointLongitude ?? null,
+    cdek_destination_city_code: normalizedContact.cdekCityCode ?? null,
+    delivery_comment: normalizedContact.deliveryComment || null,
+    customer_comment: normalizedContact.customerComment || null,
     checkout_submission_key: input.checkoutSubmissionKey,
-    legal_consent_snapshot: {},
+    legal_consent_snapshot: {
+      publicOffer: {
+        accepted: normalizedContact.legalOfferAccepted,
+        title: checkoutLegalDocuments.publicOffer.title,
+        route: checkoutLegalDocuments.publicOffer.route,
+        sourceFileName: checkoutLegalDocuments.publicOffer.sourceFileName,
+      },
+      personalDataConsent: {
+        accepted: normalizedContact.personalDataConsentAccepted,
+        title: checkoutLegalDocuments.personalDataConsent.title,
+        route: checkoutLegalDocuments.personalDataConsent.route,
+        sourceFileName: checkoutLegalDocuments.personalDataConsent.sourceFileName,
+      },
+      privacy: {
+        acknowledged: normalizedContact.personalDataConsentAccepted,
+        title: checkoutLegalDocuments.privacy.title,
+        route: checkoutLegalDocuments.privacy.route,
+        sourceFileName: checkoutLegalDocuments.privacy.sourceFileName,
+      },
+      marketingConsent: {
+        accepted: Boolean(normalizedContact.marketingConsentAccepted),
+        title: checkoutLegalDocuments.marketingConsent.title,
+        route: checkoutLegalDocuments.marketingConsent.route,
+        sourceFileName: checkoutLegalDocuments.marketingConsent.sourceFileName,
+      },
+      capturedAt: new Date().toISOString(),
+    },
   };
 
   const { data: order, error: orderError } = await setup.client
@@ -419,6 +586,13 @@ export async function createCheckoutOrderAndPayment(input: {
     nextPaymentStatus: "pending",
     message: "Заказ создан и ожидает оплаты.",
   });
+  await createPendingShipmentSnapshot({
+    client: setup.client,
+    orderId: orderRow.id,
+    contact: normalizedContact,
+    customerDeliveryChargeMinor: summary.delivery.amountMinor,
+    carrierQuote,
+  });
 
   const idempotencyKey = crypto.randomUUID();
   const { data: attempt } = await setup.client
@@ -434,12 +608,40 @@ export async function createCheckoutOrderAndPayment(input: {
     .select("*")
     .single();
 
+  if (!attempt) {
+    throw new Error("payment_attempt_failed");
+  }
+
+  if (!getServerEnv().yookassa.isConfigured) {
+    await insertOrderEvent(setup.client, {
+      orderId: orderRow.id,
+      eventType: "payment_provider_not_configured",
+      nextStatus: "awaiting_payment",
+      nextPaymentStatus: "pending",
+      message: "Заказ создан. Онлайн-оплата будет доступна после подключения платежного провайдера.",
+    });
+
+    return {
+      order: orderRow,
+      summary,
+      paymentAttempt: attempt as PaymentAttemptRow,
+      confirmationUrl: null,
+    };
+  }
+
   try {
     const payment = await createYooKassaPayment({
       amountMinor: orderRow.total_amount_minor,
       orderNumber: orderRow.order_number,
       orderId: orderRow.id,
-      userId: input.userId,
+      paymentAttemptId: String(attempt.id),
+      customerEmail: orderRow.contact_email,
+      customerPhone: orderRow.contact_phone,
+      items: buildReceiptItemsFromOrderSnapshot(orderRow, itemPayload.map((item) => ({
+        id: "",
+        created_at: "",
+        ...item,
+      })) as OrderItemRow[]),
       returnUrl: getCheckoutReturnUrl(orderRow.order_number),
       idempotencyKey,
     });
@@ -466,7 +668,7 @@ export async function updateAttemptFromYooKassaPayment(
   order: Pick<OrderRow, "id" | "total_amount_minor" | "currency" | "payment_status" | "status">,
   payment: YooKassaPayment,
 ): Promise<PaymentAttemptRow> {
-  const amountMinor = Math.round(Number(payment.amount.value) * 100);
+  const amountMinor = yookassaAmountValueToMinor(payment.amount.value);
   if (payment.amount.currency !== order.currency || amountMinor !== order.total_amount_minor) {
     throw new Error("YooKassa payment amount does not match the order.");
   }
@@ -476,6 +678,9 @@ export async function updateAttemptFromYooKassaPayment(
     provider_payment_id: payment.id,
     status,
     confirmation_url: payment.confirmation?.confirmation_url ?? null,
+    failure_reason: payment.cancellation_details
+      ? `${payment.cancellation_details.party ?? "unknown"}:${payment.cancellation_details.reason ?? "canceled"}`
+      : null,
   };
 
   if (payment.status === "succeeded") {
@@ -514,6 +719,8 @@ export async function markOrderPaid(client: SupabaseClient, orderId: string) {
     nextPaymentStatus: "succeeded",
     message: "Оплата подтверждена YooKassa, заказ передан в обработку.",
   });
+
+  await ensureCdekShipmentForPaidOrder({ orderId, client: client as SupabaseClient });
 }
 
 export async function reconcileYooKassaPayment(providerPaymentId: string) {
@@ -522,17 +729,25 @@ export async function reconcileYooKassaPayment(providerPaymentId: string) {
     throw new Error(setup.reason);
   }
 
-  const { data: attempt, error } = await setup.client
-    .from("payment_attempts")
-    .select("*, orders(*)")
-    .eq("provider_payment_id", providerPaymentId)
-    .single();
+  const payment = await getYooKassaPayment(providerPaymentId);
+  const metadataAttemptId = payment.metadata?.payment_attempt_id;
 
-  if (error || !attempt) {
+  let attemptQuery = setup.client.from("payment_attempts").select("*, orders(*)").eq("provider_payment_id", providerPaymentId);
+  if (!metadataAttemptId) {
+    attemptQuery = attemptQuery.limit(1);
+  }
+
+  let { data: attempts } = await attemptQuery;
+  if ((!attempts || attempts.length === 0) && metadataAttemptId) {
+    const retry = await setup.client.from("payment_attempts").select("*, orders(*)").eq("id", metadataAttemptId).limit(1);
+    attempts = retry.data;
+  }
+
+  const attempt = attempts?.[0];
+  if (!attempt) {
     throw new Error("Payment attempt not found.");
   }
 
-  const payment = await getYooKassaPayment(providerPaymentId);
   const order = attempt.orders as OrderRow;
   const updatedAttempt = await updateAttemptFromYooKassaPayment(setup.client, String(attempt.id), order, payment);
   return { order, payment, paymentAttempt: updatedAttempt };
@@ -541,7 +756,7 @@ export async function reconcileYooKassaPayment(providerPaymentId: string) {
 export async function getOrderDetailByNumber(
   orderNumber: string,
   access: { userId?: string; admin?: boolean },
-  client = createSupabaseServiceRoleClient(),
+  client = createSupabaseAdminClient(),
 ): Promise<CommerceOrderDetail | null> {
   if (!client) {
     return null;
@@ -558,9 +773,10 @@ export async function getOrderDetailByNumber(
     return null;
   }
 
-  const [{ data: items }, { data: attempts }, { data: events }, { data: refunds }] = await Promise.all([
+  const [{ data: items }, { data: attempts }, { data: shipments }, { data: events }, { data: refunds }] = await Promise.all([
     client.from("order_items").select("*").eq("order_id", order.id).order("created_at", { ascending: true }),
     client.from("payment_attempts").select("*").eq("order_id", order.id).order("created_at", { ascending: false }),
+    client.from("order_shipments").select("*").eq("order_id", order.id).order("created_at", { ascending: false }),
     client.from("order_events").select("*").eq("order_id", order.id).order("created_at", { ascending: true }),
     client.from("payment_refunds").select("*").eq("order_id", order.id).order("created_at", { ascending: false }),
   ]);
@@ -569,38 +785,39 @@ export async function getOrderDetailByNumber(
     order,
     items: (items ?? []) as OrderItemRow[],
     paymentAttempts: (attempts ?? []) as PaymentAttemptRow[],
+    shipments: (shipments ?? []) as OrderShipmentRow[],
     events: (events ?? []) as CommerceOrderDetail["events"],
     refunds: (refunds ?? []) as CommerceOrderDetail["refunds"],
   };
 }
 
-export async function listOrdersForUser(userId: string, client = createSupabaseServiceRoleClient()) {
+export async function listOrdersForUser(userId: string, client = createSupabaseAdminClient()) {
   if (!client) {
     return [];
   }
 
   const { data } = await client
     .from("orders")
-    .select("*, order_items(*)")
+    .select("*, order_items(*), order_shipments(*)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50);
 
-  return (data ?? []) as Array<OrderRow & { order_items: OrderItemRow[] }>;
+  return (data ?? []) as unknown as Array<OrderRow & { order_items: OrderItemRow[]; order_shipments?: OrderShipmentRow | null }>;
 }
 
-export async function listAdminOrders(client = createSupabaseServiceRoleClient()) {
+export async function listAdminOrders(client = createSupabaseAdminClient()) {
   if (!client) {
     return [];
   }
 
   const { data } = await client
     .from("orders")
-    .select("*, order_items(*)")
+    .select("*, order_items(*), order_shipments(*)")
     .order("created_at", { ascending: false })
     .limit(100);
 
-  return (data ?? []) as Array<OrderRow & { order_items: OrderItemRow[] }>;
+  return (data ?? []) as unknown as Array<OrderRow & { order_items: OrderItemRow[]; order_shipments?: OrderShipmentRow | null }>;
 }
 
 export async function createPaymentForExistingOrder(input: {
@@ -619,6 +836,19 @@ export async function createPaymentForExistingOrder(input: {
 
   if (detail.order.payment_status === "succeeded" || detail.order.payment_status === "refunded") {
     throw new Error("order_not_payable");
+  }
+
+  const reusableAttempt = detail.paymentAttempts.find(
+    (attempt) =>
+      (attempt.status === "pending" || attempt.status === "waiting_for_capture" || attempt.status === "created") &&
+      attempt.confirmation_url,
+  );
+  if (reusableAttempt) {
+    return {
+      order: detail.order,
+      confirmationUrl: reusableAttempt.confirmation_url,
+      paymentAttempt: reusableAttempt,
+    };
   }
 
   const idempotencyKey = crypto.randomUUID();
@@ -643,7 +873,10 @@ export async function createPaymentForExistingOrder(input: {
     amountMinor: detail.order.total_amount_minor,
     orderNumber: detail.order.order_number,
     orderId: detail.order.id,
-    userId: input.userId,
+    paymentAttemptId: String(attempt.id),
+    customerEmail: detail.order.contact_email,
+    customerPhone: detail.order.contact_phone,
+    items: buildReceiptItemsFromOrderSnapshot(detail.order, detail.items),
     returnUrl: getCheckoutReturnUrl(detail.order.order_number),
     idempotencyKey,
   });
@@ -704,7 +937,8 @@ export async function createAdminRefund(input: {
   amountMinor?: number;
   reason?: string;
   actorUserId: string;
-}) {
+  refundRequestKey?: string;
+}): Promise<PaymentRefundRow> {
   const setup = getCommerceSetupState(true);
   if (!setup.ready) {
     throw new Error(setup.reason);
@@ -730,7 +964,16 @@ export async function createAdminRefund(input: {
     throw new Error("invalid_refund_amount");
   }
 
-  const idempotencyKey = crypto.randomUUID();
+  const refundReceiptItems =
+    amountMinor === detail.order.total_amount_minor
+      ? undefined
+      : buildPartialRefundReceiptItems({
+          order: detail.order,
+          items: detail.items,
+          amountMinor,
+        });
+
+  const idempotencyKey = input.refundRequestKey ?? crypto.randomUUID();
   const { data: storedRefund, error } = await setup.client
     .from("payment_refunds")
     .insert({
@@ -747,29 +990,64 @@ export async function createAdminRefund(input: {
     .single();
 
   if (error || !storedRefund) {
+    if (error?.message.toLowerCase().includes("duplicate")) {
+      const { data: existingRefund } = await setup.client
+        .from("payment_refunds")
+        .select("*")
+        .eq("idempotency_key", idempotencyKey)
+        .single();
+      if (existingRefund) {
+        return existingRefund as PaymentRefundRow;
+      }
+    }
     throw new Error(error?.message ?? "refund_create_failed");
   }
 
-  const refund = await createYooKassaRefund({
-    paymentId: succeededAttempt.provider_payment_id,
-    amountMinor,
-    idempotencyKey,
-    reason: input.reason,
-  });
+  let refund;
+  try {
+    refund = await createYooKassaRefund({
+      paymentId: succeededAttempt.provider_payment_id,
+      amountMinor,
+      idempotencyKey,
+      reason: input.reason,
+      customerEmail: detail.order.contact_email,
+      customerPhone: detail.order.contact_phone,
+      items: refundReceiptItems,
+      metadata: {
+        order_id: detail.order.id,
+        order_number: detail.order.order_number,
+        payment_attempt_id: succeededAttempt.id,
+        refund_id: String(storedRefund.id),
+      },
+    });
+  } catch (error) {
+    await setup.client
+      .from("payment_refunds")
+      .update({
+        status: "failed",
+        failed_at: new Date().toISOString(),
+      })
+      .eq("id", storedRefund.id);
+    throw error;
+  }
 
   const refundStatus = refund.status === "succeeded" ? "succeeded" : refund.status === "canceled" ? "canceled" : "pending";
-  await setup.client
+  const { data: updatedRefund, error: updateError } = await setup.client
     .from("payment_refunds")
     .update({
       provider_refund_id: refund.id,
       status: refundStatus,
       succeeded_at: refundStatus === "succeeded" ? new Date().toISOString() : null,
     })
-    .eq("id", storedRefund.id);
+    .eq("id", storedRefund.id)
+    .select("*")
+    .single();
+  if (updateError || !updatedRefund) {
+    throw new Error(updateError?.message ?? "refund_update_failed");
+  }
 
   if (refundStatus === "succeeded") {
-    const nextPaymentStatus = amountMinor === refundableAmountMinor ? "refunded" : "partially_refunded";
-    await setup.client.from("orders").update({ payment_status: nextPaymentStatus }).eq("id", detail.order.id);
+    const nextPaymentStatus = await updateOrderPaymentStatusFromRefunds(setup.client, detail.order);
     await insertOrderEvent(setup.client, {
       orderId: detail.order.id,
       eventType: "refund_succeeded",
@@ -779,5 +1057,76 @@ export async function createAdminRefund(input: {
     });
   }
 
-  return refund;
+  return updatedRefund as PaymentRefundRow;
+}
+
+async function updateOrderPaymentStatusFromRefunds(client: SupabaseClient, order: Pick<OrderRow, "id" | "total_amount_minor">) {
+  const { data: refunds, error } = await client
+    .from("payment_refunds")
+    .select("amount_minor, status")
+    .eq("order_id", order.id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const succeededAmount = (refunds ?? [])
+    .filter((refund) => refund.status === "succeeded")
+    .reduce((sum, refund) => sum + Number(refund.amount_minor), 0);
+  const nextPaymentStatus = succeededAmount >= order.total_amount_minor ? "refunded" : succeededAmount > 0 ? "partially_refunded" : "succeeded";
+  await client.from("orders").update({ payment_status: nextPaymentStatus }).eq("id", order.id);
+  return nextPaymentStatus;
+}
+
+export async function reconcileYooKassaRefund(providerRefundId: string) {
+  const setup = getCommerceSetupState(true);
+  if (!setup.ready) {
+    throw new Error(setup.reason);
+  }
+
+  const providerRefund = await getYooKassaRefund(providerRefundId);
+  let { data: refunds } = await setup.client
+    .from("payment_refunds")
+    .select("*, orders(*)")
+    .eq("provider_refund_id", providerRefund.id)
+    .limit(1);
+  if ((!refunds || refunds.length === 0) && providerRefund.metadata?.refund_id) {
+    const retry = await setup.client
+      .from("payment_refunds")
+      .select("*, orders(*)")
+      .eq("id", providerRefund.metadata.refund_id)
+      .limit(1);
+    refunds = retry.data;
+  }
+
+  const storedRefund = refunds?.[0] as (PaymentRefundRow & { orders?: OrderRow }) | undefined;
+  if (!storedRefund) {
+    throw new Error("Refund not found.");
+  }
+
+  const amountMinor = yookassaAmountValueToMinor(providerRefund.amount.value);
+  if (providerRefund.amount.currency !== storedRefund.currency || amountMinor !== storedRefund.amount_minor) {
+    throw new Error("YooKassa refund amount does not match the stored refund.");
+  }
+
+  const status = providerRefund.status === "succeeded" ? "succeeded" : providerRefund.status === "canceled" ? "canceled" : "pending";
+  const { data: updatedRefund, error } = await setup.client
+    .from("payment_refunds")
+    .update({
+      provider_refund_id: providerRefund.id,
+      status,
+      succeeded_at: status === "succeeded" ? new Date().toISOString() : storedRefund.succeeded_at,
+      failed_at: status === "canceled" ? new Date().toISOString() : storedRefund.failed_at,
+    })
+    .eq("id", storedRefund.id)
+    .select("*")
+    .single();
+  if (error || !updatedRefund) {
+    throw new Error(error?.message ?? "refund_update_failed");
+  }
+
+  if (storedRefund.orders && status === "succeeded") {
+    await updateOrderPaymentStatusFromRefunds(setup.client, storedRefund.orders);
+  }
+
+  return { refund: updatedRefund as PaymentRefundRow, providerRefund };
 }

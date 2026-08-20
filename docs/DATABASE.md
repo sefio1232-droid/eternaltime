@@ -1009,7 +1009,7 @@ Rule:
 Implementation note:
 
 - Controlled catalog apply adds `import_batches`, `import_rows`, `audit_logs`, and the transactional database function `public.apply_catalog_import_batch(input jsonb)` through a versioned migration.
-- The function is an operational service-role boundary for approved catalog import apply. It is not a public write path.
+- The function is an operational Supabase/Postgres `service_role` boundary for approved catalog import apply. Application code calls it only from trusted server/CLI code configured with `SUPABASE_SECRET_KEY`; it is not a public write path.
 - It stores compact structured apply metadata and safe audit summaries, not raw Excel/ZIP dumps or image binaries.
 
 ## Search And Filtering Strategy
@@ -1072,3 +1072,10 @@ Service records, ownership transition from delivered Orders, and Collection Inte
 The database and catalog foundation phase is implemented in versioned Supabase migrations under `supabase/migrations/`.
 
 Exact implementation decisions for role codes, reference normalization, reference slugs, first-class fields, controlled attributes, commercial state, and RLS policy scope are recorded in `docs/CATALOG_IMPLEMENTATION.md`.
+
+## Commerce Delivery Additions
+
+- `orders` stores customer-facing delivery snapshot: method, contact, customer delivery charge, city/address/PVZ choice, and immutable checkout total.
+- `order_shipments` stores the private carrier shipment snapshot for CDEK: actual carrier cost, CDEK UUID/order number/tracking number, mapped shipment status, sync timestamps, retry metadata, and safe carrier metadata.
+- `order_shipments.order_id` is unique to enforce one shipment per order.
+- RLS allows customers to read only shipments for their own orders; order managers/admins can manage shipments.

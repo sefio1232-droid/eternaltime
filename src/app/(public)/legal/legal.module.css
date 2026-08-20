@@ -1,0 +1,247 @@
+.page {
+  background:
+    radial-gradient(circle at 88% 4%, rgb(185 138 69 / 10%), transparent 26rem),
+    linear-gradient(180deg, #fbfaf7 0%, #f7f3ec 48%, #fbfaf7 100%);
+  color: var(--text);
+}
+
+.shell {
+  padding-block: max(1.4rem, env(safe-area-inset-top)) clamp(4rem, 7vw, 7rem);
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  color: var(--text-muted);
+  font-family: var(--font-reference);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.breadcrumbs a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: #315e74;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  max-width: 58rem;
+  padding-block: clamp(2.2rem, 6vw, 5rem);
+  border-bottom: 1px solid rgb(16 19 22 / 18%);
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-family: var(--font-reference);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.article h1 {
+  font-family: var(--font-editorial);
+  font-size: clamp(2.3rem, 5vw, 4.8rem);
+  font-weight: 500;
+  letter-spacing: -0.028em;
+  line-height: 1.02;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.hero p {
+  max-width: 58ch;
+  color: var(--text-muted);
+  font-size: clamp(1rem, 1.2vw, 1.12rem);
+  line-height: 1.65;
+}
+
+.documentGrid {
+  display: grid;
+  gap: 1px;
+  margin-top: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid rgb(16 19 22 / 14%);
+  background: rgb(16 19 22 / 14%);
+}
+
+.documentCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  min-height: 88px;
+  background: #fbfaf7;
+  padding: clamp(1rem, 2.2vw, 1.45rem);
+  color: inherit;
+}
+
+.documentCard:focus-visible,
+.inlineLink:focus-visible,
+.backLink:focus-visible {
+  outline: 2px solid #315e74;
+  outline-offset: 3px;
+}
+
+.documentCard strong {
+  display: block;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.documentCard span {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.documentCard small {
+  color: #9b7541;
+  font-family: var(--font-reference);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.article {
+  max-width: 54rem;
+  margin-inline: auto;
+  padding-top: clamp(2rem, 5vw, 4rem);
+}
+
+.sourceMeta {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: clamp(1.6rem, 4vw, 3rem);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.content {
+  display: grid;
+  gap: 1rem;
+}
+
+.content h2 {
+  margin-top: clamp(1.8rem, 4vw, 3.2rem);
+  padding-top: 1rem;
+  border-top: 1px solid rgb(16 19 22 / 16%);
+  font-family: var(--font-editorial);
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  font-weight: 500;
+  letter-spacing: -0.014em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.content p {
+  color: #31383d;
+  font-size: clamp(1rem, 1.15vw, 1.08rem);
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+}
+
+.documentTitleLine {
+  color: #10171b !important;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.4rem, 2.6vw, 2.2rem) !important;
+  line-height: 1.15 !important;
+}
+
+.revisionLine {
+  color: #7c704d !important;
+  font-family: var(--font-reference);
+  font-size: 0.75rem !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgb(16 19 22 / 16%);
+}
+
+.tableWrap table {
+  width: 100%;
+  min-width: min(44rem, 100%);
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.tableWrap td,
+.tableWrap th {
+  border-bottom: 1px solid rgb(16 19 22 / 10%);
+  padding: 0.75rem;
+  color: #31383d;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-align: left;
+  vertical-align: top;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  border-bottom: 1px solid currentColor;
+  color: #315e74;
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.inlineLink {
+  color: #315e74;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding-block: 1rem 4rem;
+  }
+
+  .hero {
+    padding-block: 1.65rem 2rem;
+  }
+
+  .hero h1,
+  .article h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 10vw, 2.85rem);
+    font-weight: 620;
+    line-height: 1.06;
+  }
+
+  .documentCard {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .article {
+    max-width: calc(100vw - 2rem);
+    margin-inline: auto;
+  }
+
+  .content {
+    gap: 0.9rem;
+  }
+
+  .content p {
+    font-size: 1rem;
+    line-height: 1.68;
+  }
+}

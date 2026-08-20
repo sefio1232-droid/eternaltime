@@ -528,3 +528,22 @@
 @media (prefers-reduced-motion: reduce) {
   .watchMedia :global(.catalog-image) { transition: none; }
 }
+
+@media (max-width: 640px) {
+  .header { border-top: 1px solid rgb(16 23 27 / 17%); }
+  .header h1, .empty h1 { font-family: var(--font-display); font-size: clamp(2.25rem, 10vw, 3.2rem); font-weight: 620; letter-spacing: -0.04em; line-height: 1; }
+  .headerCopy { padding-block: 1.75rem; }
+  .headerAside { min-height: auto; padding: 1.25rem; }
+  .headerActions { display: grid; grid-template-columns: 1fr; }
+  .headerActions a, .headerActions button, .primaryAction, .oneWatch a { min-height: 44px; width: 100%; }
+  .watchRail { margin-inline: calc(-1 * var(--page-gutter)); padding-inline: var(--page-gutter); gap: 0.75rem; background: transparent; }
+  .watchCard { flex-basis: min(78vw, 21rem); grid-template-rows: 15.5rem auto; border: 1px solid rgb(16 23 27 / 12%); }
+  .watchMedia { padding: 1.25rem; }
+  .watchIdentity { min-height: 7.5rem; padding: 1rem 3rem 1.1rem 1rem; }
+  .tableToolbar { margin-top: 2.4rem; padding-block: 1rem; }
+  .modelLegend { position: sticky; top: calc(56px + env(safe-area-inset-top, 0px)); z-index: 12; margin-inline: calc(-1 * var(--page-gutter)); padding: 0.8rem var(--page-gutter); background: rgb(251 250 247 / 0.96); backdrop-filter: blur(14px); }
+  .detailChapter { padding-block: 2rem; }
+  .detailValues { display: flex; gap: 0.75rem; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .detailValue { flex: 0 0 min(72vw, 18rem); padding: 0.75rem; border-left: 1px solid rgb(177 138 82 / 35%); background: rgb(255 255 255 / 0.38); scroll-snap-align: start; }
+  .detailValue::before { display: none; }
+}

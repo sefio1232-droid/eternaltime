@@ -57,6 +57,7 @@
 
 .cta {
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.35rem;
@@ -105,6 +106,7 @@
 
 .assistCta {
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.3rem;
@@ -124,4 +126,59 @@
 .assistCta:focus-visible {
   outline: 2px solid var(--catalog-focus);
   outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+  .hero {
+    gap: 0.95rem;
+    padding-top: clamp(1.25rem, 6vw, 1.75rem);
+    padding-bottom: 0.95rem;
+  }
+
+  .copy {
+    gap: 0.6rem;
+  }
+
+  .eyebrow {
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: clamp(2.15rem, 11.2vw, 2.75rem);
+    font-weight: 620;
+    line-height: 1;
+  }
+
+  .lead {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .cta {
+    margin-top: 0.05rem;
+  }
+
+  .assist {
+    display: none;
+  }
+
+  .assistLabel {
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    font-weight: 620;
+    letter-spacing: -0.015em;
+  }
+
+  .assistLead {
+    display: none;
+  }
+
+  .assistCta {
+    margin-top: 0;
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
 }

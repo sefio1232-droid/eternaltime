@@ -357,8 +357,8 @@ export async function buildCatalogApplyDryRun(input: {
     actualApplyBlockers.push("Repository is not linked to a remote Supabase project.");
   }
 
-  if (!preflight.environment.serviceRoleKeyConfigured) {
-    actualApplyBlockers.push("Supabase service role key is not configured for privileged apply.");
+  if (!preflight.environment.adminSecretKeyConfigured) {
+    actualApplyBlockers.push("Supabase server admin secret key is not configured for privileged apply.");
   }
 
   if (!preflight.database.comparisonAvailable && preflight.database.blocker) {
@@ -449,7 +449,7 @@ export function buildCatalogApplyDryRunMarkdown(summary: CatalogApplyDryRunSumma
         ["Remote link", summary.databasePreflight.remoteLink.linked ? "linked" : "missing"],
         ["Public URL configured", summary.databasePreflight.environment.publicUrlConfigured ? "yes" : "no"],
         ["Publishable key configured", summary.databasePreflight.environment.publishableKeyConfigured ? "yes" : "no"],
-        ["Service role key configured", summary.databasePreflight.environment.serviceRoleKeyConfigured ? "yes" : "no"],
+        ["Server admin secret key configured", summary.databasePreflight.environment.adminSecretKeyConfigured ? "yes" : "no"],
         ["Database comparison", summary.databaseComparisonStatus],
         ["Database blocker", summary.databasePreflight.database.blocker ?? "none"],
       ],

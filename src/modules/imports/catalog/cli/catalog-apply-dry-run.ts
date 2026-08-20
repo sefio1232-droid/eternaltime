@@ -6,8 +6,11 @@ import {
   writeCatalogImageUploadPlan,
 } from "../application/database-apply-plan";
 import { buildCatalogApplyDryRun, writeCatalogApplyDryRun } from "../application/database-apply-dry-run";
+import { loadCatalogCliEnv } from "./env";
 
 const rootDir = process.cwd();
+loadCatalogCliEnv(rootDir);
+
 const previewPath = path.join(rootDir, "imports", "generated", "catalog-import-preview.json");
 const dryRunJsonPath = path.join(rootDir, "imports", "generated", "catalog-apply-dry-run.json");
 const dryRunReportPath = path.join(rootDir, "imports", "reports", "catalog-apply-dry-run.md");

@@ -1,6 +1,6 @@
 # Security Architecture
 
-Security is a core architecture concern for Eternal Time. Public catalog data, private User Watch Collection data, admin operations, service role usage, and provider callbacks must have distinct access boundaries.
+Security is a core architecture concern for Eternal Time. Public catalog data, private User Watch Collection data, admin operations, elevated Supabase admin-secret usage, and provider callbacks must have distinct access boundaries.
 
 ## Authentication
 
@@ -68,14 +68,14 @@ Admin-controlled:
 - Audit logs.
 - Business settings.
 
-Service role:
+Elevated server/admin access:
 
 - Used only in server-only trusted code when user-scoped RLS is insufficient.
 - Never exposed to client code.
 
-Catalog import apply uses service role only from CLI/server operational code after dry run, database preflight, and explicit confirmation. The apply process must not log or report service role keys, connection strings, or access tokens.
+Catalog import apply uses the server-only `SUPABASE_SECRET_KEY` only from CLI/server operational code after dry run, database preflight, and explicit confirmation. The apply process must not log or report secret keys, connection strings, or access tokens.
 
-The controlled import apply RPC is restricted to `service_role` execution. The migration revokes function execution from `public`, grants execute only to `service_role`, uses `SECURITY DEFINER` with explicit `search_path = public`, and does not use dynamic SQL with uncontrolled identifiers.
+The controlled import apply RPC is restricted to the Supabase/Postgres `service_role` database role. The migration revokes function execution from `public`, grants execute only to `service_role`, uses `SECURITY DEFINER` with explicit `search_path = public`, and does not use dynamic SQL with uncontrolled identifiers. Application code reaches this boundary with `SUPABASE_SECRET_KEY`; the key itself is not the SQL role name.
 
 ## Storage Security
 
@@ -160,7 +160,7 @@ Future production catalog images must come from the public catalog image storage
 
 Server secrets include:
 
-- Supabase service role key.
+- Supabase admin secret key (`SUPABASE_SECRET_KEY` / `sb_secret_...`).
 - Provider API keys.
 - Webhook signing secrets.
 - AI provider credentials.
@@ -174,7 +174,7 @@ Rules:
 - Do not return secrets to the client.
 - Do not use secrets in Client Components.
 
-## Service Role Usage
+## Elevated Supabase Admin Secret Usage
 
 Allowed:
 
@@ -191,7 +191,7 @@ Not allowed:
 - Browser-visible admin state.
 - Any code imported by Client Components.
 
-Catalog import apply does not add broad authenticated write policies for catalog tables. The controlled database apply function is restricted to service-role execution.
+Catalog import apply does not add broad authenticated write policies for catalog tables. The controlled database apply function is restricted to Supabase/Postgres `service_role` execution and is called only from server-side code configured with `SUPABASE_SECRET_KEY`.
 
 ## Admin Access
 

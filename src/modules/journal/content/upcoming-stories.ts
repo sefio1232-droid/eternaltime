@@ -21,7 +21,7 @@ export const upcomingEditorialStories: UpcomingEditorialStory[] = [
     id: "quartz-mechanical-or-solar",
     number: "03",
     category: "МЕХАНИЗМЫ",
-    title: "Кварц, механика или solar",
+    title: "Кварц, механика или солнечное питание",
     description: "Сравним три подхода к точности, обслуживанию и характеру часов.",
     status: "upcoming",
   },

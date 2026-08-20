@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "checkout_failed";
-    const setupErrors = new Set(["supabase_unconfigured", "service_role_missing", "yookassa_unconfigured", "delivery_unconfigured"]);
+    const setupErrors = new Set(["supabase_unconfigured", "admin_secret_missing", "yookassa_unconfigured", "delivery_unconfigured"]);
     return NextResponse.json(
       {
         error: setupErrors.has(message) ? message : "checkout_failed",

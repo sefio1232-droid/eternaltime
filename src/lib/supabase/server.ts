@@ -4,8 +4,9 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { getPublicEnv } from "@/config/public-env";
+import type { Database } from "@/lib/supabase/database.types";
 
-export async function createSupabaseServerClient(): Promise<SupabaseClient | null> {
+export async function createSupabaseServerClient(): Promise<SupabaseClient<Database> | null> {
   const env = getPublicEnv();
 
   if (!env.supabase.isConfigured) {
@@ -14,7 +15,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseClient | nul
 
   const cookieStore = await cookies();
 
-  return createServerClient(env.supabase.url, env.supabase.publishableKey, {
+  return createServerClient<Database>(env.supabase.url, env.supabase.publishableKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

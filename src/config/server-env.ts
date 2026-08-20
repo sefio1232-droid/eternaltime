@@ -6,8 +6,8 @@ export type ServerEnv = {
   nodeEnv: "development" | "test" | "production";
   catalogReadSource: "database" | "preview";
   supabase: {
-    serviceRoleKey: string;
-    hasServiceRole: boolean;
+    adminSecretKey: string;
+    hasAdminSecret: boolean;
   };
   commerce: {
     deliveryPricingMode: "included" | "flat" | "cdek_threshold" | "not_configured";
@@ -20,10 +20,20 @@ export type ServerEnv = {
     apiBaseUrl: string;
     clientId: string;
     clientSecret: string;
-    account: string;
-    securePassword: string;
+    widgetYandexMapsApiKey: string;
+    hasWidgetYandexMapsApiKey: boolean;
     fromLocationCode: number | null;
     defaultTariffCode: number | null;
+    pickupTariffCode: number | null;
+    courierTariffCode: number | null;
+    webhookToken: string;
+    packagePolicy: {
+      weightGrams: number | null;
+      lengthCm: number | null;
+      widthCm: number | null;
+      heightCm: number | null;
+      isConfigured: boolean;
+    };
   };
   yookassa: {
     isConfigured: boolean;
@@ -33,6 +43,10 @@ export type ServerEnv = {
     webhookBasicAuthUser: string;
     webhookBasicAuthPassword: string;
     receiptsEnabled: boolean;
+    receiptVatCode: number | null;
+    receiptPaymentSubject: string;
+    receiptPaymentMode: string;
+    receiptTaxSystemCode: number | null;
   };
 };
 
@@ -80,8 +94,12 @@ export function getServerEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv
     parseRubAmountMinor(source.CDEK_BELOW_THRESHOLD_DELIVERY_RUB) ?? 50_000;
   const yookassaShopId = source.YOOKASSA_SHOP_ID?.trim() ?? "";
   const yookassaSecretKey = source.YOOKASSA_SECRET_KEY?.trim() ?? "";
-  const cdekClientId = source.CDEK_CLIENT_ID?.trim() ?? source.CDEK_ACCOUNT?.trim() ?? "";
-  const cdekClientSecret = source.CDEK_CLIENT_SECRET?.trim() ?? source.CDEK_SECURE_PASSWORD?.trim() ?? "";
+  const cdekClientId = source.CDEK_CLIENT_ID?.trim() ?? "";
+  const cdekClientSecret = source.CDEK_CLIENT_SECRET?.trim() ?? "";
+  const cdekPackageWeightGrams = parseOptionalInteger(source.CDEK_DEFAULT_PACKAGE_WEIGHT_GRAMS);
+  const cdekPackageLengthCm = parseOptionalInteger(source.CDEK_DEFAULT_PACKAGE_LENGTH_CM);
+  const cdekPackageWidthCm = parseOptionalInteger(source.CDEK_DEFAULT_PACKAGE_WIDTH_CM);
+  const cdekPackageHeightCm = parseOptionalInteger(source.CDEK_DEFAULT_PACKAGE_HEIGHT_CM);
 
   const resolvedNodeEnv = nodeEnv === "production" || nodeEnv === "test" ? nodeEnv : "development";
 
@@ -89,8 +107,8 @@ export function getServerEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv
     nodeEnv: resolvedNodeEnv,
     catalogReadSource,
     supabase: {
-      serviceRoleKey: source.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? "",
-      hasServiceRole: Boolean(source.SUPABASE_SERVICE_ROLE_KEY?.trim()),
+      adminSecretKey: source.SUPABASE_SECRET_KEY?.trim() ?? "",
+      hasAdminSecret: Boolean(source.SUPABASE_SECRET_KEY?.trim()),
     },
     commerce: {
       deliveryPricingMode,
@@ -103,10 +121,27 @@ export function getServerEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv
       apiBaseUrl: source.CDEK_API_BASE_URL?.trim() || "https://api.cdek.ru/v2",
       clientId: cdekClientId,
       clientSecret: cdekClientSecret,
-      account: source.CDEK_ACCOUNT?.trim() ?? "",
-      securePassword: source.CDEK_SECURE_PASSWORD?.trim() ?? "",
-      fromLocationCode: parseOptionalInteger(source.CDEK_FROM_LOCATION_CODE),
+      widgetYandexMapsApiKey: source.CDEK_WIDGET_YANDEX_MAPS_API_KEY?.trim() ?? "",
+      hasWidgetYandexMapsApiKey: Boolean(source.CDEK_WIDGET_YANDEX_MAPS_API_KEY?.trim()),
+      fromLocationCode: parseOptionalInteger(source.CDEK_ORIGIN_CITY_CODE) ?? parseOptionalInteger(source.CDEK_FROM_LOCATION_CODE),
       defaultTariffCode: parseOptionalInteger(source.CDEK_DEFAULT_TARIFF_CODE),
+      pickupTariffCode:
+        parseOptionalInteger(source.CDEK_PICKUP_TARIFF_CODE) ?? parseOptionalInteger(source.CDEK_DEFAULT_TARIFF_CODE),
+      courierTariffCode:
+        parseOptionalInteger(source.CDEK_COURIER_TARIFF_CODE) ?? parseOptionalInteger(source.CDEK_DEFAULT_TARIFF_CODE),
+      webhookToken: source.CDEK_WEBHOOK_TOKEN?.trim() ?? "",
+      packagePolicy: {
+        weightGrams: cdekPackageWeightGrams,
+        lengthCm: cdekPackageLengthCm,
+        widthCm: cdekPackageWidthCm,
+        heightCm: cdekPackageHeightCm,
+        isConfigured: Boolean(
+          cdekPackageWeightGrams &&
+            cdekPackageLengthCm &&
+            cdekPackageWidthCm &&
+            cdekPackageHeightCm,
+        ),
+      },
     },
     yookassa: {
       isConfigured: Boolean(yookassaShopId && yookassaSecretKey),
@@ -116,6 +151,10 @@ export function getServerEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv
       webhookBasicAuthUser: source.YOOKASSA_WEBHOOK_BASIC_AUTH_USER?.trim() ?? "",
       webhookBasicAuthPassword: source.YOOKASSA_WEBHOOK_BASIC_AUTH_PASSWORD?.trim() ?? "",
       receiptsEnabled: source.YOOKASSA_RECEIPTS_ENABLED === "true",
+      receiptVatCode: parseOptionalInteger(source.YOOKASSA_RECEIPT_VAT_CODE),
+      receiptPaymentSubject: source.YOOKASSA_RECEIPT_PAYMENT_SUBJECT?.trim() ?? "",
+      receiptPaymentMode: source.YOOKASSA_RECEIPT_PAYMENT_MODE?.trim() ?? "",
+      receiptTaxSystemCode: parseOptionalInteger(source.YOOKASSA_RECEIPT_TAX_SYSTEM_CODE),
     },
   };
 }

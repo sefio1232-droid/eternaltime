@@ -992,3 +992,40 @@
     transform: none;
   }
 }
+
+@media (max-width: 767px) {
+  .page {
+    gap: 1.5rem;
+  }
+
+  .heading {
+    padding-block: 0.75rem 1.25rem;
+  }
+
+  .heading h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.15rem, 9.6vw, 3.05rem);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  .choiceCard,
+  .continueButton,
+  .backButton,
+  .primaryLink {
+    min-height: 44px;
+  }
+
+  .choiceGrid {
+    gap: 0.75rem;
+  }
+
+  .progress {
+    position: sticky;
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    z-index: 12;
+    background: rgb(248 246 241 / 0.95);
+    backdrop-filter: blur(14px);
+  }
+}

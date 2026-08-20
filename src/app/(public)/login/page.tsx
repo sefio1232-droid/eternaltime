@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
@@ -62,6 +63,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   placeholder="name@example.com"
                 />
               </label>
+              <label className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 text-sm leading-6 text-[var(--text-muted)]">
+                <input
+                  required
+                  type="checkbox"
+                  name="personalDataConsentAccepted"
+                  className="mt-1 size-4 accent-[var(--surface-graphite)]"
+                />
+                <span>
+                  Я даю <Link href="/legal/personal-data-consent" className="underline underline-offset-4">согласие на обработку персональных данных</Link> и
+                  ознакомлен(а) с <Link href="/legal/privacy" className="underline underline-offset-4">Политикой обработки персональных данных</Link>.
+                </span>
+              </label>
               <Button type="submit" className="justify-self-start">Продолжить</Button>
             </form>
           )}
@@ -72,6 +85,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 ? "Вход пока не настроен для этого окружения."
                 : error === "invalid_email"
                   ? "Проверьте адрес электронной почты."
+                  : error === "personal_data_consent_required"
+                    ? "Для входа необходимо согласие на обработку персональных данных."
                   : "Не удалось отправить ссылку. Попробуйте ещё раз."}
             </p>
           ) : null}

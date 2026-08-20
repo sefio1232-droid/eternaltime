@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useState, type CSSProperties } from "react";
 import type { CatalogImagePresentation } from "@/modules/catalog/domain/read-models";
 import {
   resolveCatalogImagePresentation,
@@ -22,21 +24,23 @@ export function CatalogImage({
   imageIndex?: number;
   galleryCount?: number;
 }>) {
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const composition = compositionSlot
     ? resolveCatalogImagePresentation({ image, slot: compositionSlot, imageIndex, galleryCount })
     : null;
 
-  if (image.kind === "none") {
+  if (image.kind === "none" || failed) {
     return (
       <span
         role="img"
         aria-label={image.alt}
-        className={`flex h-full w-full items-center justify-center ${className}`}
+        className={`catalog-image catalog-image--${presentation} catalog-image--fallback flex h-full w-full items-center justify-center ${className}`}
         data-image-presentation-mode={composition?.mode ?? "missing"}
         data-image-focal-x={composition?.focalX ?? 50}
         data-image-focal-y={composition?.focalY ?? 50}
         data-image-scale={composition?.scale ?? 1}
-        data-image-source-quality={composition?.sourceQuality ?? "missing"}
+        data-image-source-quality={failed ? "load-error" : composition?.sourceQuality ?? "missing"}
       >
         <span className="media-placeholder-mark" aria-hidden="true">
           ET
@@ -50,10 +54,12 @@ export function CatalogImage({
     <img
       src={image.src}
       alt={image.alt}
-      className={`catalog-image catalog-image--${presentation} ${composition ? "catalog-image--composed" : ""} ${className}`}
+      className={`catalog-image catalog-image--${presentation} ${composition ? "catalog-image--composed" : ""} ${loaded ? "catalog-image--loaded" : "catalog-image--loading"} ${className}`}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "auto"}
       decoding="async"
+      onLoad={() => setLoaded(true)}
+      onError={() => setFailed(true)}
       data-image-presentation-mode={composition?.mode}
       data-image-focal-x={composition?.focalX}
       data-image-focal-y={composition?.focalY}

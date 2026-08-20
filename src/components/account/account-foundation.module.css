@@ -42,3 +42,14 @@
 .emptyActions a { display: inline-flex; align-items: center; }
 @media (max-width: 980px) { .workspace { grid-template-columns: 1fr; } .profileSummary { grid-template-columns: 1fr 2fr; } .profileSummary > p:not(.eyebrow), .profileSummary > a { grid-column: 2; } }
 @media (max-width: 640px) { .heading h1 { max-width: 100%; font-size: clamp(2.65rem, 12vw, 3.6rem); } .collectionCard { grid-template-columns: 1fr; padding: 1.4rem; } .stats { grid-template-columns: 1fr; } .stats div { min-height: 5.5rem; border-right: 0; border-bottom: 1px solid rgb(16 19 22 / 12%); } .commerceStack { grid-template-rows: auto; } .smallCard { min-height: 13rem; } .profileSummary { grid-template-columns: 1fr; } .profileSummary > p:not(.eyebrow), .profileSummary > a { grid-column: 1; } .formGrid { grid-template-columns: 1fr; } .fullField { grid-column: 1; } .emptyState { display: block; padding: 2rem 0; } .emptyState > * + * { margin-top: 1.5rem; } }
+
+@media (max-width: 767px) {
+  .heading { padding-block: 0.75rem 1.25rem; }
+  .heading h1 { font-family: var(--font-display); font-size: clamp(2.1rem, 9.5vw, 3rem); font-weight: 620; letter-spacing: -0.035em; line-height: 1; }
+  .workspace { gap: 0; background: transparent; }
+  .collectionCard, .smallCard, .profileSummary, .form, .emptyState { padding-inline: 1rem; }
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats div { min-height: 5rem; padding: 0.75rem; }
+  .stats dd { font-size: 1.55rem; }
+  .form input, .form select { min-height: 44px; font-size: 16px; }
+}

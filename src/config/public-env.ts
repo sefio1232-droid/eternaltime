@@ -1,7 +1,7 @@
 import { z } from "zod";
+import { resolveConfiguredSiteUrl } from "@/config/site-url";
 
 const publicEnvSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional().or(z.literal("")),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional().or(z.literal("")),
 });
@@ -22,20 +22,24 @@ export type PublicEnv = {
 };
 
 export function getPublicEnv(source: Record<string, string | undefined> = process.env): PublicEnv {
+  const siteUrl = resolveConfiguredSiteUrl(source);
   const parsed = publicEnvSchema.safeParse(source);
 
   if (!parsed.success) {
     return {
-      appUrl: "http://localhost:3000",
+      appUrl: siteUrl.url ?? "",
       supabase: {
         isConfigured: false,
         url: "",
         publishableKey: "",
       },
-      issues: parsed.error.issues.map((issue) => ({
-        key: issue.path.join("."),
-        message: issue.message,
-      })),
+      issues: [
+        ...siteUrl.issues,
+        ...parsed.error.issues.map((issue) => ({
+          key: issue.path.join("."),
+          message: issue.message,
+        })),
+      ],
     };
   }
 
@@ -45,19 +49,22 @@ export function getPublicEnv(source: Record<string, string | undefined> = proces
   const hasPartialSupabaseConfig = Boolean(supabaseUrl || supabasePublishableKey) && !isSupabaseConfigured;
 
   return {
-    appUrl: parsed.data.NEXT_PUBLIC_APP_URL,
+    appUrl: siteUrl.url ?? "",
     supabase: {
       isConfigured: isSupabaseConfigured,
       url: supabaseUrl,
       publishableKey: supabasePublishableKey,
     },
-    issues: hasPartialSupabaseConfig
-      ? [
+    issues: [
+      ...siteUrl.issues,
+      ...(hasPartialSupabaseConfig
+        ? [
           {
             key: "NEXT_PUBLIC_SUPABASE",
             message: "Supabase URL and publishable key must be provided together.",
           },
         ]
-      : [],
+        : []),
+    ],
   };
 }

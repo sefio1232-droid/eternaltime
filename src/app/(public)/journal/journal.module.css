@@ -418,6 +418,7 @@
 }
 
 .storyRow {
+  min-width: 0;
   display: grid;
   grid-template-columns: 5rem minmax(0, 1fr) minmax(11rem, 0.38fr);
   gap: clamp(1.2rem, 3vw, 2.4rem);
@@ -449,7 +450,9 @@
 }
 
 .textLink {
-  display: inline-block;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   margin-top: 1.15rem;
   font-size: 0.64rem;
   letter-spacing: 0.08em;
@@ -757,10 +760,22 @@
   }
 
   .storyRow {
+    width: 100%;
+    min-width: 0;
     gap: 1rem;
   }
 
+  .storyRowCopy {
+    min-width: 0;
+  }
+
+  .storyRow h3 {
+    max-width: 100%;
+    font-size: clamp(1.85rem, 8.5vw, 2.45rem);
+  }
+
   .storyRowVisual {
+    width: 100%;
     max-width: 18rem;
   }
 
@@ -779,15 +794,22 @@
   }
 
   .upcomingRail {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+    scroll-snap-type: none;
   }
 
   .upcomingStory {
-    min-width: 82vw;
+    min-width: 0;
     min-height: 15rem;
-    scroll-snap-align: start;
+    border-right: 0;
+    border-bottom: 1px solid rgb(18 22 25 / 13%);
+    scroll-snap-align: none;
+  }
+
+  .upcomingStory:last-child {
+    border-bottom: 0;
   }
 }
 
@@ -802,5 +824,135 @@
       opacity: 0;
       transform: translateY(6px);
     }
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    background:
+      radial-gradient(circle at 92% 0, rgb(171 136 81 / 12%), transparent 11rem),
+      linear-gradient(180deg, #fbfaf7 0%, #f4efe6 42%, #fbfaf7 100%);
+  }
+
+  .masthead,
+  .tableOfContents,
+  .leadStory,
+  .readingGrid,
+  .editorialShelf,
+  .bridge {
+    width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
+  }
+
+  .masthead {
+    min-height: auto;
+  }
+
+  .mastheadCopy {
+    padding-block: 1.6rem 1.25rem;
+  }
+
+  .mastheadCopy h1,
+  .leadBody h2,
+  .sectionHeading h2,
+  .editorialShelf h2,
+  .upcomingHeader h2,
+  .bridge h2 {
+    font-family: var(--font-display);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+  }
+
+  .mastheadCopy h1 {
+    max-width: 9ch;
+    font-size: clamp(2.75rem, 14vw, 4rem);
+    line-height: 0.94;
+  }
+
+  .intro {
+    margin-top: 1rem;
+    font-size: 0.98rem;
+    line-height: 1.58;
+  }
+
+  .coverNote {
+    min-height: 22rem;
+  }
+
+  .coverObject,
+  .watchPlate {
+    min-height: 15rem;
+  }
+
+  .issueFacts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .issueFacts div {
+    min-width: 0;
+    padding: 0.75rem 0.55rem;
+  }
+
+  .issueFacts dd {
+    font-size: 0.62rem;
+  }
+
+  .tableOfContents {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+    scroll-padding-inline: 0;
+    scroll-snap-type: none;
+  }
+
+  .tableOfContents a {
+    min-height: 44px;
+    border-bottom: 1px solid rgb(18 22 25 / 12%);
+    border-left: 0;
+    padding-inline: 0.9rem;
+  }
+
+  .leadStory {
+    padding-block: 2.3rem;
+  }
+
+  .leadBody h2,
+  .sectionHeading h2 {
+    font-size: clamp(2.05rem, 10vw, 3.1rem);
+    line-height: 1;
+  }
+
+  .leadAside {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+
+  .leadAside > * {
+    min-width: 0;
+    scroll-snap-align: none;
+  }
+
+  .storyRowVisual {
+    width: 100%;
+    max-width: none;
+  }
+
+  .storyActions a,
+  .bridge nav a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .editorialShelf {
+    padding: 1.15rem;
+  }
+
+  .editorialShelf h2,
+  .upcomingHeader h2,
+  .bridge h2 {
+    font-size: clamp(1.9rem, 9vw, 2.7rem);
   }
 }

@@ -125,7 +125,7 @@ describe("editorial art direction and layout refinement", () => {
     expect(journal).toContain("EditorialWatchVisual");
     expect(journal).toContain("link={false}");
     expect(journal).toContain("Не витрина картинок");
-    expect(journal).toContain("Редакционная заметка");
+    expect(journal).toContain("Коротко о выпуске");
     expect(journal).toContain("Часы в контексте");
     expect(journal).not.toContain("brand-scoped");
     expect(journal).not.toContain("Catalog Read Repository");
@@ -152,7 +152,8 @@ describe("editorial art direction and layout refinement", () => {
     const publicCheckout = `${checkoutPage}\n${checkoutExperience}`;
 
     expect(checkoutPage).toContain("Онлайн-оформление скоро откроется");
-    expect(checkoutPage).toContain("после подключения личного кабинета");
+    expect(checkoutPage).toContain("В production покупатель авторизуется");
+    expect(checkoutPage).toContain("перед переходом к оплате через YooKassa");
     expect(publicCheckout).not.toContain("Supabase credentials");
     expect(publicCheckout).not.toContain("YooKassa/доставки");
     expect(publicCheckout).not.toContain("service role");

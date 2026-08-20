@@ -138,6 +138,7 @@ describe("watch detail gallery", () => {
       expect(first.scale).toBe(1);
       expect(later.scale).toBe(1);
     });
+
   });
 
   describe("fallback behavior", () => {

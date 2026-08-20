@@ -6,6 +6,7 @@ import { createAdminRefund } from "@/modules/commerce/infrastructure/commerce-re
 const refundSchema = z.object({
   amountMinor: z.number().int().positive().optional(),
   reason: z.string().trim().max(500).optional(),
+  refundRequestKey: z.string().uuid().optional(),
 });
 
 type RouteContext = {
@@ -31,8 +32,9 @@ export async function POST(request: Request, context: RouteContext) {
       actorUserId: access.user.id,
       amountMinor: parsed.data.amountMinor,
       reason: parsed.data.reason,
+      refundRequestKey: parsed.data.refundRequestKey,
     });
-    return NextResponse.json({ ok: true, refundId: refund.id, status: refund.status });
+    return NextResponse.json({ ok: true, refundId: refund.id, providerRefundId: refund.provider_refund_id, status: refund.status });
   } catch (error) {
     return NextResponse.json(
       { error: "refund_failed", message: error instanceof Error ? error.message : "refund_failed" },

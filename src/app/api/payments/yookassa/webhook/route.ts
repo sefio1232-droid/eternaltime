@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerEnv } from "@/config/server-env";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getOrderDetailByNumber,
+  reconcileYooKassaRefund,
   reconcileYooKassaPayment,
 } from "@/modules/commerce/infrastructure/commerce-repository.server";
 
@@ -52,9 +53,9 @@ export async function POST(request: Request) {
   }
 
   const event = parsed.data;
-  const client = createSupabaseServiceRoleClient();
+  const client = createSupabaseAdminClient();
   if (!client) {
-    return NextResponse.json({ ok: false, error: "supabase_service_role_missing" }, { status: 503 });
+    return NextResponse.json({ ok: false, error: "supabase_admin_secret_missing" }, { status: 503 });
   }
 
   const { data: existingEvent } = await client
@@ -87,6 +88,11 @@ export async function POST(request: Request) {
         .select("id")
         .single();
 
+  const eventRowId = storedEvent?.id ?? existingEvent?.id;
+  if (!eventRowId) {
+    return NextResponse.json({ ok: false, error: "payment_event_store_failed" }, { status: 503 });
+  }
+
   try {
     if (event.event.startsWith("payment.")) {
       const result = await reconcileYooKassaPayment(event.object.id);
@@ -99,19 +105,24 @@ export async function POST(request: Request) {
           processed_at: new Date().toISOString(),
           processing_result: "processed",
         })
-        .eq("id", storedEvent?.id ?? existingEvent?.id);
+        .eq("id", eventRowId);
     } else if (event.event.startsWith("refund.")) {
-      const orderNumber = event.object.metadata?.order_number;
-      const order = orderNumber ? await getOrderDetailByNumber(orderNumber, { admin: true }, client) : null;
+      const result = await reconcileYooKassaRefund(event.object.id);
+      const orderNumber = result.providerRefund.metadata?.order_number;
+      const order = result.refund.order_id
+        ? await getOrderDetailByNumber(orderNumber ?? "", { admin: true }, client)
+        : null;
       await client
         .from("payment_events")
         .update({
           order_id: order?.order.id ?? null,
+          payment_attempt_id: result.refund.payment_attempt_id,
+          refund_id: result.refund.id,
           provider_status: event.object.status ?? null,
           processed_at: new Date().toISOString(),
-          processing_result: "refund_received",
+          processing_result: "processed",
         })
-        .eq("id", storedEvent?.id ?? existingEvent?.id);
+        .eq("id", eventRowId);
     }
   } catch (error) {
     await client
@@ -120,7 +131,7 @@ export async function POST(request: Request) {
         processed_at: new Date().toISOString(),
         processing_result: error instanceof Error ? `failed: ${error.message.slice(0, 160)}` : "failed",
       })
-      .eq("id", storedEvent?.id ?? existingEvent?.id);
+      .eq("id", eventRowId);
 
     return NextResponse.json({ ok: false, error: "reconciliation_failed" }, { status: 409 });
   }

@@ -1,12 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getPublicEnv } from "@/config/public-env";
 import { safeReturnPath } from "@/modules/auth/return-path";
+import { buildAuthCallbackUrl } from "@/modules/auth/site-url.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function requestMagicLinkAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const personalDataConsentAccepted = formData.get("personalDataConsentAccepted") === "on";
   const returnTo = safeReturnPath(
     String(formData.get("next") || formData.get("returnTo") || ""),
     "/collection",
@@ -16,19 +17,24 @@ export async function requestMagicLinkAction(formData: FormData) {
     redirect(`/login?error=invalid_email&returnTo=${encodeURIComponent(returnTo)}`);
   }
 
+  if (!personalDataConsentAccepted) {
+    redirect(`/login?error=personal_data_consent_required&returnTo=${encodeURIComponent(returnTo)}`);
+  }
+
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
     redirect(`/login?error=unconfigured&returnTo=${encodeURIComponent(returnTo)}`);
   }
 
-  const env = getPublicEnv();
-  const callbackUrl = new URL("/auth/callback", env.appUrl);
-  callbackUrl.searchParams.set("returnTo", returnTo);
+  const callbackUrl = await buildAuthCallbackUrl(returnTo);
+  if (!callbackUrl) {
+    redirect(`/login?error=unconfigured&returnTo=${encodeURIComponent(returnTo)}`);
+  }
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: callbackUrl.toString(),
+      emailRedirectTo: callbackUrl,
     },
   });
 

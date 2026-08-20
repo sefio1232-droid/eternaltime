@@ -74,7 +74,7 @@ export type CatalogDatabasePreflight = {
   environment: {
     publicUrlConfigured: boolean;
     publishableKeyConfigured: boolean;
-    serviceRoleKeyConfigured: boolean;
+    adminSecretKeyConfigured: boolean;
   };
   database: {
     comparisonAvailable: boolean;

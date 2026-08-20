@@ -100,7 +100,7 @@ export default async function JournalPage() {
       <EditorialWideContainer className={styles.shell}>
         <header className={styles.masthead}>
           <div className={styles.mastheadCopy}>
-            <p className={styles.eyebrow}>ET / Journal / Issue 01</p>
+            <p className={styles.eyebrow}>Журнал EternalTime · Выпуск 01</p>
             <h1>Журнал</h1>
             <p className={styles.intro}>
               Не витрина картинок, а спокойный редакционный выпуск: как выбирать бренд, зачем сегодня нужна механика
@@ -116,23 +116,23 @@ export default async function JournalPage() {
                 <dd>гид / эссе / разбор</dd>
               </div>
               <div>
-                <dt>Оптика</dt>
-                <dd>модели из каталога</dd>
+                <dt>Темы</dt>
+                <dd>выбор, механизмы, коллекционирование</dd>
               </div>
             </dl>
           </div>
 
           <aside className={styles.coverNote} aria-label="Обложка выпуска">
             <div className={styles.coverFolio}>
-              <span>Issue</span>
+              <span>Выпуск</span>
               <strong>01</strong>
             </div>
             <div className={styles.coverObject}>
               <JournalTypographicCover category="Журнал" number="01" keyword="Время" variant="ink" size="lead" />
             </div>
             <p>
-              Главная роль изображений здесь — не украшать страницу, а показывать масштаб, форму и характер часов,
-              о которых говорит текст.
+              В выпуске разбираем, как отличать характер модели, читать механику и спокойнее подходить к покупке
+              часов.
             </p>
           </aside>
         </header>
@@ -167,11 +167,10 @@ export default async function JournalPage() {
             </div>
             <div className={styles.leadAside}>
               <div className={styles.editorNote}>
-                <span>Редакционная заметка</span>
-                <strong>Сначала смысл, потом объект</strong>
+                <span>Коротко о выпуске</span>
+                <strong>Практичный взгляд на часы</strong>
                 <p>
-                  Модели из каталога появляются рядом с текстом как примеры формы, масштаба и характера — не как
-                  бесконечная витрина.
+                  В статьях рядом с примерами видно, как форма, масштаб и механизм влияют на повседневный выбор.
                 </p>
               </div>
               {leadWatches.slice(0, 2).map((watch, index) => (
@@ -231,7 +230,7 @@ export default async function JournalPage() {
 
         <section className={styles.editorialShelf} aria-labelledby="journal-shelf-title">
           <div>
-            <p className={styles.eyebrow}>Модели из каталога</p>
+            <p className={styles.eyebrow}>Модели по теме</p>
             <h2 id="journal-shelf-title">Часы в контексте</h2>
           </div>
           <p>

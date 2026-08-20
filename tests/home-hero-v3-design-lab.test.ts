@@ -35,7 +35,7 @@ describe("homepage hero v3 kinetic editorial prototype", () => {
     expect(lab).toContain("Tissot");
     expect(lab).toContain("PR 100 Chronograph");
     expect(lab).toContain("T150.417.11.041.00");
-    expect(lab).toContain("publicPriceRub: 45678");
+    expect(lab).toContain("publicPriceRub: 47500");
     expect(lab).toContain("/generated/home-hero/candidates/01-everyday/secondary-01.png");
     expect(styles).toContain("min-height: calc(100svh - 72px)");
     expect(styles).toContain("grid-template-columns: minmax(410px, 48%) minmax(0, 52%)");

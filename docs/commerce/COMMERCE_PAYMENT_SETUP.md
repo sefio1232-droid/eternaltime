@@ -17,7 +17,7 @@ Required environment:
 NEXT_PUBLIC_APP_URL=https://example.com
 NEXT_PUBLIC_SUPABASE_URL=https://...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_SECRET_KEY=...
 CATALOG_READ_SOURCE=database
 
 DELIVERY_PRICING_MODE=cdek_threshold
@@ -26,8 +26,14 @@ CDEK_BELOW_THRESHOLD_DELIVERY_RUB=500
 CDEK_API_BASE_URL=https://api.cdek.ru/v2
 CDEK_CLIENT_ID=...
 CDEK_CLIENT_SECRET=...
-CDEK_FROM_LOCATION_CODE=...
-CDEK_DEFAULT_TARIFF_CODE=...
+CDEK_ORIGIN_CITY_CODE=...
+CDEK_PICKUP_TARIFF_CODE=...
+CDEK_COURIER_TARIFF_CODE=...
+CDEK_DEFAULT_PACKAGE_WEIGHT_GRAMS=700
+CDEK_DEFAULT_PACKAGE_LENGTH_CM=25
+CDEK_DEFAULT_PACKAGE_WIDTH_CM=18
+CDEK_DEFAULT_PACKAGE_HEIGHT_CM=12
+CDEK_WEBHOOK_TOKEN=...
 
 YOOKASSA_SHOP_ID=...
 YOOKASSA_SECRET_KEY=...
@@ -41,15 +47,16 @@ Delivery rule:
 
 - CDEK delivery is free when the product subtotal is at least 10 000 ₽.
 - Below 10 000 ₽ the checkout adds 500 ₽.
-- The order stores `delivery_provider`, `delivery_method`, `delivery_tariff_code` and `delivery_quote_snapshot` before YooKassa payment creation.
+- The order stores `delivery_provider`, `delivery_method`, customer delivery charge and selected pickup/courier snapshot before YooKassa payment creation.
+- The private `order_shipments` row stores CDEK UUID/number/tracking/status and carrier actual cost separately.
 
 CDEK map / pickup points:
 
-- Checkout has a prepared CDEK delivery slot: courier or pickup point.
-- A future CDEK map widget should write `cdekPickupPointCode` and `cdekPickupPointAddress` into the checkout state.
-- Server route prepared for map data:
+- Checkout supports city search, courier address, and pickup-point card selection.
+- Pickup points come from CDEK through server routes, not hardcoded data:
 
 ```text
+GET /api/delivery/cdek/cities?city=<city>
 GET /api/delivery/cdek/pickup-points?city=<city>
 GET /api/delivery/cdek/pickup-points?cityCode=<cdekCityCode>
 GET /api/delivery/cdek/pickup-points?postalCode=<postalCode>

@@ -372,9 +372,7 @@ export function SelectionPageView({
     <EditorialContainer className={`${styles.page} public-page`}>
       {isFirstStep ? (
         <div className={styles.initialExperience}>
-          <SelectionIntro
-            progress={<SelectionProgress answers={answers} answeredKeys={answeredKeys} currentStep={currentStep} />}
-          />
+          <SelectionIntro />
           {flow}
         </div>
       ) : null}

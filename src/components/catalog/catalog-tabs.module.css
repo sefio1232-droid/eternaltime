@@ -21,6 +21,9 @@
 .tab {
   position: relative;
   flex: 0 0 auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   padding: 0.75rem 0.05rem;
   color: var(--catalog-steel);
   font-size: 0.86rem;
@@ -52,4 +55,26 @@
   bottom: -1px;
   height: 2px;
   background: var(--catalog-champagne);
+}
+
+@media (max-width: 767px) {
+  .tabs {
+    flex-wrap: wrap;
+    gap: 0.45rem 0.75rem;
+    overflow: visible;
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding-inline: var(--page-gutter);
+    scroll-padding-inline: var(--page-gutter);
+  }
+
+  .tab {
+    min-width: 44px;
+    justify-content: center;
+    padding-inline: 0.2rem;
+  }
+
+  .tabs::after {
+    flex: 0 0 0.25rem;
+    content: "";
+  }
 }

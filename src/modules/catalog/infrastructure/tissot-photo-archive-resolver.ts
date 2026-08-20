@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
+import { catalogImageNodeEnv, resolveCatalogImageAssetRoot } from "@/modules/catalog/infrastructure/catalog-image-asset-root";
 import { createTissotArchiveImageKey } from "@/modules/catalog/infrastructure/tissot-photo-archive-keys";
 import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 
@@ -25,12 +26,33 @@ function contentTypeForEntry(entry: string): string | null {
   return imageContentTypes[path.extname(entry).toLowerCase()] ?? null;
 }
 
-function envFromProcess(): "development" | "test" | "production" {
-  if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "test") {
-    return process.env.NODE_ENV;
+function contentTypeForBytes(bytes: Uint8Array): string | null {
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    return "image/png";
   }
+  if (
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return "image/webp";
+  }
+  return null;
+}
 
-  return "development";
+function envFromProcess(): "development" | "test" | "production" {
+  return catalogImageNodeEnv();
 }
 
 async function readManifest(manifestPath: string): Promise<TissotPhotoArchiveManifest | null> {
@@ -42,6 +64,25 @@ async function readManifest(manifestPath: string): Promise<TissotPhotoArchiveMan
     }
     throw error;
   }
+}
+
+const manifestCache = new Map<string, Promise<TissotPhotoArchiveManifest | null>>();
+const zipCache = new Map<string, Promise<JSZip>>();
+
+function cachedManifest(manifestPath: string): Promise<TissotPhotoArchiveManifest | null> {
+  const existing = manifestCache.get(manifestPath);
+  if (existing) return existing;
+  const promise = readManifest(manifestPath);
+  manifestCache.set(manifestPath, promise);
+  return promise;
+}
+
+function cachedZip(archivePath: string): Promise<JSZip> {
+  const existing = zipCache.get(archivePath);
+  if (existing) return existing;
+  const promise = readFile(archivePath).then((zipBytes) => JSZip.loadAsync(zipBytes));
+  zipCache.set(archivePath, promise);
+  return promise;
 }
 
 /**
@@ -58,15 +99,14 @@ export async function resolveTissotArchiveImage(input: {
   nodeEnv?: "development" | "test" | "production";
   manifestPath?: string;
 }): Promise<TissotArchiveImageResolution> {
-  const rootDir = input.rootDir ?? process.cwd();
   const nodeEnv = input.nodeEnv ?? envFromProcess();
-
-  if (nodeEnv === "production") {
+  const rootDir = resolveCatalogImageAssetRoot({ rootDir: input.rootDir, nodeEnv });
+  if (!rootDir) {
     return { status: "disabled" };
   }
 
   const manifestPath = input.manifestPath ?? path.join(/* turbopackIgnore: true */ rootDir, TISSOT_MANIFEST_OUTPUT_PATH);
-  const manifest = await readManifest(manifestPath);
+  const manifest = await cachedManifest(manifestPath);
   if (!manifest) {
     return { status: "not_found" };
   }
@@ -82,22 +122,21 @@ export async function resolveTissotArchiveImage(input: {
     return { status: "not_found" };
   }
 
-  const contentType = contentTypeForEntry(entry.zipEntry);
-  if (!contentType) {
-    return { status: "not_found" };
-  }
-
   const archivePath = path.join(/* turbopackIgnore: true */ rootDir, entry.archiveFile);
-  const zipBytes = await readFile(archivePath);
-  const zip = await JSZip.loadAsync(zipBytes);
+  const zip = await cachedZip(archivePath);
   const file = zip.file(entry.zipEntry);
   if (!file) {
+    return { status: "not_found" };
+  }
+  const bytes = await file.async("uint8array");
+  const contentType = contentTypeForBytes(bytes) ?? contentTypeForEntry(entry.zipEntry);
+  if (!contentType) {
     return { status: "not_found" };
   }
 
   return {
     status: "found",
     contentType,
-    bytes: await file.async("uint8array"),
+    bytes,
   };
 }

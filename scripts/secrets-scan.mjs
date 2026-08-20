@@ -3,8 +3,10 @@ import { existsSync, statSync, readFileSync } from "node:fs";
 
 const maxFileBytes = 1024 * 1024;
 const patterns = [
-  { name: "supabase service role", regex: /SUPABASE_SERVICE_ROLE_KEY\s*=\s*['"]?[A-Za-z0-9._-]{20,}/i },
-  { name: "generic api key assignment", regex: /(?:API_KEY|SECRET|TOKEN)\s*=\s*['"][A-Za-z0-9._-]{24,}['"]/i },
+  { name: "supabase secret key", regex: /SUPABASE_SECRET_KEY[^\S\r\n]*=[^\S\r\n]*['"]?sb_secret_[A-Za-z0-9._-]+/i },
+  { name: "legacy supabase service role", regex: /SUPABASE_SERVICE_ROLE_KEY[^\S\r\n]*=[^\S\r\n]*['"]?[A-Za-z0-9._-]{20,}/i },
+  { name: "cdek client secret", regex: /CDEK_CLIENT_SECRET[^\S\r\n]*=[^\S\r\n]*['"]?[A-Za-z0-9._-]{20,}/i },
+  { name: "generic api key assignment", regex: /(?:API_KEY|SECRET|TOKEN)[^\S\r\n]*=[^\S\r\n]*['"][A-Za-z0-9._-]{24,}['"]/i },
   { name: "private key block", regex: /-----BEGIN (?:RSA |EC |OPENSSH |)PRIVATE KEY-----/ },
 ];
 

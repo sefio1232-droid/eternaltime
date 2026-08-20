@@ -45,6 +45,7 @@ export function getDeliveryQuote(
   if (env.commerce.deliveryPricingMode === "cdek_threshold") {
     const isFree = productSubtotalMinor >= env.commerce.cdekFreeDeliveryThresholdMinor;
     const amountMinor = isFree ? 0 : env.commerce.cdekBelowThresholdAmountMinor;
+    const fallbackTariffCode = env.cdek.pickupTariffCode ?? env.cdek.courierTariffCode ?? env.cdek.defaultTariffCode;
 
     return {
       status: "configured",
@@ -53,7 +54,7 @@ export function getDeliveryQuote(
       label: isFree ? "СДЭК — бесплатно от 10 000 ₽" : "СДЭК",
       amountMinor,
       currencyCode: "RUB",
-      tariffCode: env.cdek.defaultTariffCode ? String(env.cdek.defaultTariffCode) : null,
+      tariffCode: fallbackTariffCode ? String(fallbackTariffCode) : null,
       freeDeliveryThresholdMinor: env.commerce.cdekFreeDeliveryThresholdMinor,
       snapshot: {
         mode: "cdek_threshold",
@@ -62,7 +63,8 @@ export function getDeliveryQuote(
         freeDeliveryThresholdMinor: env.commerce.cdekFreeDeliveryThresholdMinor,
         belowThresholdAmountMinor: env.commerce.cdekBelowThresholdAmountMinor,
         subtotalMinor: productSubtotalMinor,
-        tariffCode: env.cdek.defaultTariffCode,
+        pickupTariffCode: env.cdek.pickupTariffCode,
+        courierTariffCode: env.cdek.courierTariffCode,
         fromLocationCode: env.cdek.fromLocationCode,
         cdekCredentialsConfigured: env.cdek.isConfigured,
       },

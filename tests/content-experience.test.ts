@@ -87,20 +87,20 @@ describe("content experience phase", () => {
     expect(faqItems).toHaveLength(10);
     expect(new Set(faqItems.map((item) => item.id)).size).toBe(faqItems.length);
     expect(faqItems.every((item) => item.answer.length > 40)).toBe(true);
-    expect(faqItems.every((item) => !item.relatedLink || item.relatedLink.href.startsWith("/"))).toBe(true);
+    expect(faqItems.every((item) => !item.relatedLink || item.relatedLink.href.startsWith("/") || item.relatedLink.href.startsWith("mailto:"))).toBe(true);
     const page = file("src/app/(public)/faq/page.tsx");
     expect(page).toContain('"@type": "FAQPage"');
     expect(page).toContain("name: item.question");
     expect(page).toContain("text: item.answer");
   });
 
-  it("does not invent commercial conditions or contact details in FAQ", () => {
+  it("does not invent commercial conditions and uses the approved contact in FAQ", () => {
     const answers = faqItems.map((item) => item.answer).join(" ");
     expect(answers).not.toMatch(/\+7\s?\(?\d{3}\)?/);
-    expect(answers).not.toMatch(/[\w.-]+@[\w.-]+/);
+    expect(answers.match(/[\w.-]+@[\w.-]+/g)?.map((email) => email.replace(/[.,;:]+$/, ""))).toEqual(["timeeternal@mail.ru"]);
     expect(answers).not.toContain("гарантируем подлинность");
     expect(answers).toContain("Единый срок доставки не публикуется");
-    expect(answers).toContain("Условия гарантии и возврата не публикуются");
+    expect(answers).toContain("Актуальные условия гарантии, возврата и обмена");
   });
 
   it("replaces the long brand story and six-step route with exactly two compact trust plaques", () => {

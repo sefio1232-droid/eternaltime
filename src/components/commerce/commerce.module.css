@@ -59,8 +59,8 @@
   top: 0.65rem;
   z-index: 3;
   display: inline-grid;
-  min-width: 2.35rem;
-  height: 2.35rem;
+  min-width: 44px;
+  height: 44px;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--border-strong) 70%, transparent);
   background: color-mix(in srgb, white 88%, transparent);
@@ -341,8 +341,8 @@
   grid-column: 1 / -1;
   border: 1px solid var(--border);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--canvas) 92%, white 8%), transparent),
-    repeating-linear-gradient(45deg, transparent 0 12px, color-mix(in srgb, var(--border) 35%, transparent) 12px 13px);
+    radial-gradient(circle at 10% 0, color-mix(in srgb, var(--surface-warm) 52%, transparent) 0, transparent 28%),
+    linear-gradient(135deg, color-mix(in srgb, var(--canvas) 92%, white 8%), transparent);
   padding: 1rem;
 }
 
@@ -371,7 +371,17 @@
 
 .checkoutForm {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
+}
+
+.checkoutSection {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.fieldAction {
+  display: flex;
+  align-items: end;
 }
 
 .fieldGrid {
@@ -417,6 +427,232 @@
   grid-column: 1 / -1;
 }
 
+.legalConsentBox {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+  padding: 1rem;
+}
+
+.legalConsentBox h2 {
+  color: var(--text);
+  font-family: var(--font-editorial);
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.checkoutForm .checkLine {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.55;
+  text-transform: none;
+}
+
+.checkoutForm .checkLine input {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin-top: 0.22rem;
+  accent-color: var(--surface-graphite);
+}
+
+.checkLine a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pickupGrid {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 22rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+@media (min-width: 680px) {
+  .pickupGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pickupCard {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+  color: var(--text);
+  padding: 0.9rem;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.pickupCard:hover,
+.pickupCard[aria-pressed="true"] {
+  border-color: var(--surface-graphite);
+  background: color-mix(in srgb, var(--surface-warm) 30%, var(--canvas));
+  transform: translateY(-1px);
+}
+
+.pickupCard span,
+.pickupCard small,
+.selectedDelivery {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.selectedDelivery {
+  border-left: 2px solid var(--surface-graphite);
+  margin: 0;
+  padding-left: 0.75rem;
+}
+
+.selectedDelivery strong,
+.selectedDelivery span,
+.selectedDelivery small {
+  display: block;
+}
+
+.cdekMapPrompt {
+  display: grid;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+}
+
+@media (min-width: 760px) {
+  .cdekMapPrompt {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.cdekMapPrompt h2 {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 520;
+  letter-spacing: -0.035em;
+}
+
+.cdekMapPrompt p {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.cdekFallback {
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.cdekFallback summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cdekFallback[open] {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.cdekWidgetOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--surface-graphite) 64%, transparent);
+  padding: clamp(0.5rem, 2vw, 1.4rem);
+}
+
+.cdekWidgetShell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(92rem, 100%);
+  height: min(48rem, calc(100dvh - 2rem));
+  border: 1px solid color-mix(in srgb, var(--border-strong) 78%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--canvas) 92%, white 8%), color-mix(in srgb, var(--surface-warm) 22%, var(--canvas))),
+    var(--canvas);
+  box-shadow: 0 2rem 5rem color-mix(in srgb, black 32%, transparent);
+}
+
+.cdekWidgetHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding: clamp(0.9rem, 2vw, 1.2rem);
+}
+
+.cdekWidgetHeader h2 {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(1.35rem, 4vw, 2.35rem);
+  font-weight: 520;
+  letter-spacing: -0.04em;
+}
+
+.cdekWidgetMap {
+  min-height: 34rem;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface-warm) 30%, var(--canvas));
+}
+
+.cdekWidgetFallbackState {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1rem;
+  min-height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .cdekWidgetOverlay {
+    padding: 0;
+  }
+
+  .cdekWidgetShell {
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+  }
+
+  .cdekWidgetMap {
+    min-height: 70dvh;
+  }
+}
+
+.adminShippingMeta {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+
 .statusPill {
   display: inline-flex;
   width: fit-content;
@@ -427,4 +663,267 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.metricCard {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 8.5rem;
+  border-top: 1px solid var(--border-strong);
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--surface-warm) 42%, transparent) 0, transparent 36%),
+    color-mix(in srgb, var(--canvas) 84%, transparent);
+  padding: clamp(1rem, 2.5vw, 1.4rem) 0 0;
+}
+
+.metricCard strong {
+  color: var(--text);
+  font-size: clamp(1.8rem, 5vw, 3.1rem);
+  font-family: var(--font-serif, Georgia, serif);
+  font-weight: 520;
+  letter-spacing: -0.05em;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.adminList {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.4rem);
+}
+
+.adminListItem,
+.adminOrderCard {
+  display: grid;
+  gap: 1rem;
+  border-top: 1px solid var(--border-strong);
+  padding-top: 1rem;
+}
+
+.adminOrderCard {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--surface-warm) 28%, transparent), transparent 42%),
+    color-mix(in srgb, var(--canvas) 84%, transparent);
+  padding: 1.1rem 0 0;
+}
+
+.adminOrderGrid {
+  display: grid;
+  gap: 0.65rem 1.1rem;
+}
+
+@media (min-width: 760px) {
+  .adminOrderGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.adminOrderGrid p {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.adminOrderGrid span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adminFilters {
+  display: grid;
+  gap: 0.8rem;
+}
+
+@media (min-width: 720px) {
+  .adminFilters {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: end;
+  }
+}
+
+.adminFilters label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.adminFilters input,
+.adminFilters select {
+  min-height: 2.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--background);
+  color: var(--text);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 767px) {
+  .cartIcon {
+    width: 44px;
+    height: 44px;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .badge {
+    top: 0.1rem;
+    right: 0.05rem;
+  }
+
+  .drawer {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding:
+      1rem
+      1rem
+      calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-inline: 0;
+    border-bottom: 0;
+  }
+
+  .drawerActions {
+    grid-template-columns: 1fr;
+  }
+
+  .cartPage,
+  .checkoutPage,
+  .ordersPage {
+    gap: 1.35rem;
+    padding-block: 1.25rem 3.5rem;
+  }
+
+  .commerceHeading {
+    gap: 0.55rem;
+  }
+
+  .commerceHeading h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 10vw, 3.2rem);
+    font-weight: 620;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .commerceHeading span {
+    font-size: 0.96rem;
+    line-height: 1.55;
+  }
+
+  .cartLayout,
+  .checkoutLayout {
+    gap: 1rem;
+  }
+
+  .cartLine {
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .quantityRow input,
+  .quantityRow button,
+  .buyNow,
+  .addToCart,
+  .quietButton,
+  .deliveryChoice button,
+  .pickupCard {
+    min-height: 44px;
+  }
+
+  .summaryPanel {
+    position: sticky;
+    bottom: 0;
+    top: auto;
+    z-index: 22;
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding:
+      1rem
+      var(--page-gutter)
+      calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgb(16 19 22 / 0.16);
+    background: rgb(251 250 248 / 0.96);
+    backdrop-filter: blur(16px);
+  }
+
+  .checkoutForm {
+    gap: 1rem;
+  }
+
+  .checkoutSection {
+    gap: 0.75rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  .fieldGrid,
+  .pickupGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkoutForm input,
+  .checkoutForm textarea {
+    font-size: 16px;
+  }
+
+  .deliveryChoice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cdekMapPrompt {
+    gap: 0.85rem;
+  }
+
+  .cdekMapPrompt button {
+    width: 100%;
+  }
+
+  .cdekWidgetOverlay {
+    padding: 0;
+  }
+
+  .cdekWidgetShell {
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+  }
+
+  .cdekWidgetHeader {
+    flex-wrap: nowrap;
+    padding:
+      calc(0.8rem + env(safe-area-inset-top, 0px))
+      1rem
+      0.8rem;
+  }
+
+  .cdekWidgetHeader h2 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+  }
+
+  .cdekWidgetMap {
+    min-height: 0;
+    height: 100%;
+  }
 }

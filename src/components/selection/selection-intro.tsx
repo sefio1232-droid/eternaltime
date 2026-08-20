@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import styles from "./selection-intro.module.css";
 
 function SelectionDialMotif() {
@@ -25,7 +24,7 @@ function SelectionDialMotif() {
   );
 }
 
-export function SelectionIntro({ progress }: Readonly<{ progress: ReactNode }>) {
+export function SelectionIntro() {
   return (
     <section className={styles.prelude} aria-labelledby="selection-intro-title">
       <div className={styles.composition}>
@@ -46,7 +45,7 @@ export function SelectionIntro({ progress }: Readonly<{ progress: ReactNode }>) 
           <div className={styles.processCopy}>
             <p className={styles.processNumber} aria-hidden="true">01 / 07</p>
             <h2>Семь шагов до вашей подборки</h2>
-            <p>Ответы сохраняются в ссылке. К подбору можно вернуться позже или поделиться результатом.</p>
+            <p>Сохраните ссылку, чтобы вернуться к подбору позже. Ей можно поделиться, если хотите обсудить варианты.</p>
           </div>
           <ol className={styles.facts} aria-label="Что входит в подбор">
             <li>
@@ -67,7 +66,6 @@ export function SelectionIntro({ progress }: Readonly<{ progress: ReactNode }>) 
           </ol>
         </aside>
       </div>
-      <div className={styles.progressFrame}>{progress}</div>
     </section>
   );
 }

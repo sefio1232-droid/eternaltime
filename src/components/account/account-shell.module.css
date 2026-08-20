@@ -1,8 +1,8 @@
 .frame { min-height: 100vh; background: #f8f6f1; color: var(--text); }
 .header { border-bottom: 1px solid rgb(16 19 22 / 16%); }
 .headerInner { min-height: 4.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
-.logo { font-family: var(--font-editorial), Georgia, serif; font-size: 1.25rem; }
-.returnLink { color: #6f5326; font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.logo { min-height: 44px; display: inline-flex; align-items: center; font-family: var(--font-editorial), Georgia, serif; font-size: 1.25rem; }
+.returnLink { min-height: 44px; display: inline-flex; align-items: center; color: #6f5326; font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; }
 .layout { display: grid; grid-template-columns: minmax(13rem, 3fr) minmax(0, 9fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; padding-block: clamp(2.5rem, 5vw, 5rem) clamp(4rem, 8vw, 8rem); }
 .sidebar { position: sticky; top: 2rem; padding-top: 1rem; border-top: 1px solid rgb(16 19 22 / 18%); }
 .eyebrow { color: #826333; font-family: var(--font-reference); font-size: 0.62rem; letter-spacing: 0.1em; }
@@ -28,4 +28,19 @@
   .returnLink { font-size: 0; }
   .returnLink::after { content: "На сайт →"; font-size: 0.65rem; }
   .footer > div { align-items: flex-start; flex-direction: column; justify-content: center; padding-block: 1.5rem; }
+}
+@media (max-width: 767px) {
+  .layout { padding-block: 1rem 4.25rem; }
+  .navigation {
+    position: sticky;
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    z-index: 20;
+    margin-inline: -1.25rem;
+    background: rgb(248 246 241 / 0.95);
+    backdrop-filter: blur(14px);
+    scroll-padding-inline: 1.25rem;
+    scroll-snap-type: x mandatory;
+  }
+  .navigation a { min-height: 44px; display: inline-flex; align-items: center; scroll-snap-align: start; }
+  .main { padding-top: 1.5rem; }
 }

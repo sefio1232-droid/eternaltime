@@ -479,3 +479,126 @@ details[open] .specGroupPreview {
 .specRow dd {
   overflow-wrap: break-word;
 }
+
+@media (max-width: 767px) {
+  .detailPage {
+    padding-top: 0.75rem;
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .hero {
+    gap: 1.1rem;
+  }
+
+  .mediaShell {
+    order: -1;
+  }
+
+  .heroCopy {
+    gap: 0.65rem;
+    max-width: none;
+  }
+
+  .title,
+  .titleShort,
+  .titleMedium {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 8.8vw, 2.85rem);
+    font-weight: 620;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+  }
+
+  .titleLong {
+    font-size: clamp(1.55rem, 7vw, 2.05rem);
+  }
+
+  .reference {
+    font-size: 0.74rem;
+  }
+
+  .deck {
+    max-width: none;
+    font-size: 0.94rem;
+    line-height: 1.58;
+  }
+
+  .priceRow {
+    margin-top: 0.15rem;
+  }
+
+  .actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 24;
+    max-width: none;
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding:
+      0.75rem
+      var(--page-gutter)
+      calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgb(16 19 22 / 0.12);
+    background: rgb(251 250 248 / 0.94);
+    backdrop-filter: blur(16px);
+  }
+
+  .actions a:global(.inline-flex),
+  .actions button:global(.inline-flex) {
+    min-height: 46px;
+  }
+
+  .detailMedia {
+    min-height: min(300px, 76vw);
+    max-height: 360px;
+    aspect-ratio: 1 / 0.92;
+  }
+
+  .tabs {
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    gap: 1.1rem;
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding-inline: var(--page-gutter);
+    background: rgb(247 247 245 / 0.95);
+    scrollbar-width: none;
+  }
+
+  .tabs a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding-block: 0.65rem;
+    font-size: 0.68rem;
+  }
+
+  .overviewCopy p {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .gallerySection {
+    display: flex;
+    gap: 0.75rem;
+    margin-inline: calc(-1 * var(--page-gutter));
+    overflow-x: auto;
+    padding-inline: var(--page-gutter);
+    scroll-padding-inline: var(--page-gutter);
+    scroll-snap-type: x mandatory;
+  }
+
+  .gallerySection figure {
+    flex: 0 0 min(84vw, 22rem);
+    min-height: 260px;
+    aspect-ratio: 1 / 1.08;
+    padding: 1rem;
+    scroll-snap-align: start;
+  }
+
+  .specGroupSummary {
+    min-height: 50px;
+  }
+
+  .specRow {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}

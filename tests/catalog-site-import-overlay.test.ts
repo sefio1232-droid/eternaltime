@@ -91,15 +91,28 @@ describe("catalog site-import overlay v2 (specifications + SEO)", () => {
 
     it("7. genuinely new fields from this batch (gemstones, dial markers, strap color/coating/features, certification, thickness) map onto real canonical keys, never invented text", () => {
       const specs = mapCombinedSpecifications(
-        "Толщина корпуса: 13 мм | Индексы: римские цифры | Драгоценные камни: тип — бриллианты | Цвет ремешка/браслета: синий | Покрытие браслета: PVD | Особенности браслета: быстросъёмный | Сертификация: COSC",
+        "Толщина корпуса: 13 мм | Индексы: римские цифры | Драгоценные камни: тип — бриллианты | Цвет ремешка/браслета: синий | Покрытие браслета: PVD | Покрытие: DLC | Особенности браслета: быстросъёмный | Сертификация: COSC | Комплектация: стальной браслет и кожаный ремешок",
       );
       expect(specs.case_thickness_raw).toBe("13 мм");
       expect(specs.dial_markers_raw).toBe("римские цифры");
       expect(specs.gemstones_raw).toBe("тип — бриллианты");
       expect(specs.strap_color_raw).toBe("синий");
       expect(specs.strap_coating_raw).toBe("PVD");
+      expect(specs.case_coating_raw).toBe("DLC");
       expect(specs.strap_features_raw).toBe("быстросъёмный");
       expect(specs.certification_raw).toBe("COSC");
+      expect(specs.package_contents_raw).toBe("стальной браслет и кожаный ремешок");
+    });
+
+    it("7b. maps the FINAL_FOR_SITE_DROPIN Casio label variants onto existing canonical fields", () => {
+      const specs = mapCombinedSpecifications(
+        "Материал корпуса/безеля: полимер | Автономность: около 3 лет | Связь: Bluetooth, CASIO WATCHES | Комплект: G-SHOCK DW-5600SLB-2 + BABY-G BGD-560SLB-2",
+      );
+
+      expect(specs.case_material_raw).toBe("полимер");
+      expect(specs.power_source_raw).toBe("около 3 лет");
+      expect(specs.functions_raw).toBe("Bluetooth, CASIO WATCHES");
+      expect(specs.package_contents_raw).toBe("G-SHOCK DW-5600SLB-2 + BABY-G BGD-560SLB-2");
     });
 
     it("8. 'Модель' and 'Серия' are deliberately never mapped — both duplicate data the main catalog import already provides", () => {
@@ -314,17 +327,44 @@ describe("catalog site-import overlay v2 (specifications + SEO)", () => {
       expect(script).toContain('brandSlug: "tissot"');
     });
 
-    it("23. the real generated manifest (when present locally) matches every Casio row and every Tissot row, and reports only the known Orient Star manual-review references as unmatched", () => {
+    it("23. the real generated manifest (when present locally) matches exact in-catalog rows and reports the known DROPIN references absent from the current catalog as unmatched", () => {
       const manifest = realOverlayManifest();
       if (!manifest) return;
-      const casioUnmatched = manifest.unmatchedRows.filter((row) => row.sourceFile.includes("casio"));
-      const tissotUnmatched = manifest.unmatchedRows.filter((row) => row.sourceFile.includes("tissot"));
-      expect(casioUnmatched).toHaveLength(0);
-      expect(tissotUnmatched).toHaveLength(0);
-      const orientUnmatchedRefs = new Set(manifest.unmatchedRows.filter((row) => row.sourceFile.includes("orient")).map((row) => row.referenceRaw));
-      for (const ref of orientUnmatchedRefs) {
-        expect(ref).toMatch(/^RE-/);
-      }
+      const unmatchedByBrand = (brand: string) =>
+        manifest.unmatchedRows
+          .filter((row) => row.sourceFile.includes(brand))
+          .map((row) => row.referenceRaw)
+          .sort();
+
+      expect(unmatchedByBrand("casio")).toEqual(
+        [
+          "DW-5000R-1A",
+          "ECB-S10NIS-7A",
+          "EFR-571MDC-1AV",
+          "EFR-574DE-7AV",
+          "EFS-S641TMS-1A",
+          "EQB-1100YD-1A",
+          "EQB-1100YDC-1A",
+          "GA-2110SU-3A",
+          "GA-B001AH-6A",
+          "GM-110BB-1A",
+          "GM-2100MWG-1A",
+          "GW-B5600BC-1B",
+          "GWF-A1000BRT-1A",
+          "MWA-300H-1AVD",
+        ].sort(),
+      );
+      expect(unmatchedByBrand("orient")).toEqual(
+        [
+          "RA-AK0803Y10B",
+          "RE-AU0306L00B",
+          "RE-AW0004S00B",
+          "RE-AW0006S00B",
+          "RE-ND0001S00B",
+          "RE-ND0003S00B",
+        ].sort(),
+      );
+      expect(unmatchedByBrand("tissot")).toEqual([]);
     });
 
     it("24. every real overlay entry belongs to one of the three integrated brands, and every specification value is a non-empty string", () => {

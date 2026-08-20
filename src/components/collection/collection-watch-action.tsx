@@ -1,9 +1,27 @@
 import Link from "next/link";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { getCurrentUser } from "@/modules/auth/server";
+import { CollectionServiceError } from "@/modules/user-watch-collection/application/collection-service";
 import { createCatalogUserWatchAction } from "@/modules/user-watch-collection/application/actions";
 import { createUserWatchCollectionRepository } from "@/modules/user-watch-collection/infrastructure/user-watch-repository.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+async function safeCountActiveByReference(
+  repository: ReturnType<typeof createUserWatchCollectionRepository>,
+  userId: string,
+  watchReferenceId: string,
+): Promise<{ available: true; count: number } | { available: false }> {
+  try {
+    return {
+      available: true,
+      count: await repository.countActiveByReference(userId, watchReferenceId),
+    };
+  } catch (error) {
+    const code = error instanceof CollectionServiceError ? error.code : "unknown";
+    console.warn("User watch collection count is unavailable for catalog detail page.", { code });
+    return { available: false };
+  }
+}
 
 export async function CollectionWatchAction({
   watchReferenceId,
@@ -35,7 +53,22 @@ export async function CollectionWatchAction({
   }
 
   const repository = createUserWatchCollectionRepository(supabase);
-  const existingCount = await repository.countActiveByReference(currentUser.user.id, watchReferenceId);
+  const existing = await safeCountActiveByReference(repository, currentUser.user.id, watchReferenceId);
+
+  if (!existing.available) {
+    return (
+      <div className="grid gap-3 border-t border-[var(--border)] pt-4">
+        <p className="text-sm text-[var(--text-muted)]">
+          Коллекция временно недоступна, но карточка модели и оформление заказа работают.
+        </p>
+        <Link href="/collection" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
+          Открыть мою коллекцию
+        </Link>
+      </div>
+    );
+  }
+
+  const existingCount = existing.count;
 
   if (existingCount > 0) {
     return (

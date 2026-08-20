@@ -46,7 +46,7 @@ export default function FaqPage() {
           <header className={styles.intro}>
             <p className={styles.kicker}>Eternal Time / Информация</p>
             <h1 className={styles.title}>Частые вопросы</h1>
-            <p className={styles.lede}>Здесь собраны только ответы, которые опираются на действующую архитектуру сервиса. Неподтвержденные сроки, гарантии и контакты намеренно не подменяются общими обещаниями.</p>
+            <p className={styles.lede}>Здесь собраны ответы на частые вопросы о выборе часов, каталоге, заказе, доставке и личной коллекции Eternal Time. Если ответа не хватило, напишите нам — подскажем следующий шаг.</p>
           </header>
 
           <nav className={styles.categoryNav} aria-label="Категории частых вопросов">
@@ -65,7 +65,13 @@ export default function FaqPage() {
                         <summary>{item.question}</summary>
                         <div className={styles.answer}>
                           <p>{item.answer}</p>
-                          {item.relatedLink ? <Link href={item.relatedLink.href}>{item.relatedLink.label}</Link> : null}
+                          {item.relatedLink ? (
+                            item.relatedLink.href.startsWith("mailto:") ? (
+                              <a href={item.relatedLink.href}>{item.relatedLink.label}</a>
+                            ) : (
+                              <Link href={item.relatedLink.href}>{item.relatedLink.label}</Link>
+                            )
+                          ) : null}
                         </div>
                       </details>
                     ))}
@@ -76,8 +82,8 @@ export default function FaqPage() {
           </div>
 
           <section className={styles.closing} aria-labelledby="faq-more-title">
-            <div><h2 id="faq-more-title">Не нашли ответ?</h2><p>Проверенный контактный канал пока не опубликован. Можно продолжить с подбором или самостоятельно изучить доступные модели.</p></div>
-            <div className={styles.actions}><Link href="/selection" className="editorial-button editorial-button-dark">Начать подбор</Link><Link href="/watches" className="editorial-button">Открыть каталог</Link></div>
+            <div><h2 id="faq-more-title">Не нашли ответ?</h2><p>Напишите нам на timeeternal@mail.ru — ответим по модели, заказу, доставке или личной коллекции.</p></div>
+            <div className={styles.actions}><a href="mailto:timeeternal@mail.ru" className="editorial-button editorial-button-dark">Написать нам</a><Link href="/selection" className="editorial-button">Начать подбор</Link><Link href="/watches" className="editorial-button">Открыть каталог</Link></div>
           </section>
         </EditorialContainer>
       </div>

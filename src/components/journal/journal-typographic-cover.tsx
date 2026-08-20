@@ -18,7 +18,7 @@ export function JournalTypographicCover({
   variant,
   size,
   motif = "dial",
-  label = "ET / Journal",
+  label = "Журнал EternalTime",
   title,
 }: JournalTypographicCoverProps) {
   return (

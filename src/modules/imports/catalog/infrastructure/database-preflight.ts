@@ -10,6 +10,7 @@ export const requiredCatalogApplyTables = [
   "watch_references",
   "catalog_offers",
   "offer_price_history",
+  "catalog_public_read_models",
   "import_batches",
   "import_rows",
   "audit_logs",
@@ -19,7 +20,7 @@ export type CatalogApplyDatabaseClient = SupabaseClient;
 
 export type CatalogApplyEnvironment = {
   supabaseUrl: string | null;
-  serviceRoleKey: string | null;
+  adminSecretKey: string | null;
   publishableKey: string | null;
 };
 
@@ -39,16 +40,16 @@ export function readCatalogApplyEnvironment(source: Record<string, string | unde
   return {
     supabaseUrl: source.NEXT_PUBLIC_SUPABASE_URL || source.SUPABASE_URL || null,
     publishableKey: source.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || source.NEXT_PUBLIC_SUPABASE_ANON_KEY || null,
-    serviceRoleKey: source.SUPABASE_SERVICE_ROLE_KEY || source.SUPABASE_SERVICE_ROLE || null,
+    adminSecretKey: source.SUPABASE_SECRET_KEY || null,
   };
 }
 
 export function createCatalogApplyDatabaseClient(env: CatalogApplyEnvironment): CatalogApplyDatabaseClient | null {
-  if (!env.supabaseUrl || !env.serviceRoleKey) {
+  if (!env.supabaseUrl || !env.adminSecretKey) {
     return null;
   }
 
-  return createClient(env.supabaseUrl, env.serviceRoleKey, {
+  return createClient(env.supabaseUrl, env.adminSecretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -65,7 +66,7 @@ async function checkRequiredTables(client: CatalogApplyDatabaseClient | null): P
   if (!client) {
     return {
       comparisonAvailable: false,
-      blocker: "Supabase URL or service role key is not configured for database comparison.",
+      blocker: "Supabase URL or server admin secret key is not configured for database comparison.",
       checked: [],
       missing: [...requiredCatalogApplyTables],
     };
@@ -118,7 +119,7 @@ export async function runCatalogDatabasePreflight(input: {
     environment: {
       publicUrlConfigured: Boolean(env.supabaseUrl),
       publishableKeyConfigured: Boolean(env.publishableKey),
-      serviceRoleKeyConfigured: Boolean(env.serviceRoleKey),
+      adminSecretKeyConfigured: Boolean(env.adminSecretKey),
     },
     database: {
       comparisonAvailable: tableCheck.comparisonAvailable,

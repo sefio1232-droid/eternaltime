@@ -485,5 +485,14 @@ describe("catalog read experience", () => {
     expect(findDevCatalogImagePlanItem({ imageKey: validKey, preview, imagePlan, nodeEnv: "production" }).status).toBe(
       "disabled",
     );
+    expect(
+      findDevCatalogImagePlanItem({
+        imageKey: validKey,
+        preview,
+        imagePlan,
+        nodeEnv: "production",
+        allowProductionAssets: true,
+      }).status,
+    ).toBe("found");
   });
 });

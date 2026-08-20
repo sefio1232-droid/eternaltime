@@ -1,4 +1,10 @@
-import type { OrderPaymentStatus, OrderStatus, PaymentAttemptStatus, RefundStatus } from "@/modules/commerce/domain/types";
+import type {
+  OrderPaymentStatus,
+  OrderShipmentStatus,
+  OrderStatus,
+  PaymentAttemptStatus,
+  RefundStatus,
+} from "@/modules/commerce/domain/types";
 
 export const orderStatusLabels: Record<OrderStatus, string> = {
   awaiting_payment: "Ожидает оплаты",
@@ -33,6 +39,22 @@ export const refundStatusLabels: Record<RefundStatus, string> = {
   succeeded: "Возврат оформлен",
   canceled: "Возврат отменен",
   failed: "Возврат не выполнен",
+};
+
+export const shipmentStatusLabels: Record<OrderShipmentStatus, string> = {
+  pending_creation: "Оформляется",
+  creation_in_progress: "Оформляется",
+  creation_pending_retry: "Готовим заказ к отправке",
+  creation_failed: "Проблема с оформлением",
+  created: "Создана",
+  handed_over: "Передан в СДЭК",
+  in_transit: "В пути",
+  arrived_at_pickup_point: "Прибыл в пункт выдачи",
+  ready_for_pickup: "Готов к выдаче",
+  delivered: "Получен",
+  returning: "Возвращается",
+  returned: "Возвращен",
+  problem: "Проблема",
 };
 
 export function formatCommerceMoney(amountMinor: number | null | undefined, currencyCode = "RUB"): string {

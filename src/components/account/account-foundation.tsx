@@ -19,6 +19,7 @@ import {
   type LocalAccountProfile,
   type LocalAccountProfileErrors,
 } from "@/modules/account/profile/local-account-profile";
+import { updateAccountProfileAction } from "@/modules/account/profile/actions";
 import styles from "./account-foundation.module.css";
 
 function AccountHeading({ eyebrow, title, description }: Readonly<{ eyebrow: string; title: string; description: string }>) {
@@ -31,7 +32,10 @@ function AccountHeading({ eyebrow, title, description }: Readonly<{ eyebrow: str
   );
 }
 
-export function AccountOverview({ catalogCandidates }: Readonly<{ catalogCandidates: CollectionRecommendationCandidate[] }>) {
+export function AccountOverview({
+  catalogCandidates,
+  profileReady,
+}: Readonly<{ catalogCandidates: CollectionRecommendationCandidate[]; profileReady?: boolean }>) {
   const { watches, ready } = useLocalCollectionStore({ demoScenario: null, catalogCandidates });
   const { cart, ready: cartReady } = useLocalCart();
   const cartSummary = summarizeLocalCart(cart);
@@ -40,11 +44,16 @@ export function AccountOverview({ catalogCandidates }: Readonly<{ catalogCandida
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (profileReady !== undefined) {
+        setProfileState(profileReady ? "ready" : "empty");
+        return;
+      }
+
       const profile = parseLocalAccountProfile(window.localStorage.getItem(localAccountProfileStorageKey));
       setProfileState(hasLocalAccountProfile(profile) ? "ready" : "empty");
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [profileReady]);
 
   const activeCount = ready ? analysis.profile.activeCount : null;
   const brandCount = ready ? Object.keys(analysis.profile.brandDistribution).length : null;
@@ -70,7 +79,7 @@ export function AccountOverview({ catalogCandidates }: Readonly<{ catalogCandida
           <section className={styles.smallCard} aria-labelledby="account-orders-title"><p className={styles.eyebrow}>ЗАКАЗЫ</p><h2 id="account-orders-title">Заказов пока нет</h2><p>История и статусы появятся после оформления первого заказа.</p><Link href="/account/orders">Открыть раздел →</Link></section>
         </div>
       </div>
-      <section className={styles.profileSummary} aria-labelledby="account-profile-title"><p className={styles.eyebrow}>ПРОФИЛЬ</p><h2 id="account-profile-title">{profileState === "ready" ? "Контактные данные сохранены" : "Добавьте контактные данные"}</h2><p>{profileState === "ready" ? "Данные доступны только в этом браузере." : "Имя и предпочтительный способ связи можно сохранить в этом браузере."}</p><Link href="/account/profile">Перейти в профиль →</Link></section>
+      <section className={styles.profileSummary} aria-labelledby="account-profile-title"><p className={styles.eyebrow}>ПРОФИЛЬ</p><h2 id="account-profile-title">{profileState === "ready" ? "Контактные данные сохранены" : "Добавьте контактные данные"}</h2><p>{profileState === "ready" ? "Данные сохранены в профиле Eternal Time." : "Имя и предпочтительный способ связи можно сохранить в профиле."}</p><Link href="/account/profile">Перейти в профиль →</Link></section>
     </div>
   );
 }
@@ -83,20 +92,38 @@ function updateField<K extends keyof LocalAccountProfile>(
   return { ...profile, [field]: value };
 }
 
-export function AccountProfileEditor() {
-  const [profile, setProfile] = useState<LocalAccountProfile>(emptyLocalAccountProfile);
+export function AccountProfileEditor({
+  initialProfile,
+  mode = "local",
+  status,
+}: Readonly<{
+  initialProfile?: LocalAccountProfile;
+  mode?: "database" | "local";
+  status?: "updated" | "error" | null;
+}>) {
+  const [profile, setProfile] = useState<LocalAccountProfile>(initialProfile ?? emptyLocalAccountProfile);
   const [errors, setErrors] = useState<LocalAccountProfileErrors>({});
-  const [ready, setReady] = useState(false);
-  const [message, setMessage] = useState("");
+  const [ready, setReady] = useState(mode === "database");
+  const [message, setMessage] = useState(
+    status === "updated"
+      ? "Профиль сохранен."
+      : status === "error"
+        ? "Не удалось сохранить профиль. Проверьте данные."
+        : "",
+  );
 
   useEffect(() => {
+    if (mode === "database") {
+      return;
+    }
+
     const timer = window.setTimeout(() => {
       const stored = parseLocalAccountProfile(window.localStorage.getItem(localAccountProfileStorageKey));
       if (stored) setProfile(stored);
       setReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [mode]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,16 +154,27 @@ export function AccountProfileEditor() {
   return (
     <div className={styles.page}>
       <AccountHeading eyebrow="ПРОФИЛЬ" title="Ваш профиль" description="Сохраните только тот контактный контекст, который нужен для будущего общения с Eternal Time." />
-      <p className={styles.localNotice}>Данные сохраняются только в этом браузере</p>
-      <form className={styles.form} onSubmit={submit} aria-busy={!ready} noValidate>
+      <p className={styles.localNotice}>
+        {mode === "database" ? "Данные сохраняются в профиле Eternal Time." : "Данные сохраняются только в этом браузере."}
+        {" "}
+        Подробнее: <Link href="/legal/privacy">Политика обработки персональных данных</Link> и{" "}
+        <Link href="/legal/personal-data-consent">Согласие на обработку персональных данных</Link>.
+      </p>
+      <form
+        className={styles.form}
+        action={mode === "database" ? updateAccountProfileAction : undefined}
+        onSubmit={mode === "database" ? undefined : submit}
+        aria-busy={!ready}
+        noValidate
+      >
         <div className={styles.formGrid}>
           <label><span>Имя</span><input name="name" autoComplete="name" maxLength={80} value={profile.name} onChange={(event) => setProfile(updateField(profile, "name", event.target.value))} /></label>
           <label><span>Город</span><input name="city" autoComplete="address-level2" maxLength={80} value={profile.city} onChange={(event) => setProfile(updateField(profile, "city", event.target.value))} /></label>
-          <label><span>Электронная почта</span><input name="email" type="email" autoComplete="email" maxLength={120} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "profile-email-error" : undefined} value={profile.email} onChange={(event) => setProfile(updateField(profile, "email", event.target.value))} />{errors.email ? <small id="profile-email-error">{errors.email}</small> : null}</label>
+          <label><span>Электронная почта</span><input name="email" type="email" autoComplete="email" maxLength={120} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "profile-email-error" : undefined} value={profile.email} readOnly={mode === "database"} onChange={(event) => setProfile(updateField(profile, "email", event.target.value))} />{errors.email ? <small id="profile-email-error">{errors.email}</small> : null}</label>
           <label><span>Телефон</span><input name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={32} aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "profile-phone-error" : undefined} value={profile.phone} onChange={(event) => setProfile(updateField(profile, "phone", event.target.value))} />{errors.phone ? <small id="profile-phone-error">{errors.phone}</small> : null}</label>
           <label className={styles.fullField}><span>Предпочтительный способ связи</span><select name="preferredContact" aria-invalid={Boolean(errors.preferredContact)} aria-describedby={errors.preferredContact ? "profile-contact-error" : undefined} value={profile.preferredContact} onChange={(event) => setProfile(updateField(profile, "preferredContact", event.target.value as LocalAccountProfile["preferredContact"]))}><option value="">Не выбран</option><option value="email">Электронная почта</option><option value="phone">Телефон</option></select>{errors.preferredContact ? <small id="profile-contact-error">{errors.preferredContact}</small> : null}</label>
         </div>
-        <div className={styles.formActions}><button type="submit">Сохранить профиль</button><button type="button" onClick={clearProfile}>Очистить</button></div>
+        <div className={styles.formActions}><button type="submit">Сохранить профиль</button>{mode === "local" ? <button type="button" onClick={clearProfile}>Очистить</button> : null}</div>
         <p className={styles.formMessage} aria-live="polite">{message}</p>
       </form>
     </div>

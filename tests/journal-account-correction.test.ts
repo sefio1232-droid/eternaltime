@@ -9,7 +9,7 @@ import { clearLocalCart, emptyLocalCart, localCartSchemaVersion, parseLocalCart,
 
 function source(relativePath: string) { return fs.readFileSync(path.join(process.cwd(), relativePath), "utf8"); }
 function watch(brandSlug: string, referenceSlug: string, image: CatalogImagePresentation = { kind: "remote", url: `https://images.example/${brandSlug}-${referenceSlug}.png`, src: `https://images.example/${brandSlug}-${referenceSlug}.png`, alt: `${brandSlug} ${referenceSlug}` }): CatalogWatchDetail {
-  return { id: `${brandSlug}:${referenceSlug}`, href: `/watches/${brandSlug}/${referenceSlug}`, brandName: brandSlug[0]!.toUpperCase() + brandSlug.slice(1), brandSlug, title: `${brandSlug} ${referenceSlug}`, officialName: null, referenceDisplay: referenceSlug.toUpperCase(), referenceNormalized: referenceSlug.toUpperCase(), referenceSlug, brandCollectionName: null, watchModelName: referenceSlug.toUpperCase(), publicPrice: { amountMinor: 100_000, currencyCode: "RUB" }, primaryImage: image, keySpecifications: [], brandLineName: null, imageGallery: image.kind === "none" ? [] : [image], specifications: [], siblingReferences: [] };
+  return { id: `${brandSlug}:${referenceSlug}`, href: `/watches/${brandSlug}/${referenceSlug}`, brandName: brandSlug[0]!.toUpperCase() + brandSlug.slice(1), brandSlug, title: `${brandSlug} ${referenceSlug}`, officialName: null, referenceDisplay: referenceSlug.toUpperCase(), referenceNormalized: referenceSlug.toUpperCase(), referenceSlug, brandCollectionName: null, watchModelName: referenceSlug.toUpperCase(), publicPrice: { amountMinor: 104_000, currencyCode: "RUB" }, primaryImage: image, keySpecifications: [], brandLineName: null, imageGallery: image.kind === "none" ? [] : [image], specifications: [], siblingReferences: [] };
 }
 function dataset(watches: CatalogWatchDetail[]): CatalogReadDataset { return { source: "preview", generatedAt: "2026-08-04T00:00:00.000Z", watches, brands: [] }; }
 
@@ -44,9 +44,9 @@ describe("Journal visual edition and customer account correction", () => {
 
   it("keeps the local cart versioned, deterministic and free of fake defaults", () => {
     expect(emptyLocalCart).toEqual({ schemaVersion: localCartSchemaVersion, items: [] });
-    const item = { identity: "casio:a130we7adf", brand: "Casio", brandSlug: "casio", reference: "A130WE-7ADF", referenceSlug: "a130we7adf", canonicalHref: "/watches/casio/a130we7adf", publicPriceSnapshot: { amountMinor: 550_000, currencyCode: "RUB" as const }, quantity: 1, addedAt: "2026-08-04T00:00:00.000Z", source: "catalog" as const };
+    const item = { identity: "casio:a130we7adf", brand: "Casio", brandSlug: "casio", reference: "A130WE-7ADF", referenceSlug: "a130we7adf", canonicalHref: "/watches/casio/a130we7adf", publicPriceSnapshot: { amountMinor: 570_000, currencyCode: "RUB" as const }, quantity: 1, addedAt: "2026-08-04T00:00:00.000Z", source: "catalog" as const };
     const cart = parseLocalCart(JSON.stringify({ schemaVersion: 1, items: [item] }));
-    expect(summarizeLocalCart(cart)).toEqual({ itemCount: 1, knownTotalMinor: 550_000, unknownPriceCount: 0 });
+    expect(summarizeLocalCart(cart)).toEqual({ itemCount: 1, knownTotalMinor: 570_000, unknownPriceCount: 0 });
     expect(updateLocalCartQuantity(cart, item.identity, 3).items[0]?.quantity).toBe(3);
     expect(removeLocalCartItem(cart, item.identity)).toEqual(emptyLocalCart);
     expect(clearLocalCart()).toEqual(emptyLocalCart);

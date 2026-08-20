@@ -7,8 +7,11 @@ import {
 } from "../application/database-apply-plan";
 import { executeControlledCatalogApply, writeCatalogApplyResult } from "../application/database-apply-executor";
 import { catalogImportApplyConfirmationPhrase } from "../domain/database-apply-types";
+import { loadCatalogCliEnv } from "./env";
 
 const rootDir = process.cwd();
+loadCatalogCliEnv(rootDir);
+
 const previewPath = path.join(rootDir, "imports", "generated", "catalog-import-preview.json");
 const applyJsonPath = path.join(rootDir, "imports", "generated", "catalog-apply-result.json");
 const applyReportPath = path.join(rootDir, "imports", "reports", "catalog-apply-result.md");
