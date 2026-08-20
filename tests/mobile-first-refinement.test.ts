@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -143,5 +143,18 @@ describe("mobile-first production refinement contracts", () => {
     expect(commerce).toContain(".cardCartButton");
     expect(commerce).toContain("min-width: 44px");
     expect(globals).not.toContain("min-width: 40px");
+  });
+
+  it("uses a real SVG cart icon and provides a browser tab favicon", () => {
+    const commerceActions = readSrc("src/components/commerce/commerce-actions.tsx");
+    const commerceStyles = readSrc("src/components/commerce/commerce.module.css");
+    const favicon = readSrc("src/app/icon.svg");
+
+    expect(commerceActions).toContain("<svg className={styles.cartIconGlyph}");
+    expect(commerceActions).toContain("viewBox=\"0 0 24 24\"");
+    expect(commerceStyles).not.toContain(".cartIconGlyph::before");
+    expect(existsSync(path.join(projectRoot, "src/app/icon.svg"))).toBe(true);
+    expect(favicon).toContain("<svg");
+    expect(favicon).toContain("ET");
   });
 });

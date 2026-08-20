@@ -33,7 +33,11 @@ export function CommerceCartIcon() {
 
   return (
     <Link href="/cart" className={styles.cartIcon} aria-label={ready && itemCount > 0 ? label : "Корзина"}>
-      <span className={styles.cartIconGlyph} aria-hidden="true" />
+      <svg className={styles.cartIconGlyph} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M7.25 8.75h9.5l-.72 9.1a2.15 2.15 0 0 1-2.14 1.98H10.1a2.15 2.15 0 0 1-2.14-1.98l-.71-9.1Z" />
+        <path d="M8.9 8.75V7.1a3.1 3.1 0 0 1 6.2 0v1.65" />
+        <path d="M9.65 12.2h4.7" />
+      </svg>
       {ready && itemCount > 0 ? <span className={styles.badge}>{Math.min(99, itemCount)}</span> : null}
     </Link>
   );
