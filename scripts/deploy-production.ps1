@@ -4,6 +4,7 @@ param(
   [string]$SshKey = "$env:USERPROFILE\.ssh\eternal_time_deploy",
   [string]$RemoteAppDir = "/opt/eternal-time",
   [string]$RemoteUser = "root",
+  [switch]$DeployCatalogAssets,
   [switch]$SkipLocalChecks
 )
 
@@ -59,6 +60,7 @@ $remoteArchive = "/tmp/eternal-time-$releaseId.tar.gz"
 $remoteAssetArchive = "/tmp/catalog-image-assets-$releaseId.tar.gz"
 $remoteEnv = "/tmp/eternal-time-$releaseId.env"
 $remoteScript = "/tmp/eternal-time-$releaseId-deploy.sh"
+$deployCatalogAssetsValue = if ($DeployCatalogAssets) { "1" } else { "0" }
 
 $requiredEnvKeys = @(
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -141,25 +143,29 @@ try {
     "."
   )
 
-  $assetPaths = @(
-    "incoming/casio_for_it_all_photos_UPDATED.zip",
-    "incoming/orient_catalog_FULL_001-079.zip",
-    "incoming/tissot_FULL_CATALOG_1-193.zip",
-    "imports/raw/catalog",
-    "imports/raw/home-hero/final",
-    "imports/generated/catalog-import-preview.json",
-    "imports/generated/catalog-image-upload-plan.json",
-    ".tmp/casio-photo-import/manifest.json",
-    ".tmp/orient-photo-import/manifest.json",
-    ".tmp/tissot-photo-import/manifest.json",
-    ".tmp/catalog-site-import-overlay/manifest.json"
-  )
-  $missingAssetPaths = @($assetPaths | Where-Object { -not (Test-Path (Join-Path $repoRoot $_)) })
-  if ($missingAssetPaths.Count -gt 0) {
-    throw "Missing catalog image asset paths: $($missingAssetPaths -join ', ')"
+  if ($DeployCatalogAssets) {
+    $assetPaths = @(
+      "incoming/casio_for_it_all_photos_UPDATED.zip",
+      "incoming/orient_catalog_FULL_001-079.zip",
+      "incoming/tissot_FULL_CATALOG_1-193.zip",
+      "imports/raw/catalog",
+      "imports/raw/home-hero/final",
+      "imports/generated/catalog-import-preview.json",
+      "imports/generated/catalog-image-upload-plan.json",
+      ".tmp/casio-photo-import/manifest.json",
+      ".tmp/orient-photo-import/manifest.json",
+      ".tmp/tissot-photo-import/manifest.json",
+      ".tmp/catalog-site-import-overlay/manifest.json"
+    )
+    $missingAssetPaths = @($assetPaths | Where-Object { -not (Test-Path (Join-Path $repoRoot $_)) })
+    if ($missingAssetPaths.Count -gt 0) {
+      throw "Missing catalog image asset paths: $($missingAssetPaths -join ', ')"
+    }
+    $assetTarArgs = @("-czf", $assetArchivePath) + $assetPaths
+    Invoke-CheckedNative "tar" $assetTarArgs
+  } else {
+    Write-Host "Skipping catalog asset archive. Use -DeployCatalogAssets for explicit shared catalog asset sync."
   }
-  $assetTarArgs = @("-czf", $assetArchivePath) + $assetPaths
-  Invoke-CheckedNative "tar" $assetTarArgs
 } finally {
   Pop-Location
 }
@@ -173,6 +179,7 @@ DOMAIN="$Domain"
 RELEASE_ID="$releaseId"
 RELEASE_DIR="`$APP_DIR/releases/`$RELEASE_ID"
 ASSET_DIR="`$APP_DIR/shared/catalog-image-assets"
+DEPLOY_CATALOG_ASSETS="$deployCatalogAssetsValue"
 APP_USER="eternaltime"
 
 apt-get update
@@ -207,8 +214,12 @@ install -d -m 0755 "`$APP_DIR/releases" "`$APP_DIR/shared"
 install -d -m 0755 "`$RELEASE_DIR"
 install -d -m 0755 "`$ASSET_DIR"
 tar -xzf "$remoteArchive" -C "`$RELEASE_DIR"
-rm -rf "`$ASSET_DIR/incoming" "`$ASSET_DIR/imports/raw/catalog" "`$ASSET_DIR/imports/raw/home-hero/final" "`$ASSET_DIR/imports/generated" "`$ASSET_DIR/.tmp/casio-photo-import" "`$ASSET_DIR/.tmp/orient-photo-import" "`$ASSET_DIR/.tmp/tissot-photo-import" "`$ASSET_DIR/.tmp/catalog-site-import-overlay"
-tar -xzf "$remoteAssetArchive" -C "`$ASSET_DIR"
+if [ "`$DEPLOY_CATALOG_ASSETS" = "1" ]; then
+  rm -rf "`$ASSET_DIR/incoming" "`$ASSET_DIR/imports/raw/catalog" "`$ASSET_DIR/imports/raw/home-hero/final" "`$ASSET_DIR/imports/generated" "`$ASSET_DIR/.tmp/casio-photo-import" "`$ASSET_DIR/.tmp/orient-photo-import" "`$ASSET_DIR/.tmp/tissot-photo-import" "`$ASSET_DIR/.tmp/catalog-site-import-overlay"
+  tar -xzf "$remoteAssetArchive" -C "`$ASSET_DIR"
+else
+  echo "catalog asset sync skipped; preserving `$ASSET_DIR"
+fi
 install -m 0640 -o root -g "`$APP_USER" "$remoteEnv" "`$APP_DIR/shared/.env.production"
 ln -sfn "`$APP_DIR/shared/.env.production" "`$RELEASE_DIR/.env.production"
 
@@ -337,7 +348,10 @@ if [ -f "`$CERT_PATH" ] && [ -f "`$CERT_KEY_PATH" ]; then
   curl -fsS "https://`$DOMAIN/api/health" >/dev/null
 fi
 
-rm -f "$remoteArchive" "$remoteAssetArchive" "$remoteEnv" "$remoteScript"
+rm -f "$remoteArchive" "$remoteEnv" "$remoteScript"
+if [ "`$DEPLOY_CATALOG_ASSETS" = "1" ]; then
+  rm -f "$remoteAssetArchive"
+fi
 echo "deploy_ok release=`$RELEASE_ID"
 "@
 
@@ -346,7 +360,11 @@ $remoteScriptPath = Join-Path $deployDir "deploy-$releaseId.sh"
 
 $sshTarget = "$RemoteUser@$HostName"
 Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $archivePath, "${sshTarget}:$remoteArchive")
-Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $assetArchivePath, "${sshTarget}:$remoteAssetArchive")
+if ($DeployCatalogAssets) {
+  Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $assetArchivePath, "${sshTarget}:$remoteAssetArchive")
+} else {
+  Write-Host "Catalog asset upload skipped for default code-only deploy."
+}
 Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $envProductionPath, "${sshTarget}:$remoteEnv")
 Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $remoteScriptPath, "${sshTarget}:$remoteScript")
 Invoke-CheckedNative "ssh" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $sshTarget, "bash $remoteScript")
