@@ -5,6 +5,8 @@ param(
   [string]$RemoteAppDir = "/opt/eternal-time",
   [string]$RemoteUser = "root",
   [switch]$DeployCatalogAssets,
+  [switch]$UpdateProductionEnv,
+  [switch]$BootstrapServer,
   [switch]$SkipLocalChecks
 )
 
@@ -61,6 +63,8 @@ $remoteAssetArchive = "/tmp/catalog-image-assets-$releaseId.tar.gz"
 $remoteEnv = "/tmp/eternal-time-$releaseId.env"
 $remoteScript = "/tmp/eternal-time-$releaseId-deploy.sh"
 $deployCatalogAssetsValue = if ($DeployCatalogAssets) { "1" } else { "0" }
+$updateProductionEnvValue = if ($UpdateProductionEnv) { "1" } else { "0" }
+$bootstrapServerValue = if ($BootstrapServer) { "1" } else { "0" }
 
 $requiredEnvKeys = @(
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -76,54 +80,59 @@ $requiredEnvKeys = @(
   "CDEK_WEBHOOK_TOKEN"
 )
 
-$envLines = Get-Content -LiteralPath $envLocalPath
-$envMap = @{}
-foreach ($line in $envLines) {
-  if ($line -match '^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
-    $envMap[$Matches[1]] = $Matches[2]
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+if ($UpdateProductionEnv) {
+  $envLines = Get-Content -LiteralPath $envLocalPath
+  $envMap = @{}
+  foreach ($line in $envLines) {
+    if ($line -match '^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
+      $envMap[$Matches[1]] = $Matches[2]
+    }
   }
-}
 
-$missingRequired = @($requiredEnvKeys | Where-Object { -not $envMap.ContainsKey($_) -or [string]::IsNullOrWhiteSpace($envMap[$_]) })
-if ($missingRequired.Count -gt 0) {
-  throw "Missing required production env keys: $($missingRequired -join ', ')"
-}
+  $missingRequired = @($requiredEnvKeys | Where-Object { -not $envMap.ContainsKey($_) -or [string]::IsNullOrWhiteSpace($envMap[$_]) })
+  if ($missingRequired.Count -gt 0) {
+    throw "Missing required production env keys: $($missingRequired -join ', ')"
+  }
 
-if (-not $envMap.ContainsKey("YOOKASSA_SHOP_ID") -or -not $envMap.ContainsKey("YOOKASSA_SECRET_KEY")) {
-  Write-Warning "YooKassa credentials are not present. Checkout payment creation must remain fail-closed until they are added on the server."
-}
+  if (-not $envMap.ContainsKey("YOOKASSA_SHOP_ID") -or -not $envMap.ContainsKey("YOOKASSA_SECRET_KEY")) {
+    Write-Warning "YooKassa credentials are not present. Checkout payment creation must remain fail-closed until they are added on the server."
+  }
 
-$safeLines = New-Object System.Collections.Generic.List[string]
-$seenKeys = New-Object System.Collections.Generic.HashSet[string]
-foreach ($line in $envLines) {
-  if ($line -match '^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
-    $key = $Matches[1]
-    if ($key -eq "NEXT_PUBLIC_APP_URL") {
-      $safeLines.Add("NEXT_PUBLIC_APP_URL=https://$Domain")
-    } elseif ($key -eq "CATALOG_READ_SOURCE") {
-      $safeLines.Add("CATALOG_READ_SOURCE=database")
-    } elseif ($key -eq "CATALOG_IMAGE_ASSET_ROOT") {
-      $safeLines.Add("CATALOG_IMAGE_ASSET_ROOT=$RemoteAppDir/shared/catalog-image-assets")
-    } elseif ($key -ne "NODE_ENV") {
+  $safeLines = New-Object System.Collections.Generic.List[string]
+  $seenKeys = New-Object System.Collections.Generic.HashSet[string]
+  foreach ($line in $envLines) {
+    if ($line -match '^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
+      $key = $Matches[1]
+      if ($key -eq "NEXT_PUBLIC_APP_URL") {
+        $safeLines.Add("NEXT_PUBLIC_APP_URL=https://$Domain")
+      } elseif ($key -eq "CATALOG_READ_SOURCE") {
+        $safeLines.Add("CATALOG_READ_SOURCE=database")
+      } elseif ($key -eq "CATALOG_IMAGE_ASSET_ROOT") {
+        $safeLines.Add("CATALOG_IMAGE_ASSET_ROOT=$RemoteAppDir/shared/catalog-image-assets")
+      } elseif ($key -ne "NODE_ENV") {
+        $safeLines.Add($line)
+      }
+      [void]$seenKeys.Add($key)
+    } elseif (-not [string]::IsNullOrWhiteSpace($line)) {
       $safeLines.Add($line)
     }
-    [void]$seenKeys.Add($key)
-  } elseif (-not [string]::IsNullOrWhiteSpace($line)) {
-    $safeLines.Add($line)
   }
+  if (-not $seenKeys.Contains("NEXT_PUBLIC_APP_URL")) {
+    $safeLines.Add("NEXT_PUBLIC_APP_URL=https://$Domain")
+  }
+  if (-not $seenKeys.Contains("CATALOG_READ_SOURCE")) {
+    $safeLines.Add("CATALOG_READ_SOURCE=database")
+  }
+  if (-not $seenKeys.Contains("CATALOG_IMAGE_ASSET_ROOT")) {
+    $safeLines.Add("CATALOG_IMAGE_ASSET_ROOT=$RemoteAppDir/shared/catalog-image-assets")
+  }
+  $safeLines.Add("NEXT_TELEMETRY_DISABLED=1")
+  [System.IO.File]::WriteAllLines($envProductionPath, [string[]]$safeLines, $utf8NoBom)
+} else {
+  Write-Host "Skipping production env upload. Use -UpdateProductionEnv for explicit env changes."
 }
-if (-not $seenKeys.Contains("NEXT_PUBLIC_APP_URL")) {
-  $safeLines.Add("NEXT_PUBLIC_APP_URL=https://$Domain")
-}
-if (-not $seenKeys.Contains("CATALOG_READ_SOURCE")) {
-  $safeLines.Add("CATALOG_READ_SOURCE=database")
-}
-if (-not $seenKeys.Contains("CATALOG_IMAGE_ASSET_ROOT")) {
-  $safeLines.Add("CATALOG_IMAGE_ASSET_ROOT=$RemoteAppDir/shared/catalog-image-assets")
-}
-$safeLines.Add("NEXT_TELEMETRY_DISABLED=1")
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllLines($envProductionPath, [string[]]$safeLines, $utf8NoBom)
 
 Push-Location $repoRoot
 try {
@@ -180,21 +189,29 @@ RELEASE_ID="$releaseId"
 RELEASE_DIR="`$APP_DIR/releases/`$RELEASE_ID"
 ASSET_DIR="`$APP_DIR/shared/catalog-image-assets"
 DEPLOY_CATALOG_ASSETS="$deployCatalogAssetsValue"
+UPDATE_PRODUCTION_ENV="$updateProductionEnvValue"
+BOOTSTRAP_SERVER="$bootstrapServerValue"
 APP_USER="eternaltime"
 
-apt-get update
-apt-get install -y ca-certificates curl gnupg nginx ufw
+if [ "`$BOOTSTRAP_SERVER" = "1" ]; then
+  apt-get update
+  apt-get install -y ca-certificates curl gnupg nginx ufw
+fi
 
 NODE_MAJOR="0"
 if command -v node >/dev/null 2>&1; then
   NODE_MAJOR="`$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
 fi
 if [ "`$NODE_MAJOR" -lt 22 ]; then
+  if [ "`$BOOTSTRAP_SERVER" != "1" ]; then
+    echo "Node.js 22+ is required. Re-run with -BootstrapServer to install it." >&2
+    exit 1
+  fi
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y nodejs
 fi
 
-if ! swapon --show | grep -q '^'; then
+if [ "`$BOOTSTRAP_SERVER" = "1" ] && ! swapon --show | grep -q '^'; then
   fallocate -l 2G /swapfile
   chmod 600 /swapfile
   mkswap /swapfile
@@ -204,7 +221,9 @@ if ! swapon --show | grep -q '^'; then
   fi
 fi
 
-timedatectl set-timezone Europe/Moscow || true
+if [ "`$BOOTSTRAP_SERVER" = "1" ]; then
+  timedatectl set-timezone Europe/Moscow || true
+fi
 
 if ! id -u "`$APP_USER" >/dev/null 2>&1; then
   useradd --system --home-dir "`$APP_DIR" --shell /usr/sbin/nologin "`$APP_USER"
@@ -220,7 +239,15 @@ if [ "`$DEPLOY_CATALOG_ASSETS" = "1" ]; then
 else
   echo "catalog asset sync skipped; preserving `$ASSET_DIR"
 fi
-install -m 0640 -o root -g "`$APP_USER" "$remoteEnv" "`$APP_DIR/shared/.env.production"
+if [ "`$UPDATE_PRODUCTION_ENV" = "1" ]; then
+  install -m 0640 -o root -g "`$APP_USER" "$remoteEnv" "`$APP_DIR/shared/.env.production"
+else
+  if [ ! -f "`$APP_DIR/shared/.env.production" ]; then
+    echo "Existing `$APP_DIR/shared/.env.production was not found. Re-run with -UpdateProductionEnv for first-time setup." >&2
+    exit 1
+  fi
+  echo "production env upload skipped; preserving `$APP_DIR/shared/.env.production"
+fi
 ln -sfn "`$APP_DIR/shared/.env.production" "`$RELEASE_DIR/.env.production"
 
 cd "`$RELEASE_DIR"
@@ -229,12 +256,15 @@ npm run build
 npm prune --omit=dev
 
 chown -R root:"`$APP_USER" "`$RELEASE_DIR"
-chown -R root:"`$APP_USER" "`$ASSET_DIR"
+if [ "`$DEPLOY_CATALOG_ASSETS" = "1" ]; then
+  chown -R root:"`$APP_USER" "`$ASSET_DIR"
+fi
 install -d -m 0755 "`$RELEASE_DIR/.next/cache/images"
 chown -R "`$APP_USER":"`$APP_USER" "`$RELEASE_DIR/.next/cache"
 ln -sfn "`$RELEASE_DIR" "`$APP_DIR/current"
 
-cat >/etc/systemd/system/eternal-time.service <<'SERVICE'
+if [ "`$BOOTSTRAP_SERVER" = "1" ]; then
+  cat >/etc/systemd/system/eternal-time.service <<'SERVICE'
 [Unit]
 Description=Eternal Time Next.js application
 After=network-online.target
@@ -257,13 +287,13 @@ RestartSec=5
 WantedBy=multi-user.target
 SERVICE
 
-CERT_PATH="/etc/letsencrypt/live/`$DOMAIN/fullchain.pem"
-CERT_KEY_PATH="/etc/letsencrypt/live/`$DOMAIN/privkey.pem"
-SSL_OPTIONS_PATH="/etc/letsencrypt/options-ssl-nginx.conf"
-SSL_DHPARAMS_PATH="/etc/letsencrypt/ssl-dhparams.pem"
+  CERT_PATH="/etc/letsencrypt/live/`$DOMAIN/fullchain.pem"
+  CERT_KEY_PATH="/etc/letsencrypt/live/`$DOMAIN/privkey.pem"
+  SSL_OPTIONS_PATH="/etc/letsencrypt/options-ssl-nginx.conf"
+  SSL_DHPARAMS_PATH="/etc/letsencrypt/ssl-dhparams.pem"
 
-if [ -f "`$CERT_PATH" ] && [ -f "`$CERT_KEY_PATH" ] && [ -f "`$SSL_OPTIONS_PATH" ] && [ -f "`$SSL_DHPARAMS_PATH" ]; then
-  cat >/etc/nginx/sites-available/eternal-time <<NGINX
+  if [ -f "`$CERT_PATH" ] && [ -f "`$CERT_KEY_PATH" ] && [ -f "`$SSL_OPTIONS_PATH" ] && [ -f "`$SSL_DHPARAMS_PATH" ]; then
+    cat >/etc/nginx/sites-available/eternal-time <<NGINX
 server {
   listen 80;
   listen [::]:80;
@@ -300,8 +330,8 @@ server {
   }
 }
 NGINX
-else
-  cat >/etc/nginx/sites-available/eternal-time <<NGINX
+  else
+    cat >/etc/nginx/sites-available/eternal-time <<NGINX
 server {
   listen 80;
   listen [::]:80;
@@ -326,20 +356,24 @@ server {
   }
 }
 NGINX
+  fi
+
+  ln -sfn /etc/nginx/sites-available/eternal-time /etc/nginx/sites-enabled/eternal-time
+  rm -f /etc/nginx/sites-enabled/default
+  nginx -t
+  systemctl daemon-reload
+  systemctl enable eternal-time
 fi
 
-ln -sfn /etc/nginx/sites-available/eternal-time /etc/nginx/sites-enabled/eternal-time
-rm -f /etc/nginx/sites-enabled/default
-nginx -t
-systemctl daemon-reload
-systemctl enable eternal-time
 systemctl restart eternal-time
-systemctl enable nginx
-systemctl reload nginx
 
-ufw allow OpenSSH
-ufw allow 'Nginx Full'
-ufw --force enable
+if [ "`$BOOTSTRAP_SERVER" = "1" ]; then
+  systemctl enable nginx
+  systemctl reload nginx
+  ufw allow OpenSSH
+  ufw allow 'Nginx Full'
+  ufw --force enable
+fi
 
 sleep 2
 curl -fsS http://127.0.0.1:3000/api/health >/dev/null
@@ -359,15 +393,20 @@ $remoteScriptPath = Join-Path $deployDir "deploy-$releaseId.sh"
 [System.IO.File]::WriteAllText($remoteScriptPath, $remoteBash, $utf8NoBom)
 
 $sshTarget = "$RemoteUser@$HostName"
-Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $archivePath, "${sshTarget}:$remoteArchive")
+$sshOptions = @("-4", "-i", $SshKey, "-o", "ConnectTimeout=30", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", "-o", "IPQoS=none")
+Invoke-CheckedNative "scp" @($sshOptions + @($archivePath, "${sshTarget}:$remoteArchive"))
 if ($DeployCatalogAssets) {
-  Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $assetArchivePath, "${sshTarget}:$remoteAssetArchive")
+  Invoke-CheckedNative "scp" @($sshOptions + @($assetArchivePath, "${sshTarget}:$remoteAssetArchive"))
 } else {
   Write-Host "Catalog asset upload skipped for default code-only deploy."
 }
-Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $envProductionPath, "${sshTarget}:$remoteEnv")
-Invoke-CheckedNative "scp" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $remoteScriptPath, "${sshTarget}:$remoteScript")
-Invoke-CheckedNative "ssh" @("-i", $SshKey, "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", $sshTarget, "bash $remoteScript")
+if ($UpdateProductionEnv) {
+  Invoke-CheckedNative "scp" @($sshOptions + @($envProductionPath, "${sshTarget}:$remoteEnv"))
+} else {
+  Write-Host "Production env upload skipped for default code-only deploy."
+}
+Invoke-CheckedNative "scp" @($sshOptions + @($remoteScriptPath, "${sshTarget}:$remoteScript"))
+Invoke-CheckedNative "ssh" @($sshOptions + @($sshTarget, "bash $remoteScript"))
 
 Write-Host "Deployment finished for release $releaseId."
 Write-Host "HTTP smoke test: http://$HostName/api/health"
