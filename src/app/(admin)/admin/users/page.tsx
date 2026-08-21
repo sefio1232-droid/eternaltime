@@ -19,7 +19,9 @@ export default async function AdminUsersPage() {
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Admin</p>
         <h1>Пользователи</h1>
-        <span>Реестр настоящих регистраций Supabase Auth с безопасной витриной публичного профиля и заказной статистики.</span>
+        <span>
+          Реестр настоящих регистраций Supabase Auth с безопасной витриной публичного профиля и заказной статистики.
+        </span>
       </header>
 
       <section className={styles.panel}>
@@ -39,14 +41,38 @@ export default async function AdminUsersPage() {
                   </div>
                 </div>
                 <div className={styles.adminOrderGrid}>
-                  <p><span>Регистрация</span>{formatDate(user.createdAt)}</p>
-                  <p><span>Last sign in</span>{formatDate(user.lastSignInAt)}</p>
-                  <p><span>Имя</span>{user.displayName ?? "—"}</p>
-                  <p><span>Телефон</span>{user.phone ?? "—"}</p>
-                  <p><span>Город</span>{user.city ?? "—"}</p>
-                  <p><span>Заказы</span>{user.ordersCount}</p>
-                  <p><span>Оплаченные заказы</span>{user.paidOrdersCount}</p>
-                  <p><span>Часы в коллекции</span>{user.collectionWatchesCount}</p>
+                  <p>
+                    <span>Регистрация</span>
+                    {formatDate(user.createdAt)}
+                  </p>
+                  <p>
+                    <span>Last sign in</span>
+                    {formatDate(user.lastSignInAt)}
+                  </p>
+                  <p>
+                    <span>Имя</span>
+                    {user.displayName ?? "—"}
+                  </p>
+                  <p>
+                    <span>Телефон</span>
+                    {user.phone ?? "—"}
+                  </p>
+                  <p>
+                    <span>Город</span>
+                    {user.city ?? "—"}
+                  </p>
+                  <p>
+                    <span>Заказы</span>
+                    {user.ordersCount}
+                  </p>
+                  <p>
+                    <span>Оплаченные заказы</span>
+                    {user.paidOrdersCount}
+                  </p>
+                  <p>
+                    <span>Часы в коллекции</span>
+                    {user.collectionWatchesCount}
+                  </p>
                 </div>
               </article>
             ))}
@@ -55,7 +81,10 @@ export default async function AdminUsersPage() {
           <div className={styles.emptyPanel}>
             <p className={styles.eyebrow}>Нет данных</p>
             <h2>Регистраций пока нет</h2>
-            <p>После первой реальной регистрации Supabase Auth пользователь появится здесь. Секретные auth-поля в UI не выводятся.</p>
+            <p>
+              После первой реальной регистрации Supabase Auth пользователь появится здесь. Секретные auth-поля в UI не
+              выводятся.
+            </p>
           </div>
         )}
       </section>

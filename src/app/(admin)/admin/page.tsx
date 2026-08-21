@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
+import adminStyles from "@/components/admin/admin.module.css";
+import styles from "@/components/commerce/commerce.module.css";
 import { formatCommerceMoney, orderStatusLabels, paymentStatusLabels } from "@/modules/commerce/domain/labels";
 import {
   getAdminDashboardStats,
   listAdminOrdersForPanel,
 } from "@/modules/admin/infrastructure/admin-repository.server";
-import styles from "@/components/commerce/commerce.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,12 @@ export default async function AdminPage() {
     listAdminOrdersForPanel(),
   ]);
   const statCards = [
+    ["Catalog total", stats.catalogTotal],
+    ["Published", stats.catalogPublished],
+    ["Hidden/draft", stats.catalogHidden],
+    ["No price", stats.catalogWithoutPrice],
+    ["No image", stats.catalogWithoutImage],
+    ["Incomplete", stats.catalogIncomplete],
     ["Все заказы", stats.totalOrders],
     ["Новые", stats.newOrders],
     ["Awaiting payment", stats.awaitingPayment],
@@ -32,8 +39,31 @@ export default async function AdminPage() {
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Admin</p>
         <h1>Операционная панель</h1>
-        <span>Реальные заказы, пользователи, оплата и доставка. Если данных нет — показываем нули и спокойный empty state, без демо-цифр.</span>
+        <span>
+          Реальные данные каталога, заказов, пользователей, оплаты и доставки. Если данных нет — показываем нули и
+          спокойный empty state без демо-цифр.
+        </span>
       </header>
+
+      <section className={adminStyles.card}>
+        <div className={adminStyles.toolbar}>
+          <div>
+            <p className={adminStyles.eyebrow}>Рабочие разделы</p>
+            <p className={adminStyles.note}>
+              Catalog управляет товарами, ценами, публикацией и существующими image rows. System показывает безопасную
+              диагностику без секретов и чувствительных auth-полей.
+            </p>
+          </div>
+          <div className={adminStyles.actions}>
+            <Link className={adminStyles.linkButton} href="/admin/catalog">
+              Открыть Catalog
+            </Link>
+            <Link className={adminStyles.linkButton} href="/admin/system">
+              System
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <section className={styles.panel}>
         <div className={styles.fieldGrid}>
@@ -68,7 +98,9 @@ export default async function AdminPage() {
                   <Link className={styles.lineTitle} href={`/admin/orders/${order.orderNumber}`}>
                     №{order.orderNumber}
                   </Link>
-                  <p className={styles.lineMeta}>{order.customerEmail} · {order.customerPhone}</p>
+                  <p className={styles.lineMeta}>
+                    {order.customerEmail} · {order.customerPhone}
+                  </p>
                 </div>
                 <div>
                   <p>{formatCommerceMoney(order.totalAmountMinor)}</p>

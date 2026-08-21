@@ -14,12 +14,12 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   in_transit: "В пути",
   local_delivery: "Передан в доставку",
   completed: "Получен",
-  cancelled: "Отменен",
+  cancelled: "Отменён",
 };
 
 export const paymentStatusLabels: Record<OrderPaymentStatus, string> = {
   not_started: "Оплата не начата",
-  pending: "Платеж обрабатывается",
+  pending: "Платёж обрабатывается",
   succeeded: "Оплачено",
   partially_refunded: "Частичный возврат",
   refunded: "Возвращено",
@@ -30,14 +30,14 @@ export const paymentAttemptStatusLabels: Record<PaymentAttemptStatus, string> = 
   pending: "Ожидает подтверждения",
   waiting_for_capture: "Ожидает списания",
   succeeded: "Оплачен",
-  canceled: "Не завершен",
+  canceled: "Не завершён",
   failed: "Не создан",
 };
 
 export const refundStatusLabels: Record<RefundStatus, string> = {
   pending: "Возврат обрабатывается",
   succeeded: "Возврат оформлен",
-  canceled: "Возврат отменен",
+  canceled: "Возврат отменён",
   failed: "Возврат не выполнен",
 };
 
@@ -53,7 +53,7 @@ export const shipmentStatusLabels: Record<OrderShipmentStatus, string> = {
   ready_for_pickup: "Готов к выдаче",
   delivered: "Получен",
   returning: "Возвращается",
-  returned: "Возвращен",
+  returned: "Возвращён",
   problem: "Проблема",
 };
 

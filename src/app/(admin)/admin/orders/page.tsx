@@ -41,7 +41,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Admin</p>
         <h1>Заказы</h1>
-        <span>List view показывает основные поля и фильтры. Полная операционная карточка открывается в detail view.</span>
+        <span>
+          List view показывает основные поля и фильтры. Полная операционная карточка открывается в detail view.
+        </span>
       </header>
 
       <section className={styles.panel}>
@@ -63,7 +65,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             <select name="status" defaultValue={filters.status ?? ""}>
               <option value="">Все</option>
               {Object.entries(orderStatusLabels).map(([status, label]) => (
-                <option key={status} value={status}>{label}</option>
+                <option key={status} value={status}>
+                  {label}
+                </option>
               ))}
             </select>
           </label>
@@ -72,7 +76,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             <select name="paymentStatus" defaultValue={filters.paymentStatus ?? ""}>
               <option value="">Все</option>
               {Object.entries(paymentStatusLabels).map(([status, label]) => (
-                <option key={status} value={status}>{label}</option>
+                <option key={status} value={status}>
+                  {label}
+                </option>
               ))}
             </select>
           </label>
@@ -81,7 +87,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             <select name="deliveryStatus" defaultValue={filters.deliveryStatus ?? ""}>
               <option value="">Все</option>
               {Object.entries(shipmentStatusLabels).map(([status, label]) => (
-                <option key={status} value={status}>{label}</option>
+                <option key={status} value={status}>
+                  {label}
+                </option>
               ))}
             </select>
           </label>
@@ -93,8 +101,12 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             Date to
             <input name="dateTo" type="date" defaultValue={filters.dateTo ?? ""} />
           </label>
-          <button className={styles.quietButton} type="submit">Фильтровать</button>
-          <Link className={styles.quietButton} href="/admin/orders">Сбросить</Link>
+          <button className={styles.quietButton} type="submit">
+            Фильтровать
+          </button>
+          <Link className={styles.quietButton} href="/admin/orders">
+            Сбросить
+          </Link>
         </form>
       </section>
 
@@ -113,22 +125,64 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
                   </div>
                   <div>
                     <strong>{formatCommerceMoney(order.totalAmountMinor)}</strong>
-                    <p className={styles.lineMeta}>{paymentStatusLabels[order.paymentStatus]} · {orderStatusLabels[order.orderStatus]}</p>
+                    <p className={styles.lineMeta}>
+                      {paymentStatusLabels[order.paymentStatus]} · {orderStatusLabels[order.orderStatus]}
+                    </p>
                   </div>
                 </div>
                 <div className={styles.adminOrderGrid}>
-                  <p><span>Покупатель</span>{order.customerName} · {order.customerEmail} · {order.customerPhone}</p>
-                  <p><span>Позиции</span>{order.itemSummary}</p>
-                  <p><span>Товары</span>{formatCommerceMoney(order.productSubtotalMinor)}</p>
-                  <p><span>Доставка для клиента</span>{formatCommerceMoney(order.customerDeliveryAmountMinor)}</p>
-                  <p><span>CDEK actual cost</span>{formatCommerceMoney(order.carrierActualCostMinor)}</p>
-                  <p><span>YooKassa</span>{order.yookassaPaymentId ?? "—"}</p>
-                  <p><span>Получение</span>{order.deliveryMethod} · {order.city}{order.cdekCityCode ? ` · CDEK city ${order.cdekCityCode}` : ""}</p>
-                  <p><span>ПВЗ / адрес</span>{order.pickupPointCode ? `${order.pickupPointCode} · ${order.pickupPointAddress}` : order.courierAddress ?? "—"}</p>
-                  <p><span>Tracking</span>{order.trackingNumber ?? "—"}</p>
-                  <p><span>Shipment</span>{order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : "—"}{order.lastErrorCode ? ` · ${order.lastErrorCode}` : ""}</p>
-                  <p><span>CDEK order</span>{order.cdekOrderNumber ?? "—"}</p>
-                  <p><span>Updated</span>{new Date(order.updatedAt).toLocaleString("ru-RU")}</p>
+                  <p>
+                    <span>Покупатель</span>
+                    {order.customerName} · {order.customerEmail} · {order.customerPhone}
+                  </p>
+                  <p>
+                    <span>Позиции</span>
+                    {order.itemSummary}
+                  </p>
+                  <p>
+                    <span>Товары</span>
+                    {formatCommerceMoney(order.productSubtotalMinor)}
+                  </p>
+                  <p>
+                    <span>Доставка для клиента</span>
+                    {formatCommerceMoney(order.customerDeliveryAmountMinor)}
+                  </p>
+                  <p>
+                    <span>CDEK actual cost</span>
+                    {formatCommerceMoney(order.carrierActualCostMinor)}
+                  </p>
+                  <p>
+                    <span>YooKassa</span>
+                    {order.yookassaPaymentId ?? "—"}
+                  </p>
+                  <p>
+                    <span>Получение</span>
+                    {order.deliveryMethod} · {order.city}
+                    {order.cdekCityCode ? ` · CDEK city ${order.cdekCityCode}` : ""}
+                  </p>
+                  <p>
+                    <span>ПВЗ / адрес</span>
+                    {order.pickupPointCode
+                      ? `${order.pickupPointCode} · ${order.pickupPointAddress}`
+                      : order.courierAddress ?? "—"}
+                  </p>
+                  <p>
+                    <span>Tracking</span>
+                    {order.trackingNumber ?? "—"}
+                  </p>
+                  <p>
+                    <span>Shipment</span>
+                    {order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : "—"}
+                    {order.lastErrorCode ? ` · ${order.lastErrorCode}` : ""}
+                  </p>
+                  <p>
+                    <span>CDEK order</span>
+                    {order.cdekOrderNumber ?? "—"}
+                  </p>
+                  <p>
+                    <span>Updated</span>
+                    {new Date(order.updatedAt).toLocaleString("ru-RU")}
+                  </p>
                 </div>
               </article>
             ))}

@@ -42,12 +42,18 @@ describe("admin backend authorization", () => {
     const layout = read("src/app/(admin)/admin/layout.tsx");
     const repository = read("src/modules/admin/infrastructure/admin-repository.server.ts");
     const orderDetailPage = read("src/app/(admin)/admin/orders/[orderNumber]/page.tsx");
+    const catalogPage = read("src/app/(admin)/admin/catalog/page.tsx");
+    const catalogDetailPage = read("src/app/(admin)/admin/catalog/[id]/page.tsx");
+    const systemPage = read("src/app/(admin)/admin/system/page.tsx");
 
     expect(layout).toContain("requireAdminAccess");
     expect(repository).toContain("await requireAdminAccess()");
     expect(repository).toContain("createSupabaseAdminClient");
     expect(orderDetailPage).toContain("getAdminOrderDetail");
     expect(orderDetailPage).not.toContain("getOrderDetailByNumber");
+    expect(catalogPage).toContain("listAdminCatalogForPanel");
+    expect(catalogDetailPage).toContain("getAdminCatalogDetail");
+    expect(systemPage).toContain("getAdminSystemOverview");
   });
 
   it("lists real admin orders and users through Supabase, not mocks", () => {
@@ -84,6 +90,62 @@ describe("admin backend authorization", () => {
     }
   });
 
+  it("uses real catalog tables, public read projection and audit logs for admin catalog operations", () => {
+    const repository = read("src/modules/admin/infrastructure/admin-repository.server.ts");
+    const actions = read("src/modules/admin/application/catalog-actions.ts");
+    const catalogPage = read("src/app/(admin)/admin/catalog/page.tsx");
+    const catalogDetailPage = read("src/app/(admin)/admin/catalog/[id]/page.tsx");
+
+    expect(repository).toContain('.from("watch_references")');
+    expect(repository).toContain('.from("catalog_offers")');
+    expect(repository).toContain('.from("watch_images")');
+    expect(repository).toContain('.from("catalog_public_read_models")');
+    expect(repository).toContain('.from("audit_logs")');
+    expect(repository).toContain("getCatalogReadDataset");
+    expect(repository).toContain("syncCatalogProjectionAfterUpdate");
+    expect(repository).toContain("admin.catalog.update");
+    expect(repository).toContain("admin.catalog_image.update");
+    expect(repository).toContain("admin.catalog.bulk_publication");
+    expect(actions).toContain('"use server"');
+    expect(actions).toContain("updateAdminCatalogReference");
+    expect(actions).toContain("updateAdminCatalogImage");
+    expect(actions).toContain("bulkUpdateAdminCatalogPublication");
+    expect(catalogPage).toContain("bulkUpdateAdminCatalogPublicationAction");
+    expect(catalogDetailPage).toContain("updateAdminCatalogReferenceAction");
+    expect(catalogDetailPage).toContain("updateAdminCatalogImageAction");
+    expect(`${repository}\n${actions}\n${catalogPage}\n${catalogDetailPage}`.toLowerCase()).not.toContain("mock");
+  });
+
+  it("requires admin access inside every catalog mutation, not only in the UI", () => {
+    const repository = read("src/modules/admin/infrastructure/admin-repository.server.ts");
+    const catalogMutations = [
+      "export async function updateAdminCatalogReference",
+      "export async function updateAdminCatalogImage",
+      "export async function bulkUpdateAdminCatalogPublication",
+    ];
+
+    for (const marker of catalogMutations) {
+      const start = repository.indexOf(marker);
+      const nextExport = repository.indexOf("\nexport async function", start + marker.length);
+      const body = repository.slice(start, nextExport === -1 ? undefined : nextExport);
+
+      expect(start).toBeGreaterThan(-1);
+      expect(body).toContain("await requireAdminAccess()");
+      expect(body).toContain('if (!access.allowed)');
+    }
+  });
+
+  it("keeps catalog image management on existing rows and preserves shared assets by default", () => {
+    const catalogDetailPage = read("src/app/(admin)/admin/catalog/[id]/page.tsx");
+    const deployScript = read("scripts/deploy-production.ps1");
+
+    expect(catalogDetailPage).toContain("watch_images");
+    expect(catalogDetailPage).toContain("shared catalog assets");
+    expect(catalogDetailPage).toContain("Upload/delete");
+    expect(deployScript).toContain("DeployCatalogAssets");
+    expect(deployScript).toContain("Catalog asset upload skipped for default code-only deploy.");
+  });
+
   it("keeps admin owner bootstrap explicit and does not create fake auth users", () => {
     const script = read("scripts/bootstrap-admin.mjs");
 
@@ -99,6 +161,9 @@ describe("admin backend authorization", () => {
     const appFiles = [
       "src/app/(admin)/admin/layout.tsx",
       "src/app/(admin)/admin/page.tsx",
+      "src/app/(admin)/admin/catalog/page.tsx",
+      "src/app/(admin)/admin/catalog/[id]/page.tsx",
+      "src/app/(admin)/admin/system/page.tsx",
       "src/app/(admin)/admin/orders/page.tsx",
       "src/app/(admin)/admin/orders/[orderNumber]/page.tsx",
       "src/app/(admin)/admin/users/page.tsx",
@@ -115,6 +180,9 @@ describe("admin backend authorization", () => {
   it("does not expose auth secrets to admin client UI files", () => {
     const uiFiles = [
       "src/app/(admin)/admin/page.tsx",
+      "src/app/(admin)/admin/catalog/page.tsx",
+      "src/app/(admin)/admin/catalog/[id]/page.tsx",
+      "src/app/(admin)/admin/system/page.tsx",
       "src/app/(admin)/admin/orders/page.tsx",
       "src/app/(admin)/admin/orders/[orderNumber]/page.tsx",
       "src/app/(admin)/admin/users/page.tsx",

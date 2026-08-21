@@ -25,11 +25,12 @@ export const accountNavigation: NavigationItem[] = [
 
 export const adminNavigation: NavigationItem[] = [
   { label: "Обзор", href: "/admin" },
-  { label: "Часы", href: "/admin/watches" },
-  { label: "Бренды", href: "/admin/brands" },
-  { label: "Brand Collections", href: "/admin/brand-collections" },
+  { label: "Catalog", href: "/admin/catalog" },
   { label: "Заказы", href: "/admin/orders" },
   { label: "Пользователи", href: "/admin/users" },
+  { label: "System", href: "/admin/system" },
+  { label: "Бренды", href: "/admin/brands" },
+  { label: "Brand Collections", href: "/admin/brand-collections" },
   { label: "Editorial Selections", href: "/admin/editorial-selections" },
   { label: "Контент", href: "/admin/content" },
   { label: "SEO", href: "/admin/seo" },
