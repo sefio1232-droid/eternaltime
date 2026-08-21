@@ -192,6 +192,10 @@ DEPLOY_CATALOG_ASSETS="$deployCatalogAssetsValue"
 UPDATE_PRODUCTION_ENV="$updateProductionEnvValue"
 BOOTSTRAP_SERVER="$bootstrapServerValue"
 APP_USER="eternaltime"
+CERT_PATH="/etc/letsencrypt/live/`$DOMAIN/fullchain.pem"
+CERT_KEY_PATH="/etc/letsencrypt/live/`$DOMAIN/privkey.pem"
+SSL_OPTIONS_PATH="/etc/letsencrypt/options-ssl-nginx.conf"
+SSL_DHPARAMS_PATH="/etc/letsencrypt/ssl-dhparams.pem"
 
 if [ "`$BOOTSTRAP_SERVER" = "1" ]; then
   apt-get update
@@ -286,11 +290,6 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 SERVICE
-
-  CERT_PATH="/etc/letsencrypt/live/`$DOMAIN/fullchain.pem"
-  CERT_KEY_PATH="/etc/letsencrypt/live/`$DOMAIN/privkey.pem"
-  SSL_OPTIONS_PATH="/etc/letsencrypt/options-ssl-nginx.conf"
-  SSL_DHPARAMS_PATH="/etc/letsencrypt/ssl-dhparams.pem"
 
   if [ -f "`$CERT_PATH" ] && [ -f "`$CERT_KEY_PATH" ] && [ -f "`$SSL_OPTIONS_PATH" ] && [ -f "`$SSL_DHPARAMS_PATH" ]; then
     cat >/etc/nginx/sites-available/eternal-time <<NGINX
