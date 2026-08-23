@@ -45,6 +45,9 @@ describe("admin backend authorization", () => {
     const catalogPage = read("src/app/(admin)/admin/catalog/page.tsx");
     const catalogDetailPage = read("src/app/(admin)/admin/catalog/[id]/page.tsx");
     const systemPage = read("src/app/(admin)/admin/system/page.tsx");
+    const importsPage = read("src/app/(admin)/admin/imports/page.tsx");
+    const importDetailPage = read("src/app/(admin)/admin/imports/[id]/page.tsx");
+    const userDetailPage = read("src/app/(admin)/admin/users/[id]/page.tsx");
 
     expect(layout).toContain("requireAdminAccess");
     expect(repository).toContain("await requireAdminAccess()");
@@ -54,6 +57,9 @@ describe("admin backend authorization", () => {
     expect(catalogPage).toContain("listAdminCatalogForPanel");
     expect(catalogDetailPage).toContain("getAdminCatalogDetail");
     expect(systemPage).toContain("getAdminSystemOverview");
+    expect(importsPage).toContain("listAdminImportBatches");
+    expect(importDetailPage).toContain("getAdminImportDetail");
+    expect(userDetailPage).toContain("getAdminUserDetail");
   });
 
   it("lists real admin orders and users through Supabase, not mocks", () => {
@@ -69,6 +75,52 @@ describe("admin backend authorization", () => {
     expect(usersPage).toContain("listAdminUsersForPanel");
     expect(ordersPage).toContain("listAdminOrdersForPanel");
     expect(`${repository}\n${ordersPage}\n${usersPage}`.toLowerCase()).not.toContain("mock");
+  });
+
+  it("keeps order and user admin lists paginated, searchable and sorted server-side", () => {
+    const repository = read("src/modules/admin/infrastructure/admin-repository.server.ts");
+    const ordersPage = read("src/app/(admin)/admin/orders/page.tsx");
+    const usersPage = read("src/app/(admin)/admin/users/page.tsx");
+
+    expect(repository).toContain("AdminOrderListResult");
+    expect(repository).toContain("AdminUserListResult");
+    expect(repository).toContain("function pagination");
+    expect(repository).toContain("sortAdminOrders");
+    expect(repository).toContain("sortAdminUsers");
+    expect(ordersPage).toContain("pageHref");
+    expect(ordersPage).toContain("paymentStatus");
+    expect(ordersPage).toContain("deliveryStatus");
+    expect(usersPage).toContain("role");
+    expect(usersPage).toContain("last_sign_in_desc");
+  });
+
+  it("surfaces order actions through existing guarded routes with confirmations", () => {
+    const actionButtons = read("src/components/commerce/order-actions.tsx");
+    const orderDetail = read("src/components/commerce/orders-view.tsx");
+
+    expect(actionButtons).toContain("window.confirm");
+    expect(actionButtons).toContain("/api/admin/orders/");
+    expect(actionButtons).toContain("/refund");
+    expect(actionButtons).toContain("/shipment/");
+    expect(orderDetail).toContain("AdminOrderStatusButton");
+    expect(orderDetail).toContain("AdminRefundButton");
+    expect(orderDetail).toContain("AdminCreateShipmentButton");
+    expect(orderDetail).toContain("Операционный timeline");
+  });
+
+  it("adds a read-only imports monitor using existing import tables and no unsafe apply path", () => {
+    const repository = read("src/modules/admin/infrastructure/admin-repository.server.ts");
+    const importsPage = read("src/app/(admin)/admin/imports/page.tsx");
+    const importDetailPage = read("src/app/(admin)/admin/imports/[id]/page.tsx");
+
+    expect(repository).toContain('.from("import_batches")');
+    expect(repository).toContain('.from("import_rows")');
+    expect(repository).toContain('.from("audit_logs")');
+    expect(importsPage).toContain("Read-only monitor");
+    expect(importsPage).toContain("DEFERRED");
+    expect(importDetailPage).toContain("Problem rows");
+    expect(`${importsPage}\n${importDetailPage}`.toLowerCase()).not.toContain("apply confirmation");
+    expect(`${importsPage}\n${importDetailPage}`).not.toContain("catalog-apply");
   });
 
   it("requires server-side admin authorization before every admin API operation", () => {
@@ -164,9 +216,12 @@ describe("admin backend authorization", () => {
       "src/app/(admin)/admin/catalog/page.tsx",
       "src/app/(admin)/admin/catalog/[id]/page.tsx",
       "src/app/(admin)/admin/system/page.tsx",
+      "src/app/(admin)/admin/imports/page.tsx",
+      "src/app/(admin)/admin/imports/[id]/page.tsx",
       "src/app/(admin)/admin/orders/page.tsx",
       "src/app/(admin)/admin/orders/[orderNumber]/page.tsx",
       "src/app/(admin)/admin/users/page.tsx",
+      "src/app/(admin)/admin/users/[id]/page.tsx",
       "src/lib/supabase/middleware.ts",
       "src/modules/auth/authorization.ts",
       "src/modules/auth/access-policy.ts",
@@ -183,9 +238,12 @@ describe("admin backend authorization", () => {
       "src/app/(admin)/admin/catalog/page.tsx",
       "src/app/(admin)/admin/catalog/[id]/page.tsx",
       "src/app/(admin)/admin/system/page.tsx",
+      "src/app/(admin)/admin/imports/page.tsx",
+      "src/app/(admin)/admin/imports/[id]/page.tsx",
       "src/app/(admin)/admin/orders/page.tsx",
       "src/app/(admin)/admin/orders/[orderNumber]/page.tsx",
       "src/app/(admin)/admin/users/page.tsx",
+      "src/app/(admin)/admin/users/[id]/page.tsx",
       "src/components/commerce/orders-view.tsx",
     ];
     const forbidden = /password|hash|access_token|refresh_token|session|SUPABASE_SECRET_KEY|SERVICE_ROLE/i;

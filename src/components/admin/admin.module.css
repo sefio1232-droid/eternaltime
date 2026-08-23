@@ -270,6 +270,19 @@
   padding: 0.65rem;
 }
 
+.galleryItem pre,
+.card pre {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-warm) 30%, transparent);
+  padding: 0.65rem;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .imageFrame {
   display: grid;
   aspect-ratio: 1;

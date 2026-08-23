@@ -48,6 +48,9 @@ export function AdminOrderStatusButton({
   const [pending, setPending] = useState(false);
 
   async function submit() {
+    const confirmed = window.confirm(`Перевести заказ ${orderNumber} в статус «${label}»?`);
+    if (!confirmed) return;
+
     setPending(true);
     setMessage("");
     const response = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/status`, {
@@ -171,6 +174,13 @@ function AdminShipmentButton({
   const [pending, setPending] = useState(false);
 
   async function submit() {
+    const confirmed = window.confirm(
+      endpoint === "create"
+        ? `Создать реальное отправление CDEK для заказа ${orderNumber}?`
+        : `Обновить статус CDEK для заказа ${orderNumber}?`,
+    );
+    if (!confirmed) return;
+
     setPending(true);
     setMessage("");
     const response = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/shipment/${endpoint}`, {
@@ -196,7 +206,7 @@ function AdminShipmentButton({
 }
 
 export function AdminCreateShipmentButton({ orderNumber }: Readonly<{ orderNumber: string }>) {
-  return <AdminShipmentButton orderNumber={orderNumber} endpoint="create" label="Создать отправление повторно" />;
+  return <AdminShipmentButton orderNumber={orderNumber} endpoint="create" label="Создать отправление CDEK" />;
 }
 
 export function AdminRefreshShipmentButton({ orderNumber }: Readonly<{ orderNumber: string }>) {

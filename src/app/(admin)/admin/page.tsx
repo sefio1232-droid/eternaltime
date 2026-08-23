@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const [stats, latestOrders] = await Promise.all([
     getAdminDashboardStats(),
-    listAdminOrdersForPanel(),
+    listAdminOrdersForPanel({ pageSize: 8 }),
   ]);
   const statCards = [
     ["Catalog total", stats.catalogTotal],
@@ -32,7 +32,17 @@ export default async function AdminPage() {
     ["Delivered", stats.delivered],
     ["Failed / problem", stats.failedProblemOrders],
     ["Пользователи", stats.registeredUsers],
+    ["Новые пользователи 14д", stats.recentRegistrations],
+    ["Blocked import rows", stats.importBlockedRows],
+    ["Manual review", stats.importManualReviewRows],
   ] as const;
+  const warnings = [
+    stats.catalogWithoutImage ? `Без фото: ${stats.catalogWithoutImage}` : null,
+    stats.catalogWithoutPrice ? `Без цены: ${stats.catalogWithoutPrice}` : null,
+    stats.failedPaymentAttempts ? `Ошибки оплат: ${stats.failedPaymentAttempts}` : null,
+    stats.failedShipments ? `Ошибки CDEK: ${stats.failedShipments}` : null,
+    stats.recentImportErrors ? `Ошибки импорта: ${stats.recentImportErrors}` : null,
+  ].filter(Boolean);
 
   return (
     <EditorialContainer className={`${styles.ordersPage} public-page`}>
@@ -58,11 +68,36 @@ export default async function AdminPage() {
             <Link className={adminStyles.linkButton} href="/admin/catalog">
               Открыть Catalog
             </Link>
+            <Link className={adminStyles.linkButton} href="/admin/orders">
+              Заказы
+            </Link>
+            <Link className={adminStyles.linkButton} href="/admin/imports">
+              Импорты
+            </Link>
             <Link className={adminStyles.linkButton} href="/admin/system">
               System
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className={adminStyles.card}>
+        <div className={adminStyles.sectionHeader}>
+          <div>
+            <p className={adminStyles.eyebrow}>Warnings</p>
+            <h2>Операционные предупреждения</h2>
+          </div>
+          {stats.latestImportSource ? (
+            <span className={adminStyles.status}>Latest import: {stats.latestImportStatus} · {stats.latestImportSource}</span>
+          ) : null}
+        </div>
+        {warnings.length ? (
+          <div className={adminStyles.issueRow}>
+            {warnings.map((warning) => <span key={warning} className={adminStyles.issue}>{warning}</span>)}
+          </div>
+        ) : (
+          <p className={adminStyles.note}>Критичных предупреждений по текущим real-data метрикам нет.</p>
+        )}
       </section>
 
       <section className={styles.panel}>
@@ -90,9 +125,9 @@ export default async function AdminPage() {
             Все заказы
           </Link>
         </div>
-        {latestOrders.length ? (
+        {latestOrders.items.length ? (
           <div className={styles.adminList}>
-            {latestOrders.slice(0, 8).map((order) => (
+            {latestOrders.items.map((order) => (
               <article key={order.id} className={styles.adminListItem}>
                 <div>
                   <Link className={styles.lineTitle} href={`/admin/orders/${order.orderNumber}`}>

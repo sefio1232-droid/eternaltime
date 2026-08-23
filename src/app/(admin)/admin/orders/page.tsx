@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
+import styles from "@/components/admin/admin.module.css";
 import {
   formatCommerceMoney,
   orderStatusLabels,
@@ -8,7 +9,6 @@ import {
   shipmentStatusLabels,
 } from "@/modules/commerce/domain/labels";
 import { listAdminOrdersForPanel, type AdminOrderFilters } from "@/modules/admin/infrastructure/admin-repository.server";
-import styles from "@/components/commerce/commerce.module.css";
 
 export const metadata: Metadata = { title: "Заказы" };
 export const dynamic = "force-dynamic";
@@ -22,6 +22,26 @@ function value(params: Record<string, string | string[] | undefined>, key: strin
   return Array.isArray(raw) ? raw[0] : raw;
 }
 
+function numberValue(params: Record<string, string | string[] | undefined>, key: string) {
+  const parsed = Number(value(params, key));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function pageHref(page: number, filters: AdminOrderFilters) {
+  const params = new URLSearchParams();
+  if (filters.query) params.set("q", filters.query);
+  if (filters.orderNumber) params.set("orderNumber", filters.orderNumber);
+  if (filters.customer) params.set("customer", filters.customer);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.paymentStatus) params.set("paymentStatus", filters.paymentStatus);
+  if (filters.deliveryStatus) params.set("deliveryStatus", filters.deliveryStatus);
+  if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.sort) params.set("sort", filters.sort);
+  params.set("page", String(page));
+  return `/admin/orders?${params.toString()}`;
+}
+
 export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageProps) {
   const params = await searchParams;
   const filters: AdminOrderFilters = {
@@ -33,168 +53,154 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
     customer: value(params, "customer"),
     orderNumber: value(params, "orderNumber"),
     query: value(params, "q"),
+    sort: (value(params, "sort") ?? "created_desc") as AdminOrderFilters["sort"],
+    page: numberValue(params, "page"),
+    pageSize: 25,
   };
-  const orders = await listAdminOrdersForPanel(filters);
+  const result = await listAdminOrdersForPanel(filters);
 
   return (
-    <EditorialContainer className={`${styles.ordersPage} public-page`}>
-      <header className={styles.commerceHeading}>
-        <p className={styles.eyebrow}>Admin</p>
-        <h1>Заказы</h1>
-        <span>
-          List view показывает основные поля и фильтры. Полная операционная карточка открывается в detail view.
-        </span>
+    <EditorialContainer className={`${styles.shell} public-page`}>
+      <header className={styles.header}>
+        <div className={styles.headerRow}>
+          <div>
+            <p className={styles.eyebrow}>Admin / Orders</p>
+            <h1>Заказы</h1>
+          </div>
+          <p className={styles.note}>Найдено: {result.total}. Серверная фильтрация, сортировка и pagination без загрузки всей базы в браузер.</p>
+        </div>
       </header>
 
-      <section className={styles.panel}>
-        <form className={styles.adminFilters}>
-          <label>
-            Поиск
-            <input name="q" defaultValue={filters.query ?? ""} placeholder="order, email, phone, tracking" />
+      <section className={styles.card}>
+        <form className={styles.filters}>
+          <label className={styles.field}>
+            <span className={styles.label}>Поиск</span>
+            <input name="q" defaultValue={filters.query ?? ""} placeholder="номер, email, телефон, tracking" />
           </label>
-          <label>
-            Order number
+          <label className={styles.field}>
+            <span className={styles.label}>Номер</span>
             <input name="orderNumber" defaultValue={filters.orderNumber ?? ""} />
           </label>
-          <label>
-            Customer
-            <input name="customer" defaultValue={filters.customer ?? ""} placeholder="email / phone / name" />
+          <label className={styles.field}>
+            <span className={styles.label}>Клиент</span>
+            <input name="customer" defaultValue={filters.customer ?? ""} placeholder="email / телефон / имя" />
           </label>
-          <label>
-            Status
-            <select name="status" defaultValue={filters.status ?? ""}>
-              <option value="">Все</option>
-              {Object.entries(orderStatusLabels).map(([status, label]) => (
-                <option key={status} value={status}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Payment
+          <label className={styles.field}>
+            <span className={styles.label}>Оплата</span>
             <select name="paymentStatus" defaultValue={filters.paymentStatus ?? ""}>
               <option value="">Все</option>
               {Object.entries(paymentStatusLabels).map(([status, label]) => (
-                <option key={status} value={status}>
-                  {label}
-                </option>
+                <option key={status} value={status}>{label}</option>
               ))}
             </select>
           </label>
-          <label>
-            Delivery
+          <label className={styles.field}>
+            <span className={styles.label}>Заказ</span>
+            <select name="status" defaultValue={filters.status ?? ""}>
+              <option value="">Все</option>
+              {Object.entries(orderStatusLabels).map(([status, label]) => (
+                <option key={status} value={status}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Доставка</span>
             <select name="deliveryStatus" defaultValue={filters.deliveryStatus ?? ""}>
               <option value="">Все</option>
               {Object.entries(shipmentStatusLabels).map(([status, label]) => (
-                <option key={status} value={status}>
-                  {label}
-                </option>
+                <option key={status} value={status}>{label}</option>
               ))}
             </select>
           </label>
-          <label>
-            Date from
+          <label className={styles.field}>
+            <span className={styles.label}>Дата от</span>
             <input name="dateFrom" type="date" defaultValue={filters.dateFrom ?? ""} />
           </label>
-          <label>
-            Date to
+          <label className={styles.field}>
+            <span className={styles.label}>Дата до</span>
             <input name="dateTo" type="date" defaultValue={filters.dateTo ?? ""} />
           </label>
-          <button className={styles.quietButton} type="submit">
-            Фильтровать
-          </button>
-          <Link className={styles.quietButton} href="/admin/orders">
-            Сбросить
-          </Link>
+          <label className={styles.field}>
+            <span className={styles.label}>Сортировка</span>
+            <select name="sort" defaultValue={filters.sort ?? "created_desc"}>
+              <option value="created_desc">Новые сверху</option>
+              <option value="created_asc">Старые сверху</option>
+              <option value="updated_desc">Недавно обновлены</option>
+              <option value="total_desc">Сумма ↓</option>
+              <option value="total_asc">Сумма ↑</option>
+            </select>
+          </label>
+          <div className={styles.actions}>
+            <button className={styles.button} type="submit">Применить</button>
+            <Link className={styles.linkButton} href="/admin/orders">Сбросить</Link>
+          </div>
         </form>
       </section>
 
-      <section className={styles.panel}>
-        {orders.length ? (
-          <div className={styles.adminList}>
-            {orders.map((order) => (
-              <article key={order.id} className={styles.adminOrderCard}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <p className={styles.eyebrow}>{new Date(order.createdAt).toLocaleString("ru-RU")}</p>
-                    <h2 className={styles.lineTitle}>
+      <section className={styles.card}>
+        {result.items.length ? (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Заказ</th>
+                  <th>Создан</th>
+                  <th>Клиент</th>
+                  <th>Сумма</th>
+                  <th>Оплата</th>
+                  <th>Статус</th>
+                  <th>Доставка</th>
+                  <th>CDEK</th>
+                  <th>Обновлён</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.items.map((order) => (
+                  <tr key={order.id}>
+                    <td>
                       <Link href={`/admin/orders/${order.orderNumber}`}>№{order.orderNumber}</Link>
-                    </h2>
-                    <p className={styles.lineMeta}>ID: {order.id}</p>
-                  </div>
-                  <div>
-                    <strong>{formatCommerceMoney(order.totalAmountMinor)}</strong>
-                    <p className={styles.lineMeta}>
-                      {paymentStatusLabels[order.paymentStatus]} · {orderStatusLabels[order.orderStatus]}
-                    </p>
-                  </div>
-                </div>
-                <div className={styles.adminOrderGrid}>
-                  <p>
-                    <span>Покупатель</span>
-                    {order.customerName} · {order.customerEmail} · {order.customerPhone}
-                  </p>
-                  <p>
-                    <span>Позиции</span>
-                    {order.itemSummary}
-                  </p>
-                  <p>
-                    <span>Товары</span>
-                    {formatCommerceMoney(order.productSubtotalMinor)}
-                  </p>
-                  <p>
-                    <span>Доставка для клиента</span>
-                    {formatCommerceMoney(order.customerDeliveryAmountMinor)}
-                  </p>
-                  <p>
-                    <span>CDEK actual cost</span>
-                    {formatCommerceMoney(order.carrierActualCostMinor)}
-                  </p>
-                  <p>
-                    <span>YooKassa</span>
-                    {order.yookassaPaymentId ?? "—"}
-                  </p>
-                  <p>
-                    <span>Получение</span>
-                    {order.deliveryMethod} · {order.city}
-                    {order.cdekCityCode ? ` · CDEK city ${order.cdekCityCode}` : ""}
-                  </p>
-                  <p>
-                    <span>ПВЗ / адрес</span>
-                    {order.pickupPointCode
-                      ? `${order.pickupPointCode} · ${order.pickupPointAddress}`
-                      : order.courierAddress ?? "—"}
-                  </p>
-                  <p>
-                    <span>Tracking</span>
-                    {order.trackingNumber ?? "—"}
-                  </p>
-                  <p>
-                    <span>Shipment</span>
-                    {order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : "—"}
-                    {order.lastErrorCode ? ` · ${order.lastErrorCode}` : ""}
-                  </p>
-                  <p>
-                    <span>CDEK order</span>
-                    {order.cdekOrderNumber ?? "—"}
-                  </p>
-                  <p>
-                    <span>Updated</span>
-                    {new Date(order.updatedAt).toLocaleString("ru-RU")}
-                  </p>
-                </div>
-              </article>
-            ))}
+                      <p className={styles.meta}>{order.id}</p>
+                    </td>
+                    <td>{new Date(order.createdAt).toLocaleString("ru-RU")}</td>
+                    <td>
+                      <strong>{order.customerName}</strong>
+                      <p className={styles.meta}>{order.customerEmail}</p>
+                      <p className={styles.meta}>{order.customerPhone}</p>
+                    </td>
+                    <td>{formatCommerceMoney(order.totalAmountMinor)}</td>
+                    <td><span className={styles.status}>{paymentStatusLabels[order.paymentStatus]}</span></td>
+                    <td><span className={styles.status}>{orderStatusLabels[order.orderStatus]}</span></td>
+                    <td>
+                      <span className={styles.status}>{order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : "Нет отправления"}</span>
+                      <p className={styles.meta}>{order.deliveryMethod} · {order.city}</p>
+                    </td>
+                    <td>
+                      <p className={styles.meta}>{order.cdekOrderNumber ?? "—"}</p>
+                      <p className={styles.meta}>{order.trackingNumber ?? "—"}</p>
+                      {order.lastErrorCode ? <span className={styles.issue}>{order.lastErrorCode}</span> : null}
+                    </td>
+                    <td>{new Date(order.updatedAt).toLocaleString("ru-RU")}</td>
+                    <td><Link className={styles.linkButton} href={`/admin/orders/${order.orderNumber}`}>Открыть</Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
-          <div className={styles.emptyPanel}>
+          <div className={styles.empty}>
             <p className={styles.eyebrow}>Нет данных</p>
             <h2>Заказы не найдены</h2>
             <p>Измените фильтры или дождитесь первого реального checkout.</p>
           </div>
         )}
       </section>
+
+      <nav className={styles.pagination} aria-label="Навигация по заказам">
+        {result.page > 1 ? <Link className={styles.linkButton} href={pageHref(result.page - 1, filters)}>Назад</Link> : null}
+        <span className={styles.meta}>Страница {result.page} из {result.pageCount}</span>
+        {result.page < result.pageCount ? <Link className={styles.linkButton} href={pageHref(result.page + 1, filters)}>Вперёд</Link> : null}
+      </nav>
     </EditorialContainer>
   );
 }

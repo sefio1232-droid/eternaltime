@@ -25,6 +25,9 @@ export type AdminOrderFilters = {
   dateTo?: string;
   customer?: string;
   orderNumber?: string;
+  sort?: "created_desc" | "created_asc" | "updated_desc" | "total_desc" | "total_asc" | "";
+  page?: number;
+  pageSize?: number;
 };
 
 export type AdminOrderListItem = {
@@ -59,6 +62,14 @@ export type AdminOrderListItem = {
   updatedAt: string;
 };
 
+export type AdminOrderListResult = {
+  items: AdminOrderListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+};
+
 export type AdminDashboardStats = {
   catalogTotal: number;
   catalogPublished: number;
@@ -76,7 +87,15 @@ export type AdminDashboardStats = {
   delivered: number;
   failedProblemOrders: number;
   registeredUsers: number;
+  recentRegistrations: number;
   paidRevenueMinor: number;
+  latestImportSource: string | null;
+  latestImportStatus: string | null;
+  importBlockedRows: number;
+  importManualReviewRows: number;
+  recentImportErrors: number;
+  failedPaymentAttempts: number;
+  failedShipments: number;
 };
 
 export type AdminCatalogFilters = {
@@ -266,6 +285,93 @@ export type AdminUserListItem = {
   collectionWatchesCount: number;
 };
 
+export type AdminUserFilters = {
+  query?: string;
+  role?: string;
+  sort?: "registered_desc" | "registered_asc" | "last_sign_in_desc" | "orders_desc" | "paid_desc" | "";
+  page?: number;
+  pageSize?: number;
+};
+
+export type AdminUserListResult = {
+  items: AdminUserListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  roles: Array<{ code: string; count: number }>;
+};
+
+export type AdminUserDetail = AdminUserListItem & {
+  preferredContact: string | null;
+  recentOrders: AdminOrderListItem[];
+  collection: Array<{
+    id: string;
+    displayName: string;
+    sourceKind: string;
+    ownershipStatus: string;
+    createdAt: string;
+  }>;
+};
+
+export type AdminImportFilters = {
+  query?: string;
+  status?: string;
+  sourceKind?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type AdminImportBatchListItem = {
+  id: string;
+  createdAt: string;
+  appliedAt: string | null;
+  uploadedBy: string | null;
+  sourceFilename: string;
+  sourceKind: string;
+  status: string;
+  totalRows: number;
+  eligibleRows: number;
+  manualReviewRows: number;
+  blockedRows: number;
+  skippedRows: number;
+  appliedRows: number;
+  errorRows: number;
+};
+
+export type AdminImportListResult = {
+  items: AdminImportBatchListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  statuses: Array<{ status: string; count: number }>;
+  sourceKinds: Array<{ sourceKind: string; count: number }>;
+};
+
+export type AdminImportRowItem = {
+  id: string;
+  rowNumber: number;
+  status: string;
+  errors: Json;
+  warnings: Json;
+  raw: Json;
+  normalized: Json;
+  createdAt: string;
+};
+
+export type AdminImportDetail = AdminImportBatchListItem & {
+  mapping: Json;
+  summary: Json;
+  auditLogs: Array<{
+    id: string;
+    action: string;
+    createdAt: string;
+    metadata: Json;
+  }>;
+  problemRows: AdminImportRowItem[];
+};
+
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items?: Array<Database["public"]["Tables"]["order_items"]["Row"]> | null;
   order_shipments?: Database["public"]["Tables"]["order_shipments"]["Row"] | null;
@@ -275,6 +381,8 @@ type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
 type WatchReferenceRow = Database["public"]["Tables"]["watch_references"]["Row"];
 type CatalogOfferRow = Database["public"]["Tables"]["catalog_offers"]["Row"];
 type WatchImageRow = Database["public"]["Tables"]["watch_images"]["Row"];
+type ImportBatchRow = Database["public"]["Tables"]["import_batches"]["Row"];
+type ImportRow = Database["public"]["Tables"]["import_rows"]["Row"];
 
 type AdminCatalogRawRow = WatchReferenceRow & {
   brands?: { id: string; name: string; slug: string } | null;
@@ -581,7 +689,24 @@ function matchesSearch(order: AdminOrderListItem, filters: AdminOrderFilters): b
   return true;
 }
 
-export async function listAdminOrdersForPanel(filters: AdminOrderFilters = {}): Promise<AdminOrderListItem[]> {
+function pagination(input: { page?: number; pageSize?: number; total: number }, defaults = { pageSize: 25 }) {
+  const pageSize = Math.min(Math.max(input.pageSize ?? defaults.pageSize, 10), 100);
+  const pageCount = Math.max(1, Math.ceil(input.total / pageSize));
+  const page = Math.min(Math.max(input.page ?? 1, 1), pageCount);
+  return { page, pageSize, pageCount, from: (page - 1) * pageSize, to: page * pageSize };
+}
+
+function sortAdminOrders(items: AdminOrderListItem[], sort: AdminOrderFilters["sort"]) {
+  return [...items].sort((left, right) => {
+    if (sort === "created_asc") return left.createdAt.localeCompare(right.createdAt);
+    if (sort === "updated_desc") return right.updatedAt.localeCompare(left.updatedAt);
+    if (sort === "total_desc") return right.totalAmountMinor - left.totalAmountMinor;
+    if (sort === "total_asc") return left.totalAmountMinor - right.totalAmountMinor;
+    return right.createdAt.localeCompare(left.createdAt);
+  });
+}
+
+export async function listAdminOrdersForPanel(filters: AdminOrderFilters = {}): Promise<AdminOrderListResult> {
   const client = await requireAdminClient();
   const { data, error } = await client
     .from("orders")
@@ -593,7 +718,18 @@ export async function listAdminOrdersForPanel(filters: AdminOrderFilters = {}): 
     throw new Error(error.message);
   }
 
-  return ((data ?? []) as unknown as OrderRow[]).map(mapOrderListItem).filter((order) => matchesSearch(order, filters));
+  const filtered = sortAdminOrders(
+    ((data ?? []) as unknown as OrderRow[]).map(mapOrderListItem).filter((order) => matchesSearch(order, filters)),
+    filters.sort,
+  );
+  const page = pagination({ total: filtered.length, page: filters.page, pageSize: filters.pageSize });
+  return {
+    items: filtered.slice(page.from, page.to),
+    total: filtered.length,
+    page: page.page,
+    pageSize: page.pageSize,
+    pageCount: page.pageCount,
+  };
 }
 
 async function listAdminCatalogRawRows(client: Client): Promise<AdminCatalogRawRow[]> {
@@ -1150,17 +1286,140 @@ export async function getAdminOrderDetail(orderNumber: string): Promise<Commerce
   return getOrderDetailByNumber(orderNumber, { admin: true }, client);
 }
 
+function rowCountByStatus(rows: Array<{ status: string }>, status: string) {
+  return rows.filter((row) => row.status === status).length;
+}
+
+function mapImportBatch(batch: ImportBatchRow, rows: ImportRow[]): AdminImportBatchListItem {
+  const batchRows = rows.filter((row) => row.import_batch_id === batch.id);
+  return {
+    id: batch.id,
+    createdAt: batch.created_at,
+    appliedAt: batch.applied_at,
+    uploadedBy: batch.uploaded_by,
+    sourceFilename: batch.source_filename,
+    sourceKind: batch.source_kind,
+    status: batch.status,
+    totalRows: batchRows.length,
+    eligibleRows: rowCountByStatus(batchRows, "eligible"),
+    manualReviewRows: rowCountByStatus(batchRows, "manual_review"),
+    blockedRows: rowCountByStatus(batchRows, "blocked"),
+    skippedRows: rowCountByStatus(batchRows, "skipped"),
+    appliedRows: rowCountByStatus(batchRows, "applied"),
+    errorRows: batchRows.filter((row) => {
+      const errors = row.errors_json;
+      return Array.isArray(errors) ? errors.length > 0 : Boolean(errors && typeof errors === "object" && Object.keys(errors).length);
+    }).length,
+  };
+}
+
+function matchesImport(batch: AdminImportBatchListItem, filters: AdminImportFilters): boolean {
+  const query = filters.query?.trim().toLowerCase();
+  if (filters.status && batch.status !== filters.status) return false;
+  if (filters.sourceKind && batch.sourceKind !== filters.sourceKind) return false;
+  if (query) {
+    const haystack = [batch.sourceFilename, batch.sourceKind, batch.status, batch.id].join(" ").toLowerCase();
+    if (!haystack.includes(query)) return false;
+  }
+  return true;
+}
+
+export async function listAdminImportBatches(filters: AdminImportFilters = {}): Promise<AdminImportListResult> {
+  const client = await requireAdminClient();
+  const [{ data: batches, error: batchError }, { data: rows, error: rowError }] = await Promise.all([
+    client.from("import_batches").select("*").order("created_at", { ascending: false }).limit(500),
+    client.from("import_rows").select("*").order("created_at", { ascending: false }).limit(10000),
+  ]);
+  if (batchError || rowError) {
+    throw new Error(batchError?.message ?? rowError?.message ?? "import_read_failed");
+  }
+
+  const allItems = ((batches ?? []) as ImportBatchRow[]).map((batch) => mapImportBatch(batch, (rows ?? []) as ImportRow[]));
+  const filtered = allItems.filter((batch) => matchesImport(batch, filters));
+  const statuses = [...allItems.reduce((map, batch) => {
+    map.set(batch.status, (map.get(batch.status) ?? 0) + 1);
+    return map;
+  }, new Map<string, number>()).entries()].map(([status, count]) => ({ status, count }));
+  const sourceKinds = [...allItems.reduce((map, batch) => {
+    map.set(batch.sourceKind, (map.get(batch.sourceKind) ?? 0) + 1);
+    return map;
+  }, new Map<string, number>()).entries()].map(([sourceKind, count]) => ({ sourceKind, count }));
+  const page = pagination({ total: filtered.length, page: filters.page, pageSize: filters.pageSize });
+
+  return {
+    items: filtered.slice(page.from, page.to),
+    total: filtered.length,
+    page: page.page,
+    pageSize: page.pageSize,
+    pageCount: page.pageCount,
+    statuses: statuses.sort((left, right) => left.status.localeCompare(right.status)),
+    sourceKinds: sourceKinds.sort((left, right) => left.sourceKind.localeCompare(right.sourceKind)),
+  };
+}
+
+export async function getAdminImportDetail(batchId: string): Promise<AdminImportDetail | null> {
+  const client = await requireAdminClient();
+  const [{ data: batch }, { data: rows }, { data: logs }] = await Promise.all([
+    client.from("import_batches").select("*").eq("id", batchId).maybeSingle(),
+    client
+      .from("import_rows")
+      .select("*")
+      .eq("import_batch_id", batchId)
+      .in("status", ["blocked", "manual_review", "failed"])
+      .order("row_number", { ascending: true })
+      .limit(200),
+    client
+      .from("audit_logs")
+      .select("id,action,created_at,safe_metadata_json")
+      .eq("entity_type", "import_batch")
+      .eq("entity_id", batchId)
+      .order("created_at", { ascending: false })
+      .limit(30),
+  ]);
+  if (!batch) return null;
+
+  const { data: allRows } = await client.from("import_rows").select("*").eq("import_batch_id", batchId).limit(10000);
+  const base = mapImportBatch(batch as ImportBatchRow, (allRows ?? []) as ImportRow[]);
+  return {
+    ...base,
+    mapping: batch.mapping_json,
+    summary: batch.summary_json,
+    auditLogs: (logs ?? []).map((log) => ({
+      id: log.id,
+      action: log.action,
+      createdAt: log.created_at,
+      metadata: log.safe_metadata_json,
+    })),
+    problemRows: ((rows ?? []) as ImportRow[]).map((row) => ({
+      id: row.id,
+      rowNumber: row.row_number,
+      status: row.status,
+      errors: row.errors_json,
+      warnings: row.warnings_json,
+      raw: row.raw_json,
+      normalized: row.normalized_json,
+      createdAt: row.created_at,
+    })),
+  };
+}
+
 export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
   const client = await requireAdminClient();
-  const [catalogStats, { data: orders }, { data: shipments }, authUsers] = await Promise.all([
+  const [catalogStats, { data: orders }, { data: shipments }, { data: attempts }, { data: batches }, { data: importRows }, authUsers] =
+    await Promise.all([
     getAdminCatalogStats(),
     client.from("orders").select("id, status, payment_status, total_amount_minor"),
     client.from("order_shipments").select("shipment_status, last_error_code"),
+    client.from("payment_attempts").select("status, failure_reason"),
+    client.from("import_batches").select("*").order("created_at", { ascending: false }).limit(1),
+    client.from("import_rows").select("status, errors_json").limit(10000),
     client.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ]);
 
   const orderRows = (orders ?? []) as Array<Pick<OrderRow, "id" | "status" | "payment_status" | "total_amount_minor">>;
   const shipmentRows = (shipments ?? []) as Array<{ shipment_status: OrderShipmentStatus; last_error_code: string | null }>;
+  const recentCutoff = Date.now() - 1000 * 60 * 60 * 24 * 14;
+  const importRowItems = (importRows ?? []) as Array<{ status: string; errors_json: Json }>;
 
   return {
     ...catalogStats,
@@ -1180,9 +1439,23 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
       shipment.shipment_status === "creation_failed" || shipment.shipment_status === "problem" || Boolean(shipment.last_error_code),
     ).length,
     registeredUsers: authUsers.data.users.length,
+    recentRegistrations: authUsers.data.users.filter((user) => {
+      const created = user.created_at ? new Date(user.created_at).getTime() : 0;
+      return created >= recentCutoff;
+    }).length,
     paidRevenueMinor: orderRows
       .filter((order) => order.payment_status === "succeeded")
       .reduce((sum, order) => sum + order.total_amount_minor, 0),
+    latestImportSource: batches?.[0]?.source_filename ?? null,
+    latestImportStatus: batches?.[0]?.status ?? null,
+    importBlockedRows: importRowItems.filter((row) => row.status === "blocked").length,
+    importManualReviewRows: importRowItems.filter((row) => row.status === "manual_review").length,
+    recentImportErrors: importRowItems.filter((row) => {
+      const errors = row.errors_json;
+      return Array.isArray(errors) ? errors.length > 0 : Boolean(errors && typeof errors === "object" && Object.keys(errors).length);
+    }).length,
+    failedPaymentAttempts: (attempts ?? []).filter((attempt) => attempt.status === "failed" || Boolean(attempt.failure_reason)).length,
+    failedShipments: shipmentRows.filter((shipment) => shipment.shipment_status === "creation_failed" || Boolean(shipment.last_error_code)).length,
   };
 }
 
@@ -1231,7 +1504,30 @@ export async function getAdminSystemOverview(): Promise<AdminSystemOverview> {
   };
 }
 
-export async function listAdminUsersForPanel(): Promise<AdminUserListItem[]> {
+function matchesUser(user: AdminUserListItem, filters: AdminUserFilters): boolean {
+  const query = filters.query?.trim().toLowerCase();
+  if (filters.role && !user.roles.includes(filters.role as RoleCode)) return false;
+  if (query) {
+    const haystack = [user.email, user.displayName, user.phone, user.city, user.userId]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (!haystack.includes(query)) return false;
+  }
+  return true;
+}
+
+function sortAdminUsers(items: AdminUserListItem[], sort: AdminUserFilters["sort"]) {
+  return [...items].sort((left, right) => {
+    if (sort === "registered_asc") return String(left.createdAt ?? "").localeCompare(String(right.createdAt ?? ""));
+    if (sort === "last_sign_in_desc") return String(right.lastSignInAt ?? "").localeCompare(String(left.lastSignInAt ?? ""));
+    if (sort === "orders_desc") return right.ordersCount - left.ordersCount;
+    if (sort === "paid_desc") return right.lifetimePaidAmountMinor - left.lifetimePaidAmountMinor;
+    return String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? ""));
+  });
+}
+
+async function listAdminUsersRaw(): Promise<AdminUserListItem[]> {
   const client = await requireAdminClient();
   const [{ data: profiles }, { data: roleRows }, { data: orders }, { data: watches }, authUsers] = await Promise.all([
     client.from("profiles").select("id, display_name, phone, city, created_at"),
@@ -1297,5 +1593,65 @@ export async function listAdminUsersForPanel(): Promise<AdminUserListItem[]> {
     };
   });
 
-  return users.sort((a, b) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")));
+  return users;
+}
+
+export async function listAdminUsersForPanel(filters: AdminUserFilters = {}): Promise<AdminUserListResult> {
+  const users = await listAdminUsersRaw();
+  const filtered = sortAdminUsers(users.filter((user) => matchesUser(user, filters)), filters.sort);
+  const roles = [...users.reduce((map, user) => {
+    for (const role of user.roles.length ? user.roles : ["customer"]) {
+      map.set(role, (map.get(role) ?? 0) + 1);
+    }
+    return map;
+  }, new Map<string, number>()).entries()]
+    .map(([code, count]) => ({ code, count }))
+    .sort((left, right) => left.code.localeCompare(right.code));
+  const page = pagination({ total: filtered.length, page: filters.page, pageSize: filters.pageSize });
+
+  return {
+    items: filtered.slice(page.from, page.to),
+    total: filtered.length,
+    page: page.page,
+    pageSize: page.pageSize,
+    pageCount: page.pageCount,
+    roles,
+  };
+}
+
+export async function getAdminUserDetail(userId: string): Promise<AdminUserDetail | null> {
+  const client = await requireAdminClient();
+  const users = await listAdminUsersRaw();
+  const user = users.find((item) => item.userId === userId);
+  if (!user) return null;
+
+  const [{ data: profile }, { data: orders }, { data: watches }] = await Promise.all([
+    client.from("profiles").select("preferred_contact").eq("id", userId).maybeSingle(),
+    client
+      .from("orders")
+      .select("*, order_items(*), order_shipments(*), payment_attempts(*)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(12),
+    client
+      .from("user_watches")
+      .select("id, display_name, source_kind, ownership_status, created_at")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
+
+  return {
+    ...user,
+    preferredContact: profile?.preferred_contact ?? null,
+    recentOrders: ((orders ?? []) as unknown as OrderRow[]).map(mapOrderListItem),
+    collection: (watches ?? []).map((watch) => ({
+      id: watch.id,
+      displayName: watch.display_name,
+      sourceKind: watch.source_kind,
+      ownershipStatus: watch.ownership_status,
+      createdAt: watch.created_at,
+    })),
+  };
 }
