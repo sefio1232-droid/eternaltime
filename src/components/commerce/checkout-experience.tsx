@@ -75,6 +75,7 @@ declare global {
 }
 
 const cdekWidgetScriptId = "cdek-widget-v3-script";
+const cdekWidgetScriptTimeoutMs = 15_000;
 
 const emptyContact: CheckoutContactInput = {
   recipientName: "",
@@ -107,14 +108,81 @@ function sourceItems(source: CheckoutSource, cartItems: CommerceCartItemInput[])
   return source.type === "buy_now" ? [source.item] : cartItems;
 }
 
+function createCheckoutSubmissionKey() {
+  const browserCrypto = typeof crypto === "undefined" ? null : crypto;
+
+  if (browserCrypto && typeof browserCrypto.randomUUID === "function") {
+    return browserCrypto.randomUUID();
+  }
+
+  const bytes = new Uint8Array(16);
+  if (browserCrypto && typeof browserCrypto.getRandomValues === "function") {
+    browserCrypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex
+    .slice(8, 10)
+    .join("")}-${hex.slice(10, 16).join("")}`;
+}
+
 function loadScript(src: string): Promise<void> {
   if (window.CDEKWidget) return Promise.resolve();
 
-  const existing = document.getElementById(cdekWidgetScriptId) as HTMLScriptElement | null;
+  let existing = document.getElementById(cdekWidgetScriptId) as HTMLScriptElement | null;
+  if (existing?.dataset.status === "failed") {
+    existing.remove();
+    existing = null;
+  }
+
   if (existing) {
+    const pendingScript = existing;
     return new Promise((resolve, reject) => {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("cdek_widget_script_failed")), { once: true });
+      if (pendingScript.dataset.status === "loaded") {
+        if (window.CDEKWidget) {
+          resolve();
+        } else {
+          reject(new Error("cdek_widget_constructor_missing"));
+        }
+        return;
+      }
+
+      const timer = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("cdek_widget_script_timeout"));
+      }, cdekWidgetScriptTimeoutMs);
+
+      function cleanup() {
+        window.clearTimeout(timer);
+        pendingScript.removeEventListener("load", onLoad);
+        pendingScript.removeEventListener("error", onError);
+      }
+
+      function onLoad() {
+        cleanup();
+        pendingScript.dataset.status = "loaded";
+        if (window.CDEKWidget) {
+          resolve();
+        } else {
+          reject(new Error("cdek_widget_constructor_missing"));
+        }
+      }
+
+      function onError() {
+        cleanup();
+        pendingScript.dataset.status = "failed";
+        reject(new Error("cdek_widget_script_failed"));
+      }
+
+      pendingScript.addEventListener("load", onLoad, { once: true });
+      pendingScript.addEventListener("error", onError, { once: true });
     });
   }
 
@@ -124,8 +192,38 @@ function loadScript(src: string): Promise<void> {
     script.src = src;
     script.async = true;
     script.charset = "utf-8";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("cdek_widget_script_failed"));
+    script.dataset.status = "loading";
+
+    const timer = window.setTimeout(() => {
+      cleanup();
+      script.dataset.status = "failed";
+      reject(new Error("cdek_widget_script_timeout"));
+    }, cdekWidgetScriptTimeoutMs);
+
+    function cleanup() {
+      window.clearTimeout(timer);
+      script.removeEventListener("load", onLoad);
+      script.removeEventListener("error", onError);
+    }
+
+    function onLoad() {
+      cleanup();
+      script.dataset.status = "loaded";
+      if (window.CDEKWidget) {
+        resolve();
+      } else {
+        reject(new Error("cdek_widget_constructor_missing"));
+      }
+    }
+
+    function onError() {
+      cleanup();
+      script.dataset.status = "failed";
+      reject(new Error("cdek_widget_script_failed"));
+    }
+
+    script.addEventListener("load", onLoad, { once: true });
+    script.addEventListener("error", onError, { once: true });
     document.head.appendChild(script);
   });
 }
@@ -156,7 +254,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const activeItems = useMemo(() => sourceItems(source, cart.items), [cart.items, source]);
   const { summary, loading } = useResolvedCommerceCart(activeItems);
   const [contact, setContact] = useState<CheckoutContactInput>({ ...emptyContact, email: userEmail });
-  const [submissionKey] = useState(() => crypto.randomUUID());
+  const [submissionKey] = useState(createCheckoutSubmissionKey);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [cityOptions, setCityOptions] = useState<CdekCityOption[]>([]);
@@ -167,6 +265,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const [widgetConfig, setWidgetConfig] = useState<CdekWidgetConfig | null>(null);
   const [widgetStatus, setWidgetStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
   const [widgetError, setWidgetError] = useState("");
+  const [widgetAttempt, setWidgetAttempt] = useState(0);
 
   useEffect(() => {
     if (source.type !== "cart" || !cart.ready || cart.items.length === 0) {
@@ -260,7 +359,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       } catch {
         if (cancelled) return;
         setWidgetStatus("failed");
-        setWidgetError("Не удалось загрузить карту СДЭК. Попробовать снова");
+        setWidgetError("Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.");
       }
     }
 
@@ -269,7 +368,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
     return () => {
       cancelled = true;
     };
-  }, [contact.city, rootId, widgetOpen]);
+  }, [contact.city, rootId, widgetAttempt, widgetOpen]);
 
   useEffect(() => {
     if (widgetOpen) {
@@ -728,8 +827,11 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
                   <p>
                     {widgetError || (widgetConfig?.ready === false
                       ? widgetConfig.message
-                      : "Не удалось загрузить карту СДЭК. Попробовать снова")}
+                      : "Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.")}
                   </p>
+                  <button type="button" className={styles.buyNow} onClick={() => setWidgetAttempt((attempt) => attempt + 1)}>
+                    Попробовать ещё раз
+                  </button>
                   <button type="button" className={styles.quietButton} onClick={() => setWidgetOpen(false)}>
                     Вернуться к checkout
                   </button>

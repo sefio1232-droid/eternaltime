@@ -424,6 +424,32 @@ describe("checkout backend activation", () => {
     expect(validation).toContain("getCdekPickupPointByCode(pointCode)");
   });
 
+  it("keeps checkout mounted when browser storage or the CDEK widget script fails", async () => {
+    const fs = await import("node:fs");
+    const checkout = fs.readFileSync("src/components/commerce/checkout-experience.tsx", "utf8");
+    const cartHook = fs.readFileSync("src/components/commerce/use-commerce-cart.ts", "utf8");
+
+    expect(cartHook).toContain("function readStoredCommerceCartItems");
+    expect(cartHook).toContain("window.localStorage.getItem(commerceCartStorageKey)");
+    expect(cartHook).toContain("catch");
+    expect(cartHook).toContain("function deferCartUpdate");
+    expect(cartHook).not.toContain("queueMicrotask(() =>");
+
+    expect(checkout).toContain("function createCheckoutSubmissionKey");
+    expect(checkout).toContain("typeof browserCrypto.randomUUID === \"function\"");
+    expect(checkout).toContain("browserCrypto.getRandomValues(bytes)");
+    expect(checkout).toContain("const [submissionKey] = useState(createCheckoutSubmissionKey)");
+    expect(checkout).not.toContain("useState(() => crypto.randomUUID())");
+
+    expect(checkout).toContain("cdekWidgetScriptTimeoutMs");
+    expect(checkout).toContain("cdek_widget_script_timeout");
+    expect(checkout).toContain("cdek_widget_constructor_missing");
+    expect(checkout).toContain("setWidgetStatus(\"failed\")");
+    expect(checkout).toContain("setWidgetAttempt((attempt) => attempt + 1)");
+    expect(checkout).toContain("Попробовать ещё раз");
+    expect(checkout).toContain("Карта не загрузилась? Открыть технический список ПВЗ");
+  });
+
   it("does not expose CDEK client secrets to checkout widget code", async () => {
     const fs = await import("node:fs");
     const checkout = fs.readFileSync("src/components/commerce/checkout-experience.tsx", "utf8");

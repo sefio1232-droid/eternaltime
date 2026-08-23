@@ -15,7 +15,29 @@ import {
 const cartChangedEvent = "eternal-time:cart-changed";
 
 export function notifyCommerceCartChanged() {
-  window.dispatchEvent(new Event(cartChangedEvent));
+  try {
+    window.dispatchEvent(new Event(cartChangedEvent));
+  } catch {
+    // Dispatch can fail in unusual browser/privacy contexts; cart state is still updated locally.
+  }
+}
+
+function readStoredCommerceCartItems(): CommerceCartItemInput[] {
+  try {
+    return parseCommerceCartStorage(window.localStorage.getItem(commerceCartStorageKey)).items;
+  } catch {
+    // localStorage can throw SecurityError in locked-down/private contexts.
+    return [];
+  }
+}
+
+function deferCartUpdate(callback: () => void) {
+  if (typeof queueMicrotask === "function") {
+    queueMicrotask(callback);
+    return;
+  }
+
+  window.setTimeout(callback, 0);
 }
 
 export function useCommerceCart() {
@@ -23,8 +45,7 @@ export function useCommerceCart() {
   const [ready, setReady] = useState(false);
 
   const read = useCallback(() => {
-    const parsed = parseCommerceCartStorage(window.localStorage.getItem(commerceCartStorageKey));
-    setItemsState(parsed.items);
+    setItemsState(readStoredCommerceCartItems());
     setReady(true);
   }, []);
 
@@ -91,7 +112,7 @@ export function useResolvedCommerceCart(items: CommerceCartItemInput[]) {
   useEffect(() => {
     let cancelled = false;
     if (items.length === 0) {
-      queueMicrotask(() => {
+      deferCartUpdate(() => {
         if (!cancelled) {
           setSummary(null);
         }
@@ -99,7 +120,7 @@ export function useResolvedCommerceCart(items: CommerceCartItemInput[]) {
       return;
     }
 
-    queueMicrotask(() => {
+    deferCartUpdate(() => {
       if (!cancelled) {
         setLoading(true);
       }
