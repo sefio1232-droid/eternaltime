@@ -409,6 +409,10 @@ describe("checkout backend activation", () => {
     expect(checkout).toContain("onChoose");
     expect(checkout).toContain("onKeyDown");
     expect(checkout).toContain("Escape");
+    expect(checkout).toContain("cdekWidgetDefaultLocation");
+    expect(checkout).toContain("defaultLocation: cdekWidgetDefaultLocation");
+    expect(checkout).toContain("CDEK_MAP_DEFAULT_LOCATION_MISSING");
+    expect(checkout).toContain("CDEK_MAP_READY_TIMEOUT");
     expect(checkout).toContain("widgetTriggerRef.current?.focus()");
     expect(checkout).toContain("normalizeCdekWidgetPickupPoint");
     expect(checkout).toContain("clearPickupState");
@@ -416,6 +420,7 @@ describe("checkout backend activation", () => {
     expect(configRoute).toContain("CDEK_WIDGET_YANDEX_MAPS_API_KEY");
     expect(configRoute).toContain("/api/delivery/cdek/widget-service");
     expect(configRoute).toContain('servicePath: "/api/delivery/cdek/widget-service"');
+    expect(configRoute).toContain("pickup: []");
     expect(configRoute).not.toContain("cdn.jsdelivr.net");
     expect(configRoute).not.toContain("new URL(request.url)");
     expect(configRoute).not.toContain("localhost:3000");

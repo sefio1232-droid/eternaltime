@@ -103,8 +103,10 @@ async function renderCheckout(options: {
   widgetConfig?: Record<string, unknown>;
 } = {}) {
   installDom();
+  const widgetOptions: Array<Record<string, unknown>> = [];
   window.CDEKWidget = class {
-    constructor(options: { onReady?: () => void }) {
+    constructor(options: Record<string, unknown> & { onReady?: () => void }) {
+      widgetOptions.push(options);
       options.onReady?.();
     }
   };
@@ -162,7 +164,7 @@ async function renderCheckout(options: {
         }
       : { type: "cart" as const, items: [] };
 
-  return render(React.createElement(CheckoutExperience, { source, userEmail: "buyer@example.com" }));
+  return Object.assign(render(React.createElement(CheckoutExperience, { source, userEmail: "buyer@example.com" })), { widgetOptions });
 }
 
 afterEach(() => {
@@ -260,6 +262,18 @@ describe("checkout client render", () => {
 
     await waitFor(() => expect(view.getByText(/Не удалось загрузить карту СДЭК/)).toBeTruthy());
     expect(view.getByRole("button", { name: "Оформить заказ" })).toBeTruthy();
+  });
+
+  it("passes a valid coordinate defaultLocation to the CDEK widget even before a city is entered", async () => {
+    const view = await renderCheckout();
+
+    fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
+    fireEvent.click(view.getByRole("button", { name: "Выбрать пункт на карте" }));
+
+    await waitFor(() => expect(view.widgetOptions[0]).toBeTruthy());
+    expect(view.widgetOptions[0].defaultLocation).toEqual([37.6173, 55.7558]);
+    expect(view.widgetOptions[0].tariffs).toMatchObject({ office: [136], door: [137], pickup: [] });
+    expect(view.queryByText("Диагностический код: CDEK_MAP_DEFAULT_LOCATION_MISSING · stage: constructor")).toBeNull();
   });
 
   it("uses the bundled CDEK widget constructor without injecting a third-party script", async () => {

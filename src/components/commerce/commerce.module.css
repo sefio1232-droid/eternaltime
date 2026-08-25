@@ -645,7 +645,23 @@
   gap: 1rem;
   min-height: 100%;
   padding: 1.5rem;
+  background:
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--surface-warm) 36%, transparent) 0, transparent 34%),
+    color-mix(in srgb, var(--canvas) 94%, white 6%);
   text-align: center;
+}
+
+.cdekWidgetFallbackState p {
+  max-width: 34rem;
+}
+
+.cdekWidgetDiagnostic {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-reference, ui-monospace, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
 }
 
 @media (max-width: 620px) {

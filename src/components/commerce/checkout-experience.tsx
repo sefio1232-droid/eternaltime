@@ -41,7 +41,7 @@ type CdekWidgetConfig =
       apiKey: string;
       servicePath: string;
       from: { country_code: "RU"; code: number };
-      tariffs: { office: number[]; door: number[] };
+      tariffs: { office: number[]; door: number[]; pickup?: number[] };
       goods: Array<{ width: number; height: number; length: number; weight: number }>;
     }
   | {
@@ -49,6 +49,18 @@ type CdekWidgetConfig =
       reason: string;
       message: string;
     };
+
+type CdekWidgetDefaultLocation = string | [number, number];
+
+type CdekWidgetDiagnostic = {
+  code: string;
+  stage: string;
+  message: string;
+};
+
+type CdekWidgetInstance = {
+  destroy?: () => void;
+};
 
 type CdekWidgetConstructor = new (options: {
   from: CdekWidgetConfig extends infer T ? T extends { ready: true; from: infer From } ? From : never : never;
@@ -58,14 +70,14 @@ type CdekWidgetConstructor = new (options: {
   servicePath: string;
   hideDeliveryOptions: { office: boolean; door: boolean };
   hideFilters: { have_cashless: boolean; have_cash: boolean; is_dressing_room: boolean; type: boolean };
-  tariffs: { office: number[]; door: number[] };
+  tariffs: { office: number[]; door: number[]; pickup: number[] };
   goods: Array<{ width: number; height: number; length: number; weight: number }>;
-  defaultLocation?: string;
+  defaultLocation: CdekWidgetDefaultLocation;
   lang: "rus";
   currency: "RUB";
   onReady?: () => void;
   onChoose?: (mode: unknown, tariff: unknown, address: unknown) => void;
-}) => unknown;
+}) => CdekWidgetInstance;
 
 declare global {
   interface Window {
@@ -99,6 +111,9 @@ const emptyContact: CheckoutContactInput = {
   personalDataConsentAccepted: false,
   marketingConsentAccepted: false,
 };
+
+const cdekWidgetDefaultLocation: CdekWidgetDefaultLocation = [37.6173, 55.7558];
+const cdekWidgetReadyTimeoutMs = 35_000;
 
 function sourceItems(source: CheckoutSource, cartItems: CommerceCartItemInput[]) {
   return source.type === "buy_now" ? [source.item] : cartItems;
@@ -144,6 +159,38 @@ async function loadCdekWidgetConstructor(): Promise<CdekWidgetConstructor> {
   return constructor;
 }
 
+function cdekWidgetErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function cdekWidgetFailure(stage: string, error: unknown, fallbackCode: string): CdekWidgetDiagnostic {
+  const message = cdekWidgetErrorMessage(error);
+
+  if (message.includes("defaultLocation is a required field")) {
+    return { code: "CDEK_MAP_DEFAULT_LOCATION_MISSING", stage, message };
+  }
+
+  if (message.includes("cdek_widget_root_missing")) {
+    return { code: "CDEK_MAP_ROOT_MISSING", stage, message };
+  }
+
+  if (message.includes("cdek_widget_constructor_missing")) {
+    return { code: "CDEK_MAP_CONSTRUCTOR_MISSING", stage, message };
+  }
+
+  return { code: fallbackCode, stage, message };
+}
+
+function destroyCdekWidget(widget: CdekWidgetInstance | null) {
+  try {
+    widget?.destroy?.();
+  } catch (error) {
+    console.warn("[cdek-widget] destroy failed", {
+      message: cdekWidgetErrorMessage(error),
+    });
+  }
+}
+
 function clearPickupState(contact: CheckoutContactInput): CheckoutContactInput {
   return {
     ...contact,
@@ -164,6 +211,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const rootId = `cdek-map-${useId().replace(/:/g, "")}`;
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const widgetInstanceRef = useRef<CdekWidgetInstance | null>(null);
   const widgetTriggerRef = useRef<HTMLButtonElement | null>(null);
   const wasWidgetOpenRef = useRef(false);
   const cart = useCommerceCart();
@@ -181,6 +229,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const [widgetConfig, setWidgetConfig] = useState<CdekWidgetConfig | null>(null);
   const [widgetStatus, setWidgetStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
   const [widgetError, setWidgetError] = useState("");
+  const [widgetDiagnostic, setWidgetDiagnostic] = useState<CdekWidgetDiagnostic | null>(null);
   const [widgetAttempt, setWidgetAttempt] = useState(0);
 
   useEffect(() => {
@@ -203,13 +252,34 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
     if (!widgetOpen) return;
 
     let cancelled = false;
+    let readyTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    function clearReadyTimeout() {
+      if (readyTimeout) {
+        clearTimeout(readyTimeout);
+        readyTimeout = null;
+      }
+    }
+
+    function failWidget(diagnostic: CdekWidgetDiagnostic) {
+      if (cancelled) return;
+      setWidgetStatus("failed");
+      setWidgetDiagnostic(diagnostic);
+      setWidgetError("Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.");
+      console.error("[cdek-widget] map initialization failed", diagnostic);
+    }
 
     async function initWidget() {
       setWidgetStatus("loading");
       setWidgetError("");
+      setWidgetDiagnostic(null);
 
       try {
         const configResponse = await fetch("/api/delivery/cdek/widget-config", { cache: "no-store" });
+        if (!configResponse.ok) {
+          throw new Error(`cdek_widget_config_http_${configResponse.status}`);
+        }
+
         const config = (await configResponse.json()) as CdekWidgetConfig;
         if (cancelled) return;
         setWidgetConfig(config);
@@ -217,6 +287,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
         if (!config.ready) {
           setWidgetStatus("failed");
           setWidgetError(config.message);
+          setWidgetDiagnostic({ code: "CDEK_MAP_CONFIG_NOT_READY", stage: "config", message: config.reason });
           return;
         }
 
@@ -227,9 +298,19 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
         if (!root) {
           throw new Error("cdek_widget_root_missing");
         }
-        root.innerHTML = "";
+        destroyCdekWidget(widgetInstanceRef.current);
+        widgetInstanceRef.current = null;
+        root.replaceChildren();
 
-        new CdekWidget({
+        readyTimeout = setTimeout(() => {
+          failWidget({
+            code: "CDEK_MAP_READY_TIMEOUT",
+            stage: "ready",
+            message: `CDEK widget did not call onReady within ${cdekWidgetReadyTimeoutMs}ms.`,
+          });
+        }, cdekWidgetReadyTimeoutMs);
+
+        widgetInstanceRef.current = new CdekWidget({
           from: config.from,
           root: rootId,
           apiKey: config.apiKey,
@@ -237,12 +318,14 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           servicePath: config.servicePath,
           hideDeliveryOptions: { office: false, door: true },
           hideFilters: { have_cashless: false, have_cash: false, is_dressing_room: true, type: false },
-          tariffs: config.tariffs,
+          tariffs: { office: config.tariffs.office, door: config.tariffs.door, pickup: config.tariffs.pickup ?? [] },
           goods: config.goods,
-          defaultLocation: contact.city || undefined,
+          defaultLocation: cdekWidgetDefaultLocation,
           lang: "rus",
           currency: "RUB",
           onReady: () => {
+            clearReadyTimeout();
+            setWidgetDiagnostic(null);
             setWidgetStatus("ready");
           },
           onChoose: (mode, tariff, address) => {
@@ -272,10 +355,10 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
             setWidgetOpen(false);
           },
         });
-      } catch {
+      } catch (error) {
         if (cancelled) return;
-        setWidgetStatus("failed");
-        setWidgetError("Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.");
+        clearReadyTimeout();
+        failWidget(cdekWidgetFailure("constructor", error, "CDEK_MAP_CONSTRUCTOR_FAILED"));
       }
     }
 
@@ -283,8 +366,11 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
 
     return () => {
       cancelled = true;
+      clearReadyTimeout();
+      destroyCdekWidget(widgetInstanceRef.current);
+      widgetInstanceRef.current = null;
     };
-  }, [contact.city, rootId, widgetAttempt, widgetOpen]);
+  }, [rootId, widgetAttempt, widgetOpen]);
 
   useEffect(() => {
     if (widgetOpen) {
@@ -292,6 +378,8 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       return;
     }
 
+    destroyCdekWidget(widgetInstanceRef.current);
+    widgetInstanceRef.current = null;
     rootRef.current?.replaceChildren();
     if (wasWidgetOpenRef.current) {
       widgetTriggerRef.current?.focus();
@@ -746,6 +834,11 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
                       ? widgetConfig.message
                       : "Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.")}
                   </p>
+                  {widgetDiagnostic ? (
+                    <p className={styles.cdekWidgetDiagnostic}>
+                      Диагностический код: {widgetDiagnostic.code} · stage: {widgetDiagnostic.stage}
+                    </p>
+                  ) : null}
                   <button type="button" className={styles.buyNow} onClick={() => setWidgetAttempt((attempt) => attempt + 1)}>
                     Попробовать ещё раз
                   </button>

@@ -32,6 +32,7 @@ export async function GET() {
     tariffs: {
       office: [env.cdek.pickupTariffCode].filter((value): value is number => Boolean(value)),
       door: [env.cdek.courierTariffCode].filter((value): value is number => Boolean(value)),
+      pickup: [],
     },
     goods: [
       {
