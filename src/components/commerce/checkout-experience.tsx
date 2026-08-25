@@ -820,8 +820,9 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
                 Закрыть
               </button>
             </header>
-            <div className={styles.cdekWidgetMap} id={rootId} ref={rootRef}>
-              {widgetStatus === "loading" ? <p className={styles.lineMeta}>Загружаем карту СДЭК…</p> : null}
+            <div className={styles.cdekWidgetMap}>
+              <div className={styles.cdekWidgetRoot} id={rootId} ref={rootRef} />
+              {widgetStatus === "loading" ? <p className={`${styles.lineMeta} ${styles.cdekWidgetStatus}`}>Загружаем карту СДЭК…</p> : null}
               {widgetStatus === "failed" ? (
                 <div className={styles.cdekWidgetFallbackState}>
                   <p>

@@ -7,6 +7,36 @@ import {
   type CatalogImageCompositionSlot,
 } from "@/modules/catalog/application/catalog-image-presentation-policy";
 
+function missingCatalogImageAlt(image: CatalogImagePresentation | null | undefined) {
+  return image && typeof image === "object" && "alt" in image && typeof image.alt === "string" && image.alt.trim()
+    ? image.alt
+    : "Изображение часов недоступно";
+}
+
+function normalizeCatalogImagePresentation(image: CatalogImagePresentation | null | undefined): CatalogImagePresentation {
+  if (!image || typeof image !== "object" || !("kind" in image)) {
+    return { kind: "none", alt: missingCatalogImageAlt(image) };
+  }
+
+  if (image.kind === "development_zip") {
+    return typeof image.src === "string" && image.src.trim() && typeof image.imageKey === "string"
+      ? { ...image, alt: missingCatalogImageAlt(image) }
+      : { kind: "none", alt: missingCatalogImageAlt(image) };
+  }
+
+  if (image.kind === "remote") {
+    return typeof image.src === "string" && image.src.trim() && typeof image.url === "string"
+      ? { ...image, alt: missingCatalogImageAlt(image) }
+      : { kind: "none", alt: missingCatalogImageAlt(image) };
+  }
+
+  if (image.kind === "none") {
+    return { kind: "none", alt: missingCatalogImageAlt(image) };
+  }
+
+  return { kind: "none", alt: missingCatalogImageAlt(image) };
+}
+
 export function CatalogImage({
   image,
   className = "",
@@ -16,7 +46,7 @@ export function CatalogImage({
   imageIndex = 0,
   galleryCount = 1,
 }: Readonly<{
-  image: CatalogImagePresentation;
+  image: CatalogImagePresentation | null | undefined;
   className?: string;
   priority?: boolean;
   presentation?: "guarded" | "card" | "full";
@@ -26,15 +56,16 @@ export function CatalogImage({
 }>) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const safeImage = normalizeCatalogImagePresentation(image);
   const composition = compositionSlot
-    ? resolveCatalogImagePresentation({ image, slot: compositionSlot, imageIndex, galleryCount })
+    ? resolveCatalogImagePresentation({ image: safeImage, slot: compositionSlot, imageIndex, galleryCount })
     : null;
 
-  if (image.kind === "none" || failed) {
+  if (safeImage.kind === "none" || failed) {
     return (
       <span
         role="img"
-        aria-label={image.alt}
+        aria-label={safeImage.alt}
         className={`catalog-image catalog-image--${presentation} catalog-image--fallback flex h-full w-full items-center justify-center ${className}`}
         data-image-presentation-mode={composition?.mode ?? "missing"}
         data-image-focal-x={composition?.focalX ?? 50}
@@ -52,8 +83,8 @@ export function CatalogImage({
   return (
     // eslint-disable-next-line @next/next/no-img-element -- catalog images can come from dev ZIP resolver or remote source URLs.
     <img
-      src={image.src}
-      alt={image.alt}
+      src={safeImage.src}
+      alt={safeImage.alt}
       className={`catalog-image catalog-image--${presentation} ${composition ? "catalog-image--composed" : ""} ${loaded ? "catalog-image--loaded" : "catalog-image--loading"} ${className}`}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "auto"}
