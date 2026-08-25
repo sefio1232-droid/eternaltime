@@ -28,6 +28,43 @@ function installDom() {
   Object.defineProperty(globalThis, "Event", { value: dom.window.Event, configurable: true });
   Object.defineProperty(globalThis, "HTMLButtonElement", { value: dom.window.HTMLButtonElement, configurable: true });
   Object.defineProperty(globalThis, "HTMLElement", { value: dom.window.HTMLElement, configurable: true });
+  Object.defineProperty(globalThis, "requestAnimationFrame", {
+    value: (callback: FrameRequestCallback) => window.setTimeout(() => callback(Date.now()), 0),
+    configurable: true,
+  });
+  Object.defineProperty(globalThis, "cancelAnimationFrame", {
+    value: (handle: number) => window.clearTimeout(handle),
+    configurable: true,
+  });
+  Object.defineProperty(globalThis, "ResizeObserver", {
+    value: class {
+      constructor(private readonly callback: ResizeObserverCallback) {}
+      observe() {
+        this.callback([{ contentRect: { width: 960, height: 640 } } as ResizeObserverEntry], this);
+      }
+      disconnect() {}
+      unobserve() {}
+    },
+    configurable: true,
+  });
+  Object.defineProperty(dom.window.HTMLElement.prototype, "getBoundingClientRect", {
+    value() {
+      return {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 960,
+        bottom: 640,
+        width: 960,
+        height: 640,
+        toJSON() {
+          return this;
+        },
+      };
+    },
+    configurable: true,
+  });
 }
 
 function product(overrides: Record<string, unknown> = {}): CommerceProductSnapshot {
@@ -273,6 +310,7 @@ describe("checkout client render", () => {
     await waitFor(() => expect(view.widgetOptions[0]).toBeTruthy());
     expect(view.widgetOptions[0].defaultLocation).toEqual([37.6173, 55.7558]);
     expect(view.widgetOptions[0].tariffs).toMatchObject({ office: [136], door: [137], pickup: [] });
+    expect(await view.findByText(/WIDGET_READY/)).toBeTruthy();
     expect(view.queryByText("Диагностический код: CDEK_MAP_DEFAULT_LOCATION_MISSING · stage: constructor")).toBeNull();
   });
 

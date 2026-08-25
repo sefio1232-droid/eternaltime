@@ -411,6 +411,11 @@ describe("checkout backend activation", () => {
     expect(checkout).toContain("Escape");
     expect(checkout).toContain("cdekWidgetDefaultLocation");
     expect(checkout).toContain("defaultLocation: cdekWidgetDefaultLocation");
+    expect(checkout).toContain("waitForCdekContainer");
+    expect(checkout).toContain("ResizeObserver");
+    expect(checkout).toContain("cdekMapDiagnostic");
+    expect(checkout).toContain("MAP_TIMEOUT");
+    expect(checkout).toContain("MAP_VISIBLE");
     expect(checkout).toContain("CDEK_MAP_DEFAULT_LOCATION_MISSING");
     expect(checkout).toContain("CDEK_MAP_READY_TIMEOUT");
     expect(checkout).toContain("widgetTriggerRef.current?.focus()");

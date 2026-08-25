@@ -114,6 +114,7 @@ const emptyContact: CheckoutContactInput = {
 
 const cdekWidgetDefaultLocation: CdekWidgetDefaultLocation = [37.6173, 55.7558];
 const cdekWidgetReadyTimeoutMs = 35_000;
+const cdekMapVisibilityTimeoutMs = 8_000;
 
 function sourceItems(source: CheckoutSource, cartItems: CommerceCartItemInput[]) {
   return source.type === "buy_now" ? [source.item] : cartItems;
@@ -178,6 +179,10 @@ function cdekWidgetFailure(stage: string, error: unknown, fallbackCode: string):
     return { code: "CDEK_MAP_CONSTRUCTOR_MISSING", stage, message };
   }
 
+  if (message.includes("cdek_widget_container_not_ready")) {
+    return { code: "CDEK_MAP_CONTAINER_NOT_READY", stage, message };
+  }
+
   return { code: fallbackCode, stage, message };
 }
 
@@ -189,6 +194,130 @@ function destroyCdekWidget(widget: CdekWidgetInstance | null) {
       message: cdekWidgetErrorMessage(error),
     });
   }
+}
+
+function cdekElementSummary(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const style = window.getComputedStyle(element);
+
+  return {
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+    display: style.display,
+    visibility: style.visibility,
+    opacity: style.opacity,
+    position: style.position,
+    overflow: style.overflow,
+  };
+}
+
+function cdekHostIsUsable(element: HTMLElement) {
+  const summary = cdekElementSummary(element);
+  return (
+    summary.width > 0 &&
+    summary.height > 0 &&
+    summary.display !== "none" &&
+    summary.visibility !== "hidden" &&
+    summary.opacity !== "0"
+  );
+}
+
+function waitForCdekContainer(root: HTMLElement, isCancelled: () => boolean): Promise<CdekWidgetDiagnostic> {
+  return new Promise((resolve, reject) => {
+    if (cdekHostIsUsable(root)) {
+      const summary = cdekElementSummary(root);
+      resolve({
+        code: "CONTAINER_READY",
+        stage: "CONTAINER_READY",
+        message: `host=${summary.width}x${summary.height}; display=${summary.display}; visibility=${summary.visibility}; position=${summary.position}; overflow=${summary.overflow}`,
+      });
+      return;
+    }
+
+    let settled = false;
+    let frame = 0;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    let observer: ResizeObserver | null = null;
+
+    const cleanup = () => {
+      if (timeout) clearTimeout(timeout);
+      if (frame) cancelAnimationFrame(frame);
+      observer?.disconnect();
+    };
+
+    const finish = () => {
+      if (settled || isCancelled()) return;
+      if (!cdekHostIsUsable(root)) return;
+
+      settled = true;
+      cleanup();
+      const summary = cdekElementSummary(root);
+      resolve({
+        code: "CONTAINER_READY",
+        stage: "CONTAINER_READY",
+        message: `host=${summary.width}x${summary.height}; display=${summary.display}; visibility=${summary.visibility}; position=${summary.position}; overflow=${summary.overflow}`,
+      });
+    };
+
+    const scheduleFrame = () => {
+      frame = requestAnimationFrame(() => {
+        finish();
+        if (!settled) scheduleFrame();
+      });
+    };
+
+    if ("ResizeObserver" in window) {
+      observer = new ResizeObserver(finish);
+      observer.observe(root);
+    }
+
+    scheduleFrame();
+
+    timeout = setTimeout(() => {
+      if (settled || isCancelled()) return;
+      settled = true;
+      cleanup();
+      const summary = cdekElementSummary(root);
+      reject(
+        new Error(
+          `cdek_widget_container_not_ready:${summary.width}x${summary.height};display=${summary.display};visibility=${summary.visibility};opacity=${summary.opacity}`,
+        ),
+      );
+    }, 3_000);
+  });
+}
+
+function safeHost(input: string) {
+  try {
+    return new URL(input).host;
+  } catch {
+    return "";
+  }
+}
+
+function cdekMapDiagnostic(root: HTMLElement): CdekWidgetDiagnostic {
+  const host = cdekElementSummary(root);
+  const yandexScript = document.getElementById("vue-yandex-maps") as HTMLScriptElement | null;
+  const mapNodes = Array.from(root.querySelectorAll<HTMLElement>('[class*="ymaps"], canvas'));
+  const visibleMapNodes = mapNodes.filter((node) => cdekHostIsUsable(node));
+  const resourceHosts = Array.from(performance.getEntriesByType("resource") as PerformanceResourceTiming[])
+    .map((entry) => safeHost(entry.name))
+    .filter((hostName) => /yandex|ymaps|cdek|eternaltime/i.test(hostName))
+    .filter((hostName, index, hosts) => hostName && hosts.indexOf(hostName) === index)
+    .slice(0, 8);
+  const ymapsReady = "ymaps3" in window;
+  const scriptHost = yandexScript?.src ? safeHost(yandexScript.src) : "none";
+  const message = `host=${host.width}x${host.height}; ymaps3=${ymapsReady ? "yes" : "no"}; script=${scriptHost}; mapNodes=${mapNodes.length}; visibleMapNodes=${visibleMapNodes.length}; resources=${resourceHosts.join("|") || "none"}`;
+
+  if (visibleMapNodes.length > 0) {
+    return { code: "MAP_VISIBLE", stage: "MAP_VISIBLE", message };
+  }
+
+  if (mapNodes.length > 0) {
+    return { code: "MAP_CONTAINER_FOUND", stage: "MAP_VISIBLE", message };
+  }
+
+  return { code: "MAP_TIMEOUT", stage: "MAP_VISIBLE", message };
 }
 
 function clearPickupState(contact: CheckoutContactInput): CheckoutContactInput {
@@ -253,11 +382,19 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
 
     let cancelled = false;
     let readyTimeout: ReturnType<typeof setTimeout> | null = null;
+    let mapVisibilityTimeout: ReturnType<typeof setTimeout> | null = null;
 
     function clearReadyTimeout() {
       if (readyTimeout) {
         clearTimeout(readyTimeout);
         readyTimeout = null;
+      }
+    }
+
+    function clearMapVisibilityTimeout() {
+      if (mapVisibilityTimeout) {
+        clearTimeout(mapVisibilityTimeout);
+        mapVisibilityTimeout = null;
       }
     }
 
@@ -301,6 +438,8 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
         destroyCdekWidget(widgetInstanceRef.current);
         widgetInstanceRef.current = null;
         root.replaceChildren();
+        setWidgetDiagnostic(await waitForCdekContainer(root, () => cancelled));
+        if (cancelled) return;
 
         readyTimeout = setTimeout(() => {
           failWidget({
@@ -325,8 +464,16 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           currency: "RUB",
           onReady: () => {
             clearReadyTimeout();
-            setWidgetDiagnostic(null);
             setWidgetStatus("ready");
+            setWidgetDiagnostic({
+              code: "WIDGET_READY",
+              stage: "WIDGET_READY",
+              message: cdekMapDiagnostic(root).message,
+            });
+            mapVisibilityTimeout = setTimeout(() => {
+              if (cancelled) return;
+              setWidgetDiagnostic(cdekMapDiagnostic(root));
+            }, cdekMapVisibilityTimeoutMs);
           },
           onChoose: (mode, tariff, address) => {
             const point = normalizeCdekWidgetPickupPoint(mode, tariff, address);
@@ -358,6 +505,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       } catch (error) {
         if (cancelled) return;
         clearReadyTimeout();
+        clearMapVisibilityTimeout();
         failWidget(cdekWidgetFailure("constructor", error, "CDEK_MAP_CONSTRUCTOR_FAILED"));
       }
     }
@@ -367,6 +515,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
     return () => {
       cancelled = true;
       clearReadyTimeout();
+      clearMapVisibilityTimeout();
       destroyCdekWidget(widgetInstanceRef.current);
       widgetInstanceRef.current = null;
     };
@@ -827,6 +976,11 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
             <div className={styles.cdekWidgetMap}>
               <div className={styles.cdekWidgetRoot} id={rootId} ref={rootRef} />
               {widgetStatus === "loading" ? <p className={`${styles.lineMeta} ${styles.cdekWidgetStatus}`}>Загружаем карту СДЭК…</p> : null}
+              {widgetDiagnostic && widgetStatus !== "failed" ? (
+                <p className={styles.cdekWidgetDiagnosticRibbon}>
+                  {widgetDiagnostic.code} · {widgetDiagnostic.message}
+                </p>
+              ) : null}
               {widgetStatus === "failed" ? (
                 <div className={styles.cdekWidgetFallbackState}>
                   <p>
