@@ -38,7 +38,6 @@ type CdekPickupPointOption = {
 type CdekWidgetConfig =
   | {
       ready: true;
-      scriptUrl: string;
       apiKey: string;
       servicePath: string;
       from: { country_code: "RU"; code: number };
@@ -73,9 +72,6 @@ declare global {
     CDEKWidget?: CdekWidgetConstructor;
   }
 }
-
-const cdekWidgetScriptId = "cdek-widget-v3-script";
-const cdekWidgetScriptTimeoutMs = 15_000;
 
 const emptyContact: CheckoutContactInput = {
   recipientName: "",
@@ -133,99 +129,19 @@ function createCheckoutSubmissionKey() {
     .join("")}-${hex.slice(10, 16).join("")}`;
 }
 
-function loadScript(src: string): Promise<void> {
-  if (window.CDEKWidget) return Promise.resolve();
-
-  let existing = document.getElementById(cdekWidgetScriptId) as HTMLScriptElement | null;
-  if (existing?.dataset.status === "failed") {
-    existing.remove();
-    existing = null;
+async function loadCdekWidgetConstructor(): Promise<CdekWidgetConstructor> {
+  if (window.CDEKWidget) {
+    return window.CDEKWidget;
   }
 
-  if (existing) {
-    const pendingScript = existing;
-    return new Promise((resolve, reject) => {
-      if (pendingScript.dataset.status === "loaded") {
-        if (window.CDEKWidget) {
-          resolve();
-        } else {
-          reject(new Error("cdek_widget_constructor_missing"));
-        }
-        return;
-      }
-
-      const timer = window.setTimeout(() => {
-        cleanup();
-        reject(new Error("cdek_widget_script_timeout"));
-      }, cdekWidgetScriptTimeoutMs);
-
-      function cleanup() {
-        window.clearTimeout(timer);
-        pendingScript.removeEventListener("load", onLoad);
-        pendingScript.removeEventListener("error", onError);
-      }
-
-      function onLoad() {
-        cleanup();
-        pendingScript.dataset.status = "loaded";
-        if (window.CDEKWidget) {
-          resolve();
-        } else {
-          reject(new Error("cdek_widget_constructor_missing"));
-        }
-      }
-
-      function onError() {
-        cleanup();
-        pendingScript.dataset.status = "failed";
-        reject(new Error("cdek_widget_script_failed"));
-      }
-
-      pendingScript.addEventListener("load", onLoad, { once: true });
-      pendingScript.addEventListener("error", onError, { once: true });
-    });
+  const widgetModule = await import("@cdek-it/widget");
+  const constructor = widgetModule.default as unknown as CdekWidgetConstructor | undefined;
+  if (!constructor) {
+    throw new Error("cdek_widget_constructor_missing");
   }
 
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.id = cdekWidgetScriptId;
-    script.src = src;
-    script.async = true;
-    script.charset = "utf-8";
-    script.dataset.status = "loading";
-
-    const timer = window.setTimeout(() => {
-      cleanup();
-      script.dataset.status = "failed";
-      reject(new Error("cdek_widget_script_timeout"));
-    }, cdekWidgetScriptTimeoutMs);
-
-    function cleanup() {
-      window.clearTimeout(timer);
-      script.removeEventListener("load", onLoad);
-      script.removeEventListener("error", onError);
-    }
-
-    function onLoad() {
-      cleanup();
-      script.dataset.status = "loaded";
-      if (window.CDEKWidget) {
-        resolve();
-      } else {
-        reject(new Error("cdek_widget_constructor_missing"));
-      }
-    }
-
-    function onError() {
-      cleanup();
-      script.dataset.status = "failed";
-      reject(new Error("cdek_widget_script_failed"));
-    }
-
-    script.addEventListener("load", onLoad, { once: true });
-    script.addEventListener("error", onError, { once: true });
-    document.head.appendChild(script);
-  });
+  window.CDEKWidget = constructor;
+  return constructor;
 }
 
 function clearPickupState(contact: CheckoutContactInput): CheckoutContactInput {
@@ -304,16 +220,16 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           return;
         }
 
-        await loadScript(config.scriptUrl);
+        const CdekWidget = await loadCdekWidgetConstructor();
         if (cancelled) return;
 
         const root = rootRef.current;
-        if (!root || !window.CDEKWidget) {
+        if (!root) {
           throw new Error("cdek_widget_root_missing");
         }
         root.innerHTML = "";
 
-        new window.CDEKWidget({
+        new CdekWidget({
           from: config.from,
           root: rootId,
           apiKey: config.apiKey,

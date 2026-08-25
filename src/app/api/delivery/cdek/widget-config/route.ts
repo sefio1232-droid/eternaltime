@@ -23,7 +23,6 @@ export async function GET() {
 
   return NextResponse.json({
     ready: true,
-    scriptUrl: "https://cdn.jsdelivr.net/npm/@cdek-it/widget@3",
     apiKey: env.cdek.widgetYandexMapsApiKey,
     servicePath: "/api/delivery/cdek/widget-service",
     from: {

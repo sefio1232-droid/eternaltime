@@ -404,8 +404,8 @@ describe("checkout backend activation", () => {
     const serviceRoute = fs.readFileSync("src/app/api/delivery/cdek/widget-service/route.ts", "utf8");
     const validation = fs.readFileSync("src/modules/commerce/infrastructure/cdek-shipping-repository.server.ts", "utf8");
 
-    expect(configRoute).toContain("https://cdn.jsdelivr.net/npm/@cdek-it/widget@3");
-    expect(checkout).toContain("new window.CDEKWidget");
+    expect(checkout).toContain('await import("@cdek-it/widget")');
+    expect(checkout).toContain("new CdekWidget");
     expect(checkout).toContain("onChoose");
     expect(checkout).toContain("onKeyDown");
     expect(checkout).toContain("Escape");
@@ -416,6 +416,7 @@ describe("checkout backend activation", () => {
     expect(configRoute).toContain("CDEK_WIDGET_YANDEX_MAPS_API_KEY");
     expect(configRoute).toContain("/api/delivery/cdek/widget-service");
     expect(configRoute).toContain('servicePath: "/api/delivery/cdek/widget-service"');
+    expect(configRoute).not.toContain("cdn.jsdelivr.net");
     expect(configRoute).not.toContain("new URL(request.url)");
     expect(configRoute).not.toContain("localhost:3000");
     expect(serviceRoute).toContain("proxyCdekWidgetService");
@@ -424,7 +425,7 @@ describe("checkout backend activation", () => {
     expect(validation).toContain("getCdekPickupPointByCode(pointCode)");
   });
 
-  it("keeps checkout mounted when browser storage or the CDEK widget script fails", async () => {
+  it("keeps checkout mounted when browser storage or the CDEK widget initialization fails", async () => {
     const fs = await import("node:fs");
     const checkout = fs.readFileSync("src/components/commerce/checkout-experience.tsx", "utf8");
     const cartHook = fs.readFileSync("src/components/commerce/use-commerce-cart.ts", "utf8");
@@ -441,9 +442,10 @@ describe("checkout backend activation", () => {
     expect(checkout).toContain("const [submissionKey] = useState(createCheckoutSubmissionKey)");
     expect(checkout).not.toContain("useState(() => crypto.randomUUID())");
 
-    expect(checkout).toContain("cdekWidgetScriptTimeoutMs");
-    expect(checkout).toContain("cdek_widget_script_timeout");
+    expect(checkout).toContain("loadCdekWidgetConstructor");
     expect(checkout).toContain("cdek_widget_constructor_missing");
+    expect(checkout).not.toContain("document.createElement(\"script\")");
+    expect(checkout).not.toContain("cdn.jsdelivr.net");
     expect(checkout).toContain("setWidgetStatus(\"failed\")");
     expect(checkout).toContain("setWidgetAttempt((attempt) => attempt + 1)");
     expect(checkout).toContain("Попробовать ещё раз");

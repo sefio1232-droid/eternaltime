@@ -103,6 +103,11 @@ async function renderCheckout(options: {
   widgetConfig?: Record<string, unknown>;
 } = {}) {
   installDom();
+  window.CDEKWidget = class {
+    constructor(options: { onReady?: () => void }) {
+      options.onReady?.();
+    }
+  };
   window.localStorage.setItem(
     commerceCartStorageKey,
     options.storage ??
@@ -124,7 +129,6 @@ async function renderCheckout(options: {
   const widgetConfig =
     options.widgetConfig ?? {
       ready: true,
-      scriptUrl: "https://cdn.example.invalid/cdek-widget.js",
       apiKey: "public-test-key",
       servicePath: "/api/delivery/cdek/widget-service",
       from: { country_code: "RU", code: 44 },
@@ -258,18 +262,15 @@ describe("checkout client render", () => {
     expect(view.getByRole("button", { name: "Оформить заказ" })).toBeTruthy();
   });
 
-  it("isolates CDEK script loading failure from the checkout", async () => {
+  it("uses the bundled CDEK widget constructor without injecting a third-party script", async () => {
     const view = await renderCheckout();
-    const appendChild = vi.spyOn(document.head, "appendChild").mockImplementation((node: Node) => {
-      window.setTimeout(() => node.dispatchEvent(new window.Event("error")), 0);
-      return node;
-    });
+    const appendChild = vi.spyOn(document.head, "appendChild");
 
     fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
     fireEvent.click(view.getByRole("button", { name: "Выбрать пункт на карте" }));
 
-    await waitFor(() => expect(view.getByText(/Не удалось загрузить карту СДЭК/)).toBeTruthy());
+    await waitFor(() => expect(view.queryByText(/Не удалось загрузить карту СДЭК/)).toBeNull());
     expect(view.getByRole("button", { name: "Оформить заказ" })).toBeTruthy();
-    expect(appendChild).toHaveBeenCalled();
+    expect(appendChild).not.toHaveBeenCalled();
   });
 });
