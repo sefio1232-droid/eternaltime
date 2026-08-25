@@ -52,12 +52,6 @@ type CdekWidgetConfig =
 
 type CdekWidgetDefaultLocation = string | [number, number];
 
-type CdekWidgetDiagnostic = {
-  code: string;
-  stage: string;
-  message: string;
-};
-
 type CdekWidgetInstance = {
   destroy?: () => void;
 };
@@ -114,7 +108,6 @@ const emptyContact: CheckoutContactInput = {
 
 const cdekWidgetDefaultLocation: CdekWidgetDefaultLocation = [37.6173, 55.7558];
 const cdekWidgetReadyTimeoutMs = 35_000;
-const cdekMapVisibilityTimeoutMs = 8_000;
 
 function sourceItems(source: CheckoutSource, cartItems: CommerceCartItemInput[]) {
   return source.type === "buy_now" ? [source.item] : cartItems;
@@ -164,28 +157,6 @@ function cdekWidgetErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
-function cdekWidgetFailure(stage: string, error: unknown, fallbackCode: string): CdekWidgetDiagnostic {
-  const message = cdekWidgetErrorMessage(error);
-
-  if (message.includes("defaultLocation is a required field")) {
-    return { code: "CDEK_MAP_DEFAULT_LOCATION_MISSING", stage, message };
-  }
-
-  if (message.includes("cdek_widget_root_missing")) {
-    return { code: "CDEK_MAP_ROOT_MISSING", stage, message };
-  }
-
-  if (message.includes("cdek_widget_constructor_missing")) {
-    return { code: "CDEK_MAP_CONSTRUCTOR_MISSING", stage, message };
-  }
-
-  if (message.includes("cdek_widget_container_not_ready")) {
-    return { code: "CDEK_MAP_CONTAINER_NOT_READY", stage, message };
-  }
-
-  return { code: fallbackCode, stage, message };
-}
-
 function destroyCdekWidget(widget: CdekWidgetInstance | null) {
   try {
     widget?.destroy?.();
@@ -222,15 +193,10 @@ function cdekHostIsUsable(element: HTMLElement) {
   );
 }
 
-function waitForCdekContainer(root: HTMLElement, isCancelled: () => boolean): Promise<CdekWidgetDiagnostic> {
+function waitForCdekContainer(root: HTMLElement, isCancelled: () => boolean): Promise<void> {
   return new Promise((resolve, reject) => {
     if (cdekHostIsUsable(root)) {
-      const summary = cdekElementSummary(root);
-      resolve({
-        code: "CONTAINER_READY",
-        stage: "CONTAINER_READY",
-        message: `host=${summary.width}x${summary.height}; display=${summary.display}; visibility=${summary.visibility}; position=${summary.position}; overflow=${summary.overflow}`,
-      });
+      resolve();
       return;
     }
 
@@ -251,12 +217,7 @@ function waitForCdekContainer(root: HTMLElement, isCancelled: () => boolean): Pr
 
       settled = true;
       cleanup();
-      const summary = cdekElementSummary(root);
-      resolve({
-        code: "CONTAINER_READY",
-        stage: "CONTAINER_READY",
-        message: `host=${summary.width}x${summary.height}; display=${summary.display}; visibility=${summary.visibility}; position=${summary.position}; overflow=${summary.overflow}`,
-      });
+      resolve();
     };
 
     const scheduleFrame = () => {
@@ -285,39 +246,6 @@ function waitForCdekContainer(root: HTMLElement, isCancelled: () => boolean): Pr
       );
     }, 3_000);
   });
-}
-
-function safeHost(input: string) {
-  try {
-    return new URL(input).host;
-  } catch {
-    return "";
-  }
-}
-
-function cdekMapDiagnostic(root: HTMLElement): CdekWidgetDiagnostic {
-  const host = cdekElementSummary(root);
-  const yandexScript = document.getElementById("vue-yandex-maps") as HTMLScriptElement | null;
-  const mapNodes = Array.from(root.querySelectorAll<HTMLElement>('[class*="ymaps"], canvas'));
-  const visibleMapNodes = mapNodes.filter((node) => cdekHostIsUsable(node));
-  const resourceHosts = Array.from(performance.getEntriesByType("resource") as PerformanceResourceTiming[])
-    .map((entry) => safeHost(entry.name))
-    .filter((hostName) => /yandex|ymaps|cdek|eternaltime/i.test(hostName))
-    .filter((hostName, index, hosts) => hostName && hosts.indexOf(hostName) === index)
-    .slice(0, 8);
-  const ymapsReady = "ymaps3" in window;
-  const scriptHost = yandexScript?.src ? safeHost(yandexScript.src) : "none";
-  const message = `host=${host.width}x${host.height}; ymaps3=${ymapsReady ? "yes" : "no"}; script=${scriptHost}; mapNodes=${mapNodes.length}; visibleMapNodes=${visibleMapNodes.length}; resources=${resourceHosts.join("|") || "none"}`;
-
-  if (visibleMapNodes.length > 0) {
-    return { code: "MAP_VISIBLE", stage: "MAP_VISIBLE", message };
-  }
-
-  if (mapNodes.length > 0) {
-    return { code: "MAP_CONTAINER_FOUND", stage: "MAP_VISIBLE", message };
-  }
-
-  return { code: "MAP_TIMEOUT", stage: "MAP_VISIBLE", message };
 }
 
 function clearPickupState(contact: CheckoutContactInput): CheckoutContactInput {
@@ -358,7 +286,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const [widgetConfig, setWidgetConfig] = useState<CdekWidgetConfig | null>(null);
   const [widgetStatus, setWidgetStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
   const [widgetError, setWidgetError] = useState("");
-  const [widgetDiagnostic, setWidgetDiagnostic] = useState<CdekWidgetDiagnostic | null>(null);
   const [widgetAttempt, setWidgetAttempt] = useState(0);
 
   useEffect(() => {
@@ -382,7 +309,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
 
     let cancelled = false;
     let readyTimeout: ReturnType<typeof setTimeout> | null = null;
-    let mapVisibilityTimeout: ReturnType<typeof setTimeout> | null = null;
 
     function clearReadyTimeout() {
       if (readyTimeout) {
@@ -391,25 +317,15 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       }
     }
 
-    function clearMapVisibilityTimeout() {
-      if (mapVisibilityTimeout) {
-        clearTimeout(mapVisibilityTimeout);
-        mapVisibilityTimeout = null;
-      }
-    }
-
-    function failWidget(diagnostic: CdekWidgetDiagnostic) {
+    function failWidget() {
       if (cancelled) return;
       setWidgetStatus("failed");
-      setWidgetDiagnostic(diagnostic);
       setWidgetError("Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.");
-      console.error("[cdek-widget] map initialization failed", diagnostic);
     }
 
     async function initWidget() {
       setWidgetStatus("loading");
       setWidgetError("");
-      setWidgetDiagnostic(null);
 
       try {
         const configResponse = await fetch("/api/delivery/cdek/widget-config", { cache: "no-store" });
@@ -424,7 +340,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
         if (!config.ready) {
           setWidgetStatus("failed");
           setWidgetError(config.message);
-          setWidgetDiagnostic({ code: "CDEK_MAP_CONFIG_NOT_READY", stage: "config", message: config.reason });
           return;
         }
 
@@ -438,15 +353,11 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
         destroyCdekWidget(widgetInstanceRef.current);
         widgetInstanceRef.current = null;
         root.replaceChildren();
-        setWidgetDiagnostic(await waitForCdekContainer(root, () => cancelled));
+        await waitForCdekContainer(root, () => cancelled);
         if (cancelled) return;
 
         readyTimeout = setTimeout(() => {
-          failWidget({
-            code: "CDEK_MAP_READY_TIMEOUT",
-            stage: "ready",
-            message: `CDEK widget did not call onReady within ${cdekWidgetReadyTimeoutMs}ms.`,
-          });
+          failWidget();
         }, cdekWidgetReadyTimeoutMs);
 
         widgetInstanceRef.current = new CdekWidget({
@@ -465,15 +376,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           onReady: () => {
             clearReadyTimeout();
             setWidgetStatus("ready");
-            setWidgetDiagnostic({
-              code: "WIDGET_READY",
-              stage: "WIDGET_READY",
-              message: cdekMapDiagnostic(root).message,
-            });
-            mapVisibilityTimeout = setTimeout(() => {
-              if (cancelled) return;
-              setWidgetDiagnostic(cdekMapDiagnostic(root));
-            }, cdekMapVisibilityTimeoutMs);
           },
           onChoose: (mode, tariff, address) => {
             const point = normalizeCdekWidgetPickupPoint(mode, tariff, address);
@@ -505,8 +407,8 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       } catch (error) {
         if (cancelled) return;
         clearReadyTimeout();
-        clearMapVisibilityTimeout();
-        failWidget(cdekWidgetFailure("constructor", error, "CDEK_MAP_CONSTRUCTOR_FAILED"));
+        void error;
+        failWidget();
       }
     }
 
@@ -515,7 +417,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
     return () => {
       cancelled = true;
       clearReadyTimeout();
-      clearMapVisibilityTimeout();
       destroyCdekWidget(widgetInstanceRef.current);
       widgetInstanceRef.current = null;
     };
@@ -976,11 +877,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
             <div className={styles.cdekWidgetMap}>
               <div className={styles.cdekWidgetRoot} id={rootId} ref={rootRef} />
               {widgetStatus === "loading" ? <p className={`${styles.lineMeta} ${styles.cdekWidgetStatus}`}>Загружаем карту СДЭК…</p> : null}
-              {widgetDiagnostic && widgetStatus !== "failed" ? (
-                <p className={styles.cdekWidgetDiagnosticRibbon}>
-                  {widgetDiagnostic.code} · {widgetDiagnostic.message}
-                </p>
-              ) : null}
               {widgetStatus === "failed" ? (
                 <div className={styles.cdekWidgetFallbackState}>
                   <p>
@@ -988,11 +884,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
                       ? widgetConfig.message
                       : "Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.")}
                   </p>
-                  {widgetDiagnostic ? (
-                    <p className={styles.cdekWidgetDiagnostic}>
-                      Диагностический код: {widgetDiagnostic.code} · stage: {widgetDiagnostic.stage}
-                    </p>
-                  ) : null}
                   <button type="button" className={styles.buyNow} onClick={() => setWidgetAttempt((attempt) => attempt + 1)}>
                     Попробовать ещё раз
                   </button>

@@ -310,8 +310,9 @@ describe("checkout client render", () => {
     await waitFor(() => expect(view.widgetOptions[0]).toBeTruthy());
     expect(view.widgetOptions[0].defaultLocation).toEqual([37.6173, 55.7558]);
     expect(view.widgetOptions[0].tariffs).toMatchObject({ office: [136], door: [137], pickup: [] });
-    expect(await view.findByText(/WIDGET_READY/)).toBeTruthy();
-    expect(view.queryByText("Диагностический код: CDEK_MAP_DEFAULT_LOCATION_MISSING · stage: constructor")).toBeNull();
+    await waitFor(() => expect(view.queryByText(/Загружаем карту СДЭК/)).toBeNull());
+    expect(view.queryByText(/WIDGET_READY|MAP_TIMEOUT|MAP_VISIBLE/)).toBeNull();
+    expect(view.queryByText(/Диагностический код/)).toBeNull();
   });
 
   it("uses the bundled CDEK widget constructor without injecting a third-party script", async () => {

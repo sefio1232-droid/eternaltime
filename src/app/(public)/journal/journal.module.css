@@ -813,6 +813,98 @@
   }
 }
 
+@media (max-width: 720px) {
+  .shell {
+    padding-block: 1rem 3.5rem;
+  }
+
+  .masthead,
+  .tableOfContents,
+  .leadStory,
+  .readingGrid,
+  .editorialShelf,
+  .bridge {
+    width: min(calc(100vw - 2rem), 42rem);
+    max-width: min(calc(100vw - 2rem), 42rem);
+  }
+
+  .mastheadCopy {
+    padding-block: 1.35rem 1rem;
+  }
+
+  .mastheadCopy h1 {
+    max-width: 10ch;
+    font-size: var(--mobile-display, clamp(2rem, 10vw, 3.15rem));
+    line-height: 1.02;
+  }
+
+  .intro {
+    font-size: 0.96rem;
+    line-height: 1.58;
+  }
+
+  .coverNote {
+    min-height: 18rem;
+    border-left: 0;
+    border-top: 1px solid rgb(18 22 25 / 14%);
+  }
+
+  .coverObject,
+  .watchPlate {
+    min-height: 12.5rem;
+  }
+
+  .coverFolio strong {
+    font-size: clamp(3rem, 18vw, 4.5rem);
+  }
+
+  .issueFacts {
+    grid-template-columns: 1fr;
+  }
+
+  .issueFacts div {
+    border-right: 0;
+    border-bottom: 1px solid rgb(18 22 25 / 10%);
+    padding-inline: 0;
+  }
+
+  .issueFacts div:last-child {
+    border-bottom: 0;
+  }
+
+  .tableOfContents {
+    margin-top: 1rem;
+  }
+
+  .tocLabel {
+    padding: 0.8rem 0.9rem 0.2rem;
+  }
+
+  .leadStory {
+    gap: 1rem;
+    padding-block: 2rem;
+  }
+
+  .leadKicker > span {
+    writing-mode: horizontal-tb;
+  }
+
+  .leadBody h2,
+  .sectionHeading h2,
+  .editorialShelf h2,
+  .upcomingHeader h2,
+  .bridge h2 {
+    max-width: 100%;
+    font-size: var(--mobile-heading, clamp(1.55rem, 7.4vw, 2.35rem));
+    line-height: 1.06;
+  }
+
+  .leadDek {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .watchPlate :global(.catalog-image),
   .watchMini :global(.catalog-image) {

@@ -48,7 +48,7 @@ describe("mobile-first production refinement contracts", () => {
     expect(listStyles).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
     expect(listStyles).toContain("@media (max-width: 359px)");
     expect(cardStyles).toContain("@media (max-width: 767px)");
-    expect(cardStyles).toContain("aspect-ratio: 1 / 1.18");
+    expect(cardStyles).toContain("aspect-ratio: 1 / 1.12");
     expect(heroStyles).toContain("@media (max-width: 767px)");
     expect(heroStyles).toContain(".assistLead");
     expect(heroStyles).toContain("display: none");
@@ -115,7 +115,7 @@ describe("mobile-first production refinement contracts", () => {
     expect(hero).toContain("--orbit-x: 83cqw !important");
     expect(hero).toContain(".leftWatch .watchAction");
     expect(hero).toContain("pointer-events: none");
-    expect(hero).toContain("height: clamp(330px, 64svh, 440px)");
+    expect(hero).toContain("height: clamp(300px, 58svh, 400px)");
   });
 
   it("uses mobile-native collection recommendation stacks instead of desktop carousel overflow", () => {
@@ -156,5 +156,19 @@ describe("mobile-first production refinement contracts", () => {
     expect(existsSync(path.join(projectRoot, "src/app/icon.svg"))).toBe(true);
     expect(favicon).toContain("<svg");
     expect(favicon).toContain("ET");
+  });
+
+  it("keeps production UI free of temporary diagnostics and developer placeholder copy", () => {
+    const checkout = readSrc("src/components/commerce/checkout-experience.tsx");
+    const commerceStyles = readSrc("src/components/commerce/commerce.module.css");
+    const missingImage = readSrc("src/components/catalog/catalog-missing-image.tsx");
+
+    expect(checkout).not.toContain("WIDGET_READY");
+    expect(checkout).not.toContain("MAP_TIMEOUT");
+    expect(checkout).not.toContain("MAP_VISIBLE");
+    expect(checkout).not.toContain("Диагностический код");
+    expect(commerceStyles).not.toContain("cdekWidgetDiagnosticRibbon");
+    expect(missingImage).not.toContain("Изображение готовится");
+    expect(missingImage).toContain("Фото временно недоступно");
   });
 });

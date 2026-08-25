@@ -655,32 +655,8 @@
   max-width: 34rem;
 }
 
-.cdekWidgetDiagnostic {
-  border: 1px solid var(--border);
-  padding: 0.55rem 0.7rem;
-  color: var(--text-muted);
-  font-family: var(--font-reference, ui-monospace, monospace);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-}
-
-.cdekWidgetDiagnosticRibbon {
-  position: absolute;
-  right: 0.75rem;
-  bottom: 0.75rem;
-  z-index: 3;
-  max-width: min(46rem, calc(100% - 1.5rem));
-  margin: 0;
-  border: 1px solid color-mix(in srgb, var(--border-strong) 70%, transparent);
-  background: color-mix(in srgb, var(--canvas) 92%, white 8%);
-  box-shadow: 0 0.75rem 2rem color-mix(in srgb, black 12%, transparent);
-  color: var(--text-muted);
-  font-family: var(--font-reference, ui-monospace, monospace);
-  font-size: 0.68rem;
-  line-height: 1.35;
-  padding: 0.55rem 0.65rem;
-  pointer-events: none;
-  text-align: left;
+.cdekWidgetFallbackState button {
+  width: min(100%, 18rem);
 }
 
 @media (max-width: 620px) {
@@ -961,6 +937,7 @@
 
   .cdekWidgetHeader {
     flex-wrap: nowrap;
+    align-items: start;
     padding:
       calc(0.8rem + env(safe-area-inset-top, 0px))
       1rem
@@ -977,5 +954,14 @@
   .cdekWidgetMap {
     min-height: 0;
     height: 100%;
+  }
+
+  .cdekWidgetFallbackState {
+    align-content: center;
+    padding: 1rem;
+  }
+
+  .cdekWidgetFallbackState button {
+    width: 100%;
   }
 }

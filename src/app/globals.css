@@ -30,6 +30,11 @@
   --container-wide: 1360px;
   --page-gutter: clamp(20px, 4vw, 72px);
   --wide-page-gutter: clamp(16px, 2.2vw, 40px);
+  --mobile-page-gutter: clamp(16px, 4.8vw, 22px);
+  --mobile-section-y: clamp(2rem, 7vw, 3.5rem);
+  --mobile-display: clamp(2rem, 10vw, 3.15rem);
+  --mobile-heading: clamp(1.55rem, 7.4vw, 2.35rem);
+  --font-serif: var(--font-editorial);
   --content-max: 1360px;
   --wide-content-max: 1800px;
   --measure: 680px;
@@ -55,17 +60,31 @@
 
 html {
   min-height: 100%;
+  overflow-x: clip;
   background: var(--background);
 }
 
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: clip;
   background: var(--background);
   color: var(--text);
   font-family: var(--font-body);
   letter-spacing: 0;
   text-rendering: optimizeLegibility;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+:where(h1, h2, h3, .type-display, .type-editorial, .type-page, .type-section) {
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 a {

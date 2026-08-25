@@ -216,3 +216,72 @@
     padding: 1.1rem;
   }
 }
+
+@media (max-width: 640px) {
+  .breadcrumbs,
+  .hero,
+  .inlineToc,
+  .copy,
+  .related,
+  .bridge {
+    width: min(calc(100vw - 2rem), 42rem);
+    max-width: min(calc(100vw - 2rem), 42rem);
+  }
+
+  .heroCopy {
+    padding: 1.4rem 0 1.15rem;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    font-size: var(--mobile-display, clamp(2rem, 10vw, 3.15rem));
+    line-height: 1.04;
+  }
+
+  .dek {
+    font-size: 0.96rem;
+    line-height: 1.58;
+  }
+
+  .heroVisual {
+    min-height: 18rem;
+  }
+
+  .inlineToc {
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    max-height: min(52dvh, 24rem);
+    overflow-y: auto;
+  }
+
+  .copy {
+    padding-block: 2.15rem;
+  }
+
+  .copy h2 {
+    font-size: var(--mobile-heading, clamp(1.55rem, 7.4vw, 2.35rem));
+    line-height: 1.08;
+  }
+
+  .copy p {
+    font-size: 1rem;
+    line-height: 1.72;
+  }
+
+  .statement,
+  .comparison {
+    padding: 1.15rem;
+  }
+
+  .copy :global(figure) {
+    width: min(calc(100vw - 2rem), 42rem);
+    max-width: min(calc(100vw - 2rem), 42rem);
+  }
+
+  .relatedGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .relatedCard {
+    grid-template-columns: 5.75rem minmax(0, 1fr);
+  }
+}

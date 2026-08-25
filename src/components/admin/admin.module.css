@@ -325,7 +325,11 @@
   }
 
   .header h1 {
-    font-size: 2rem;
+    font-family: var(--font-display);
+    font-size: var(--mobile-display, clamp(2rem, 10vw, 3.15rem));
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
   }
 
   .metrics,
@@ -333,5 +337,44 @@
   .formGrid,
   .compactGrid {
     grid-template-columns: 1fr;
+  }
+
+  .headerRow,
+  .toolbar,
+  .sectionHeader,
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .button,
+  .linkButton,
+  .dangerButton,
+  .field input,
+  .field select,
+  .check {
+    min-height: 44px;
+  }
+
+  .button,
+  .linkButton,
+  .dangerButton {
+    width: 100%;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 16px;
+  }
+
+  .tableWrap {
+    margin-inline: calc(-1 * var(--page-gutter));
+    border-inline: 0;
+    scroll-padding-inline: var(--page-gutter);
+  }
+
+  .table {
+    min-width: 760px;
   }
 }

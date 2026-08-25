@@ -226,13 +226,13 @@
 
 @media (max-width: 767px) {
   .media {
-    aspect-ratio: 1 / 1.18;
-    padding: 5%;
+    aspect-ratio: 1 / 1.12;
+    padding: 6%;
   }
 
   .media img {
-    max-height: 90%;
-    max-width: 88%;
+    max-height: 86%;
+    max-width: 84%;
   }
 
   .content {
@@ -246,8 +246,8 @@
   }
 
   .model {
-    font-size: clamp(0.98rem, 4.1vw, 1.16rem);
-    line-height: 1.16;
+    font-size: clamp(0.94rem, 3.9vw, 1.1rem);
+    line-height: 1.18;
   }
 
   .reference {

@@ -1325,6 +1325,88 @@
 
 @media (max-width: 767px) {
   .section {
+    min-width: 0;
+  }
+
+  .homeContent {
+    width: min(calc(100% - 2 * var(--mobile-page-gutter, 18px)), var(--home-content-max));
+  }
+
+  .section h2,
+  .section h3,
+  .finalCopy > p {
+    max-width: 100%;
+    font-family: var(--font-display);
+    font-size: var(--mobile-heading, clamp(1.55rem, 7.4vw, 2.35rem));
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  .sectionCopy {
+    gap: 0.75rem;
+  }
+
+  .sectionCopy > p:not(.eyebrow) {
+    max-width: 100%;
+    font-size: 0.96rem;
+    line-height: 1.58;
+  }
+
+  .ctaPrimaryLight,
+  .ctaSecondaryLight,
+  .ctaPrimaryDark,
+  .ctaSecondaryDark {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .journalLead,
+  .journalList,
+  .finalInner {
+    min-height: auto;
+  }
+
+  .journalLead {
+    padding: 1rem;
+  }
+
+  .journalLead strong {
+    max-width: 100%;
+    font-size: clamp(1.45rem, 7vw, 2.05rem);
+  }
+
+  .journalLink strong {
+    font-size: clamp(1.05rem, 5vw, 1.35rem);
+  }
+
+  .finalInner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+    padding-block: 2.25rem;
+  }
+
+  .finalCopy,
+  .finalWatches {
+    grid-column: 1;
+  }
+
+  .finalActions {
+    display: grid;
+    width: 100%;
+  }
+
+  .finalWatches {
+    height: clamp(17rem, 64vw, 23rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .section {
     --home-gutter: 20px;
     --home-gap: 20px;
   }
@@ -6357,4 +6439,73 @@
   display: block;
   color: rgb(255 255 255 / 82%);
   opacity: 1;
+}
+
+/* Final mobile polish: keep the premium composition airy without letting old desktop layers
+   stretch phone viewports or enlarge watch/editorial blocks past the visible canvas. */
+@media (max-width: 767px) {
+  .homeContent {
+    width: min(calc(100% - 2 * var(--mobile-page-gutter, 18px)), var(--home-content-max));
+  }
+
+  .section h2,
+  .section h3,
+  .finalCopy > p {
+    max-width: 100%;
+    font-family: var(--font-display);
+    font-size: var(--mobile-heading, clamp(1.55rem, 7.4vw, 2.35rem));
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  .sectionCopy,
+  .journalIntro,
+  .finalCopy {
+    gap: 0.75rem;
+  }
+
+  .sectionCopy > p:not(.eyebrow),
+  .journalLead p,
+  .journalLink p {
+    max-width: 100%;
+    font-size: 0.96rem;
+    line-height: 1.58;
+  }
+
+  .ctaPrimaryLight,
+  .ctaSecondaryLight,
+  .ctaPrimaryDark,
+  .ctaSecondaryDark {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .journalLead {
+    min-height: auto;
+    padding: 1rem;
+  }
+
+  .journalLead strong {
+    max-width: 100%;
+    font-size: clamp(1.45rem, 7vw, 2.05rem);
+    line-height: 1.08;
+  }
+
+  .journalLink strong {
+    font-size: clamp(1.05rem, 5vw, 1.35rem);
+  }
+
+  .finalInner {
+    min-height: auto;
+    gap: 1.35rem;
+    padding-block: 2.35rem;
+  }
+
+  .finalWatches {
+    height: clamp(17rem, 64vw, 23rem);
+  }
 }
