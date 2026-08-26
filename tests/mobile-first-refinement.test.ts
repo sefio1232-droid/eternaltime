@@ -154,6 +154,8 @@ describe("mobile-first production refinement contracts", () => {
     expect(commerceActions).toContain("viewBox=\"0 0 24 24\"");
     expect(commerceStyles).not.toContain(".cartIconGlyph::before");
     expect(existsSync(path.join(projectRoot, "src/app/icon.svg"))).toBe(true);
+    expect(existsSync(path.join(projectRoot, "public/favicon.ico"))).toBe(true);
+    expect(existsSync(path.join(projectRoot, "public/apple-icon.png"))).toBe(true);
     expect(favicon).toContain("<svg");
     expect(favicon).toContain("ET");
   });

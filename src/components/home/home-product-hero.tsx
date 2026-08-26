@@ -1097,7 +1097,7 @@ export function HomeProductHero({
                     width={1700}
                     height={1800}
                     priority={isCenter}
-                    loading={isCenter ? "eager" : "lazy"}
+                    loading="eager"
                     sizes={isCenter ? "(max-width: 767px) 78vw, 42vw" : "(max-width: 767px) 34vw, 18vw"}
                     className={styles.watchImage}
                   />

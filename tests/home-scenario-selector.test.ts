@@ -567,6 +567,15 @@ describe("homepage production multi-watch hero", () => {
     expect(ecosystem).not.toContain("/api/catalog/dev-images");
   });
 
+  it("eager-loads every visible hero orbit watch while keeping priority limited to the center LCP image", () => {
+    const hero = file("src/components/home/home-product-hero.tsx");
+
+    expect(hero).toContain('const isCenter = slot.slotName === "centerActive" && travelState === "idle"');
+    expect(hero).toContain("priority={isCenter}");
+    expect(hero).toContain('loading="eager"');
+    expect(hero).not.toContain('loading={isCenter ? "eager" : "lazy"}');
+  });
+
   it("compresses homepage copy while preserving the approved product journey", () => {
     const home = file("src/app/(public)/page.tsx");
     const hero = file("src/components/home/home-product-hero.tsx");

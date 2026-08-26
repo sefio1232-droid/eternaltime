@@ -54,4 +54,21 @@ describe("UX copy audit", () => {
     expect(source("src/app/(public)/journal/page.tsx")).toContain("Журнал EternalTime · Выпуск 01");
     expect(source("src/modules/journal/content/upcoming-stories.ts")).toContain("Кварц, механика или солнечное питание");
   });
+
+  it("keeps pre-launch audit route inventories aligned with the published Journal slugs", () => {
+    const browserAudit = source("scripts/prelaunch-browser-audit.mjs");
+    const publicInventory = source("src/modules/public-experience/application/public-experience-inventory.ts");
+
+    for (const staleSlug of ["why-g-shock-became-cult", "quartz-vs-mechanical-real-difference", "water-resistance-atm-guide"]) {
+      expect(browserAudit).not.toContain(staleSlug);
+      expect(publicInventory).not.toContain(staleSlug);
+    }
+
+    for (const publishedSlug of ["pochemu-mekhanicheskie-chasy-populyarny", "kak-vybrat-brend-chasov", "chasy-kak-investitsiya"]) {
+      expect(browserAudit).toContain(`/journal/${publishedSlug}`);
+    }
+
+    expect(publicInventory).toContain("listPublishedJournalArticles");
+    expect(publicInventory).toContain("publishedJournalRoutes");
+  });
 });

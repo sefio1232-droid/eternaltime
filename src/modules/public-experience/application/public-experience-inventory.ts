@@ -1,7 +1,7 @@
 import { foundationPublicRoutes, publicNavigation, utilityNavigation } from "@/config/navigation";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import { listEditorialSelections } from "@/modules/editorial-selections/application/editorial-selection-service";
-import { getJournalInventory } from "@/modules/journal/application/journal-repository";
+import { getJournalInventory, listPublishedJournalArticles } from "@/modules/journal/application/journal-repository";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
 
@@ -24,6 +24,7 @@ export function buildPublicExperienceInventory(input: {
 }): PublicExperienceInventory {
   const dataset = catalogReadDatasetFromPreview(input);
   const journalInventory = getJournalInventory();
+  const publishedJournalRoutes = listPublishedJournalArticles().map((article) => `/journal/${article.slug}`);
   const detailRoutes = dataset.brands
     .map((brand) => dataset.watches.find((watch) => watch.brandSlug === brand.slug)?.href)
     .filter((href): href is string => Boolean(href))
@@ -45,9 +46,7 @@ export function buildPublicExperienceInventory(input: {
       ...detailRoutes,
       "/brands",
       "/journal",
-      "/journal/why-g-shock-became-cult",
-      "/journal/quartz-vs-mechanical-real-difference",
-      "/journal/water-resistance-atm-guide",
+      ...publishedJournalRoutes,
       "/selection",
       "/collection",
     ],
