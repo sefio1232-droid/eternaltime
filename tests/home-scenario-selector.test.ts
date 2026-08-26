@@ -573,6 +573,7 @@ describe("homepage production multi-watch hero", () => {
     expect(hero).toContain('const isCenter = slot.slotName === "centerActive" && travelState === "idle"');
     expect(hero).toContain("priority={isCenter}");
     expect(hero).toContain('loading="eager"');
+    expect(hero).toContain('sizes="96px"');
     expect(hero).not.toContain('loading={isCenter ? "eager" : "lazy"}');
   });
 

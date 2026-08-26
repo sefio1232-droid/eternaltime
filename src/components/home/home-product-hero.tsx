@@ -1189,7 +1189,9 @@ export function HomeProductHero({
           <div className={styles.preloadImages} aria-hidden="true">
             {preloadIndexes.map((index) => {
               const watch = orbitWatches[index];
-              return watch ? <Image key={`preload-${index}`} src={watch.imageSrc} alt="" width={96} height={96} priority={false} /> : null;
+              return watch ? (
+                <Image key={`preload-${index}`} src={watch.imageSrc} alt="" width={96} height={96} loading="eager" sizes="96px" />
+              ) : null;
             })}
           </div>
 
