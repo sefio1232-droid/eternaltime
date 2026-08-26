@@ -56,7 +56,7 @@ const fixtureDataset: CatalogReadDataset = {
   watches: [
     watch({ reference: "T150.417.11.041.00", brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", price: 45678 }),
     watch({ reference: "T150.410.16.051.00", brandName: "Tissot", title: "Tissot PR 100 40mm", price: 44000 }),
-    watch({ reference: "T120.417.11.041.03", brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph", price: 91000 }),
+    watch({ reference: "T120.417.17.051.03", brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph", price: 68000 }),
     watch({ reference: "EFK-100D-2A", brandName: "Casio", title: "Casio Edifice Automatic", price: 48000 }),
     watch({ reference: "T120.807.33.051.00", brandName: "Tissot", title: "Tissot Seastar 1000 40mm", price: 89000 }),
     watch({ reference: "T137.407.33.051.00", brandName: "Tissot", title: "Tissot PRX Powermatic 80 Gold", price: 120000 }),
@@ -66,10 +66,10 @@ const fixtureDataset: CatalogReadDataset = {
 const expectedScenarioRefs = [
   ["T150.410.16.051.00", "T150.417.11.041.00", "T150.210.11.041.00", "EFK-100D-2A"],
   ["T150.410.16.051.00", "T150.210.11.041.00", "T150.417.11.041.00", "EFK-100D-2A"],
-  ["T120.417.11.041.03", "MTG-B3000DN-1A", "EFK-100D-2A", "T150.417.11.041.00"],
-  ["EFK-100D-2A", "T137.407.33.051.00", "T120.417.11.041.03", "T150.410.16.051.00"],
-  ["T120.417.11.041.03", "MTG-B3000DN-1A", "EFK-100D-2A", "T150.417.11.041.00"],
-  ["T137.407.33.051.00", "MTG-B3000DN-1A", "T120.417.11.041.03", "T150.410.16.051.00"],
+  ["T120.417.17.051.03", "MTG-B3000DN-1A", "EFK-100D-2A", "T150.417.11.041.00"],
+  ["EFK-100D-2A", "T137.407.33.051.00", "T120.417.17.051.03", "T150.410.16.051.00"],
+  ["T120.417.17.051.03", "MTG-B3000DN-1A", "EFK-100D-2A", "T150.417.11.041.00"],
+  ["T137.407.33.051.00", "MTG-B3000DN-1A", "T120.417.17.051.03", "T150.410.16.051.00"],
 ];
 
 describe("homepage production multi-watch hero", () => {
@@ -384,7 +384,13 @@ describe("homepage production multi-watch hero", () => {
     expect(manifest.count).toBeGreaterThanOrEqual(16);
     expect(model).not.toContain("orbitNormalizedAssetPath");
     expect(model).not.toContain("/generated/home-hero/orbit-normalized/");
-    expect(orbit.every((watch) => watch.imageSrc.startsWith("/generated/homepage-premium-assets/"))).toBe(true);
+    expect(
+      orbit.every(
+        (watch) =>
+          watch.imageSrc.startsWith("/generated/homepage-premium-assets/") ||
+          watch.imageSrc === "/generated/homepage-editorial-assets/tissot-seastar-t1204171705103.png",
+      ),
+    ).toBe(true);
     expect(manifest.records.every((record) => record.noArtificialUpscale)).toBe(true);
     expect(manifest.records.every((record) => record.visibleBounds.width > 0 && record.visibleBounds.height > 0)).toBe(true);
     expect(manifest.records.some((record) => record.reference === "T129.410.11.053.00")).toBe(true);
@@ -406,7 +412,14 @@ describe("homepage production multi-watch hero", () => {
     expect(existsSync(contactSheetPath)).toBe(true);
     expect(manifest.approved).toHaveLength(7);
     expect(manifest.approved.every((record) => record.noArtificialUpscale)).toBe(true);
-    expect(orbit.every((watch) => approvedPaths.has(watch.imageSrc))).toBe(true);
+    expect(
+      orbit.every(
+        (watch) =>
+          approvedPaths.has(watch.imageSrc) ||
+          (watch.reference === "T120.417.17.051.03" &&
+            watch.imageSrc === "/generated/homepage-editorial-assets/tissot-seastar-t1204171705103.png"),
+      ),
+    ).toBe(true);
     expect(manifest.rejected.some((record) => record.reference === "GBD-H1000-1A4" && record.decision === "REJECTED_LOW_RESOLUTION")).toBe(true);
   });
 

@@ -10,6 +10,7 @@ import { createTissotArchiveImageKey } from "@/modules/catalog/infrastructure/ti
 import type { TissotManifestEntry, TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import type { CatalogSiteImportOverlayEntry, CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
 import { classifyCatalogImageRejection, selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
+import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
 import { sanitizeCatalogPublicText } from "@/modules/catalog/application/catalog-public-sanitation";
 import type {
   CatalogImagePresentation,
@@ -172,7 +173,7 @@ function publicSpecifications(candidate: MergedCatalogCandidate, overlaySpecific
     result.push({
       key,
       label: definition.label,
-      value,
+      value: sanitizeCatalogSpecificationValue({ key, label: definition.label, value }),
       group: definition.group,
     });
   }

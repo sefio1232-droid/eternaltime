@@ -16,6 +16,7 @@ import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/
 import { createTissotArchiveImageKey } from "@/modules/catalog/infrastructure/tissot-photo-archive-keys";
 import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import { resolveCatalogImageAssetRoot } from "@/modules/catalog/infrastructure/catalog-image-asset-root";
+import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
 
 type CatalogPublicReadModelRow = {
   read_model_json: CatalogWatchDetail;
@@ -162,6 +163,23 @@ function applyProductionImagePolicy(watch: CatalogWatchDetail, manifests: Catalo
   };
 }
 
+function applyProductionSpecificationPolicy(watch: CatalogWatchDetail): CatalogWatchDetail {
+  const sanitize = (specification: CatalogWatchDetail["specifications"][number]) => ({
+    ...specification,
+    value: sanitizeCatalogSpecificationValue({
+      key: specification.key,
+      label: specification.label,
+      value: specification.value,
+    }),
+  });
+
+  return {
+    ...watch,
+    specifications: watch.specifications.map(sanitize),
+    keySpecifications: watch.keySpecifications.map(sanitize),
+  };
+}
+
 function refreshSiblingImages(watches: CatalogWatchDetail[]): CatalogWatchDetail[] {
   const primaryById = new Map(watches.map((watch) => [watch.id, watch.primaryImage]));
 
@@ -179,6 +197,7 @@ function datasetFromRows(rows: CatalogPublicReadModelRow[], manifests: CatalogPh
     .map((row) => ({
       ...row.read_model_json,
     }))
+    .map(applyProductionSpecificationPolicy)
     .map((watch) => applyProductionImagePolicy(watch, manifests))
     .sort((left, right) => left.brandName.localeCompare(right.brandName, "ru") || left.title.localeCompare(right.title, "ru"));
   const watchesWithSiblingImages = refreshSiblingImages(watches);

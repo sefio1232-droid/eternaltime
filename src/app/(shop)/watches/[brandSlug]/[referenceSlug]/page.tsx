@@ -4,6 +4,7 @@ import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { CatalogWatchDetailPage } from "@/components/catalog/catalog-watch-detail-page";
 import { getPublicEnv } from "@/config/public-env";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
+import { displayWatchSeoTitle } from "@/modules/catalog/application/catalog-display";
 import {
   CatalogReadSourceError,
   getPublicCatalogRelatedWatches,
@@ -35,7 +36,13 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
     });
 
     return {
-      title: seoOverlay?.seoTitle || `${watch.title} ${watch.referenceDisplay}`,
+      title:
+        seoOverlay?.seoTitle ||
+        displayWatchSeoTitle({
+          brandName: watch.brandName,
+          title: watch.title,
+          referenceDisplay: watch.referenceDisplay,
+        }),
       description:
         seoOverlay?.metaDescription ||
         `${watch.brandName} ${watch.referenceDisplay}: цена ${formatCatalogMoney(
@@ -74,7 +81,11 @@ function productStructuredData(
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: watch.title,
+    name: displayWatchSeoTitle({
+      brandName: watch.brandName,
+      title: watch.title,
+      referenceDisplay: watch.referenceDisplay,
+    }),
     brand: {
       "@type": "Brand",
       name: watch.brandName,

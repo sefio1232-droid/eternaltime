@@ -1,4 +1,5 @@
 import { mechanismGroupCardLabels, normalizeMechanismGroup } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
+import { normalizeManufacturerReference } from "@/modules/catalog/domain/reference-normalization";
 import type { CatalogPublicSpecification, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
 
 function normalizeDisplayText(value: string): string {
@@ -66,6 +67,18 @@ export function displayWatchTitle(input: { brandName: string; title: string; ref
   return `${brandName} ${title}`;
 }
 
+export function displayWatchSeoTitle(input: { brandName: string; title: string; referenceDisplay: string }): string {
+  const title = displayWatchTitle(input);
+  const normalizedTitle = normalizeManufacturerReference(title);
+  const normalizedReference = normalizeManufacturerReference(input.referenceDisplay);
+
+  if (normalizedReference && normalizedTitle.includes(normalizedReference)) {
+    return title;
+  }
+
+  return `${title} ${normalizeDisplayText(input.referenceDisplay)}`;
+}
+
 /**
  * Model heading for contexts where the brand is already shown as a separate line (e.g. the
  * catalog card). Strips a redundant leading brand name from the title instead of prepending one,
@@ -115,6 +128,78 @@ export function formatCatalogDisplayValue(value: string): string {
       return index === 0 ? lower.charAt(0).toLocaleUpperCase("ru") + lower.slice(1) : lower;
     })
     .join(", ");
+}
+
+function stripLeadingSpecificationLabel(value: string, label: string): string {
+  const normalizedLabel = normalizeDisplayText(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replace(new RegExp(`^${normalizedLabel}\\s*[:—-]\\s*`, "iu"), "").trim();
+}
+
+function dedupeDelimitedParts(value: string): string {
+  const separator = value.includes(" / ") ? " / " : value.includes(", ") ? ", " : null;
+  if (!separator) return value;
+
+  const seen = new Set<string>();
+  const parts = value
+    .split(separator)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => {
+      const key = part.toLocaleLowerCase("ru").replace(/[()]/g, "").replace(/\s+/g, " ");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+  return parts.length > 0 ? parts.join(separator) : value;
+}
+
+/**
+ * Read-model-facing sanitizer for public specification values. It removes only label/value
+ * duplication and malformed generated adjectives (for example `Стекло: полимерное стекло` under
+ * the already-visible row label `Стекло`, or `Кожаный ремешокный ремешок`). It never fills missing
+ * specs or changes the underlying fact.
+ */
+export function sanitizeCatalogSpecificationValue(input: { key: string; label: string; value: string }): string {
+  let value = normalizeDisplayText(input.value);
+
+  value = stripLeadingSpecificationLabel(value, input.label);
+
+  if (input.key === "crystal_type_raw") {
+    value = value.replace(
+      /(^|[^а-яё])((?:минеральн(?:ое|ый)|сапфиров(?:ое|ый)|акрилов(?:ое|ый)|полимерн(?:ое|ый)|органическ(?:ое|ий))\s+)стекл[оа](?=$|[^а-яё])/giu,
+      "$1$2",
+    );
+    value = value.replace(
+      /(^|[^а-яё])(hardlex|hesalite)\s+стекл[оа](?=$|[^а-яё])/giu,
+      "$1$2",
+    );
+    value = value.replace(/\s+стекл[оа](?=$|[^а-яё])/giu, "");
+    value = value.replace(/\s*\(([^)]*)\)\s*/gu, (match, inner: string) => {
+      const normalizedInner = inner.trim().toLocaleLowerCase("ru");
+      if (!normalizedInner) return " ";
+      return value.toLocaleLowerCase("ru").replace(match.toLocaleLowerCase("ru"), " ").includes(normalizedInner)
+        ? " "
+        : ` (${inner.trim()}) `;
+    });
+  }
+
+  if (input.key === "dial_raw") {
+    value = value.replace(/^циферблат\s+/iu, "");
+  }
+
+  if (
+    input.key === "attachment_material_raw" ||
+    input.key === "strap_material_raw" ||
+    input.key === "bracelet_material_raw" ||
+    input.key === "strap_features_raw"
+  ) {
+    value = value
+      .replace(/ремешокн(?:ый|ая|ое|ые)?\s+ремешок/giu, "ремешок")
+      .replace(/браслетн(?:ый|ая|ое|ые)?\s+браслет/giu, "браслет");
+  }
+
+  return dedupeDelimitedParts(value).replace(/\s+/g, " ").trim();
 }
 
 // Note: JS regex `\b` only recognizes ASCII word characters, so it does not work as a word

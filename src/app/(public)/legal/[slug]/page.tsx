@@ -106,10 +106,6 @@ export default async function LegalDocumentPage({ params }: LegalPageProps) {
           </nav>
 
           <article className={styles.article}>
-            <div className={styles.sourceMeta}>
-              <span>Источник: {document.sourceFileName}</span>
-              <span>Раздел: {document.title}</span>
-            </div>
             <div className={styles.content}>
               {document.blocks.map((block, index) => (
                 <LegalBlock key={`${block.type}-${index}`} block={block} index={index} />

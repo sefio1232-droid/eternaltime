@@ -51,7 +51,7 @@ function HeroVisual({ watches, variant }: Readonly<{ watches: CatalogWatchDetail
           index={index}
         />
       ))}
-      {variant === "guide" ? <><div className={styles.brandMarker}><strong>Casio</strong><span>Практичность и узнаваемость</span><small>Подходящее предметное изображение в текущем каталоге недоступно.</small></div><div className={styles.brandMarker}><strong>Citizen</strong><span>Технологии и удобство</span><small>Типографическая композиция: безопасное изображение отсутствует.</small></div></> : null}
+      {variant === "guide" ? <><div className={styles.brandMarker}><strong>Casio</strong><span>Практичность и узнаваемость</span><small>Смотрите на артикул, размер и повседневные функции.</small></div><div className={styles.brandMarker}><strong>Citizen</strong><span>Технологии и удобство</span><small>Сравнивайте питание, читаемость и комфорт на руке.</small></div></> : null}
     </div>
   );
 }

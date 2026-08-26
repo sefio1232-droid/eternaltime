@@ -176,6 +176,7 @@ const premiumAsset = (reference: string, qualityClass: HomeHeroQualityClass = "H
   if (!config || !dimensions) {
     throw new Error(`Missing homepage premium asset config for ${reference}`);
   }
+  const isEditorialAsset = config.assetPath.includes("/homepage-editorial-assets/");
 
   return {
     path: config.assetPath,
@@ -188,8 +189,10 @@ const premiumAsset = (reference: string, qualityClass: HomeHeroQualityClass = "H
     motionMode: "STATIC_FRONT",
     framePaths: [],
     frameCount: 1,
-    source: "homepage_premium_asset",
-    sourceNote: "Approved by HOMEPAGE_ASSET_CURATION for the production homepage premium visual set.",
+    source: isEditorialAsset ? "homepage_editorial_asset" : "homepage_premium_asset",
+    sourceNote: isEditorialAsset
+      ? "Exact-reference homepage editorial asset selected from catalog-compatible product media."
+      : "Approved by HOMEPAGE_ASSET_CURATION for the production homepage premium visual set.",
     isExactReference: true,
     view: "front",
     isHeroApproved: true,
@@ -270,7 +273,7 @@ const readableHomeScenarioDefinitions: ScenarioDefinition[] = [
     sceneDescription: "Seastar Chronograph ведет дорожный сценарий; G-Shock thumbnail заменен качественным MT-G asset.",
     reviewNote: "GBD-H1000 stays rejected for production homepage because source is low-resolution.",
     slots: [
-      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "centralMain", specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.17.051.03", referenceSlug: "t1204171705103", slotRole: "centralMain", specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
       premiumSlot({ brandName: "Casio", title: "Casio G-Shock MT-G", shortTitle: "G-Shock MT-G", reference: "MTG-B3000DN-1A", referenceSlug: "mtgb3000dn1a", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: -32, displayY: 2, depth: 3, opacity: 0.44, specs: ["защита", "металл", "акцент"] }),
       premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: 32, displayY: 2, depth: 4, opacity: 0.46, specs: ["автомат", "синий циферблат", "стальной браслет"] }),
       premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", shortTitle: "PR 100 Chronograph", reference: "T150.417.11.041.00", referenceSlug: "t1504171104100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["синий циферблат", "хронограф", "сталь"] }),
@@ -292,7 +295,7 @@ const readableHomeScenarioDefinitions: ScenarioDefinition[] = [
     slots: [
       premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "centralMain", specs: ["автомат", "синий циферблат", "стальной браслет"] }),
       premiumSlot({ brandName: "Tissot", title: "Tissot PRX Powermatic 80 40mm Gold", shortTitle: "PRX Powermatic Gold", reference: "T137.407.33.051.00", referenceSlug: "t1374073305100", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: -32, displayY: 2, depth: 3, opacity: 0.44, specs: ["Powermatic 80", "золотой корпус", "черный циферблат"] }),
-      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.17.051.03", referenceSlug: "t1204171705103", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
       premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 40mm", shortTitle: "PR 100 40mm", reference: "T150.410.16.051.00", referenceSlug: "t1504101605100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["черный циферблат", "кожаный ремешок", "40 мм"] }),
     ],
   },
@@ -310,7 +313,7 @@ const readableHomeScenarioDefinitions: ScenarioDefinition[] = [
     sceneDescription: "Sport scenario uses Seastar and MT-G quality assets instead of the low-resolution Seastar 40/G-Shock thumbnails.",
     reviewNote: "T120.807.33.051.00 and GBD-H1000-1A4 remain rejected until better exact front assets exist.",
     slots: [
-      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "centralMain", specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.17.051.03", referenceSlug: "t1204171705103", slotRole: "centralMain", specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
       premiumSlot({ brandName: "Casio", title: "Casio G-Shock MT-G", shortTitle: "G-Shock MT-G", reference: "MTG-B3000DN-1A", referenceSlug: "mtgb3000dn1a", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: -32, displayY: 2, depth: 3, opacity: 0.46, specs: ["защита", "металл", "акцент"] }),
       premiumSlot({ brandName: "Casio", title: "Casio Edifice Automatic", shortTitle: "Edifice Automatic", reference: "EFK-100D-2A", referenceSlug: "efk100d2a", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["автомат", "синий циферблат", "стальной браслет"] }),
       premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 Chronograph 40mm", shortTitle: "PR 100 Chronograph", reference: "T150.417.11.041.00", referenceSlug: "t1504171104100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["синий циферблат", "хронограф", "сталь"] }),
@@ -332,7 +335,7 @@ const readableHomeScenarioDefinitions: ScenarioDefinition[] = [
     slots: [
       premiumSlot({ brandName: "Tissot", title: "Tissot PRX Powermatic 80 40mm Gold", shortTitle: "PRX Powermatic Gold", reference: "T137.407.33.051.00", referenceSlug: "t1374073305100", slotRole: "centralMain", specs: ["Powermatic 80", "золотой корпус", "черный циферблат"] }),
       premiumSlot({ brandName: "Casio", title: "Casio G-Shock MT-G", shortTitle: "G-Shock MT-G", reference: "MTG-B3000DN-1A", referenceSlug: "mtgb3000dn1a", slotRole: "alternativeLeft", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.66, displayX: -32, displayY: 2, depth: 3, opacity: 0.46, specs: ["защита", "металл", "акцент"] }),
-      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.11.041.03", referenceSlug: "t1204171104103", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
+      premiumSlot({ brandName: "Tissot", title: "Tissot Seastar 1000 Chronograph 45.5mm", shortTitle: "Seastar Chronograph", reference: "T120.417.17.051.03", referenceSlug: "t1204171705103", slotRole: "alternativeRight", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.62, displayX: 32, displayY: 2, depth: 4, opacity: 0.44, specs: ["синий циферблат", "хронограф", "стальной браслет"] }),
       premiumSlot({ brandName: "Tissot", title: "Tissot PR 100 40mm", shortTitle: "PR 100 40mm", reference: "T150.410.16.051.00", referenceSlug: "t1504101605100", slotRole: "alternativeRear", qualityClass: "ALTERNATIVE_GRADE", displayScale: 0.48, displayX: 48, displayY: -10, depth: 5, opacity: 0.22, specs: ["черный циферблат", "кожаный ремешок", "40 мм"] }),
     ],
   },

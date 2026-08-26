@@ -38,8 +38,8 @@ export const homepageWatchVisualConfigs: HomepageWatchVisualConfig[] = [
     shadowOpacity: 0.18,
   },
   {
-    reference: "T120.417.11.041.03",
-    assetPath: "/generated/homepage-premium-assets/t1204171104103.png",
+    reference: "T120.417.17.051.03",
+    assetPath: "/generated/homepage-editorial-assets/tissot-seastar-t1204171705103.png",
     opticalCaseScale: 0.96,
     xCorrection: 0,
     yCorrection: 1,
@@ -135,7 +135,7 @@ export const homepageWatchVisualConfigByReference = Object.fromEntries(
 
 export const homepageWatchAssetDimensions: Record<string, HomepageWatchAssetDimensions> = {
   "T150.410.16.051.00": { sourceWidth: 796, sourceHeight: 1250, generatedWidth: 767, generatedHeight: 1220 },
-  "T120.417.11.041.03": { sourceWidth: 1050, sourceHeight: 1468, generatedWidth: 1008, generatedHeight: 1424 },
+  "T120.417.17.051.03": { sourceWidth: 1680, sourceHeight: 1680, generatedWidth: 1680, generatedHeight: 1680 },
   "T137.407.33.051.00": { sourceWidth: 1006, sourceHeight: 1579, generatedWidth: 954, generatedHeight: 1527 },
   "EFK-100D-2A": { sourceWidth: 1026, sourceHeight: 1606, generatedWidth: 972, generatedHeight: 1552 },
   "T150.210.11.041.00": { sourceWidth: 650, sourceHeight: 1164, generatedWidth: 626, generatedHeight: 1141 },

@@ -17,6 +17,7 @@
     "catalog:read:coverage": "tsx src/modules/catalog/cli/catalog-read-coverage.ts",
     "catalog:public:hygiene": "tsx src/modules/imports/catalog/cli/catalog-public-hygiene.ts",
     "public:experience:inventory": "tsx src/modules/public-experience/cli/public-experience-inventory.ts",
+    "prelaunch:semantic:audit": "tsx scripts/final-prelaunch-semantic-audit.ts",
     "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
     "home-hero:prepare-assets": "node scripts/prepare-home-hero-assets.mjs",
     "home-hero:prepare-candidates": "node scripts/prepare-home-hero-candidates.mjs",

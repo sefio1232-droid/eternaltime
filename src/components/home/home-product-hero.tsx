@@ -198,7 +198,7 @@ const readableSpecsByReferenceClean: Record<string, OrbitWatchSpec[]> = {
     { label: "РЕМЕШОК", value: "КОЖА" },
     { label: "ЦИФЕРБЛАТ", value: "ЧЕРНЫЙ" },
   ],
-  "T120.417.11.041.03": [
+  "T120.417.17.051.03": [
     { label: "ДИАМЕТР", value: "45.5 ММ" },
     { label: "ФУНКЦИЯ", value: "ХРОНОГРАФ" },
     { label: "ВОДОЗАЩИТА", value: "300 М" },
