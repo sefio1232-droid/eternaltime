@@ -8,6 +8,7 @@ import {
 } from "@/modules/commerce/domain/cart";
 import {
   commerceCartStorageKey,
+  type CheckoutContactInput,
   type CommerceCartItemInput,
   type CommerceResolvedSummary,
 } from "@/modules/commerce/domain/types";
@@ -105,7 +106,7 @@ export function useCommerceCart() {
   return { items, ready, itemCount, setItems, addItem, updateQuantity, removeItem, clear };
 }
 
-export function useResolvedCommerceCart(items: CommerceCartItemInput[]) {
+export function useResolvedCommerceCart(items: CommerceCartItemInput[], deliveryMethod?: CheckoutContactInput["deliveryMethod"]) {
   const [summary, setSummary] = useState<CommerceResolvedSummary | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -128,7 +129,7 @@ export function useResolvedCommerceCart(items: CommerceCartItemInput[]) {
     fetch("/api/cart/resolve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, deliveryMethod }),
     })
       .then((response) => response.json())
       .then((payload) => {
@@ -150,7 +151,7 @@ export function useResolvedCommerceCart(items: CommerceCartItemInput[]) {
     return () => {
       cancelled = true;
     };
-  }, [items]);
+  }, [items, deliveryMethod]);
 
   return { summary, loading };
 }

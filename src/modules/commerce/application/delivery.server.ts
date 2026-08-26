@@ -1,10 +1,14 @@
 import "server-only";
 
 import { getServerEnv, type ServerEnv } from "@/config/server-env";
-import type { DeliveryQuote } from "@/modules/commerce/domain/types";
+import type { CheckoutContactInput, DeliveryQuote } from "@/modules/commerce/domain/types";
+
+export const cdekCourierDeliveryAmountMinor = 65_000;
+
+type DeliveryQuoteMethod = CheckoutContactInput["deliveryMethod"];
 
 export function getDeliveryQuote(
-  input: { productSubtotalMinor: number },
+  input: { productSubtotalMinor: number; deliveryMethod?: DeliveryQuoteMethod },
   env: ServerEnv = getServerEnv(),
 ): DeliveryQuote {
   const productSubtotalMinor = Math.max(0, input.productSubtotalMinor);
@@ -43,28 +47,50 @@ export function getDeliveryQuote(
   }
 
   if (env.commerce.deliveryPricingMode === "cdek_threshold") {
+    if (input.deliveryMethod === "cdek_courier") {
+      return {
+        status: "configured",
+        provider: "cdek",
+        method: "courier",
+        label: "СДЭК — курьером",
+        amountMinor: cdekCourierDeliveryAmountMinor,
+        currencyCode: "RUB",
+        tariffCode: env.cdek.courierTariffCode ? String(env.cdek.courierTariffCode) : null,
+        freeDeliveryThresholdMinor: null,
+        snapshot: {
+          mode: "cdek_courier_flat",
+          provider: "cdek",
+          amountMinor: cdekCourierDeliveryAmountMinor,
+          courierDeliveryAmountMinor: cdekCourierDeliveryAmountMinor,
+          subtotalMinor: productSubtotalMinor,
+          courierTariffCode: env.cdek.courierTariffCode,
+          fromLocationCode: env.cdek.fromLocationCode,
+          cdekCredentialsConfigured: env.cdek.isConfigured,
+        },
+      };
+    }
+
     const isFree = productSubtotalMinor >= env.commerce.cdekFreeDeliveryThresholdMinor;
     const amountMinor = isFree ? 0 : env.commerce.cdekBelowThresholdAmountMinor;
-    const fallbackTariffCode = env.cdek.pickupTariffCode ?? env.cdek.courierTariffCode ?? env.cdek.defaultTariffCode;
+    const fallbackTariffCode = env.cdek.pickupTariffCode ?? env.cdek.defaultTariffCode;
 
     return {
       status: "configured",
       provider: "cdek",
-      method: "courier",
-      label: isFree ? "СДЭК — бесплатно от 10 000 ₽" : "СДЭК",
+      method: "pickup",
+      label: isFree ? "СДЭК ПВЗ — бесплатно от 10 000 ₽" : "СДЭК ПВЗ",
       amountMinor,
       currencyCode: "RUB",
       tariffCode: fallbackTariffCode ? String(fallbackTariffCode) : null,
       freeDeliveryThresholdMinor: env.commerce.cdekFreeDeliveryThresholdMinor,
       snapshot: {
-        mode: "cdek_threshold",
+        mode: "cdek_pickup_threshold",
         provider: "cdek",
         amountMinor,
         freeDeliveryThresholdMinor: env.commerce.cdekFreeDeliveryThresholdMinor,
         belowThresholdAmountMinor: env.commerce.cdekBelowThresholdAmountMinor,
         subtotalMinor: productSubtotalMinor,
         pickupTariffCode: env.cdek.pickupTariffCode,
-        courierTariffCode: env.cdek.courierTariffCode,
         fromLocationCode: env.cdek.fromLocationCode,
         cdekCredentialsConfigured: env.cdek.isConfigured,
       },

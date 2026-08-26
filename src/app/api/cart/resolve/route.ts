@@ -6,6 +6,7 @@ import type { CommerceCartItemInput } from "@/modules/commerce/domain/types";
 
 const resolveCartSchema = z.object({
   items: z.array(z.unknown()).default([]),
+  deliveryMethod: z.enum(["cdek_courier", "cdek_pickup"]).optional(),
 });
 
 export async function POST(request: Request) {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   const items = parsed.data.items
     .map(normalizeCommerceCartItem)
     .filter((item): item is CommerceCartItemInput => Boolean(item));
-  const summary = await resolveCommerceSummary(items);
+  const summary = await resolveCommerceSummary(items, { deliveryMethod: parsed.data.deliveryMethod });
 
   return NextResponse.json({ summary });
 }

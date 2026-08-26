@@ -429,7 +429,9 @@ export async function createCheckoutOrderAndPayment(input: {
     throw new Error(setup.reason);
   }
 
-  const summary = await resolveCommerceSummary(checkoutItems(input.source));
+  const summary = await resolveCommerceSummary(checkoutItems(input.source), {
+    deliveryMethod: input.contact.deliveryMethod,
+  });
   if (!summary.purchasable || summary.totalAmountMinor === null || summary.delivery.status !== "configured") {
     throw new Error(summary.issues.join(" ") || "Checkout summary is not payable.");
   }

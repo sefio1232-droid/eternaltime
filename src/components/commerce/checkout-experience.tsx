@@ -40,7 +40,7 @@ type CdekWidgetConfig =
       ready: true;
       apiKey: string;
       servicePath: string;
-      from: { country_code: "RU"; code: number };
+      from: { country_code: "RU"; code: number } | null;
       tariffs: { office: number[]; door: number[]; pickup?: number[] };
       goods: Array<{ width: number; height: number; length: number; weight: number }>;
     }
@@ -108,6 +108,7 @@ const emptyContact: CheckoutContactInput = {
 
 const cdekWidgetDefaultLocation: CdekWidgetDefaultLocation = [37.6173, 55.7558];
 const cdekWidgetReadyTimeoutMs = 35_000;
+let cdekWidgetConstructorPromise: Promise<CdekWidgetConstructor> | null = null;
 
 function sourceItems(source: CheckoutSource, cartItems: CommerceCartItemInput[]) {
   return source.type === "buy_now" ? [source.item] : cartItems;
@@ -143,14 +144,17 @@ async function loadCdekWidgetConstructor(): Promise<CdekWidgetConstructor> {
     return window.CDEKWidget;
   }
 
-  const widgetModule = await import("@cdek-it/widget");
-  const constructor = widgetModule.default as unknown as CdekWidgetConstructor | undefined;
-  if (!constructor) {
-    throw new Error("cdek_widget_constructor_missing");
-  }
+  cdekWidgetConstructorPromise ??= import("@cdek-it/widget").then((widgetModule) => {
+    const constructor = widgetModule.default as unknown as CdekWidgetConstructor | undefined;
+    if (!constructor) {
+      throw new Error("cdek_widget_constructor_missing");
+    }
 
-  window.CDEKWidget = constructor;
-  return constructor;
+    window.CDEKWidget = constructor;
+    return constructor;
+  });
+
+  return cdekWidgetConstructorPromise;
 }
 
 function cdekWidgetErrorMessage(error: unknown) {
@@ -273,8 +277,8 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const wasWidgetOpenRef = useRef(false);
   const cart = useCommerceCart();
   const activeItems = useMemo(() => sourceItems(source, cart.items), [cart.items, source]);
-  const { summary, loading } = useResolvedCommerceCart(activeItems);
   const [contact, setContact] = useState<CheckoutContactInput>({ ...emptyContact, email: userEmail });
+  const { summary, loading } = useResolvedCommerceCart(activeItems, contact.deliveryMethod);
   const [submissionKey] = useState(createCheckoutSubmissionKey);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -284,9 +288,29 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   const [deliveryMessage, setDeliveryMessage] = useState("");
   const [widgetOpen, setWidgetOpen] = useState(false);
   const [widgetConfig, setWidgetConfig] = useState<CdekWidgetConfig | null>(null);
+  const widgetConfigPromiseRef = useRef<Promise<CdekWidgetConfig> | null>(null);
   const [widgetStatus, setWidgetStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
   const [widgetError, setWidgetError] = useState("");
   const [widgetAttempt, setWidgetAttempt] = useState(0);
+
+  function preloadCdekWidgetResources() {
+    if (!widgetConfigPromiseRef.current) {
+      widgetConfigPromiseRef.current = fetch("/api/delivery/cdek/widget-config", { cache: "no-store" }).then((response) => {
+        if (!response.ok) {
+          throw new Error(`cdek_widget_config_http_${response.status}`);
+        }
+
+        return response.json() as Promise<CdekWidgetConfig>;
+      });
+    }
+
+    void widgetConfigPromiseRef.current.catch(() => {
+      widgetConfigPromiseRef.current = null;
+    });
+    void loadCdekWidgetConstructor().catch(() => {
+      cdekWidgetConstructorPromise = null;
+    });
+  }
 
   useEffect(() => {
     if (source.type !== "cart" || !cart.ready || cart.items.length === 0) {
@@ -320,7 +344,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
     function failWidget() {
       if (cancelled) return;
       setWidgetStatus("failed");
-      setWidgetError("Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.");
+      setWidgetError("Не удалось загрузить карту пунктов выдачи.");
     }
 
     async function initWidget() {
@@ -328,12 +352,14 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       setWidgetError("");
 
       try {
-        const configResponse = await fetch("/api/delivery/cdek/widget-config", { cache: "no-store" });
-        if (!configResponse.ok) {
-          throw new Error(`cdek_widget_config_http_${configResponse.status}`);
-        }
+        const config = await (widgetConfigPromiseRef.current ??
+          fetch("/api/delivery/cdek/widget-config", { cache: "no-store" }).then((response) => {
+            if (!response.ok) {
+              throw new Error(`cdek_widget_config_http_${response.status}`);
+            }
 
-        const config = (await configResponse.json()) as CdekWidgetConfig;
+            return response.json() as Promise<CdekWidgetConfig>;
+          }));
         if (cancelled) return;
         setWidgetConfig(config);
 
@@ -451,6 +477,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   }
 
   function choosePickupMode() {
+    preloadCdekWidgetResources();
     setContact((current) => ({
       ...current,
       deliveryMethod: "cdek_pickup",
@@ -636,7 +663,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           <p className={styles.eyebrow}>2. Получение</p>
           <div className={styles.deliveryMapSlot}>
             <strong>Доставка СДЭК</strong>
-            <p className={styles.lineMeta}>Бесплатно от 10 000 ₽. Для заказов ниже этой суммы — 500 ₽.</p>
+            <p className={styles.lineMeta}>ПВЗ: бесплатно от 10 000 ₽, ниже — 500 ₽. Курьер СДЭК — всегда 650 ₽.</p>
             <div className={styles.deliveryChoice} aria-label="Способ доставки СДЭК">
               <button type="button" aria-pressed={isPickup} onClick={choosePickupMode}>
                 Пункт выдачи СДЭК
@@ -654,7 +681,17 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
                     <h2>Выберите пункт на карте</h2>
                     <p>Можно найти город, посмотреть ПВЗ и выбрать конкретный пункт выдачи. Технический JSON покупателю не показывается.</p>
                   </div>
-                  <button type="button" className={styles.buyNow} ref={widgetTriggerRef} onClick={() => setWidgetOpen(true)}>
+                  <button
+                    type="button"
+                    className={styles.buyNow}
+                    ref={widgetTriggerRef}
+                    onClick={() => {
+                      preloadCdekWidgetResources();
+                      setWidgetOpen(true);
+                    }}
+                    onFocus={preloadCdekWidgetResources}
+                    onPointerEnter={preloadCdekWidgetResources}
+                  >
                     {selectedPickup ? "Изменить на карте" : "Выбрать пункт на карте"}
                   </button>
                 </div>
@@ -876,13 +913,13 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
             </header>
             <div className={styles.cdekWidgetMap}>
               <div className={styles.cdekWidgetRoot} id={rootId} ref={rootRef} />
-              {widgetStatus === "loading" ? <p className={`${styles.lineMeta} ${styles.cdekWidgetStatus}`}>Загружаем карту СДЭК…</p> : null}
+              {widgetStatus === "loading" ? <p className={`${styles.lineMeta} ${styles.cdekWidgetStatus}`}>Загружаем карту пунктов выдачи…</p> : null}
               {widgetStatus === "failed" ? (
                 <div className={styles.cdekWidgetFallbackState}>
                   <p>
                     {widgetError || (widgetConfig?.ready === false
                       ? widgetConfig.message
-                      : "Не удалось загрузить карту СДЭК. Попробуйте снова или откройте технический список ПВЗ ниже.")}
+                      : "Не удалось загрузить карту пунктов выдачи.")}
                   </p>
                   <button type="button" className={styles.buyNow} onClick={() => setWidgetAttempt((attempt) => attempt + 1)}>
                     Попробовать ещё раз

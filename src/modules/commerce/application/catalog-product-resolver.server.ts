@@ -4,6 +4,7 @@ import { displayWatchModelHeading } from "@/modules/catalog/application/catalog-
 import { getPublicCatalogWatchByIdentity } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { mergeCommerceCartItems } from "@/modules/commerce/domain/cart";
 import type {
+  CheckoutContactInput,
   CommerceCartItemInput,
   CommerceProductSnapshot,
   CommerceResolvedSummary,
@@ -33,7 +34,10 @@ function snapshotFromWatch(watch: NonNullable<Awaited<ReturnType<typeof getPubli
   };
 }
 
-export async function resolveCommerceSummary(items: CommerceCartItemInput[]): Promise<CommerceResolvedSummary> {
+export async function resolveCommerceSummary(
+  items: CommerceCartItemInput[],
+  options: { deliveryMethod?: CheckoutContactInput["deliveryMethod"] } = {},
+): Promise<CommerceResolvedSummary> {
   const normalizedItems = mergeCommerceCartItems(items);
   const lines = await Promise.all(
     normalizedItems.map(async (input) => {
@@ -71,7 +75,7 @@ export async function resolveCommerceSummary(items: CommerceCartItemInput[]): Pr
   });
 
   const productSubtotalMinor = lines.reduce((sum, line) => sum + (line.lineTotalMinor ?? 0), 0);
-  const delivery = getDeliveryQuote({ productSubtotalMinor });
+  const delivery = getDeliveryQuote({ productSubtotalMinor, deliveryMethod: options.deliveryMethod });
 
   if (delivery.status !== "configured") {
     issues.push("Стоимость доставки не настроена на сервере.");

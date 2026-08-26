@@ -117,14 +117,14 @@ function summary(overrides: Partial<CommerceResolvedSummary> = {}): CommerceReso
       status: "configured",
       provider: "cdek",
       method: "courier",
-      label: "Доставка СДЭК",
-      amountMinor: 0,
+      label: "СДЭК — курьером",
+      amountMinor: 65_000,
       currencyCode: "RUB",
       tariffCode: "137",
-      freeDeliveryThresholdMinor: 1_000_000,
+      freeDeliveryThresholdMinor: null,
       snapshot: {},
     },
-    totalAmountMinor: 1_200_000,
+    totalAmountMinor: 1_265_000,
     currencyCode: "RUB",
     itemCount: 1,
     purchasable: true,
@@ -170,12 +170,12 @@ async function renderCheckout(options: {
       ready: true,
       apiKey: "public-test-key",
       servicePath: "/api/delivery/cdek/widget-service",
-      from: { country_code: "RU", code: 44 },
+      from: null,
       tariffs: { office: [136], door: [137] },
-      goods: [{ width: 18, height: 12, length: 25, weight: 700 }],
+      goods: [],
     };
 
-  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes("/api/cart/resolve")) {
       return Response.json({ summary: responseSummary });
@@ -184,7 +184,8 @@ async function renderCheckout(options: {
       return Response.json(widgetConfig);
     }
     return Response.json({}, { status: 404 });
-  }) as typeof fetch;
+  });
+  globalThis.fetch = fetchMock as typeof fetch;
 
   const { CheckoutExperience } = await import("@/components/commerce/checkout-experience");
   const source =
@@ -201,7 +202,10 @@ async function renderCheckout(options: {
         }
       : { type: "cart" as const, items: [] };
 
-  return Object.assign(render(React.createElement(CheckoutExperience, { source, userEmail: "buyer@example.com" })), { widgetOptions });
+  return Object.assign(render(React.createElement(CheckoutExperience, { source, userEmail: "buyer@example.com" })), {
+    fetchMock,
+    widgetOptions,
+  });
 }
 
 afterEach(() => {
@@ -297,7 +301,7 @@ describe("checkout client render", () => {
     fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
     fireEvent.click(view.getByRole("button", { name: "Выбрать пункт на карте" }));
 
-    await waitFor(() => expect(view.getByText(/Не удалось загрузить карту СДЭК/)).toBeTruthy());
+    await waitFor(() => expect(view.getByText("Не удалось загрузить карту пунктов выдачи.")).toBeTruthy());
     expect(view.getByRole("button", { name: "Оформить заказ" })).toBeTruthy();
   });
 
@@ -310,7 +314,9 @@ describe("checkout client render", () => {
     await waitFor(() => expect(view.widgetOptions[0]).toBeTruthy());
     expect(view.widgetOptions[0].defaultLocation).toEqual([37.6173, 55.7558]);
     expect(view.widgetOptions[0].tariffs).toMatchObject({ office: [136], door: [137], pickup: [] });
-    await waitFor(() => expect(view.queryByText(/Загружаем карту СДЭК/)).toBeNull());
+    expect(view.widgetOptions[0].from).toBeNull();
+    expect(view.widgetOptions[0].goods).toEqual([]);
+    await waitFor(() => expect(view.queryByText(/Загружаем карту пунктов выдачи/)).toBeNull());
     expect(view.queryByText(/WIDGET_READY|MAP_TIMEOUT|MAP_VISIBLE/)).toBeNull();
     expect(view.queryByText(/Диагностический код/)).toBeNull();
   });
@@ -322,8 +328,46 @@ describe("checkout client render", () => {
     fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
     fireEvent.click(view.getByRole("button", { name: "Выбрать пункт на карте" }));
 
-    await waitFor(() => expect(view.queryByText(/Не удалось загрузить карту СДЭК/)).toBeNull());
+    await waitFor(() => expect(view.queryByText(/Не удалось загрузить карту пунктов выдачи/)).toBeNull());
     expect(view.getByRole("button", { name: "Оформить заказ" })).toBeTruthy();
     expect(appendChild).not.toHaveBeenCalled();
+  });
+
+  it("resolves checkout totals with the selected delivery method", async () => {
+    const view = await renderCheckout();
+
+    await waitFor(() => expect(view.fetchMock).toHaveBeenCalledWith(
+      "/api/cart/resolve",
+      expect.objectContaining({
+        body: expect.stringContaining('"deliveryMethod":"cdek_courier"'),
+      }),
+    ));
+
+    fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
+
+    await waitFor(() => expect(view.fetchMock).toHaveBeenCalledWith(
+      "/api/cart/resolve",
+      expect.objectContaining({
+        body: expect.stringContaining('"deliveryMethod":"cdek_pickup"'),
+      }),
+    ));
+  });
+
+  it("preloads the CDEK widget resources on pickup intent and keeps retry available", async () => {
+    const view = await renderCheckout({
+      widgetConfig: {
+        ready: false,
+        reason: "not_configured",
+        message: "Не удалось загрузить карту пунктов выдачи.",
+      },
+    });
+
+    fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
+    await waitFor(() => expect(view.fetchMock).toHaveBeenCalledWith("/api/delivery/cdek/widget-config", { cache: "no-store" }));
+
+    fireEvent.click(view.getByRole("button", { name: "Выбрать пункт на карте" }));
+    await waitFor(() => expect(view.getByText("Не удалось загрузить карту пунктов выдачи.")).toBeTruthy());
+    expect(view.getByRole("button", { name: "Попробовать ещё раз" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Вернуться к checkout" })).toBeTruthy();
   });
 });

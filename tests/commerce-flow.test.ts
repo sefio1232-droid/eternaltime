@@ -9,7 +9,7 @@ import {
   serializeCommerceCartStorage,
 } from "@/modules/commerce/domain/cart";
 import { commerceCartMaxQuantity } from "@/modules/commerce/domain/types";
-import { getDeliveryQuote } from "@/modules/commerce/application/delivery.server";
+import { cdekCourierDeliveryAmountMinor, getDeliveryQuote } from "@/modules/commerce/application/delivery.server";
 import { getServerEnv } from "@/config/server-env";
 import { orderStatusLabels, paymentStatusLabels, shipmentStatusLabels } from "@/modules/commerce/domain/labels";
 import { normalizeCdekWidgetPickupPoint } from "@/modules/commerce/domain/cdek-widget";
@@ -153,7 +153,7 @@ describe("commerce server configuration", () => {
     expect(env.cdek.courierTariffCode).toBe(136);
   });
 
-  it("calculates CDEK delivery as 500 RUB below 10000 RUB and free at the threshold", () => {
+  it("keeps PVZ delivery as 500 RUB below 10000 RUB and free at the threshold", () => {
     const env = getServerEnv({
       NODE_ENV: "production",
       CATALOG_READ_SOURCE: "database",
@@ -175,7 +175,7 @@ describe("commerce server configuration", () => {
     expect(stillFreeDelivery.amountMinor).toBe(0);
   });
 
-  it("uses the exact Eternal Time delivery boundary totals", () => {
+  it("uses the exact Eternal Time PVZ delivery boundary totals", () => {
     const env = getServerEnv({
       NODE_ENV: "production",
       CATALOG_READ_SOURCE: "database",
@@ -199,6 +199,47 @@ describe("commerce server configuration", () => {
       expect(quote.amountMinor).toBe(example.deliveryRub * 100);
       expect(subtotalMinor + quote.amountMinor).toBe(example.totalRub * 100);
     }
+  });
+
+  it("keeps CDEK courier delivery at 650 RUB for every order subtotal", () => {
+    const env = getServerEnv({
+      NODE_ENV: "production",
+      CATALOG_READ_SOURCE: "database",
+      DELIVERY_PRICING_MODE: "cdek_threshold",
+      CDEK_FREE_DELIVERY_THRESHOLD_RUB: "10000",
+      CDEK_BELOW_THRESHOLD_DELIVERY_RUB: "500",
+      CDEK_COURIER_TARIFF_CODE: "137",
+    });
+    const subtotalRubCases = [5_000, 10_000, 50_000, 100_000, 200_000];
+
+    for (const subtotalRub of subtotalRubCases) {
+      const subtotalMinor = subtotalRub * 100;
+      const quote = getDeliveryQuote({ productSubtotalMinor: subtotalMinor, deliveryMethod: "cdek_courier" }, env);
+
+      if (quote.status !== "configured") {
+        throw new Error("Expected configured courier delivery quote.");
+      }
+      expect(quote.method).toBe("courier");
+      expect(quote.amountMinor).toBe(cdekCourierDeliveryAmountMinor);
+      expect(quote.freeDeliveryThresholdMinor).toBeNull();
+      expect(subtotalMinor + quote.amountMinor).toBe(subtotalMinor + 65_000);
+    }
+  });
+
+  it("does not make courier delivery free above the PVZ threshold", () => {
+    const env = getServerEnv({
+      NODE_ENV: "production",
+      CATALOG_READ_SOURCE: "database",
+      DELIVERY_PRICING_MODE: "cdek_threshold",
+      CDEK_FREE_DELIVERY_THRESHOLD_RUB: "10000",
+      CDEK_BELOW_THRESHOLD_DELIVERY_RUB: "500",
+    });
+
+    const courier = getDeliveryQuote({ productSubtotalMinor: 15_000_000, deliveryMethod: "cdek_courier" }, env);
+    const pvz = getDeliveryQuote({ productSubtotalMinor: 15_000_000, deliveryMethod: "cdek_pickup" }, env);
+
+    expect(courier.amountMinor).toBe(65_000);
+    expect(pvz.amountMinor).toBe(0);
   });
 
   it("keeps CDEK paid below threshold and free at or above the central threshold config", () => {
@@ -285,6 +326,23 @@ describe("CDEK shipping domain", () => {
     });
   });
 
+  it("does not copy raw provider tariff cost into the selected PVZ snapshot", () => {
+    const point = normalizeCdekWidgetPickupPoint(
+      "office",
+      { tariff_code: 136, tariff_name: "Посылка склад-склад", delivery_sum: 890 },
+      {
+        city_code: 44,
+        city: "Москва",
+        code: "MSK123",
+        name: "ПВЗ MSK123",
+        address: "Москва, ул. Тверская, 1",
+      },
+    );
+
+    expect(point?.providerSnapshot).not.toHaveProperty("delivery_sum");
+    expect(JSON.stringify(point?.providerSnapshot)).not.toContain("Посылка склад-склад");
+  });
+
   it("rejects invalid CDEK Widget office selections", () => {
     expect(normalizeCdekWidgetPickupPoint("door", {}, { code: "MSK123", address: "Москва" })).toBeNull();
     expect(normalizeCdekWidgetPickupPoint("office", {}, { address: "Москва" })).toBeNull();
@@ -364,6 +422,27 @@ describe("CDEK shipping domain", () => {
     expect(carrierActualCosts.map((cost) => subtotalMinor + customerDelivery.amountMinor + cost)).not.toContain(900_000);
   });
 
+  it("never lets carrier actual cost or malformed provider tariff alter a courier customer total", () => {
+    const env = getServerEnv({
+      NODE_ENV: "production",
+      DELIVERY_PRICING_MODE: "cdek_threshold",
+      CDEK_FREE_DELIVERY_THRESHOLD_RUB: "10000",
+      CDEK_BELOW_THRESHOLD_DELIVERY_RUB: "500",
+    });
+    const subtotalMinor = 5_000_000;
+    const customerDelivery = getDeliveryQuote({ productSubtotalMinor: subtotalMinor, deliveryMethod: "cdek_courier" }, env);
+    const providerTariffs = [0, 1, 89_000, 999_999_999];
+
+    if (customerDelivery.status !== "configured") {
+      throw new Error("Expected configured delivery quote.");
+    }
+    expect(customerDelivery.amountMinor).toBe(65_000);
+    for (const providerTariff of providerTariffs) {
+      expect(subtotalMinor + customerDelivery.amountMinor + providerTariff).not.toBe(subtotalMinor + providerTariff);
+      expect(subtotalMinor + customerDelivery.amountMinor).toBe(5_065_000);
+    }
+  });
+
   it("maps CDEK statuses to customer-safe shipment labels", () => {
     expect(mapCdekStatusToShipmentStatus({ code: "READY_FOR_PICKUP", name: "Готов к выдаче" }).status).toBe(
       "ready_for_pickup",
@@ -404,7 +483,7 @@ describe("checkout backend activation", () => {
     const serviceRoute = fs.readFileSync("src/app/api/delivery/cdek/widget-service/route.ts", "utf8");
     const validation = fs.readFileSync("src/modules/commerce/infrastructure/cdek-shipping-repository.server.ts", "utf8");
 
-    expect(checkout).toContain('await import("@cdek-it/widget")');
+    expect(checkout).toContain('import("@cdek-it/widget")');
     expect(checkout).toContain("new CdekWidget");
     expect(checkout).toContain("onChoose");
     expect(checkout).toContain("onKeyDown");
@@ -414,6 +493,7 @@ describe("checkout backend activation", () => {
     expect(checkout).toContain("waitForCdekContainer");
     expect(checkout).toContain("ResizeObserver");
     expect(checkout).toContain("cdekWidgetReadyTimeoutMs");
+    expect(checkout).toContain("preloadCdekWidgetResources");
     expect(checkout).not.toContain("cdekMapDiagnostic");
     expect(checkout).not.toContain("MAP_TIMEOUT");
     expect(checkout).not.toContain("MAP_VISIBLE");
@@ -422,9 +502,12 @@ describe("checkout backend activation", () => {
     expect(checkout).toContain("normalizeCdekWidgetPickupPoint");
     expect(checkout).toContain("clearPickupState");
     expect(checkout).toContain("Карта не загрузилась? Открыть технический список ПВЗ");
-    expect(configRoute).toContain("CDEK_WIDGET_YANDEX_MAPS_API_KEY");
+    expect(configRoute).toContain("env.cdek.hasWidgetYandexMapsApiKey");
+    expect(configRoute).toContain("env.cdek.widgetYandexMapsApiKey");
     expect(configRoute).toContain("/api/delivery/cdek/widget-service");
     expect(configRoute).toContain('servicePath: "/api/delivery/cdek/widget-service"');
+    expect(configRoute).toContain("from: null");
+    expect(configRoute).toContain("goods: []");
     expect(configRoute).toContain("pickup: []");
     expect(configRoute).not.toContain("cdn.jsdelivr.net");
     expect(configRoute).not.toContain("new URL(request.url)");
