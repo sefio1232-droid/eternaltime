@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-27T01:35:02.242Z",
-  "sourceWorkbook": "c:/Users/Sergey/Downloads/Citizen_Official_Sources_for_Codex.xlsx",
+  "generatedAt": "2026-08-27T14:36:34.833Z",
+  "sourceWorkbook": "c:/Users/Sergey/Downloads/Citizen_Official_Sources_and_Gallery_Plan_for_Codex.xlsx",
   "officialSource": "Citizen",
   "entries": [
     {
@@ -161,6 +161,23 @@
       "referenceNormalized": "NJ021013L",
       "brandSlug": "citizen",
       "sourcePageUrl": "https://citizenwatch.eu/en/p/nj0210-13l/",
+      "sourceAssetUrl": "https://citizenwatch.eu/media/thumbs/51/b7/f048b82cc747125a2c075e092cbe7f707d7b/1024x512_crop=center/managed/1d/29/1d29d6e28d36ddad95b8ae2d58098862/NJ0210-13L_xTcc0BV.png.thumb.png",
+      "publicPath": "/generated/catalog/citizen-official/nj021013l/05-310885f52d693c04.png",
+      "storedRelativePath": "public/generated/catalog/citizen-official/nj021013l/05-310885f52d693c04.png",
+      "width": 1024,
+      "height": 512,
+      "contentType": "image/png",
+      "sha256": "310885f52d693c04a7c2aa8792a427a862fce76eb260b270f6fcd4d243120f1c",
+      "imageOrder": 5,
+      "isCover": false,
+      "view": "angle",
+      "officialSource": "Citizen"
+    },
+    {
+      "catalogReference": "NJ0210-13L",
+      "referenceNormalized": "NJ021013L",
+      "brandSlug": "citizen",
+      "sourcePageUrl": "https://citizenwatch.eu/en/p/nj0210-13l/",
       "sourceAssetUrl": "https://citizenwatch.eu/media/thumbs/04/d5/35d5caed0ec2ec85ae5d4c1a3c1898f34a66/1400x_crop=center;format=webp/managed/0a/41/0a410d7e76facc64e870a36b40b9283b/NJ0210-13L_S_shot_84FO9dZ.png.thumb.webp",
       "publicPath": "/generated/catalog/citizen-official/nj021013l/06-89892153abcdc2ae.webp",
       "storedRelativePath": "public/generated/catalog/citizen-official/nj021013l/06-89892153abcdc2ae.webp",
@@ -168,7 +185,7 @@
       "height": 1400,
       "contentType": "image/webp",
       "sha256": "89892153abcdc2ae2d3a307c73d95dfa662c5101639c78a9f0c2756f37988293",
-      "imageOrder": 5,
+      "imageOrder": 6,
       "isCover": false,
       "view": "side",
       "officialSource": "Citizen"
@@ -185,7 +202,7 @@
       "height": 1400,
       "contentType": "image/webp",
       "sha256": "dee146588793fb34abfafc2c9f01d32c3e205a58f6d3d7deeb0da7f94a56c0bc",
-      "imageOrder": 6,
+      "imageOrder": 7,
       "isCover": false,
       "view": "caseback",
       "officialSource": "Citizen"
@@ -681,6 +698,23 @@
       "imageOrder": 5,
       "isCover": false,
       "view": "angle",
+      "officialSource": "Citizen"
+    },
+    {
+      "catalogReference": "EM0533-82Y",
+      "referenceNormalized": "EM053382Y",
+      "brandSlug": "citizen",
+      "sourcePageUrl": "https://www.citizen.com.ph/html/en/products/citizen-l/regular/em0533-82y.html",
+      "sourceAssetUrl": "https://www.citizen.com.ph/filebase2/113/002/0-306282-a2e57bd3e0bb7379ab7b715adc398ec6.jpg?md5=c7d253c98e52dd92c3d375e7ab692b99",
+      "publicPath": "/generated/catalog/citizen-official/em053382y/01-6962229b673d6b19.jpg",
+      "storedRelativePath": "public/generated/catalog/citizen-official/em053382y/01-6962229b673d6b19.jpg",
+      "width": 856,
+      "height": 1284,
+      "contentType": "image/jpeg",
+      "sha256": "6962229b673d6b19da22aa6986d1dff81b1d231b2c83a40026c0f56737a73410",
+      "imageOrder": 1,
+      "isCover": true,
+      "view": "front",
       "officialSource": "Citizen"
     },
     {
@@ -1242,7 +1276,7 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.com.cn/products/AW1818-59L.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1818-59L.aspx\ncurl: (28) Connection timed out after 8008 milliseconds",
+        "https://www.citizen.com.cn/products/AW1818-59L.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1818-59L.aspx\ncurl: (28) Connection timed out after 6005 milliseconds",
         "https://citizenwatch.eu/en/p/aw1818-59l/: 404",
         "https://citizen-me.com/productinfo/product_info/AW1818-59L: exact reference not found in official page response",
         "https://www.citizenwatch.com/us/en/product/AW1818-59L: 404",
@@ -1261,7 +1295,10 @@
       "uniqueProductImages": 5,
       "coverPublicPath": "/generated/catalog/citizen-official/nj021005e/01-c693070084f17fa8.webp",
       "storagePath": "public/generated/catalog/citizen-official/nj021005e",
-      "notes": []
+      "notes": [
+        "download failed: https://citizenwatch.eu/media/thumbs/59/91/4407e47e14f0d6021e8eda571de424073423/1400x_crop=center;format=webp/managed/3f/9c/3f9ccbafbd9069d969f9ff39156a133a/NJ0210-05E_S_shot_9MYUtYi.png.thumb.webp: Command failed: curl.exe -L --fail --silent --show-error --connect-timeout 8 --max-time 20 --speed-time 8 --speed-limit 1024 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: image/avif,image/webp,image/png,image/jpeg,*/* https://citizenwatch.eu/media/thumbs/59/91/4407e47e14f0d6021e8eda571de424073423/1400x_crop=center;format=webp/managed/3f/9c/3f9ccbafbd9069d969f9ff39156a133a/NJ0210-05E_S_shot_9MYUtYi.png.thumb.webp\ncurl: (28) Failed to connect to citizenwatch.eu port 443 after 8016 ms: Timeout was reached\r\n",
+        "preserved 5 existing official images because the new extraction found only 4"
+      ]
     },
     {
       "reference": "AW1819-05A",
@@ -1276,7 +1313,7 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.com.cn/products/AW1819-05A.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-05A.aspx\ncurl: (28) Connection timed out after 8012 milliseconds",
+        "https://www.citizen.com.cn/products/AW1819-05A.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-05A.aspx\ncurl: (28) Connection timed out after 6014 milliseconds",
         "https://citizenwatch.eu/en/p/aw1819-05a/: 404",
         "https://citizen-me.com/productinfo/product_info/AW1819-05A: exact reference not found in official page response",
         "https://www.citizenwatch.com/us/en/product/AW1819-05A: 404",
@@ -1292,12 +1329,10 @@
       "resolvedOfficialUrl": "https://citizenwatch.eu/en/p/nj0210-13l/",
       "sourceVerificationStatus": "verified_exact",
       "galleryEntries": 7,
-      "uniqueProductImages": 6,
+      "uniqueProductImages": 7,
       "coverPublicPath": "/generated/catalog/citizen-official/nj021013l/01-731deb4ae1024e1b.webp",
       "storagePath": "public/generated/catalog/citizen-official/nj021013l",
-      "notes": [
-        "download failed: https://citizenwatch.eu/media/thumbs/51/b7/f048b82cc747125a2c075e092cbe7f707d7b/1024x512_crop=center/managed/1d/29/1d29d6e28d36ddad95b8ae2d58098862/NJ0210-13L_xTcc0BV.png.thumb.png: Command failed: curl.exe -L --fail --silent --show-error --connect-timeout 8 --max-time 20 --speed-time 8 --speed-limit 1024 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: image/avif,image/webp,image/png,image/jpeg,*/* https://citizenwatch.eu/media/thumbs/51/b7/f048b82cc747125a2c075e092cbe7f707d7b/1024x512_crop=center/managed/1d/29/1d29d6e28d36ddad95b8ae2d58098862/NJ0210-13L_xTcc0BV.png.thumb.png\ncurl: (28) Failed to connect to citizenwatch.eu port 443 after 8007 ms: Timeout was reached\r\n"
-      ]
+      "notes": []
     },
     {
       "reference": "AW1819-13L",
@@ -1312,7 +1347,7 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.com.cn/products/AW1819-13L.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-13L.aspx\ncurl: (28) Connection timed out after 8003 milliseconds",
+        "https://www.citizen.com.cn/products/AW1819-13L.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-13L.aspx\ncurl: (28) Connection timed out after 6010 milliseconds",
         "https://citizenwatch.eu/en/p/aw1819-13l/: 404",
         "https://citizen-me.com/productinfo/product_info/AW1819-13L: exact reference not found in official page response",
         "https://www.citizenwatch.com/us/en/product/AW1819-13L: 404",
@@ -1346,7 +1381,7 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.com.cn/products/AW1819-56A.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-56A.aspx\ncurl: (28) Connection timed out after 8008 milliseconds",
+        "https://www.citizen.com.cn/products/AW1819-56A.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-56A.aspx\ncurl: (28) Connection timed out after 6012 milliseconds",
         "https://citizenwatch.eu/en/p/aw1819-56a/: 404",
         "https://citizen-me.com/productinfo/product_info/AW1819-56A: exact reference not found in official page response",
         "https://www.citizenwatch.com/us/en/product/AW1819-56A: 404",
@@ -1380,7 +1415,7 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.com.cn/products/AW1819-56E.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-56E.aspx\ncurl: (28) Connection timed out after 8003 milliseconds",
+        "https://www.citizen.com.cn/products/AW1819-56E.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-56E.aspx\ncurl: (28) Connection timed out after 6015 milliseconds",
         "https://citizenwatch.eu/en/p/aw1819-56e/: 404",
         "https://citizen-me.com/productinfo/product_info/AW1819-56E: exact reference not found in official page response",
         "https://www.citizenwatch.com/us/en/product/AW1819-56E: 404",
@@ -1400,7 +1435,7 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.com.cn/products/AW1819-56X.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-56X.aspx\ncurl: (28) Connection timed out after 8001 milliseconds",
+        "https://www.citizen.com.cn/products/AW1819-56X.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/AW1819-56X.aspx\ncurl: (28) Connection timed out after 6010 milliseconds",
         "https://citizenwatch.eu/en/p/aw1819-56x/: 404",
         "https://citizen-me.com/productinfo/product_info/AW1819-56X: exact reference not found in official page response",
         "https://www.citizenwatch.com/us/en/product/AW1819-56X: 404",
@@ -1448,7 +1483,7 @@
       "coverPublicPath": "/generated/catalog/citizen-official/bm763080x/01-52ff781017444903.jpg",
       "storagePath": "public/generated/catalog/citizen-official/bm763080x",
       "notes": [
-        "https://www.citizen.com.cn/products/BM7630-80X.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/BM7630-80X.aspx\ncurl: (28) Connection timed out after 8013 milliseconds",
+        "https://www.citizen.com.cn/products/BM7630-80X.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/BM7630-80X.aspx\ncurl: (28) Connection timed out after 6009 milliseconds",
         "https://citizenwatch.eu/en/p/bm7630-80x/: 404"
       ]
     },
@@ -1507,11 +1542,11 @@
       "coverPublicPath": null,
       "storagePath": null,
       "notes": [
-        "https://www.citizen.it/collezione/19-citizen-lady/145-citizen-l/em0530-2/em0530-81d: ERR Command failed: curl.exe -L --silent --show-error --max-time 18 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.it/collezione/19-citizen-lady/145-citizen-l/em0530-2/em0530-81d\ncurl: (28) Connection timed out after 18004 milliseconds",
+        "https://www.citizen.it/collezione/19-citizen-lady/145-citizen-l/em0530-2/em0530-81d: ERR Command failed: curl.exe -L --silent --show-error --max-time 10 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.it/collezione/19-citizen-lady/145-citizen-l/em0530-2/em0530-81d\ncurl: (28) Connection timed out after 10003 milliseconds",
         "https://citizenwatch.eu/en/p/em0530-81d/: 404",
         "https://citizen-me.com/productinfo/product_info/EM0530-81D: exact reference verified, but no product image assets extracted",
         "https://www.citizenwatch.com/us/en/product/EM0530-81D: 404",
-        "https://www.citizen.com.cn/products/EM0530-81D.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 8 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/EM0530-81D.aspx\ncurl: (28) Connection timed out after 8011 milliseconds",
+        "https://www.citizen.com.cn/products/EM0530-81D.aspx: ERR Command failed: curl.exe -L --silent --show-error --max-time 6 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: text/html,application/xhtml+xml -w \n__CITIZEN_HTTP_STATUS__:%{http_code}\n__CITIZEN_EFFECTIVE_URL__:%{url_effective}\n https://www.citizen.com.cn/products/EM0530-81D.aspx\ncurl: (28) Connection timed out after 6002 milliseconds",
         "https://citizen.jp/shop/citizen_l/g/gEM0530-81D/: 403"
       ]
     },
@@ -1519,17 +1554,15 @@
       "reference": "EM0533-82Y",
       "referenceNormalized": "EM053382Y",
       "internalId": "citizen/em053382y",
-      "status": "download_failed",
+      "status": "success_with_limited_images",
       "initialUrl": "https://www.citizen.com.ph/html/en/products/citizen-l/regular/em0533-82y.html",
       "resolvedOfficialUrl": "https://www.citizen.com.ph/html/en/products/citizen-l/regular/em0533-82y.html",
       "sourceVerificationStatus": "verified_exact",
       "galleryEntries": 1,
-      "uniqueProductImages": 0,
-      "coverPublicPath": null,
-      "storagePath": null,
-      "notes": [
-        "download failed: https://www.citizen.com.ph/filebase2/113/002/0-306282-a2e57bd3e0bb7379ab7b715adc398ec6.jpg?md5=c7d253c98e52dd92c3d375e7ab692b99: Command failed: curl.exe -L --fail --silent --show-error --connect-timeout 8 --max-time 20 --speed-time 8 --speed-limit 1024 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36 EternalTimeCitizenImport/1.0 -H Accept: image/avif,image/webp,image/png,image/jpeg,*/* https://www.citizen.com.ph/filebase2/113/002/0-306282-a2e57bd3e0bb7379ab7b715adc398ec6.jpg?md5=c7d253c98e52dd92c3d375e7ab692b99\ncurl: (28) Resolving timed out after 8010 milliseconds\r\n"
-      ]
+      "uniqueProductImages": 1,
+      "coverPublicPath": "/generated/catalog/citizen-official/em053382y/01-6962229b673d6b19.jpg",
+      "storagePath": "public/generated/catalog/citizen-official/em053382y",
+      "notes": []
     },
     {
       "reference": "EM1060-87N",
