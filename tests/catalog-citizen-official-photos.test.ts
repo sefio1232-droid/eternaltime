@@ -32,7 +32,7 @@ describe("Citizen official photo import", () => {
 
     expect(manifest.officialSource).toBe("Citizen");
     expect(manifest.models).toHaveLength(25);
-    expect(manifest.entries).toHaveLength(72);
+    expect(manifest.entries).toHaveLength(74);
 
     for (const entry of manifest.entries) {
       expect(entry.brandSlug).toBe("citizen");
@@ -77,7 +77,7 @@ describe("Citizen official photo import", () => {
     const withImages = citizenWatches.filter((watch) => watch.primaryImage.kind !== "none");
 
     expect(citizenWatches).toHaveLength(25);
-    expect(withImages).toHaveLength(17);
+    expect(withImages).toHaveLength(18);
     for (const watch of withImages) {
       expect(watch.primaryImage.kind).toBe("remote");
       if (watch.primaryImage.kind === "remote") {
