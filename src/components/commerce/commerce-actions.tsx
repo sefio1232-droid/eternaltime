@@ -152,7 +152,7 @@ export function CommerceProductActions({
         </button>
       </div>
       <p className={styles.disabledNote}>
-        Сервер заново проверит модель, цену и доставку перед оплатой. Максимум одной модели в заказе — {commerceCartMaxQuantity}.
+        Перед оплатой мы ещё раз уточним модель, цену и доставку. Максимум одной модели в заказе — {commerceCartMaxQuantity}.
       </p>
       <CommerceCartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>

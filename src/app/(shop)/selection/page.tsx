@@ -9,7 +9,6 @@ import {
   type SelectionSearchParams,
 } from "@/modules/selection/application/selection-query";
 import {
-  buildSelectionCatalogDiagnostics,
   buildSelectionRecommendations,
   resolveSelectionStep,
 } from "@/modules/selection/application/selection-service";
@@ -62,13 +61,6 @@ export default async function SelectionPage({
       />
     );
   }
-
-  const diagnostics = buildSelectionCatalogDiagnostics(datasetState.dataset);
-  console.info("[selection-runtime]", {
-    source: datasetState.dataset.source,
-    generatedAt: datasetState.dataset.generatedAt,
-    diagnostics,
-  });
 
   return (
     <SelectionPageView
