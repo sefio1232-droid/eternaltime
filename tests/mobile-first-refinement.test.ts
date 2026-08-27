@@ -171,6 +171,7 @@ describe("mobile-first production refinement contracts", () => {
     expect(checkout).not.toContain("Диагностический код");
     expect(commerceStyles).not.toContain("cdekWidgetDiagnosticRibbon");
     expect(missingImage).not.toContain("Изображение готовится");
-    expect(missingImage).toContain("Фото временно недоступно");
+    expect(missingImage).not.toContain("Фото временно недоступно");
+    expect(missingImage).toContain("нейтральная карточка модели без фотографии");
   });
 });

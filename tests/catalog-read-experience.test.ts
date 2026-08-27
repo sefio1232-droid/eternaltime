@@ -430,8 +430,12 @@ describe("catalog read experience", () => {
   it("resolves canonical detail route and groups sibling references by Watch Model", () => {
     const { dataset } = fixture();
     const watch = getCatalogWatchByRoute(dataset, { brandSlug: "tissot", referenceSlug: "t1374071104100" });
+    const punctuatedTissot = getCatalogWatchByRoute(dataset, { brandSlug: "tissot", referenceSlug: "T137.407.11.041.00" });
+    const punctuatedCasio = getCatalogWatchByRoute(dataset, { brandSlug: "casio", referenceSlug: "A158WA-1DF" });
 
     expect(watch?.title).toContain("Blue");
+    expect(punctuatedTissot?.referenceNormalized).toBe("T1374071104100");
+    expect(punctuatedCasio?.referenceNormalized).toBe("A158WA1DF");
     expect(watch?.siblingReferences).toHaveLength(1);
     expect(watch?.siblingReferences[0]?.referenceSlug).toBe("t1374071105100");
     expect(getCatalogWatchByRoute(dataset, { brandSlug: "casio", referenceSlug: "7" })).toBeNull();

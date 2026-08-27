@@ -1,9 +1,9 @@
 import styles from "@/components/catalog/catalog-missing-image.module.css";
 
 /**
- * Editorial placeholder shown when a watch has no usable image in the current source data.
+ * Editorial fallback shown when a watch has no usable image in the current source data.
  * Never a fake product photo, never another reference's image — a neutral watch-case
- * silhouette plus factual identity text and a calm availability line.
+ * silhouette plus factual identity text.
  */
 export function CatalogMissingImage({
   brandName,
@@ -13,7 +13,7 @@ export function CatalogMissingImage({
   referenceDisplay: string;
 }>) {
   return (
-    <div className={styles.wrap} role="img" aria-label={`${brandName} ${referenceDisplay}: изображение пока недоступно`}>
+    <div className={styles.wrap} role="img" aria-label={`${brandName} ${referenceDisplay}: нейтральная карточка модели без фотографии`}>
       <svg viewBox="0 0 64 64" fill="none" className={styles.silhouette} aria-hidden="true">
         <rect x="26" y="4" width="12" height="8" rx="1.5" strokeWidth="1.4" />
         <rect x="26" y="52" width="12" height="8" rx="1.5" strokeWidth="1.4" />
@@ -24,7 +24,6 @@ export function CatalogMissingImage({
       <div className={styles.caption} aria-hidden="true">
         <span className={styles.brand}>{brandName}</span>
         <span className={styles.reference}>{referenceDisplay}</span>
-        <span className={styles.status}>Фото временно недоступно</span>
       </div>
     </div>
   );

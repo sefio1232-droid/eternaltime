@@ -570,8 +570,12 @@ export function getCatalogWatchByRoute(
   dataset: CatalogReadDataset,
   input: { brandSlug: string; referenceSlug: string },
 ): CatalogWatchDetail | null {
+  const normalizedReference = normalizeReferenceSearchText(input.referenceSlug);
   return dataset.watches.find(
-    (watch) => watch.brandSlug === input.brandSlug && watch.referenceSlug === input.referenceSlug,
+    (watch) =>
+      watch.brandSlug === input.brandSlug &&
+      (watch.referenceSlug === input.referenceSlug ||
+        (normalizedReference !== null && watch.referenceNormalized === normalizedReference)),
   ) ?? null;
 }
 

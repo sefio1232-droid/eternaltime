@@ -5083,6 +5083,13 @@
     line-height: 1;
   }
 
+  .selectionTop .sectionCopy h2 {
+    max-width: 13ch;
+    font-size: clamp(2.35rem, 10.5vw, 3rem);
+    line-height: 1.03;
+    text-wrap: balance;
+  }
+
   .pathSteps {
     gap: 0.45rem;
     padding-left: 1.25rem;

@@ -265,7 +265,8 @@ describe("catalog list Phase 2.1 visual recovery", () => {
     const card = readSrc("src/components/catalog/catalog-watch-card.tsx");
     const placeholder = readSrc("src/components/catalog/catalog-missing-image.tsx");
     expect(card).toContain("CatalogMissingImage");
-    expect(placeholder).toContain("Фото временно недоступно");
+    expect(placeholder).not.toContain("Фото временно недоступно");
+    expect(placeholder).toContain("нейтральная карточка модели без фотографии");
     expect(placeholder).toContain("brandName");
     expect(placeholder).toContain("referenceDisplay");
   });

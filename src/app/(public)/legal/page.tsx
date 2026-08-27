@@ -15,9 +15,9 @@ export default function LegalCenterPage() {
     <div className={styles.page}>
       <EditorialContainer className={styles.shell}>
         <section className={styles.hero}>
-          <p className={styles.eyebrow}>Eternal Time / legal</p>
+          <p className={styles.eyebrow}>Eternal Time / документы</p>
           <h1>Юридические документы</h1>
-          <p>Служебный раздел с действующими документами Eternal Time.</p>
+          <p>Действующие документы Eternal Time для заказов, доставки, оплаты и защиты персональных данных.</p>
         </section>
 
         <nav className={styles.documentGrid} aria-label="Действующие юридические документы">
