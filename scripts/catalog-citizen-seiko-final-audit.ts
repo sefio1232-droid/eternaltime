@@ -234,7 +234,12 @@ function main() {
   const imagePlan = readJson<CatalogImageUploadPlan>("imports/generated/catalog-image-upload-plan.json");
   const citizenManifest = readJson<CitizenOfficialPhotoManifest>("src/content/catalog/citizen-official-photo-manifest.json");
   const seikoManifest = readJson<SeikoOfficialPhotoManifest>("src/content/catalog/seiko-official-photo-manifest.json");
-  const dataset = catalogReadDatasetFromPreview({ preview, imagePlan, citizenOfficialPhotoManifest: citizenManifest });
+  const dataset = catalogReadDatasetFromPreview({
+    preview,
+    imagePlan,
+    citizenOfficialPhotoManifest: citizenManifest,
+    seikoOfficialPhotoManifest: seikoManifest,
+  });
 
   const citizen = dataset.watches.filter((watch) => watch.brandSlug === "citizen");
   const seiko = dataset.watches.filter((watch) => watch.brandSlug === "seiko");

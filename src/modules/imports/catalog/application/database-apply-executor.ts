@@ -11,6 +11,10 @@ import {
   type CitizenOfficialPhotoManifest,
 } from "@/modules/catalog/infrastructure/citizen-official-photo-types";
 import {
+  SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH,
+  type SeikoOfficialPhotoManifest,
+} from "@/modules/catalog/infrastructure/seiko-official-photo-types";
+import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
   type CatalogSiteImportOverlayManifest,
 } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
@@ -72,6 +76,9 @@ async function buildPublicReadModelPayload(input: {
   const citizenOfficialPhotoManifest = await readOptionalJsonFile<CitizenOfficialPhotoManifest>(
     path.join(input.rootDir, CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH),
   );
+  const seikoOfficialPhotoManifest = await readOptionalJsonFile<SeikoOfficialPhotoManifest>(
+    path.join(input.rootDir, SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH),
+  );
   const siteImportOverlay = await readOptionalJsonFile<CatalogSiteImportOverlayManifest>(
     path.join(input.rootDir, SITE_IMPORT_OVERLAY_OUTPUT_PATH),
   );
@@ -82,6 +89,7 @@ async function buildPublicReadModelPayload(input: {
     casioPhotoManifest,
     tissotPhotoManifest,
     citizenOfficialPhotoManifest,
+    seikoOfficialPhotoManifest,
     siteImportOverlay,
   });
 

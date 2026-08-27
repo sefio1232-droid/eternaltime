@@ -25,6 +25,10 @@ import {
   CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH,
   type CitizenOfficialPhotoManifest,
 } from "@/modules/catalog/infrastructure/citizen-official-photo-types";
+import {
+  SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH,
+  type SeikoOfficialPhotoManifest,
+} from "@/modules/catalog/infrastructure/seiko-official-photo-types";
 import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/modules/catalog/infrastructure/orient-photo-archive-types";
 import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
@@ -198,6 +202,7 @@ async function loadDataset(): Promise<{
     casio: CasioPhotoArchiveManifest | null;
     citizen: CitizenOfficialPhotoManifest | null;
     orient: OrientPhotoArchiveManifest | null;
+    seiko: SeikoOfficialPhotoManifest | null;
     tissot: TissotPhotoArchiveManifest | null;
   };
 }> {
@@ -206,6 +211,7 @@ async function loadDataset(): Promise<{
   const orient = await readOptionalJson<OrientPhotoArchiveManifest>(path.join(rootDir, ORIENT_MANIFEST_OUTPUT_PATH));
   const casio = await readOptionalJson<CasioPhotoArchiveManifest>(path.join(rootDir, CASIO_MANIFEST_OUTPUT_PATH));
   const citizen = await readOptionalJson<CitizenOfficialPhotoManifest>(path.join(rootDir, CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH));
+  const seiko = await readOptionalJson<SeikoOfficialPhotoManifest>(path.join(rootDir, SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH));
   const tissot = await readOptionalJson<TissotPhotoArchiveManifest>(path.join(rootDir, TISSOT_MANIFEST_OUTPUT_PATH));
   const overlay = await readOptionalJson<CatalogSiteImportOverlayManifest>(path.join(rootDir, SITE_IMPORT_OVERLAY_OUTPUT_PATH));
   const dataset = catalogReadDatasetFromPreview({
@@ -214,11 +220,12 @@ async function loadDataset(): Promise<{
     orientPhotoManifest: orient,
     casioPhotoManifest: casio,
     citizenOfficialPhotoManifest: citizen,
+    seikoOfficialPhotoManifest: seiko,
     tissotPhotoManifest: tissot,
     siteImportOverlay: overlay,
   });
 
-  return { dataset, overlay, manifests: { casio, citizen, orient, tissot } };
+  return { dataset, overlay, manifests: { casio, citizen, orient, seiko, tissot } };
 }
 
 function findByReference(dataset: CatalogReadDataset, reference: string): CatalogWatchDetail | null {
@@ -976,6 +983,7 @@ async function main() {
         casioEntries: manifests.casio?.entries.length ?? 0,
         citizenEntries: manifests.citizen?.entries.length ?? 0,
         orientEntries: manifests.orient?.entries.length ?? 0,
+        seikoEntries: manifests.seiko?.entries.length ?? 0,
         tissotEntries: manifests.tissot?.entries.length ?? 0,
       },
     },

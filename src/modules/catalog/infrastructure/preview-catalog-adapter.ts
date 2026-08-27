@@ -12,6 +12,10 @@ import type {
   CitizenOfficialPhotoManifest,
   CitizenOfficialPhotoManifestEntry,
 } from "@/modules/catalog/infrastructure/citizen-official-photo-types";
+import type {
+  SeikoOfficialPhotoManifest,
+  SeikoOfficialPhotoManifestEntry,
+} from "@/modules/catalog/infrastructure/seiko-official-photo-types";
 import type { CatalogSiteImportOverlayEntry, CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
 import { classifyCatalogImageRejection, selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
@@ -338,7 +342,7 @@ function tissotArchiveImagePresentation(entry: TissotManifestEntry, title: strin
 }
 
 function citizenOfficialImagePresentation(
-  entry: CitizenOfficialPhotoManifestEntry,
+  entry: CitizenOfficialPhotoManifestEntry | SeikoOfficialPhotoManifestEntry,
   title: string,
   referenceDisplay: string,
   order: number,
@@ -455,6 +459,26 @@ function applyCitizenOfficialPhotoUpgrade(input: {
   return applyPhotoArchiveUpgrade({ primaryImage: input.primaryImage, imageGallery: input.imageGallery, archiveImages: officialImages });
 }
 
+function applySeikoOfficialPhotoUpgrade(input: {
+  brandSlug: string;
+  referenceNormalized: string;
+  title: string;
+  referenceDisplay: string;
+  primaryImage: CatalogImagePresentation;
+  imageGallery: CatalogImagePresentation[];
+  seikoManifestByReference: Map<string, SeikoOfficialPhotoManifestEntry[]>;
+}): { primaryImage: CatalogImagePresentation; imageGallery: CatalogImagePresentation[] } {
+  if (input.brandSlug !== "seiko") {
+    return { primaryImage: input.primaryImage, imageGallery: input.imageGallery };
+  }
+
+  const officialEntries = input.seikoManifestByReference.get(input.referenceNormalized) ?? [];
+  const officialImages = officialEntries.map((entry, index) =>
+    citizenOfficialImagePresentation(entry, input.title, input.referenceDisplay, index + 1),
+  );
+  return applyPhotoArchiveUpgrade({ primaryImage: input.primaryImage, imageGallery: input.imageGallery, archiveImages: officialImages });
+}
+
 /** Groups the Casio photo-archive manifest by catalog reference, primary image first (mirrors
  * groupOrientManifestByReference). */
 function groupCasioManifestByReference(manifest: CasioPhotoArchiveManifest | null): Map<string, CasioManifestEntry[]> {
@@ -530,6 +554,31 @@ function groupCitizenOfficialManifestByReference(
   return grouped;
 }
 
+function groupSeikoOfficialManifestByReference(
+  manifest: SeikoOfficialPhotoManifest | null,
+): Map<string, SeikoOfficialPhotoManifestEntry[]> {
+  const grouped = new Map<string, SeikoOfficialPhotoManifestEntry[]>();
+  if (!manifest) {
+    return grouped;
+  }
+
+  for (const entry of manifest.entries) {
+    if (!grouped.has(entry.referenceNormalized)) {
+      grouped.set(entry.referenceNormalized, []);
+    }
+    grouped.get(entry.referenceNormalized)!.push(entry);
+  }
+
+  for (const entries of grouped.values()) {
+    entries.sort((left, right) => {
+      if (left.isCover !== right.isCover) return left.isCover ? -1 : 1;
+      return left.imageOrder - right.imageOrder;
+    });
+  }
+
+  return grouped;
+}
+
 function readModelFromCandidate(input: {
   candidate: MergedCatalogCandidate;
   imagePlanItems: CatalogImageUploadPlanItem[];
@@ -537,6 +586,7 @@ function readModelFromCandidate(input: {
   casioManifestByReference: Map<string, CasioManifestEntry[]>;
   tissotManifestByReference: Map<string, TissotManifestEntry[]>;
   citizenManifestByReference: Map<string, CitizenOfficialPhotoManifestEntry[]>;
+  seikoManifestByReference: Map<string, SeikoOfficialPhotoManifestEntry[]>;
   siteImportOverlayByReference: Map<string, CatalogSiteImportOverlayEntry>;
 }): Omit<CatalogWatchDetail, "siblingReferences"> | null {
   const { candidate } = input;
@@ -638,7 +688,16 @@ function readModelFromCandidate(input: {
     imageGallery: tissotUpgrade.imageGallery,
     citizenManifestByReference: input.citizenManifestByReference,
   });
-  const primaryImage = citizenUpgrade.primaryImage;
+  const seikoUpgrade = applySeikoOfficialPhotoUpgrade({
+    brandSlug,
+    referenceNormalized,
+    title,
+    referenceDisplay,
+    primaryImage: citizenUpgrade.primaryImage,
+    imageGallery: citizenUpgrade.imageGallery,
+    seikoManifestByReference: input.seikoManifestByReference,
+  });
+  const primaryImage = seikoUpgrade.primaryImage;
   const price = candidate.pricing.publicPriceCandidate
     ? createMoney(candidate.pricing.publicPriceCandidate.amountMinor, candidate.pricing.publicPriceCandidate.currencyCode)
     : null;
@@ -660,7 +719,7 @@ function readModelFromCandidate(input: {
     watchModelName,
     publicPrice: price,
     primaryImage,
-    imageGallery: citizenUpgrade.imageGallery,
+    imageGallery: seikoUpgrade.imageGallery,
     keySpecifications: keySpecifications(specifications),
     specifications,
   };
@@ -756,6 +815,9 @@ export function catalogReadDatasetFromPreview(input: {
   /** Optional official Citizen image manifest. Only exact-reference entries are consumed and only
    * for the Citizen brand; it never rewrites characteristics, SEO, prices, or supplier data. */
   citizenOfficialPhotoManifest?: CitizenOfficialPhotoManifest | null;
+  /** Optional official Seiko image manifest. Same exact-reference and presentation-only boundary
+   * as Citizen; it never fills prices or substitutes neighboring references. */
+  seikoOfficialPhotoManifest?: SeikoOfficialPhotoManifest | null;
   /** Optional — absent on every existing call site until it's explicitly passed. Merges richer,
    * pre-normalized specification values from the user-supplied site-import workbooks into the same
    * `CatalogPublicSpecification[]` shape the raw import already produces; never changes the
@@ -768,6 +830,7 @@ export function catalogReadDatasetFromPreview(input: {
   const casioManifestByReference = groupCasioManifestByReference(input.casioPhotoManifest ?? null);
   const tissotManifestByReference = groupTissotManifestByReference(input.tissotPhotoManifest ?? null);
   const citizenManifestByReference = groupCitizenOfficialManifestByReference(input.citizenOfficialPhotoManifest ?? null);
+  const seikoManifestByReference = groupSeikoOfficialManifestByReference(input.seikoOfficialPhotoManifest ?? null);
   const siteImportOverlayByReference = groupSiteImportOverlayByReference(input.siteImportOverlay ?? null);
   const baseWatches = input.preview.records
     .map((candidate) =>
@@ -778,6 +841,7 @@ export function catalogReadDatasetFromPreview(input: {
         casioManifestByReference,
         tissotManifestByReference,
         citizenManifestByReference,
+        seikoManifestByReference,
         siteImportOverlayByReference,
       }),
     )

@@ -46,7 +46,8 @@ describe("Seiko Women 73 staged import", () => {
   it("adds all 73 Seiko watches to the staged read model with blank RUB prices", () => {
     const preview = readJson<CatalogImportPreview>("imports/generated/catalog-import-preview.json");
     const imagePlan = readJson<CatalogImageUploadPlan>("imports/generated/catalog-image-upload-plan.json");
-    const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
+    const manifest = readJson<SeikoOfficialPhotoManifest>("src/content/catalog/seiko-official-photo-manifest.json");
+    const dataset = catalogReadDatasetFromPreview({ preview, imagePlan, seikoOfficialPhotoManifest: manifest });
     const seiko = dataset.watches.filter((watch) => watch.brandSlug === "seiko");
     const brandScopedReferenceKeys = dataset.watches.map((watch) => `${watch.brandSlug}:${watch.referenceNormalized}`);
 
@@ -60,6 +61,20 @@ describe("Seiko Women 73 staged import", () => {
     expect(dataset.brands.find((brand) => brand.slug === "casio")?.watchCount).toBe(222);
     expect(dataset.brands.find((brand) => brand.slug === "orient")?.watchCount).toBe(82);
     expect(dataset.brands.find((brand) => brand.slug === "tissot")?.watchCount).toBe(218);
+  });
+
+  it("keeps Seiko official manifest wired into preview, apply, and production read paths", () => {
+    const previewAdapterSource = readSrc("src/modules/catalog/infrastructure/preview-catalog-adapter.ts");
+    const catalogRepositorySource = readSrc("src/modules/catalog/infrastructure/catalog-read-repository.server.ts");
+    const databaseAdapterSource = readSrc("src/modules/catalog/infrastructure/database-catalog-adapter.server.ts");
+    const applyExecutorSource = readSrc("src/modules/imports/catalog/application/database-apply-executor.ts");
+
+    for (const source of [catalogRepositorySource, databaseAdapterSource, applyExecutorSource]) {
+      expect(source).toContain("SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH");
+    }
+    expect(previewAdapterSource).toContain("seikoOfficialPhotoManifest");
+    expect(databaseAdapterSource).toContain('watch.brandSlug === "seiko"');
+    expect(applyExecutorSource).toContain("seikoOfficialPhotoManifest");
   });
 
   it("keeps official Seiko cover images front-scoped with no cross-model contamination", () => {

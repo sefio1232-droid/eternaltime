@@ -25,6 +25,10 @@ import {
   type CitizenOfficialPhotoManifest,
 } from "@/modules/catalog/infrastructure/citizen-official-photo-types";
 import {
+  SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH,
+  type SeikoOfficialPhotoManifest,
+} from "@/modules/catalog/infrastructure/seiko-official-photo-types";
+import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
   type CatalogSiteImportOverlayManifest,
 } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
@@ -38,6 +42,7 @@ const orientManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), 
 const casioManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), CASIO_MANIFEST_OUTPUT_PATH);
 const tissotManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), TISSOT_MANIFEST_OUTPUT_PATH);
 const citizenOfficialManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH);
+const seikoOfficialManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH);
 
 export class CatalogReadSourceError extends Error {
   readonly code: "catalog_source_unavailable" | "catalog_source_not_configured";
@@ -117,6 +122,7 @@ export const getCatalogReadDataset = cache(async () => {
     const casioPhotoManifest = await readOptionalJsonFile<CasioPhotoArchiveManifest>(casioManifestPath);
     const tissotPhotoManifest = await readOptionalJsonFile<TissotPhotoArchiveManifest>(tissotManifestPath);
     const citizenOfficialPhotoManifest = await readOptionalJsonFile<CitizenOfficialPhotoManifest>(citizenOfficialManifestPath);
+    const seikoOfficialPhotoManifest = await readOptionalJsonFile<SeikoOfficialPhotoManifest>(seikoOfficialManifestPath);
     const siteImportOverlay = await getCatalogSiteImportOverlayManifest();
     return catalogReadDatasetFromPreview({
       preview,
@@ -125,6 +131,7 @@ export const getCatalogReadDataset = cache(async () => {
       casioPhotoManifest,
       tissotPhotoManifest,
       citizenOfficialPhotoManifest,
+      seikoOfficialPhotoManifest,
       siteImportOverlay,
     });
   }
