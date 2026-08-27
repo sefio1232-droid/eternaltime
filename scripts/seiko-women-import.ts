@@ -19,6 +19,7 @@ import {
   buildControlledCatalogApplyPlan,
   writeCatalogImageUploadPlan,
 } from "@/modules/imports/catalog/application/database-apply-plan";
+import { buildStagedPricing, parseMoneyToMinorUnits } from "@/modules/imports/catalog/domain/pricing";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type {
   CatalogImportPreview,
@@ -27,13 +28,15 @@ import type {
   PriceSource,
   RawCatalogRow,
   SourceProvenance,
-  StagedPricing,
 } from "@/modules/imports/catalog/domain/types";
 
 const execFileAsync = promisify(execFile);
 const workbookPath =
   process.env.SEIKO_WOMEN_WORKBOOK ??
   "c:/Users/Sergey/Downloads/Seiko_Women_73_characteristics_for_Codex.xlsx";
+const priceWorkbookPath =
+  process.env.SEIKO_WOMEN_PRICE_WORKBOOK ??
+  "c:/Users/Sergey/Downloads/Seiko_Women_73_prices_RUB.xlsx";
 const rootDir = process.cwd();
 const apply = process.argv.includes("--apply");
 const artifactsDir = path.join(rootDir, "artifacts", "seiko-women-import");
@@ -64,6 +67,15 @@ type SeikoRow = {
   officialStatus: string;
   importNote: string;
   officialUrl: string;
+};
+
+type SeikoPriceRow = {
+  rowNumber: number;
+  reference: string;
+  priceCny: string;
+  purchaseRub: string;
+  publicRub: string;
+  differenceRub: string;
 };
 
 type ExtractedImage = {
@@ -301,6 +313,50 @@ function readRows(): SeikoRow[] {
   })).filter((row) => row.reference);
 }
 
+function readPriceRows(): SeikoPriceRow[] {
+  const workbook = XLSX.readFile(priceWorkbookPath);
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName || !workbook.Sheets[sheetName]) {
+    throw new Error(`Seiko price workbook has no readable sheets: ${priceWorkbookPath}`);
+  }
+
+  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(workbook.Sheets[sheetName]!, {
+    defval: "",
+    raw: false,
+  });
+
+  return rows.map((row, index) => ({
+    rowNumber: index + 2,
+    reference: String(row["Артикул"] ?? "").trim(),
+    priceCny: String(row["Цена в юанях (CNY)"] ?? "").trim(),
+    purchaseRub: String(row["Закуп в рублях"] ?? "").trim(),
+    publicRub: String(row["Моя цена в рублях"] ?? "").trim(),
+    differenceRub: String(row["Разница, руб."] ?? "").trim(),
+  })).filter((row) => row.reference);
+}
+
+function assertPriceCoverage(rows: SeikoRow[], priceRows: SeikoPriceRow[]): void {
+  const catalogRefs = new Set(rows.map((row) => normalizeManufacturerReference(row.reference)));
+  const priceRefs = new Set(priceRows.map((row) => normalizeManufacturerReference(row.reference)));
+  const missing = [...catalogRefs].filter((reference) => !priceRefs.has(reference)).sort();
+  const extra = [...priceRefs].filter((reference) => !catalogRefs.has(reference)).sort();
+  const invalidPublicPrices = priceRows
+    .filter((row) => parseMoneyToMinorUnits(row.publicRub) === null)
+    .map((row) => row.reference)
+    .sort();
+
+  if (missing.length > 0 || extra.length > 0 || invalidPublicPrices.length > 0) {
+    throw new Error(
+      [
+        "Seiko price workbook does not exactly match the staged Seiko catalog.",
+        missing.length ? `Missing prices: ${missing.join(", ")}` : null,
+        extra.length ? `Extra price rows: ${extra.join(", ")}` : null,
+        invalidPublicPrices.length ? `Invalid public RUB prices: ${invalidPublicPrices.join(", ")}` : null,
+      ].filter(Boolean).join(" "),
+    );
+  }
+}
+
 async function downloadBytes(url: string): Promise<Buffer> {
   const { stdout } = await execFileAsync("curl.exe", [
     "-L",
@@ -422,14 +478,15 @@ function modelManifest(model: ResolvedModel, entries: SeikoOfficialPhotoManifest
   };
 }
 
-function emptyPricing(): StagedPricing {
+function priceProvenance(row: SeikoPriceRow, rawColumn?: string, rawValue?: string): SourceProvenance {
   return {
-    publicPriceCandidate: null,
-    selectedPublicPriceSource: null,
-    rubPriceSources: [],
-    nonRubPriceSources: [],
-    internalAnalyticalValues: [],
-    allSources: [],
+    sourceFile: path.basename(priceWorkbookPath),
+    sourceType: "main_catalog_workbook",
+    workbook: path.basename(priceWorkbookPath),
+    sheet: "Seiko Women — цены",
+    rowNumber: row.rowNumber,
+    rawColumn,
+    rawValue,
   };
 }
 
@@ -443,6 +500,60 @@ function provenance(row: SeikoRow, rawColumn?: string, rawValue?: string): Sourc
     rawColumn,
     rawValue,
   };
+}
+
+function priceSources(row: SeikoPriceRow): PriceSource[] {
+  const publicRubMinor = parseMoneyToMinorUnits(row.publicRub);
+  const purchaseRubMinor = parseMoneyToMinorUnits(row.purchaseRub);
+  const differenceMinor = parseMoneyToMinorUnits(row.differenceRub);
+  const priceCnyMinor = parseMoneyToMinorUnits(row.priceCny);
+
+  return [
+    {
+      rawFieldName: "Моя цена в рублях",
+      sourcePackage: path.basename(priceWorkbookPath),
+      currency: "RUB",
+      rawValue: row.publicRub,
+      normalizedAmountMinor: publicRubMinor,
+      intendedVisibility: "public_candidate",
+      validationState: publicRubMinor === null ? "invalid" : "valid",
+      reason: "User-provided Seiko selling price in RUB; selected as the only public website price.",
+      provenance: priceProvenance(row, "Моя цена в рублях", row.publicRub),
+    },
+    {
+      rawFieldName: "Закуп в рублях",
+      sourcePackage: path.basename(priceWorkbookPath),
+      currency: "RUB",
+      rawValue: row.purchaseRub,
+      normalizedAmountMinor: purchaseRubMinor,
+      intendedVisibility: "internal",
+      validationState: purchaseRubMinor === null ? "invalid" : "valid",
+      reason: "Purchase cost is internal provenance and must never be displayed as a public price.",
+      provenance: priceProvenance(row, "Закуп в рублях", row.purchaseRub),
+    },
+    {
+      rawFieldName: "Разница, руб.",
+      sourcePackage: path.basename(priceWorkbookPath),
+      currency: "RUB",
+      rawValue: row.differenceRub,
+      normalizedAmountMinor: differenceMinor,
+      intendedVisibility: "excluded_from_public",
+      validationState: "not_a_price",
+      reason: "Difference is analytical source data, not a product price.",
+      provenance: priceProvenance(row, "Разница, руб.", row.differenceRub),
+    },
+    {
+      rawFieldName: "Цена в юанях (CNY)",
+      sourcePackage: path.basename(priceWorkbookPath),
+      currency: "CNY",
+      rawValue: row.priceCny,
+      normalizedAmountMinor: priceCnyMinor,
+      intendedVisibility: "internal",
+      validationState: priceCnyMinor === null ? "invalid" : "valid",
+      reason: "CNY source value is internal provenance only; public catalog uses RUB selling price.",
+      provenance: priceProvenance(row, "Цена в юанях (CNY)", row.priceCny),
+    },
+  ];
 }
 
 function rawRow(row: SeikoRow): RawCatalogRow {
@@ -487,7 +598,12 @@ function imageCandidate(row: SeikoRow, entry: SeikoOfficialPhotoManifestEntry): 
   };
 }
 
-function candidateFromModel(model: SeikoOfficialPhotoManifestModel, row: SeikoRow, entries: SeikoOfficialPhotoManifestEntry[]): MergedCatalogCandidate {
+function candidateFromModel(
+  model: SeikoOfficialPhotoManifestModel,
+  row: SeikoRow,
+  priceRow: SeikoPriceRow,
+  entries: SeikoOfficialPhotoManifestEntry[],
+): MergedCatalogCandidate {
   const referenceNormalized = normalizeManufacturerReference(row.reference);
   const collection = row.collection || null;
   const line = row.seriesLine || null;
@@ -506,19 +622,7 @@ function candidateFromModel(model: SeikoOfficialPhotoManifestModel, row: SeikoRo
     ...(row.officialStatus ? { lifecycle_status_raw: row.officialStatus } : {}),
     ...(row.catalogTier ? { catalog_tier_raw: row.catalogTier } : {}),
   };
-  const priceNote: PriceSource = {
-    rawFieldName: "RUB public price",
-    sourcePackage: path.basename(workbookPath),
-    currency: "RUB",
-    rawValue: "",
-    normalizedAmountMinor: null,
-    intendedVisibility: "public_candidate",
-    validationState: "not_a_price",
-    reason: "RUB prices intentionally left empty per user instruction; CNY supplier card values are not public RUB prices.",
-    provenance: provenance(row, "RUB public price", ""),
-  };
-  const pricing = emptyPricing();
-  pricing.allSources = [priceNote];
+  const pricing = buildStagedPricing(priceSources(priceRow));
 
   return {
     candidateId: `seiko-women:${referenceNormalized}`,
@@ -569,41 +673,56 @@ function candidateFromModel(model: SeikoOfficialPhotoManifestModel, row: SeikoRo
             field: "images",
           }]
         : []),
-      {
-        severity: "info",
-        code: "rub_price_intentionally_blank",
-        message: "RUB public price intentionally left blank per user instruction.",
-        source: provenance(row, "RUB public price", ""),
-        field: "pricing.publicPriceCandidate",
-      },
+      ...(pricing.publicPriceCandidate
+        ? []
+        : [{
+            severity: "error" as const,
+            code: "seiko_public_rub_price_missing",
+            message: "Seiko public RUB selling price is missing or invalid in the user-provided price workbook.",
+            source: priceProvenance(priceRow, "Моя цена в рублях", priceRow.publicRub),
+            field: "pricing.publicPriceCandidate",
+          }]),
     ],
     applyEligibility: {
       status: "eligible",
       referenceApplyEligible: true,
-      commercialApplyEligible: false,
-      reasons: ["Seiko women 73 staged import; public RUB price intentionally blank."],
+      commercialApplyEligible: Boolean(pricing.publicPriceCandidate),
+      reasons: ["Seiko women 73 staged import with user-provided RUB selling prices."],
     },
   };
 }
 
-async function writePreviewSupplement(models: SeikoOfficialPhotoManifestModel[], rows: SeikoRow[], entries: SeikoOfficialPhotoManifestEntry[]) {
+async function writePreviewSupplement(
+  models: SeikoOfficialPhotoManifestModel[],
+  rows: SeikoRow[],
+  priceRows: SeikoPriceRow[],
+  entries: SeikoOfficialPhotoManifestEntry[],
+) {
   const previewPath = path.join(rootDir, "imports/generated/catalog-import-preview.json");
   const imagePlanPath = path.join(rootDir, "imports/generated/catalog-image-upload-plan.json");
   const preview = JSON.parse(await readFile(previewPath, "utf8")) as CatalogImportPreview;
   const byRef = new Map(rows.map((row) => [normalizeManufacturerReference(row.reference), row]));
-  const candidates = models.map((model) => candidateFromModel(model, byRef.get(model.referenceNormalized)!, entries));
+  const priceByRef = new Map(priceRows.map((row) => [normalizeManufacturerReference(row.reference), row]));
+  const candidates = models.map((model) => candidateFromModel(model, byRef.get(model.referenceNormalized)!, priceByRef.get(model.referenceNormalized)!, entries));
   preview.records = [
     ...preview.records.filter((record) => !record.candidateId.startsWith("seiko-women:")),
     ...candidates,
   ];
   preview.sources = [
-    ...preview.sources.filter((source) => source.filename !== path.basename(workbookPath)),
+    ...preview.sources.filter((source) => source.filename !== path.basename(workbookPath) && source.filename !== path.basename(priceWorkbookPath)),
     {
       filename: path.basename(workbookPath),
       sourceType: "main_catalog_workbook",
       reasons: ["Seiko Women 73 staged import from user-provided official source map."],
       workbookSheets: ["Seiko Women 73", "Summary", "Method & exclusions"],
       rawRowCount: rows.length,
+    },
+    {
+      filename: path.basename(priceWorkbookPath),
+      sourceType: "main_catalog_workbook",
+      reasons: ["Seiko Women 73 public RUB selling prices from user-provided price workbook."],
+      workbookSheets: ["Seiko Women — цены", "Параметры"],
+      rawRowCount: priceRows.length,
     },
   ];
   preview.generatedAt = new Date().toISOString();
@@ -639,7 +758,7 @@ async function writeReports(models: SeikoOfficialPhotoManifestModel[], entries: 
     }).length,
     statusCounts: counts,
     thirdPartyImagesUsed: 0,
-    rubPricesBlank: true,
+    rubPricesConfigured: models.length,
   };
   const report = { generatedAt: new Date().toISOString(), summary, models, entries };
   const jsonPath = path.join(artifactsDir, `seiko-women-import-${timestamp}.json`);
@@ -651,7 +770,7 @@ async function writeReports(models: SeikoOfficialPhotoManifestModel[], entries: 
     `- Target models: ${summary.targetModels}`,
     `- Official images ${apply ? "stored" : "planned"}: ${summary.totalOfficialImages}`,
     `- Status counts: ${JSON.stringify(summary.statusCounts)}`,
-    `- RUB prices blank: yes`,
+    `- RUB prices configured: ${summary.rubPricesConfigured}`,
     `- Third-party images used: 0`,
     "",
     "| Reference | Status | Official source | Unique images | Cover | Notes |",
@@ -665,15 +784,20 @@ async function writeReports(models: SeikoOfficialPhotoManifestModel[], entries: 
   console.log(`TARGET_MODELS=${summary.targetModels}`);
   console.log(`OFFICIAL_IMAGES_${apply ? "STORED" : "PLANNED"}=${summary.totalOfficialImages}`);
   console.log(`STATUS_COUNTS=${JSON.stringify(summary.statusCounts)}`);
-  console.log("RUB_PRICES_BLANK=YES");
+  console.log(`RUB_PRICES_CONFIGURED=${summary.rubPricesConfigured}`);
   console.log("THIRD_PARTY_IMAGES_USED=0");
 }
 
 async function main() {
   const rows = readRows();
+  const priceRows = readPriceRows();
   if (rows.length !== 73) {
     throw new Error(`Expected exactly 73 Seiko rows, got ${rows.length}`);
   }
+  if (priceRows.length !== 73) {
+    throw new Error(`Expected exactly 73 Seiko price rows, got ${priceRows.length}`);
+  }
+  assertPriceCoverage(rows, priceRows);
   const resolved: ResolvedModel[] = [];
   for (const row of rows) {
     const model = await resolveModel(row);
@@ -700,7 +824,7 @@ async function main() {
     const manifestPath = path.join(rootDir, SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH);
     await mkdir(path.dirname(manifestPath), { recursive: true });
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-    await writePreviewSupplement(models, rows, entries);
+    await writePreviewSupplement(models, rows, priceRows, entries);
     console.log(`SEIKO_OFFICIAL_PHOTO_MANIFEST=${manifestPath}`);
   }
 

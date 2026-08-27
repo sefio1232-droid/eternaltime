@@ -22,6 +22,7 @@
     "citizen:photos:apply": "tsx scripts/citizen-official-photo-import.ts --apply",
     "seiko:women:dry-run": "tsx scripts/seiko-women-import.ts --dry-run",
     "seiko:women:apply": "tsx scripts/seiko-women-import.ts --apply",
+    "seiko:women:prices:apply": "tsx scripts/seiko-women-prices-import.ts",
     "catalog:citizen-seiko:audit": "tsx scripts/catalog-citizen-seiko-final-audit.ts",
     "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
     "home-hero:prepare-assets": "node scripts/prepare-home-hero-assets.mjs",

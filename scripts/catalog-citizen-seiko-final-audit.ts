@@ -173,6 +173,8 @@ function writeAuditMarkdown(report: {
     withoutImages: string[];
     withoutRubPrice: number;
     purchasableWithoutRubPrice: string[];
+    publicRubPriceMin: number | null;
+    publicRubPriceMax: number | null;
     statuses: Record<string, number>;
   };
   catalog: {
@@ -204,6 +206,8 @@ function writeAuditMarkdown(report: {
     `- With images: ${report.seiko.withImages}`,
     `- Without images: ${report.seiko.withoutImages.length}`,
     `- Without RUB price: ${report.seiko.withoutRubPrice}`,
+    `- Public RUB price min: ${report.seiko.publicRubPriceMin ?? "none"}`,
+    `- Public RUB price max: ${report.seiko.publicRubPriceMax ?? "none"}`,
     `- Purchasable without RUB price: ${report.seiko.purchasableWithoutRubPrice.length}`,
     `- Statuses: ${JSON.stringify(report.seiko.statuses)}`,
     "",
@@ -249,6 +253,7 @@ function main() {
   const seikoWithoutImages = seiko.filter((watch) => watch.primaryImage.kind === "none").map((watch) => watch.referenceDisplay).sort();
   const seikoWithoutRubPrice = seiko.filter((watch) => watch.publicPrice === null);
   const seikoPurchasableWithoutRubPrice = seikoWithoutRubPrice.filter(isPurchasable).map((watch) => watch.referenceDisplay).sort();
+  const seikoRubPrices = seiko.flatMap((watch) => watch.publicPrice?.currencyCode === "RUB" ? [watch.publicPrice.amountMinor / 100] : []);
   const primaryAudit = [
     ...primaryAuditRows({
       brand: "citizen",
@@ -281,6 +286,8 @@ function main() {
       withoutImages: seikoWithoutImages,
       withoutRubPrice: seikoWithoutRubPrice.length,
       purchasableWithoutRubPrice: seikoPurchasableWithoutRubPrice,
+      publicRubPriceMin: seikoRubPrices.length ? Math.min(...seikoRubPrices) : null,
+      publicRubPriceMax: seikoRubPrices.length ? Math.max(...seikoRubPrices) : null,
       statuses: statusCounts(seikoManifest.models),
     },
     catalog: {
@@ -313,6 +320,8 @@ function main() {
   console.log(`SEIKO_WITHOUT_IMAGES=${report.seiko.withoutImages.length}`);
   console.log(`SEIKO_WITHOUT_RUB_PRICE=${report.seiko.withoutRubPrice}`);
   console.log(`SEIKO_WITHOUT_RUB_PRICE_PURCHASABLE=${report.seiko.purchasableWithoutRubPrice.length}`);
+  console.log(`SEIKO_PUBLIC_RUB_PRICE_MIN=${report.seiko.publicRubPriceMin ?? "NONE"}`);
+  console.log(`SEIKO_PUBLIC_RUB_PRICE_MAX=${report.seiko.publicRubPriceMax ?? "NONE"}`);
   console.log(`BRAND_SCOPED_DUPLICATES=${report.catalog.duplicateBrandScopedReferences.length}`);
   console.log(`PRIMARY_WARNINGS=${report.primaryAudit.filter((row) => row.warning).length}`);
   console.log(`AUDIT_JSON=${path.relative(projectRoot, path.join(artifactDir, "catalog-citizen-seiko-final-audit.json"))}`);

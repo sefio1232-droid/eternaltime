@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import * as XLSX from "xlsx";
@@ -23,7 +23,7 @@ const execFileAsync = promisify(execFile);
 
 const workbookPath =
   process.env.CITIZEN_SOURCE_WORKBOOK ??
-  "c:/Users/Sergey/Downloads/Citizen_Official_Sources_for_Codex.xlsx";
+  "c:/Users/Sergey/Downloads/Citizen_Official_Sources_and_Gallery_Plan_for_Codex.xlsx";
 const apply = process.argv.includes("--apply");
 const rootDir = process.cwd();
 const artifactsDir = path.join(rootDir, "artifacts", "citizen-official-photo-import");
@@ -129,46 +129,9 @@ async function fetchTextWithCurl(url: string, timeoutSeconds = 18): Promise<{ st
   }
 }
 
-async function fetchTextWithNative(url: string, timeoutSeconds = 18): Promise<{ status: number | null; finalUrl: string; body: string; error: string | null }> {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "user-agent": userAgent,
-        accept: "text/html,application/xhtml+xml",
-        "accept-language": "en-US,en;q=0.9,ja;q=0.8,zh;q=0.7",
-      },
-      signal: AbortSignal.timeout(timeoutSeconds * 1000),
-    });
-    return {
-      status: response.status,
-      finalUrl: response.url,
-      body: await response.text(),
-      error: null,
-    };
-  } catch (error) {
-    return {
-      status: null,
-      finalUrl: url,
-      body: "",
-      error: error instanceof Error ? error.message : "fetch_failed",
-    };
-  }
-}
-
 async function fetchOfficialPage(url: string) {
-  const timeout = url.includes("citizen.com.cn") ? 8 : 18;
-  const attempts = url.includes("citizen.com.cn") ? 1 : 2;
-  let last = await fetchTextWithNative(url, timeout);
-  if (last.error || !last.status || last.status >= 400) {
-    last = await fetchTextWithCurl(url, timeout);
-  }
-  for (let attempt = 1; attempt < attempts && (last.error || !last.status || last.status >= 500); attempt += 1) {
-    last = await fetchTextWithNative(url, timeout);
-    if (last.error || !last.status || last.status >= 400) {
-      last = await fetchTextWithCurl(url, timeout);
-    }
-  }
-  return last;
+  const timeout = url.includes("citizen.com.cn") ? 6 : 10;
+  return fetchTextWithCurl(url, timeout);
 }
 
 async function downloadBytes(url: string): Promise<{ bytes: Buffer; contentType: string | null }> {
@@ -357,37 +320,66 @@ function uniqueImages(images: ExtractedImage[]): ExtractedImage[] {
   return result;
 }
 
-async function cleanTargetAssetDirectories(rows: SourceRow[]): Promise<void> {
-  const assetRoot = path.resolve(rootDir, CITIZEN_OFFICIAL_PUBLIC_ASSET_DIR);
-  await mkdir(assetRoot, { recursive: true });
-
-  for (const row of rows) {
-    const referenceDir = path.resolve(assetRoot, normalizeManufacturerReference(row.reference).toLowerCase());
-    if (!referenceDir.startsWith(`${assetRoot}${path.sep}`)) {
-      throw new Error(`Refusing to clean unexpected Citizen asset path: ${referenceDir}`);
-    }
-    await rm(referenceDir, { recursive: true, force: true });
-  }
-}
-
 function readSourceRows(): SourceRow[] {
   const workbook = XLSX.readFile(workbookPath);
-  for (const required of ["Citizen Source Map", "Summary", "Read Me"]) {
-    if (!workbook.SheetNames.includes(required)) {
-      throw new Error(`Workbook is missing required sheet: ${required}`);
-    }
+  const sheetName = workbook.SheetNames.includes("Citizen Gallery Plan") ? "Citizen Gallery Plan" : "Citizen Source Map";
+  if (!sheetName || !workbook.Sheets[sheetName]) {
+    throw new Error("Workbook is missing a Citizen source sheet.");
   }
-  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(workbook.Sheets["Citizen Source Map"]!, {
+  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(workbook.Sheets[sheetName]!, {
     defval: "",
     raw: false,
   });
   return rows.map((row) => ({
     reference: String(row.Reference ?? "").trim(),
-    initialUrl: String(row["Primary official Citizen URL"] ?? "").trim(),
+    initialUrl: String(row["Official Citizen URL"] ?? row["Primary official Citizen URL"] ?? "").trim(),
     sourceStatus: String(row["Source status"] ?? "").trim(),
-    importMode: String(row["Codex import mode"] ?? "").trim(),
-    exactConfirmed: String(row["Exact reference confirmed"] ?? "").trim(),
+    importMode: String(row["Required Codex action"] ?? row["Codex import mode"] ?? "").trim(),
+    exactConfirmed: String(row["Source status"] ?? row["Exact reference confirmed"] ?? "").trim(),
   })).filter((row) => row.reference && row.initialUrl);
+}
+
+async function readExistingManifest(): Promise<CitizenOfficialPhotoManifest | null> {
+  try {
+    return JSON.parse(await readFile(path.join(rootDir, CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH), "utf8")) as CitizenOfficialPhotoManifest;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function mergeWithExistingEntries(input: {
+  rows: SourceRow[];
+  models: ResolvedModel[];
+  downloadedEntries: CitizenOfficialPhotoManifestEntry[];
+  existingManifest: CitizenOfficialPhotoManifest | null;
+}): CitizenOfficialPhotoManifestEntry[] {
+  const existingByReference = new Map<string, CitizenOfficialPhotoManifestEntry[]>();
+  for (const entry of input.existingManifest?.entries ?? []) {
+    existingByReference.set(entry.referenceNormalized, [...(existingByReference.get(entry.referenceNormalized) ?? []), entry]);
+  }
+
+  const downloadedByReference = new Map<string, CitizenOfficialPhotoManifestEntry[]>();
+  for (const entry of input.downloadedEntries) {
+    downloadedByReference.set(entry.referenceNormalized, [...(downloadedByReference.get(entry.referenceNormalized) ?? []), entry]);
+  }
+
+  const finalEntries: CitizenOfficialPhotoManifestEntry[] = [];
+  for (const row of input.rows) {
+    const referenceNormalized = normalizeManufacturerReference(row.reference);
+    const existing = existingByReference.get(referenceNormalized) ?? [];
+    const downloaded = downloadedByReference.get(referenceNormalized) ?? [];
+    const chosen = downloaded.length >= existing.length ? downloaded : existing;
+    if (downloaded.length > 0 && downloaded.length < existing.length) {
+      const model = input.models.find((candidate) => normalizeManufacturerReference(candidate.row.reference) === referenceNormalized);
+      model?.notes.push(`preserved ${existing.length} existing official images because the new extraction found only ${downloaded.length}`);
+    }
+    finalEntries.push(...chosen);
+  }
+
+  return finalEntries;
 }
 
 async function loadCatalogByReference() {
@@ -549,14 +541,14 @@ function detectContentType(bytes: Buffer): string | null {
 
 function modelToManifestModel(model: ResolvedModel, entries: CitizenOfficialPhotoManifestEntry[]): CitizenOfficialPhotoManifestModel {
   const modelEntries = entries.filter((entry) => entry.referenceNormalized === normalizeManufacturerReference(model.row.reference));
-  const finalStatus = modelEntries.length > 0
+  const finalStatus = apply && modelEntries.length > 0
     ? modelEntries.length >= 3 ? "success" : "success_with_limited_images"
     : model.status;
   return {
     reference: model.row.reference,
     referenceNormalized: normalizeManufacturerReference(model.row.reference),
     internalId: model.internalId,
-    status: modelEntries.length === 0 && model.images.length > 0 ? "download_failed" : finalStatus,
+    status: apply && modelEntries.length === 0 && model.images.length > 0 ? "download_failed" : finalStatus,
     initialUrl: model.row.initialUrl,
     resolvedOfficialUrl: model.resolvedOfficialUrl,
     sourceVerificationStatus: model.verification,
@@ -641,6 +633,7 @@ async function writeReports(models: ResolvedModel[], entries: CitizenOfficialPho
 async function main() {
   const rows = readSourceRows();
   const catalogByReference = await loadCatalogByReference();
+  const existingManifest = await readExistingManifest();
   const models: ResolvedModel[] = [];
 
   for (const row of rows) {
@@ -650,11 +643,10 @@ async function main() {
     console.log(`${row.reference}: ${resolved.status}; images=${resolved.uniqueProductImages}; resolved=${resolved.resolvedOfficialUrl ?? "none"}`);
   }
 
-  if (apply) {
-    await cleanTargetAssetDirectories(rows);
-  }
-
-  const entries = apply ? await applyDownloads(models) : [];
+  const downloadedEntries = apply ? await applyDownloads(models) : [];
+  const entries = apply
+    ? mergeWithExistingEntries({ rows, models, downloadedEntries, existingManifest })
+    : [];
   if (apply) {
     const manifest: CitizenOfficialPhotoManifest = {
       generatedAt: new Date().toISOString(),

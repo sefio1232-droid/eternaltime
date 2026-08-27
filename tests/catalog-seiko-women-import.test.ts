@@ -43,17 +43,31 @@ describe("Seiko Women 73 staged import", () => {
     }
   });
 
-  it("adds all 73 Seiko watches to the staged read model with blank RUB prices", () => {
+  it("adds all 73 Seiko watches to the staged read model with public RUB selling prices only", () => {
     const preview = readJson<CatalogImportPreview>("imports/generated/catalog-import-preview.json");
     const imagePlan = readJson<CatalogImageUploadPlan>("imports/generated/catalog-image-upload-plan.json");
     const manifest = readJson<SeikoOfficialPhotoManifest>("src/content/catalog/seiko-official-photo-manifest.json");
     const dataset = catalogReadDatasetFromPreview({ preview, imagePlan, seikoOfficialPhotoManifest: manifest });
     const seiko = dataset.watches.filter((watch) => watch.brandSlug === "seiko");
+    const seikoPrices = seiko.map((watch) => watch.publicPrice?.amountMinor ?? 0);
     const brandScopedReferenceKeys = dataset.watches.map((watch) => `${watch.brandSlug}:${watch.referenceNormalized}`);
+    const srpl61 = seiko.find((watch) => watch.referenceDisplay === "SRPL61J1");
+    const srpl64 = seiko.find((watch) => watch.referenceDisplay === "SRPL64J1");
+    const seikoRecords = preview.records.filter((record) => record.candidateId.startsWith("seiko-women:"));
 
     expect(seiko).toHaveLength(73);
-    expect(seiko.filter((watch) => watch.publicPrice !== null)).toHaveLength(0);
+    expect(seiko.filter((watch) => watch.publicPrice?.currencyCode === "RUB")).toHaveLength(73);
     expect(seiko.some((watch) => watch.publicPrice?.amountMinor === 0)).toBe(false);
+    expect(Math.min(...seikoPrices)).toBe(2_490_000);
+    expect(Math.max(...seikoPrices)).toBe(6_500_000);
+    expect(srpl61?.publicPrice?.amountMinor).toBe(6_000_000);
+    expect(srpl64?.publicPrice?.amountMinor).toBe(6_500_000);
+    expect(preview.sources.some((source) => source.filename === "Seiko_Women_73_prices_RUB.xlsx")).toBe(true);
+    expect(seikoRecords).toHaveLength(73);
+    expect(seikoRecords.every((record) => record.pricing.selectedPublicPriceSource?.rawFieldName === "Моя цена в рублях")).toBe(true);
+    expect(seikoRecords.every((record) => record.pricing.selectedPublicPriceSource?.currency === "RUB")).toBe(true);
+    expect(seikoRecords.every((record) => record.pricing.internalAnalyticalValues.some((source) => source.rawFieldName === "Закуп в рублях"))).toBe(true);
+    expect(seikoRecords.every((record) => record.pricing.nonRubPriceSources.some((source) => source.rawFieldName === "Цена в юанях (CNY)"))).toBe(true);
     expect(seiko.filter((watch) => watch.primaryImage.kind !== "none")).toHaveLength(59);
     expect(imagePlan.items.filter((item) => item.brandSlug === "seiko")).toHaveLength(122);
     expect(new Set(brandScopedReferenceKeys).size).toBe(brandScopedReferenceKeys.length);
@@ -121,11 +135,11 @@ describe("Seiko Women 73 staged import", () => {
     const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
     const watch = dataset.watches.find((candidate) => candidate.brandSlug === "seiko" && candidate.referenceDisplay === "SSVW196");
 
-    expect(watch?.publicPrice).toBeNull();
+    expect(watch?.publicPrice?.amountMinor).toBeGreaterThan(0);
     expect(watch?.specifications.find((spec) => spec.key === "lifecycle_status_raw")?.value).toBe("Discontinued");
   });
 
-  it("keeps no-price Seiko models out of checkout and structured-data offers", () => {
+  it("keeps checkout and structured-data offers guarded by server-side public price presence", () => {
     const detailPageSource = readSrc("src/app/(shop)/watches/[brandSlug]/[referenceSlug]/page.tsx");
     const commerceActionsSource = readSrc("src/components/commerce/commerce-actions.tsx");
     const commerceResolverSource = readSrc("src/modules/commerce/application/catalog-product-resolver.server.ts");
