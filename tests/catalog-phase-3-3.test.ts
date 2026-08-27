@@ -165,9 +165,9 @@ describe("catalog Phase 3.3", () => {
       expect(new Set(keys).size).toBe(keys.length);
     });
 
-    it("17. the real catalog contains exactly 547 legitimate distinct records", () => {
+    it("17. the real catalog contains exactly 620 legitimate distinct records including the Seiko Women staged import", () => {
       const dataset = realDataset();
-      expect(dataset.watches.length).toBe(547);
+      expect(dataset.watches.length).toBe(620);
     });
   });
 

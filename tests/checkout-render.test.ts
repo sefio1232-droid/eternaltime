@@ -263,6 +263,49 @@ describe("checkout client render", () => {
     await waitFor(() => expect(view.getByText("Модель не найдена.")).toBeTruthy());
   });
 
+  it("keeps no-price products non-purchasable and disables checkout submission", async () => {
+    const noPriceProduct = product({
+      brandSlug: "seiko",
+      referenceNormalized: "SSQW094",
+      referenceDisplay: "SSQW094",
+      referenceSlug: "ssqw094",
+      brandName: "Seiko",
+      displayName: "Seiko SSQW094",
+      canonicalHref: "/watches/seiko/ssqw094",
+      publicPrice: null,
+      purchasable: false,
+    });
+    const view = await renderCheckout({
+      source: "buy_now",
+      summaryPayload: summary({
+        lines: [
+          cartLine({
+            input: {
+              brandSlug: "seiko",
+              referenceNormalized: "SSQW094",
+              quantity: 1,
+              source: "buy_now",
+              addedAt: "2026-08-27T00:00:00.000Z",
+            },
+            product: noPriceProduct,
+            unitPrice: null,
+            lineTotalMinor: null,
+            issue: "not_purchasable",
+          }),
+        ],
+        productSubtotalMinor: 0,
+        totalAmountMinor: null,
+        itemCount: 1,
+        purchasable: false,
+        issues: ["Для Seiko SSQW094 нет корректной публичной цены."],
+      }),
+    });
+
+    await waitFor(() => expect(view.getByText("Seiko SSQW094")).toBeTruthy());
+    expect(view.getByText("Для Seiko SSQW094 нет корректной публичной цены.")).toBeTruthy();
+    expect(view.getByRole("button", { name: "Оформить заказ" })).toHaveProperty("disabled", true);
+  });
+
   it("does not crash when optional product media is missing from the resolved cart", async () => {
     const view = await renderCheckout({
       summaryPayload: summary({

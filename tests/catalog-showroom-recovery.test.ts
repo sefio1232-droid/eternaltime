@@ -200,10 +200,10 @@ describe("catalog Phase 3.2 showroom recovery", () => {
   // preview-catalog-adapter.ts's Cyrillic-reference-display guard), and 6 more are verbatim
   // duplicates of an already-present clean-reference row where sanitization *does* fully clean the
   // text, leaving two rows with the identical public reference (see deduplicateByCleanReference).
-  // 547 is the real, verified count of legitimate distinct catalog records.
-  it("10. the All tab preserves the real catalog's full 547 legitimate records", () => {
+  // 620 is the real, verified count after adding the 73-row Seiko Women staged import.
+  it("10. the All tab preserves the real catalog's full 620 legitimate records", () => {
     const all = listCatalogWatches(realDataset(), parseCatalogReadQuery({ searchParams: { view: "all" } }));
-    expect(all.totalRecords).toBe(547);
+    expect(all.totalRecords).toBe(620);
   });
 
   it("11. the Casio brand tab preserves all 222 real records (234 raw minus 12 non-product/duplicate rows)", () => {

@@ -21,6 +21,10 @@ import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/
 import { CASIO_MANIFEST_OUTPUT_PATH, type CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
 import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import {
+  CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH,
+  type CitizenOfficialPhotoManifest,
+} from "@/modules/catalog/infrastructure/citizen-official-photo-types";
+import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
   type CatalogSiteImportOverlayManifest,
 } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
@@ -33,6 +37,7 @@ const imagePlanPath = path.join(/* turbopackIgnore: true */ process.cwd(), "impo
 const orientManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), ORIENT_MANIFEST_OUTPUT_PATH);
 const casioManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), CASIO_MANIFEST_OUTPUT_PATH);
 const tissotManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), TISSOT_MANIFEST_OUTPUT_PATH);
+const citizenOfficialManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH);
 
 export class CatalogReadSourceError extends Error {
   readonly code: "catalog_source_unavailable" | "catalog_source_not_configured";
@@ -111,6 +116,7 @@ export const getCatalogReadDataset = cache(async () => {
     const orientPhotoManifest = await readOptionalJsonFile<OrientPhotoArchiveManifest>(orientManifestPath);
     const casioPhotoManifest = await readOptionalJsonFile<CasioPhotoArchiveManifest>(casioManifestPath);
     const tissotPhotoManifest = await readOptionalJsonFile<TissotPhotoArchiveManifest>(tissotManifestPath);
+    const citizenOfficialPhotoManifest = await readOptionalJsonFile<CitizenOfficialPhotoManifest>(citizenOfficialManifestPath);
     const siteImportOverlay = await getCatalogSiteImportOverlayManifest();
     return catalogReadDatasetFromPreview({
       preview,
@@ -118,6 +124,7 @@ export const getCatalogReadDataset = cache(async () => {
       orientPhotoManifest,
       casioPhotoManifest,
       tissotPhotoManifest,
+      citizenOfficialPhotoManifest,
       siteImportOverlay,
     });
   }

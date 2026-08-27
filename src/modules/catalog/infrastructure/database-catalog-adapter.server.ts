@@ -16,6 +16,10 @@ import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/
 import { createTissotArchiveImageKey } from "@/modules/catalog/infrastructure/tissot-photo-archive-keys";
 import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import { resolveCatalogImageAssetRoot } from "@/modules/catalog/infrastructure/catalog-image-asset-root";
+import {
+  CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH,
+  type CitizenOfficialPhotoManifest,
+} from "@/modules/catalog/infrastructure/citizen-official-photo-types";
 import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
 
 type CatalogPublicReadModelRow = {
@@ -27,6 +31,7 @@ type CatalogPhotoManifests = {
   casio: CasioPhotoArchiveManifest | null;
   orient: OrientPhotoArchiveManifest | null;
   tissot: TissotPhotoArchiveManifest | null;
+  citizen: CitizenOfficialPhotoManifest | null;
 };
 
 function candidateManifestPaths(relativePath: string): string[] {
@@ -59,13 +64,14 @@ async function readOptionalJsonFromCandidates<T>(filePaths: string[]): Promise<T
 }
 
 async function loadPhotoManifests(): Promise<CatalogPhotoManifests> {
-  const [casio, orient, tissot] = await Promise.all([
+  const [casio, orient, tissot, citizen] = await Promise.all([
     readOptionalJsonFromCandidates<CasioPhotoArchiveManifest>(candidateManifestPaths(CASIO_MANIFEST_OUTPUT_PATH)),
     readOptionalJsonFromCandidates<OrientPhotoArchiveManifest>(candidateManifestPaths(ORIENT_MANIFEST_OUTPUT_PATH)),
     readOptionalJsonFromCandidates<TissotPhotoArchiveManifest>(candidateManifestPaths(TISSOT_MANIFEST_OUTPUT_PATH)),
+    readOptionalJsonFromCandidates<CitizenOfficialPhotoManifest>(candidateManifestPaths(CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH)),
   ]);
 
-  return { casio, orient, tissot };
+  return { casio, orient, tissot, citizen };
 }
 
 function missingImage(title: string): CatalogImagePresentation {
@@ -139,6 +145,23 @@ function archiveImagesForWatch(watch: CatalogWatchDetail, manifests: CatalogPhot
         alt: `${watch.title}, ${watch.referenceDisplay}, фото ${index + 1}`,
       };
     });
+  }
+
+  if (watch.brandSlug === "citizen" && manifests.citizen) {
+    return sortArchiveImages(
+      manifests.citizen.entries
+        .filter((entry) => comparableReference(entry.referenceNormalized) === watchReference)
+        .map((entry) => ({
+          ...entry,
+          position: entry.isCover ? "primary" as const : "gallery" as const,
+          galleryIndex: entry.isCover ? null : entry.imageOrder,
+        })),
+    ).map((entry, index) => ({
+      kind: "remote",
+      url: entry.publicPath,
+      src: entry.publicPath,
+      alt: `${watch.title}, ${watch.referenceDisplay}, фото ${index + 1}`,
+    }));
   }
 
   return [];

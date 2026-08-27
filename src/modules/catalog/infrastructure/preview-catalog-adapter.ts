@@ -8,6 +8,10 @@ import { createCasioArchiveImageKey } from "@/modules/catalog/infrastructure/cas
 import type { CasioManifestEntry, CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
 import { createTissotArchiveImageKey } from "@/modules/catalog/infrastructure/tissot-photo-archive-keys";
 import type { TissotManifestEntry, TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
+import type {
+  CitizenOfficialPhotoManifest,
+  CitizenOfficialPhotoManifestEntry,
+} from "@/modules/catalog/infrastructure/citizen-official-photo-types";
 import type { CatalogSiteImportOverlayEntry, CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
 import { classifyCatalogImageRejection, selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
@@ -74,6 +78,8 @@ const specificationDefinitions: Record<string, SpecificationDefinition> = {
   gemstones_raw: { label: "Драгоценные камни", group: "dial" },
   certification_raw: { label: "Сертификация", group: "mechanism" },
   package_contents_raw: { label: "Комплектация", group: "other" },
+  lifecycle_status_raw: { label: "Статус модели", group: "other" },
+  catalog_tier_raw: { label: "Класс каталога", group: "other" },
 };
 
 const specificationOrder = [
@@ -116,6 +122,8 @@ const specificationOrder = [
   "luminescence_raw",
   "certification_raw",
   "package_contents_raw",
+  "lifecycle_status_raw",
+  "catalog_tier_raw",
   "watch_type_raw",
   "brand_country_raw",
 ];
@@ -329,6 +337,20 @@ function tissotArchiveImagePresentation(entry: TissotManifestEntry, title: strin
   };
 }
 
+function citizenOfficialImagePresentation(
+  entry: CitizenOfficialPhotoManifestEntry,
+  title: string,
+  referenceDisplay: string,
+  order: number,
+): CatalogImagePresentation {
+  return {
+    kind: "remote",
+    url: entry.publicPath,
+    src: entry.publicPath,
+    alt: imageAlt(title, referenceDisplay, order),
+  };
+}
+
 /**
  * Shared upgrade logic for both brand archives. The primary image is only ever replaced when the
  * candidate's own current primary is genuinely missing or rejected by the same clean-image policy
@@ -413,6 +435,26 @@ function applyTissotArchiveUpgrade(input: {
   return applyPhotoArchiveUpgrade({ primaryImage: input.primaryImage, imageGallery: input.imageGallery, archiveImages });
 }
 
+function applyCitizenOfficialPhotoUpgrade(input: {
+  brandSlug: string;
+  referenceNormalized: string;
+  title: string;
+  referenceDisplay: string;
+  primaryImage: CatalogImagePresentation;
+  imageGallery: CatalogImagePresentation[];
+  citizenManifestByReference: Map<string, CitizenOfficialPhotoManifestEntry[]>;
+}): { primaryImage: CatalogImagePresentation; imageGallery: CatalogImagePresentation[] } {
+  if (input.brandSlug !== "citizen") {
+    return { primaryImage: input.primaryImage, imageGallery: input.imageGallery };
+  }
+
+  const officialEntries = input.citizenManifestByReference.get(input.referenceNormalized) ?? [];
+  const officialImages = officialEntries.map((entry, index) =>
+    citizenOfficialImagePresentation(entry, input.title, input.referenceDisplay, index + 1),
+  );
+  return applyPhotoArchiveUpgrade({ primaryImage: input.primaryImage, imageGallery: input.imageGallery, archiveImages: officialImages });
+}
+
 /** Groups the Casio photo-archive manifest by catalog reference, primary image first (mirrors
  * groupOrientManifestByReference). */
 function groupCasioManifestByReference(manifest: CasioPhotoArchiveManifest | null): Map<string, CasioManifestEntry[]> {
@@ -463,12 +505,38 @@ function groupTissotManifestByReference(manifest: TissotPhotoArchiveManifest | n
   return grouped;
 }
 
+function groupCitizenOfficialManifestByReference(
+  manifest: CitizenOfficialPhotoManifest | null,
+): Map<string, CitizenOfficialPhotoManifestEntry[]> {
+  const grouped = new Map<string, CitizenOfficialPhotoManifestEntry[]>();
+  if (!manifest) {
+    return grouped;
+  }
+
+  for (const entry of manifest.entries) {
+    if (!grouped.has(entry.referenceNormalized)) {
+      grouped.set(entry.referenceNormalized, []);
+    }
+    grouped.get(entry.referenceNormalized)!.push(entry);
+  }
+
+  for (const entries of grouped.values()) {
+    entries.sort((left, right) => {
+      if (left.isCover !== right.isCover) return left.isCover ? -1 : 1;
+      return left.imageOrder - right.imageOrder;
+    });
+  }
+
+  return grouped;
+}
+
 function readModelFromCandidate(input: {
   candidate: MergedCatalogCandidate;
   imagePlanItems: CatalogImageUploadPlanItem[];
   orientManifestByReference: Map<string, OrientManifestEntry[]>;
   casioManifestByReference: Map<string, CasioManifestEntry[]>;
   tissotManifestByReference: Map<string, TissotManifestEntry[]>;
+  citizenManifestByReference: Map<string, CitizenOfficialPhotoManifestEntry[]>;
   siteImportOverlayByReference: Map<string, CatalogSiteImportOverlayEntry>;
 }): Omit<CatalogWatchDetail, "siblingReferences"> | null {
   const { candidate } = input;
@@ -561,7 +629,16 @@ function readModelFromCandidate(input: {
     imageGallery: casioUpgrade.imageGallery,
     tissotManifestByReference: input.tissotManifestByReference,
   });
-  const primaryImage = tissotUpgrade.primaryImage;
+  const citizenUpgrade = applyCitizenOfficialPhotoUpgrade({
+    brandSlug,
+    referenceNormalized,
+    title,
+    referenceDisplay,
+    primaryImage: tissotUpgrade.primaryImage,
+    imageGallery: tissotUpgrade.imageGallery,
+    citizenManifestByReference: input.citizenManifestByReference,
+  });
+  const primaryImage = citizenUpgrade.primaryImage;
   const price = candidate.pricing.publicPriceCandidate
     ? createMoney(candidate.pricing.publicPriceCandidate.amountMinor, candidate.pricing.publicPriceCandidate.currencyCode)
     : null;
@@ -583,7 +660,7 @@ function readModelFromCandidate(input: {
     watchModelName,
     publicPrice: price,
     primaryImage,
-    imageGallery: tissotUpgrade.imageGallery,
+    imageGallery: citizenUpgrade.imageGallery,
     keySpecifications: keySpecifications(specifications),
     specifications,
   };
@@ -676,6 +753,9 @@ export function catalogReadDatasetFromPreview(input: {
    * upgrades a missing/rejected primary, otherwise appends real gallery photos" rule as the Orient/
    * Casio manifests above (docs/CATALOG_SHOWROOM_RECOVERY.md "Tissot photo gap"). */
   tissotPhotoManifest?: TissotPhotoArchiveManifest | null;
+  /** Optional official Citizen image manifest. Only exact-reference entries are consumed and only
+   * for the Citizen brand; it never rewrites characteristics, SEO, prices, or supplier data. */
+  citizenOfficialPhotoManifest?: CitizenOfficialPhotoManifest | null;
   /** Optional — absent on every existing call site until it's explicitly passed. Merges richer,
    * pre-normalized specification values from the user-supplied site-import workbooks into the same
    * `CatalogPublicSpecification[]` shape the raw import already produces; never changes the
@@ -687,6 +767,7 @@ export function catalogReadDatasetFromPreview(input: {
   const orientManifestByReference = groupOrientManifestByReference(input.orientPhotoManifest ?? null);
   const casioManifestByReference = groupCasioManifestByReference(input.casioPhotoManifest ?? null);
   const tissotManifestByReference = groupTissotManifestByReference(input.tissotPhotoManifest ?? null);
+  const citizenManifestByReference = groupCitizenOfficialManifestByReference(input.citizenOfficialPhotoManifest ?? null);
   const siteImportOverlayByReference = groupSiteImportOverlayByReference(input.siteImportOverlay ?? null);
   const baseWatches = input.preview.records
     .map((candidate) =>
@@ -696,6 +777,7 @@ export function catalogReadDatasetFromPreview(input: {
         orientManifestByReference,
         casioManifestByReference,
         tissotManifestByReference,
+        citizenManifestByReference,
         siteImportOverlayByReference,
       }),
     )

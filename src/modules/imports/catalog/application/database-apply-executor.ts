@@ -7,6 +7,10 @@ import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/
 import { CASIO_MANIFEST_OUTPUT_PATH, type CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
 import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import {
+  CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH,
+  type CitizenOfficialPhotoManifest,
+} from "@/modules/catalog/infrastructure/citizen-official-photo-types";
+import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
   type CatalogSiteImportOverlayManifest,
 } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
@@ -65,6 +69,9 @@ async function buildPublicReadModelPayload(input: {
   const tissotPhotoManifest = await readOptionalJsonFile<TissotPhotoArchiveManifest>(
     path.join(input.rootDir, TISSOT_MANIFEST_OUTPUT_PATH),
   );
+  const citizenOfficialPhotoManifest = await readOptionalJsonFile<CitizenOfficialPhotoManifest>(
+    path.join(input.rootDir, CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH),
+  );
   const siteImportOverlay = await readOptionalJsonFile<CatalogSiteImportOverlayManifest>(
     path.join(input.rootDir, SITE_IMPORT_OVERLAY_OUTPUT_PATH),
   );
@@ -74,6 +81,7 @@ async function buildPublicReadModelPayload(input: {
     orientPhotoManifest,
     casioPhotoManifest,
     tissotPhotoManifest,
+    citizenOfficialPhotoManifest,
     siteImportOverlay,
   });
 
