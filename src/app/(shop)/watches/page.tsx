@@ -11,7 +11,7 @@ import { getCatalogReviewSanitationEntries } from "@/modules/catalog/infrastruct
 
 export const metadata: Metadata = {
   title: "Каталог часов",
-  description: "Каталог Eternal Time: Casio, Tissot, Orient и Citizen с ценами, изображениями и характеристиками.",
+  description: "Каталог Eternal Time: Casio, Tissot, Orient, Citizen и Seiko с ценами, изображениями и характеристиками.",
   alternates: {
     canonical: "/watches",
   },

@@ -31,6 +31,7 @@
   --catalog-focus: #255f85;
 
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1.25rem, 1.8vw, 1.75rem);
   padding-bottom: clamp(3rem, 5vw, 4.5rem);
   color: var(--catalog-graphite);
@@ -248,8 +249,9 @@
 
   .toolbarWrap {
     top: calc(56px + env(safe-area-inset-top, 0px));
-    margin-inline: calc(-1 * var(--page-gutter));
-    padding-inline: var(--page-gutter);
+    overflow: clip;
+    margin-inline: -20px;
+    padding-inline: 20px;
     background: rgb(251 250 246 / 0.94);
     backdrop-filter: blur(14px);
   }

@@ -23,9 +23,9 @@ export const mechanismGroupOrder: CatalogMechanismGroup[] = [
 
 export const mechanismGroupLabels: Record<CatalogMechanismGroup, string> = {
   quartz: "Кварц",
-  automatic: "Автомат",
-  hand_wound: "Механика с ручным заводом",
-  solar: "Solar",
+  automatic: "Автоматическая механика",
+  hand_wound: "Ручной завод",
+  solar: "Солнечные / Eco-Drive",
   digital: "Цифровые",
   analog_digital: "Аналого-цифровые",
   other: "Другое",
@@ -61,7 +61,7 @@ export function normalizeMechanismGroup(rawValue: string | null | undefined): Ca
     return null;
   }
 
-  if (/tough\s*solar|солнечн/iu.test(text)) {
+  if (/tough\s*solar|\bsolar\b|eco-?drive|солнечн/iu.test(text)) {
     return "solar";
   }
 
@@ -71,15 +71,15 @@ export function normalizeMechanismGroup(rawValue: string | null | undefined): Ca
     return "analog_digital";
   }
 
-  if (/автоматич|автоподзавод/iu.test(text)) {
+  if (/automatic|автоматич|автоподзавод/iu.test(text)) {
     return "automatic";
   }
 
-  if (/ручн(?:ой|ым|ого)\s+завод/iu.test(text)) {
+  if (/hand[-\s]?wound|ручн(?:ой|ым|ого)\s+завод/iu.test(text)) {
     return "hand_wound";
   }
 
-  if (/кварц/iu.test(text)) {
+  if (/quartz|кварц/iu.test(text)) {
     return "quartz";
   }
 

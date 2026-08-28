@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseCatalogReadQuery } from "@/modules/catalog/application/catalog-read-query";
 import { listCatalogWatches } from "@/modules/catalog/application/catalog-read-service";
+import { normalizeCatalogGender } from "@/modules/catalog/application/catalog-filter-taxonomy";
 import { normalizePositioningGroup, positioningGroupLabels, positioningGroupOrder } from "@/modules/catalog/application/catalog-positioning-taxonomy";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import type { CatalogReadDataset } from "@/modules/catalog/domain/read-models";
@@ -71,23 +72,21 @@ describe("positioning taxonomy", () => {
       expect(nonTissotWithData).toHaveLength(0);
     });
 
-    it("9. filtering by positioning=female narrows results and only returns watches whose own data says female", () => {
+    it("9. legacy positioning=female is parsed as the new customer-facing gender filter", () => {
       const dataset = realDataset();
       const filtered = listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", positioning: "female" } }));
       expect(filtered.totalRecords).toBeGreaterThan(0);
       expect(filtered.totalRecords).toBeLessThan(dataset.watches.length);
       for (const item of filtered.items) {
         const full = dataset.watches.find((w) => w.id === item.id)!;
-        const spec = full.specifications.find((s) => s.key === "watch_type_raw");
-        expect(normalizePositioningGroup(spec?.value ?? null)).toBe("female");
+        expect(normalizeCatalogGender(full).gender).toBe("female");
       }
     });
 
-    it("10. filtering by positioning=unknown returns every watch with no usable positioning data, including all non-Tissot brands", () => {
+    it("10. unknown/unclassified positioning is not exposed as a public gender filter", () => {
       const dataset = realDataset();
-      const filtered = listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", positioning: "unknown" } }));
-      const nonTissotCount = dataset.watches.filter((w) => w.brandSlug !== "tissot").length;
-      expect(filtered.totalRecords).toBeGreaterThanOrEqual(nonTissotCount);
+      const result = listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all" } }));
+      expect(result.facets.genders.some((option) => option.value === "unknown")).toBe(false);
     });
 
     it("11. positioning facet counts sum to the full unfiltered record count", () => {
@@ -97,9 +96,9 @@ describe("positioning taxonomy", () => {
       expect(total).toBe(dataset.watches.length);
     });
 
-    it("12. removing the positioning filter via URL (positioning absent) returns the full catalog again", () => {
+    it("12. removing the gender filter via URL (gender absent) returns the full catalog again", () => {
       const dataset = realDataset();
-      const withFilter = listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", positioning: "female" } }));
+      const withFilter = listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", gender: "female" } }));
       const withoutFilter = listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all" } }));
       expect(withFilter.totalRecords).toBeLessThan(withoutFilter.totalRecords);
       expect(withoutFilter.totalRecords).toBe(dataset.watches.length);

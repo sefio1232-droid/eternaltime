@@ -5,9 +5,21 @@ import {
 import { classifyCatalogImageRejection } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { mechanismGroupLabels, normalizeMechanismGroup } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
 import { waterResistanceGroupLabels, normalizeWaterResistanceGroup } from "@/modules/catalog/application/catalog-water-resistance-taxonomy";
-import { caseMaterialGroupLabels, normalizeCaseMaterialGroup } from "@/modules/catalog/application/catalog-case-material-taxonomy";
-import { crystalGroupLabels, normalizeCrystalGroup } from "@/modules/catalog/application/catalog-crystal-taxonomy";
+import { caseMaterialGroupLabels } from "@/modules/catalog/application/catalog-case-material-taxonomy";
+import { crystalGroupLabels } from "@/modules/catalog/application/catalog-crystal-taxonomy";
 import { positioningGroupLabels, normalizePositioningGroup } from "@/modules/catalog/application/catalog-positioning-taxonomy";
+import {
+  caseSizeGroupLabels,
+  caseSizeGroupOrder,
+  classifyCatalogFacets,
+  dialColorGroupLabels,
+  dialColorGroupOrder,
+  findSpecificationValue as findCatalogSpecificationValue,
+  genderGroupLabels,
+  genderGroupOrder,
+  strapMaterialGroupLabels,
+  strapMaterialGroupOrder,
+} from "@/modules/catalog/application/catalog-filter-taxonomy";
 import type {
   CatalogFilterFacets,
   CatalogFilterOption,
@@ -29,14 +41,7 @@ const filterSpecKeys = {
 } as const;
 
 function findSpecificationValue(watch: CatalogWatchDetail, keys: readonly string[]): string | null {
-  for (const key of keys) {
-    const value = watch.specifications.find((specification) => specification.key === key)?.value.trim();
-    if (value) {
-      return value;
-    }
-  }
-
-  return null;
+  return findCatalogSpecificationValue(watch.specifications, keys);
 }
 
 function matchesSearch(watch: CatalogWatchDetail, search: string): boolean {
@@ -75,22 +80,40 @@ function matchesQuery(watch: CatalogWatchDetail, query: CatalogReadQuery): boole
     return false;
   }
 
-  if (query.movement && normalizeMechanismGroup(findSpecificationValue(watch, filterSpecKeys.movement)) !== query.movement) {
+  const facets = classifyCatalogFacets(watch);
+
+  if (query.gender && facets.gender !== query.gender) {
+    return false;
+  }
+
+  if (query.caseSize && facets.caseSize !== query.caseSize) {
+    return false;
+  }
+
+  if (query.movement && facets.movement !== query.movement) {
+    return false;
+  }
+
+  if (query.dialColor && facets.dialColor !== query.dialColor) {
+    return false;
+  }
+
+  if (query.strapMaterial && facets.strapMaterial !== query.strapMaterial) {
     return false;
   }
 
   if (
     query.waterResistance &&
-    normalizeWaterResistanceGroup(findSpecificationValue(watch, filterSpecKeys.waterResistance)) !== query.waterResistance
+    facets.waterResistance !== query.waterResistance
   ) {
     return false;
   }
 
-  if (query.caseMaterial && normalizeCaseMaterialGroup(findSpecificationValue(watch, filterSpecKeys.caseMaterial)) !== query.caseMaterial) {
+  if (query.caseMaterial && facets.caseMaterial !== query.caseMaterial) {
     return false;
   }
 
-  if (query.crystal && normalizeCrystalGroup(findSpecificationValue(watch, filterSpecKeys.crystal)) !== query.crystal) {
+  if (query.crystal && facets.crystal !== query.crystal) {
     return false;
   }
 
@@ -441,11 +464,15 @@ function increment(counts: Map<string, number>, value: string | null): void {
 function buildFacets(watches: CatalogWatchDetail[]): CatalogFilterFacets {
   const brands = new Map<string, { label: string; count: number }>();
   const brandCollections = new Map<string, number>();
+  const genders = new Map<string, number>();
+  const caseSizes = new Map<string, number>();
   // Keyed by normalized mechanism group id ("quartz", "automatic", ...), never the raw import
   // string — a user must never see "автоматический механический механизм Orient" as a filter
   // option. Watches with no recognizable mechanism data are simply not counted here (no
   // "unspecified" option is ever shown), per docs/CATALOG_SHOWROOM_RECOVERY.md.
   const movementGroups = new Map<string, number>();
+  const dialColors = new Map<string, number>();
+  const strapMaterials = new Map<string, number>();
   const waterResistance = new Map<string, number>();
   const caseMaterials = new Map<string, number>();
   const crystalTypes = new Map<string, number>();
@@ -461,11 +488,17 @@ function buildFacets(watches: CatalogWatchDetail[]): CatalogFilterFacets {
       count: (brand?.count ?? 0) + 1,
     });
     increment(brandCollections, watch.brandCollectionName);
-    const mechanismGroup = normalizeMechanismGroup(findSpecificationValue(watch, filterSpecKeys.movement));
-    increment(movementGroups, mechanismGroup);
-    increment(waterResistance, normalizeWaterResistanceGroup(findSpecificationValue(watch, filterSpecKeys.waterResistance)));
-    increment(caseMaterials, normalizeCaseMaterialGroup(findSpecificationValue(watch, filterSpecKeys.caseMaterial)));
-    increment(crystalTypes, normalizeCrystalGroup(findSpecificationValue(watch, filterSpecKeys.crystal)));
+    const normalizedFacets = classifyCatalogFacets(watch);
+    if (normalizedFacets.gender !== "unknown") {
+      increment(genders, normalizedFacets.gender);
+    }
+    increment(caseSizes, normalizedFacets.caseSize);
+    increment(movementGroups, normalizedFacets.movement);
+    increment(dialColors, normalizedFacets.dialColor);
+    increment(strapMaterials, normalizedFacets.strapMaterial);
+    increment(waterResistance, normalizedFacets.waterResistance);
+    increment(caseMaterials, normalizedFacets.caseMaterial);
+    increment(crystalTypes, normalizedFacets.crystal);
     increment(positioning, normalizePositioningGroup(findSpecificationValue(watch, filterSpecKeys.positioning)));
 
     if (watch.publicPrice) {
@@ -480,9 +513,29 @@ function buildFacets(watches: CatalogWatchDetail[]): CatalogFilterFacets {
       .map(([value, entry]) => ({ value, label: entry.label, count: entry.count }))
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "ru")),
     brandCollections: optionFromCounts(brandCollections),
+    genders: genderGroupOrder
+      .flatMap((group) => {
+        const count = genders.get(group) ?? 0;
+        return count > 0 ? [{ value: group, label: genderGroupLabels[group], count }] : [];
+      }),
+    caseSizes: caseSizeGroupOrder
+      .flatMap((group) => {
+        const count = caseSizes.get(group) ?? 0;
+        return count > 0 ? [{ value: group, label: caseSizeGroupLabels[group], count }] : [];
+      }),
     movements: [...movementGroups.entries()]
       .map(([group, count]) => ({ value: group, label: mechanismGroupLabels[group as keyof typeof mechanismGroupLabels], count }))
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "ru")),
+    dialColors: dialColorGroupOrder
+      .flatMap((group) => {
+        const count = dialColors.get(group) ?? 0;
+        return count > 0 ? [{ value: group, label: dialColorGroupLabels[group], count }] : [];
+      }),
+    strapMaterials: strapMaterialGroupOrder
+      .flatMap((group) => {
+        const count = strapMaterials.get(group) ?? 0;
+        return count > 0 ? [{ value: group, label: strapMaterialGroupLabels[group], count }] : [];
+      }),
     waterResistance: [...waterResistance.entries()]
       .map(([group, count]) => ({ value: group, label: waterResistanceGroupLabels[group as keyof typeof waterResistanceGroupLabels], count }))
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "ru")),

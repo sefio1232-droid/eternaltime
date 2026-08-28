@@ -73,11 +73,17 @@ export function parseCatalogReadQuery(input: {
     search: cleanTextParam(params.q),
     brandSlug: input.brandSlug ?? cleanOptionalParam(params.brand, 80),
     brandCollection: cleanOptionalParam(params.collection),
+    // `positioning` was the old public param for "Для кого"; keep it as a legacy alias so shared
+    // links do not dead-end, but serialize new URLs as `gender`.
+    gender: cleanOptionalParam(params.gender, 40) ?? cleanOptionalParam(params.positioning, 40),
+    caseSize: cleanOptionalParam(params.size, 40),
     movement: cleanOptionalParam(params.movement),
+    dialColor: cleanOptionalParam(params.dialColor, 40),
+    strapMaterial: cleanOptionalParam(params.strap, 40),
     waterResistance: cleanOptionalParam(params.water),
     caseMaterial: cleanOptionalParam(params.caseMaterial),
     crystal: cleanOptionalParam(params.crystal),
-    positioning: cleanOptionalParam(params.positioning),
+    positioning: null,
     minPriceMinor,
     maxPriceMinor,
     sort: parseSort(params.sort),
@@ -122,11 +128,14 @@ export function catalogQueryToSearchParams(
   if (nextQuery.search) params.set("q", nextQuery.search);
   if (nextQuery.brandSlug) params.set("brand", nextQuery.brandSlug);
   if (nextQuery.brandCollection) params.set("collection", nextQuery.brandCollection);
+  if (nextQuery.gender) params.set("gender", nextQuery.gender);
+  if (nextQuery.caseSize) params.set("size", nextQuery.caseSize);
   if (nextQuery.movement) params.set("movement", nextQuery.movement);
+  if (nextQuery.dialColor) params.set("dialColor", nextQuery.dialColor);
+  if (nextQuery.strapMaterial) params.set("strap", nextQuery.strapMaterial);
   if (nextQuery.waterResistance) params.set("water", nextQuery.waterResistance);
   if (nextQuery.caseMaterial) params.set("caseMaterial", nextQuery.caseMaterial);
   if (nextQuery.crystal) params.set("crystal", nextQuery.crystal);
-  if (nextQuery.positioning) params.set("positioning", nextQuery.positioning);
   if (nextQuery.minPriceMinor !== null) params.set("priceMin", rubMinorToQueryValue(nextQuery.minPriceMinor) ?? "");
   if (nextQuery.maxPriceMinor !== null) params.set("priceMax", rubMinorToQueryValue(nextQuery.maxPriceMinor) ?? "");
   if (nextQuery.sort !== "default") params.set("sort", nextQuery.sort);

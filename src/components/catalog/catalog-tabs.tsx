@@ -14,7 +14,7 @@ type CatalogTab = {
  * so Tissot/Orient/Citizen aren't buried after Casio's larger catalog. Real facet data still
  * drives which brands actually render (and their labels/counts); this only orders them. Any
  * brand not in this list (future catalog growth) is appended after, by facet count. */
-const BRAND_TAB_PRIORITY = ["tissot", "orient", "citizen", "casio"];
+const BRAND_TAB_PRIORITY = ["tissot", "orient", "citizen", "seiko", "casio"];
 
 /**
  * Real navigational links over the same query architecture as the rest of the catalog — not a
@@ -34,7 +34,11 @@ export function CatalogTabs({
   const resetOverrides = {
     search: "",
     brandCollection: null,
+    gender: null,
+    caseSize: null,
     movement: null,
+    dialColor: null,
+    strapMaterial: null,
     waterResistance: null,
     caseMaterial: null,
     crystal: null,
@@ -66,7 +70,6 @@ export function CatalogTabs({
         if (rightRank === -1) return -1;
         return leftRank - rightRank;
       })
-      .slice(0, 4)
       .map((brand) => ({
         key: brand.value,
         label: brand.label,

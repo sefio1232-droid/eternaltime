@@ -210,7 +210,7 @@ describe("catalog list Phase 2 redesign", () => {
 
   it("16. empty state exists with a real reset link", () => {
     const listPage = readSrc("src/components/catalog/catalog-list-page.tsx");
-    expect(listPage).toContain("Ничего не найдено");
+    expect(listPage).toContain("По выбранным параметрам моделей не нашлось");
     expect(listPage).toContain("resetHref");
     expect(listPage).toContain("catalogFilterResetHref");
   });

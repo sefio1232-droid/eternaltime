@@ -3,7 +3,16 @@ import { CatalogAutoSubmitSelect } from "@/components/catalog/catalog-auto-submi
 import { catalogQueryHref, rubMinorToQueryValue } from "@/modules/catalog/application/catalog-read-query";
 import { formatCatalogCount } from "@/modules/catalog/application/catalog-format";
 import { mechanismGroupLabels, mechanismGroupOrder } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
-import { positioningGroupLabels, positioningGroupOrder } from "@/modules/catalog/application/catalog-positioning-taxonomy";
+import {
+  caseSizeGroupLabels,
+  caseSizeGroupOrder,
+  dialColorGroupLabels,
+  dialColorGroupOrder,
+  dialColorSwatches,
+  genderGroupLabels,
+  genderGroupOrder,
+  strapMaterialGroupLabels,
+} from "@/modules/catalog/application/catalog-filter-taxonomy";
 import type { CatalogFilterFacets, CatalogFilterOption, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
 import styles from "@/components/catalog/catalog-filter-panel.module.css";
 
@@ -57,7 +66,16 @@ function SelectField({
 type ActiveChip = { key: string; label: string; removeHref: string };
 
 function optionLabel(options: CatalogFilterOption[], value: string): string {
-  return options.find((option) => option.value === value)?.label ?? value;
+  const known = options.find((option) => option.value === value)?.label;
+  if (known) {
+    return known;
+  }
+
+  return value
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toLocaleUpperCase("ru")}${part.slice(1)}`)
+    .join(" ");
 }
 
 function buildActiveChips(input: {
@@ -93,11 +111,45 @@ function buildActiveChips(input: {
     });
   }
 
+  if (query.gender) {
+    chips.push({
+      key: "gender",
+      label: genderGroupLabels[query.gender as keyof typeof genderGroupLabels] ?? optionLabel(facets.genders, query.gender),
+      removeHref: catalogQueryHref(pathname, query, { gender: null, page: 1 }),
+    });
+  }
+
+  if (query.caseSize) {
+    chips.push({
+      key: "size",
+      label: caseSizeGroupLabels[query.caseSize as keyof typeof caseSizeGroupLabels] ?? optionLabel(facets.caseSizes, query.caseSize),
+      removeHref: catalogQueryHref(pathname, query, { caseSize: null, page: 1 }),
+    });
+  }
+
   if (query.movement) {
     chips.push({
       key: "movement",
       label: mechanismGroupLabels[query.movement as keyof typeof mechanismGroupLabels] ?? optionLabel(facets.movements, query.movement),
       removeHref: catalogQueryHref(pathname, query, { movement: null, page: 1 }),
+    });
+  }
+
+  if (query.dialColor) {
+    chips.push({
+      key: "dialColor",
+      label: dialColorGroupLabels[query.dialColor as keyof typeof dialColorGroupLabels] ?? optionLabel(facets.dialColors, query.dialColor),
+      removeHref: catalogQueryHref(pathname, query, { dialColor: null, page: 1 }),
+    });
+  }
+
+  if (query.strapMaterial) {
+    chips.push({
+      key: "strap",
+      label:
+        strapMaterialGroupLabels[query.strapMaterial as keyof typeof strapMaterialGroupLabels] ??
+        optionLabel(facets.strapMaterials, query.strapMaterial),
+      removeHref: catalogQueryHref(pathname, query, { strapMaterial: null, page: 1 }),
     });
   }
 
@@ -125,14 +177,6 @@ function buildActiveChips(input: {
     });
   }
 
-  if (query.positioning) {
-    chips.push({
-      key: "positioning",
-      label: positioningGroupLabels[query.positioning as keyof typeof positioningGroupLabels] ?? optionLabel(facets.positioning, query.positioning),
-      removeHref: catalogQueryHref(pathname, query, { positioning: null, page: 1 }),
-    });
-  }
-
   if (query.minPriceMinor !== null || query.maxPriceMinor !== null) {
     const min = rubMinorToQueryValue(query.minPriceMinor);
     const max = rubMinorToQueryValue(query.maxPriceMinor);
@@ -154,11 +198,14 @@ function countExpandedFilters(query: CatalogReadQuery, includeBrandFilter: boole
   let count = 0;
   if (includeBrandFilter && query.brandSlug) count += 1;
   if (query.brandCollection) count += 1;
+  if (query.gender) count += 1;
+  if (query.caseSize) count += 1;
   if (query.movement) count += 1;
+  if (query.dialColor) count += 1;
+  if (query.strapMaterial) count += 1;
   if (query.waterResistance) count += 1;
   if (query.caseMaterial) count += 1;
   if (query.crystal) count += 1;
-  if (query.positioning) count += 1;
   if (query.minPriceMinor !== null || query.maxPriceMinor !== null) count += 1;
   return count;
 }
@@ -168,7 +215,11 @@ export function catalogFilterResetHref(pathname: string, query: CatalogReadQuery
     search: "",
     brandSlug: null,
     brandCollection: null,
+    gender: null,
+    caseSize: null,
     movement: null,
+    dialColor: null,
+    strapMaterial: null,
     waterResistance: null,
     caseMaterial: null,
     crystal: null,
@@ -227,10 +278,9 @@ function CatalogFilterSortField({ query, idPrefix = "catalog" }: Readonly<{ quer
 
 /**
  * Everything behind the "Расширенные фильтры" toggle: brand/collection (where relevant),
- * mechanism as a real radio group over the normalized taxonomy (never raw import strings — see
- * catalog-mechanism-taxonomy.ts), price bounds, and the other traits that are already reliably
- * normalized (water resistance, case material, crystal). No filter is added here for data that
- * isn't already normalized (no strap/color/display-type filter yet).
+ * customer-facing discovery groups over normalized derived facets. Raw import values never render
+ * as public options; unknown/unclassified values remain internal audit state, not shopper-facing
+ * filters.
  */
 function CatalogFilterExpandedFields({
   facets,
@@ -252,6 +302,55 @@ function CatalogFilterExpandedFields({
   return (
     <div id={`${idPrefix}-expanded-filters`} className={styles.expandedPanel}>
       <div className={styles.expandedGrid}>
+        {facets.genders.length > 0 ? (
+          <fieldset className={styles.mechanismField}>
+            <legend className={styles.fieldLabel}>Для кого</legend>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioOption}>
+                <input type="radio" name="gender" value="" defaultChecked={!query.gender} />
+                <span>Все</span>
+              </label>
+              {genderGroupOrder.map((group) => {
+                const option = facets.genders.find((entry) => entry.value === group);
+                if (!option || option.count === 0) return null;
+                return (
+                  <label key={group} className={styles.radioOption}>
+                    <input type="radio" name="gender" value={group} defaultChecked={query.gender === group} />
+                    <span>
+                      {genderGroupLabels[group]} ({option.count})
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : null}
+
+        {facets.caseSizes.length > 0 ? (
+          <fieldset className={styles.mechanismField}>
+            <legend className={styles.fieldLabel}>Размер корпуса</legend>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioOption}>
+                <input type="radio" name="size" value="" defaultChecked={!query.caseSize} />
+                <span>Любой</span>
+              </label>
+              {caseSizeGroupOrder.map((group) => {
+                const option = facets.caseSizes.find((entry) => entry.value === group);
+                if (!option || option.count === 0) return null;
+                return (
+                  <label key={group} className={styles.radioOption}>
+                    <input type="radio" name="size" value={group} defaultChecked={query.caseSize === group} />
+                    <span>
+                      {caseSizeGroupLabels[group]} ({option.count})
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className={styles.fieldHint}>Размер корпуса считается по заявленному диаметру или ширине, без привязки к полу.</p>
+          </fieldset>
+        ) : null}
+
         <fieldset className={styles.mechanismField}>
           <legend className={styles.fieldLabel}>Механизм</legend>
           <div className={styles.radioGroup}>
@@ -267,28 +366,6 @@ function CatalogFilterExpandedFields({
                   <input type="radio" name="movement" value={group} defaultChecked={query.movement === group} />
                   <span>
                     {mechanismGroupLabels[group]} ({option.count})
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-
-        <fieldset className={styles.mechanismField}>
-          <legend className={styles.fieldLabel}>Позиционирование</legend>
-          <div className={styles.radioGroup}>
-            <label className={styles.radioOption}>
-              <input type="radio" name="positioning" value="" defaultChecked={!query.positioning} />
-              <span>Любое</span>
-            </label>
-            {positioningGroupOrder.map((group) => {
-              const option = facets.positioning.find((entry) => entry.value === group);
-              if (!option || option.count === 0) return null;
-              return (
-                <label key={group} className={styles.radioOption}>
-                  <input type="radio" name="positioning" value={group} defaultChecked={query.positioning === group} />
-                  <span>
-                    {positioningGroupLabels[group]} ({option.count})
                   </span>
                 </label>
               );
@@ -330,6 +407,39 @@ function CatalogFilterExpandedFields({
             name="collection"
             value={query.brandCollection}
             options={facets.brandCollections.slice(0, 80)}
+            className={styles.moreField}
+          />
+        ) : null}
+        {facets.dialColors.length > 1 ? (
+          <fieldset className={styles.mechanismField}>
+            <legend className={styles.fieldLabel}>Цвет циферблата</legend>
+            <div className={`${styles.radioGroup} ${styles.colorGroup}`}>
+              <label className={styles.radioOption}>
+                <input type="radio" name="dialColor" value="" defaultChecked={!query.dialColor} />
+                <span>Любой</span>
+              </label>
+              {dialColorGroupOrder.map((group) => {
+                const option = facets.dialColors.find((entry) => entry.value === group);
+                if (!option || option.count === 0) return null;
+                return (
+                  <label key={group} className={`${styles.radioOption} ${styles.colorOption}`}>
+                    <input type="radio" name="dialColor" value={group} defaultChecked={query.dialColor === group} />
+                    <span className={styles.colorSwatch} style={{ background: dialColorSwatches[group] }} aria-hidden="true" />
+                    <span>
+                      {dialColorGroupLabels[group]} ({option.count})
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : null}
+        {facets.strapMaterials.length > 1 ? (
+          <SelectField
+            label="Ремешок / браслет"
+            name="strap"
+            value={query.strapMaterial}
+            options={facets.strapMaterials.slice(0, 80)}
             className={styles.moreField}
           />
         ) : null}

@@ -98,13 +98,17 @@ export type CatalogPriceFacet = {
 export type CatalogFilterFacets = {
   brands: CatalogFilterOption[];
   brandCollections: CatalogFilterOption[];
+  genders: CatalogFilterOption[];
+  caseSizes: CatalogFilterOption[];
   movements: CatalogFilterOption[];
+  dialColors: CatalogFilterOption[];
+  strapMaterials: CatalogFilterOption[];
   waterResistance: CatalogFilterOption[];
   caseMaterials: CatalogFilterOption[];
   crystalTypes: CatalogFilterOption[];
-  /** Always includes an "unknown"/"Не указано" option — most brands have no source positioning
-   * field at all (docs/CATALOG_SHOWROOM_RECOVERY.md "Positioning filter"), and hiding that low
-   * coverage would misrepresent the data. */
+  /** Legacy source-positioning facet kept for compatibility with older tests and old URLs.
+   * The public customer-facing "Для кого" filter is `genders` and intentionally does not expose
+   * unknown/unclassified records as a clickable option. */
   positioning: CatalogFilterOption[];
   price: CatalogPriceFacet;
 };
@@ -113,7 +117,11 @@ export type CatalogReadQuery = {
   search: string;
   brandSlug: string | null;
   brandCollection: string | null;
+  gender: string | null;
+  caseSize: string | null;
   movement: string | null;
+  dialColor: string | null;
+  strapMaterial: string | null;
   waterResistance: string | null;
   caseMaterial: string | null;
   crystal: string | null;

@@ -55,13 +55,16 @@ function buildCatalogFeed(items: CatalogWatchCard[], includeCuratorial: boolean)
 
 function hasRefinementFilters(query: CatalogReadQuery): boolean {
   return Boolean(
-    query.search ||
+      query.search ||
       query.brandCollection ||
+      query.gender ||
+      query.caseSize ||
       query.movement ||
+      query.dialColor ||
+      query.strapMaterial ||
       query.waterResistance ||
       query.caseMaterial ||
       query.crystal ||
-      query.positioning ||
       query.minPriceMinor !== null ||
       query.maxPriceMinor !== null,
   );
@@ -117,11 +120,14 @@ export function CatalogListPage({
           result.query.search ? { label: "search", value: result.query.search } : null,
           includeBrandFilter && result.query.brandSlug ? { label: "brand", value: result.query.brandSlug } : null,
           result.query.brandCollection ? { label: "collection", value: result.query.brandCollection } : null,
+          result.query.gender ? { label: "gender", value: result.query.gender } : null,
+          result.query.caseSize ? { label: "size", value: result.query.caseSize } : null,
           result.query.movement ? { label: "movement", value: result.query.movement } : null,
+          result.query.dialColor ? { label: "dialColor", value: result.query.dialColor } : null,
+          result.query.strapMaterial ? { label: "strap", value: result.query.strapMaterial } : null,
           result.query.waterResistance ? { label: "water", value: result.query.waterResistance } : null,
           result.query.caseMaterial ? { label: "caseMaterial", value: result.query.caseMaterial } : null,
           result.query.crystal ? { label: "crystal", value: result.query.crystal } : null,
-          result.query.positioning ? { label: "positioning", value: result.query.positioning } : null,
           result.query.minPriceMinor !== null ? { label: "priceMin", value: String(result.query.minPriceMinor) } : null,
           result.query.maxPriceMinor !== null ? { label: "priceMax", value: String(result.query.maxPriceMinor) } : null,
           { label: "view", value: result.query.view },
@@ -228,8 +234,8 @@ export function CatalogListPage({
           </>
         ) : (
           <div className={styles.emptyState}>
-            <h2 className={styles.emptyTitle}>Ничего не найдено</h2>
-            <p className={styles.emptyBody}>Измените фильтры или вернитесь ко всему каталогу.</p>
+            <h2 className={styles.emptyTitle}>По выбранным параметрам моделей не нашлось</h2>
+            <p className={styles.emptyBody}>Попробуйте убрать один из строгих фильтров или вернуться ко всему каталогу.</p>
             <Link href={resetHref} className={styles.emptyCta}>
               Сбросить фильтры <span aria-hidden="true">→</span>
             </Link>
