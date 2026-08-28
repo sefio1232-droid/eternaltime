@@ -1,152 +1,153 @@
 import { toCatalogWatchCard } from "@/modules/catalog/application/catalog-read-service";
+import {
+  classifyCatalogFacets,
+  findSpecificationValue,
+  normalizeCaseSizeMm,
+  type CatalogStrapMaterialGroup,
+} from "@/modules/catalog/application/catalog-filter-taxonomy";
+import type { CatalogMechanismGroup } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
 import { isSelectionFrontImage } from "@/modules/selection/application/selection-image-policy";
 import type {
   CatalogImagePresentation,
-  CatalogPublicSpecification,
   CatalogReadDataset,
   CatalogWatchDetail,
 } from "@/modules/catalog/domain/read-models";
 import type {
+  SelectionActualMovementKey,
   SelectionAnswerKey,
   SelectionAnswers,
-  SelectionAttachmentCode,
   SelectionBudgetCode,
   SelectionCatalogDiagnostics,
   SelectionCharacterCode,
   SelectionCriterionEvaluation,
   SelectionCriterionStatus,
+  SelectionFeatureCode,
   SelectionFitCode,
   SelectionFormDefinition,
   SelectionMovementPreference,
-  SelectionPracticalCode,
   SelectionRecommendation,
   SelectionRecommendationRole,
   SelectionScenarioCode,
   SelectionScoreBreakdown,
   SelectionStepCode,
+  SelectionStrapKey,
 } from "@/modules/selection/domain/types";
 
 export const selectionStepOrder = [
   "scenario",
-  "character",
-  "budget",
-  "movement",
   "fit",
-  "attachment",
-  "practical",
+  "character",
+  "movement",
+  "features",
+  "budget",
 ] as const;
+
+export const selectionScoringWeights = {
+  scenario: 0.16,
+  fit: 0.16,
+  character: 0.12,
+  movement: 0.18,
+  features: 0.17,
+  budget: 0.18,
+  dataConfidence: 0.03,
+} as const;
 
 export const selectionFormDefinition: SelectionFormDefinition = {
   steps: [
     {
       code: "scenario",
       answerKey: "scenario",
-      eyebrow: "Шаг 1 из 7",
-      title: "Что важнее всего в будущих часах?",
-      deck: "Выберите главный сценарий или цель. Остальные предпочтения уточним на следующих шагах.",
+      eyebrow: "Шаг 1 из 6",
+      title: "Для чего вы выбираете часы?",
+      deck: "Выберите основной сценарий — дальше уточним посадку, характер и характеристики.",
       optional: false,
       options: [
-        { code: "everyday", label: "На каждый день", description: "Спокойный вариант для регулярной носки." },
-        { code: "work", label: "Для работы", description: "Сдержанные часы для офиса, встреч и делового ритма." },
-        { code: "special", label: "Для особого случая", description: "Более нарядная или классическая модель." },
-        { code: "travel", label: "Для путешествий", description: "Практичность, надежность и полезные функции." },
-        { code: "sport", label: "Для спорта и активности", description: "Повышенная прочность, водозащита и функциональность." },
-        { code: "first_mechanical", label: "Первые механические часы", description: "Понятная модель для знакомства с механикой." },
-        { code: "universal", label: "Универсальный вариант", description: "Сбалансированные часы для разных ситуаций." },
-      ],
-    },
-    {
-      code: "character",
-      answerKey: "character",
-      eyebrow: "Шаг 2 из 7",
-      title: "Каким должен быть характер часов?",
-      deck: "Характер помогает выбрать не только характеристики, но и общее впечатление от модели.",
-      optional: false,
-      options: [
-        { code: "quiet", label: "Сдержанные", description: "Спокойный дизайн без лишних акцентов." },
-        { code: "universal", label: "Универсальные", description: "Без выраженного уклона в один стиль." },
-        { code: "expressive", label: "Выразительные", description: "Заметный дизайн или цветовой акцент." },
-        { code: "sporty", label: "Спортивные", description: "Динамичная форма и более активный образ." },
-        { code: "classic", label: "Классические", description: "Традиционные пропорции и спокойные материалы." },
-        { code: "instrumental", label: "Инструментальные", description: "Функциональность, прочность и утилитарный характер." },
-      ],
-    },
-    {
-      code: "budget",
-      answerKey: "budget",
-      eyebrow: "Шаг 3 из 7",
-      title: "На какой бюджет ориентироваться?",
-      deck: "Цена будет ограничением только для моделей с известной стоимостью.",
-      optional: false,
-      options: [
-        { code: "under_15000", label: "До 15 000 ₽", description: "Самый доступный диапазон." },
-        { code: "range_15000_30000", label: "15 000-30 000 ₽", description: "Практичный стартовый диапазон." },
-        { code: "range_30000_50000", label: "30 000-50 000 ₽", description: "Больше вариантов по дизайну и материалам." },
-        { code: "range_50000_100000", label: "50 000-100 000 ₽", description: "Шире выбор механики и более сложных моделей." },
-        { code: "over_100000", label: "Выше 100 000 ₽", description: "Верхний диапазон текущего каталога." },
-        { code: "any", label: "Без строгой рамки", description: "Сначала назначение и характеристики, затем цена." },
-      ],
-    },
-    {
-      code: "movement",
-      answerKey: "movement",
-      eyebrow: "Шаг 4 из 7",
-      title: "Есть предпочтение по механизму?",
-      deck: "Выберите знакомый тип или оставьте больше вариантов для подбора.",
-      optional: true,
-      options: [
-        { code: "any", label: "Без предпочтений", description: "Подбирать по назначению и остальным характеристикам." },
-        { code: "quartz", label: "Кварцевые", description: "Точность и минимальный уход." },
-        { code: "mechanical", label: "Механические", description: "Механика с автоподзаводом." },
-        { code: "solar", label: "Solar", description: "Питание от света." },
-        { code: "digital", label: "Цифровые", description: "Электронная индикация и практичные функции." },
-        { code: "ana_digi", label: "Аналого-цифровые", description: "Стрелки и цифровой экран в одной модели." },
+        { code: "daily", label: "На каждый день", description: "Универсальные часы для города и повседневной носки." },
+        { code: "work", label: "Для работы", description: "Сдержанные часы для офиса и делового образа." },
+        { code: "occasion", label: "Для особого случая", description: "Более нарядные и выразительные модели." },
+        { code: "sport", label: "Для спорта и активности", description: "Практичные часы с акцентом на прочность и функциональность." },
+        { code: "travel", label: "Для путешествий", description: "Удобные и практичные часы для поездок и активного дня." },
+        { code: "first-mechanical", label: "Первые механические часы", description: "Понятные модели для знакомства с механическими часами." },
+        { code: "universal", label: "Универсальный вариант", description: "Часы без узкой роли, подходящие к разным ситуациям." },
       ],
     },
     {
       code: "fit",
       answerKey: "fit",
-      eyebrow: "Шаг 5 из 7",
-      title: "Какой размер корпуса предпочитаете?",
-      deck: "Размер учитывается ориентировочно. Неизвестный диаметр не исключает модель автоматически.",
-      optional: true,
+      eyebrow: "Шаг 2 из 6",
+      title: "Какая посадка вам ближе?",
+      deck: "Размер корпуса сильно влияет на то, как часы смотрятся на руке.",
+      optional: false,
       options: [
-        { code: "compact", label: "Компактный", description: "Обычно до 38 мм." },
-        { code: "medium", label: "Средний", description: "Обычно от 38 до 42 мм." },
-        { code: "large", label: "Крупный", description: "Обычно от 42 мм." },
-        { code: "unknown", label: "Без предпочтений", description: "Не ограничивать подбор по размеру." },
+        { code: "compact", label: "Компактная", description: "Небольшие часы; сюда также относится большинство женских моделей." },
+        { code: "medium", label: "Средняя", description: "Универсальный размер для большинства запястий." },
+        { code: "large", label: "Крупная", description: "Более заметные часы на руке." },
+        { code: "unknown", label: "Не знаю", description: "Не будем ограничивать подбор по размеру." },
       ],
     },
     {
-      code: "attachment",
-      answerKey: "attachment",
-      eyebrow: "Шаг 6 из 7",
-      title: "Что предпочитаете: ремень или браслет?",
-      deck: "Крепление влияет на внешний вид, вес и сценарий использования.",
-      optional: true,
+      code: "character",
+      answerKey: "character",
+      eyebrow: "Шаг 3 из 6",
+      title: "Какой характер часов вам нравится?",
+      deck: "Выберите то, как часы должны ощущаться визуально.",
+      optional: false,
       options: [
-        { code: "bracelet", label: "Стальной браслет", description: "Практичный и собранный вариант." },
-        { code: "leather", label: "Кожаный ремень", description: "Более классический и спокойный образ." },
-        { code: "rubber", label: "Каучук или полимер", description: "Для воды, спорта и активного режима." },
-        { code: "any", label: "Без предпочтений", description: "Не ограничивать подбор по креплению." },
+        { code: "classic", label: "Классические", description: "Спокойный дизайн, чистый циферблат и минимум лишних деталей." },
+        { code: "modern", label: "Современные", description: "Актуальный универсальный дизайн без излишней формальности." },
+        { code: "sporty", label: "Спортивные", description: "Более функциональные и заметные часы." },
+        { code: "expressive", label: "Выразительные", description: "Необычные детали, более заметный дизайн или характер." },
+        { code: "neutral", label: "Не принципиально", description: "Не будем ограничивать подбор по стилю." },
       ],
     },
     {
-      code: "practical",
-      answerKey: "practical",
-      eyebrow: "Шаг 7 из 7",
-      title: "Есть обязательное практическое требование?",
-      deck: "Выберите только то условие, без которого модель вам не подойдет.",
-      optional: true,
+      code: "movement",
+      answerKey: "movement",
+      eyebrow: "Шаг 4 из 6",
+      title: "Какой механизм вы предпочитаете?",
+      deck: "Если не уверены, можно оставить этот выбор открытым.",
+      optional: false,
       options: [
-        { code: "none", label: "Без обязательных требований", description: "Оставить подбор шире." },
-        { code: "high_water", label: "Высокая водозащита", description: "Приоритет от 100 м." },
-        { code: "sapphire", label: "Сапфировое стекло", description: "Больше устойчивости к царапинам." },
-        { code: "chronograph", label: "Хронограф", description: "Секундомер и спортивная логика." },
-        { code: "date", label: "Дата", description: "Базовая повседневная функция." },
-        { code: "gmt", label: "GMT / мировое время", description: "Для поездок и часовых поясов." },
-        { code: "lume", label: "Подсветка", description: "Читаемость в темноте." },
-        { code: "shock", label: "Повышенная прочность", description: "Для активного режима и частой носки." },
+        { code: "mechanical", label: "Механические / автоматические", description: "Классическая механика — с ручным заводом или автоподзаводом." },
+        { code: "quartz", label: "Кварцевые", description: "Точные и неприхотливые часы для повседневного использования." },
+        { code: "solar", label: "Solar / Eco-Drive", description: "Кварцевые часы с зарядкой от света." },
+        { code: "neutral", label: "Не принципиально", description: "Механизм не будет ограничивать подбор." },
+      ],
+    },
+    {
+      code: "features",
+      answerKey: "features",
+      eyebrow: "Шаг 5 из 6",
+      title: "Что для вас особенно важно?",
+      deck: "Можно выбрать несколько вариантов.",
+      optional: false,
+      multiple: true,
+      options: [
+        { code: "sapphire", label: "Сапфировое стекло", description: "Если важна повышенная стойкость к царапинам." },
+        { code: "water-resistance", label: "Повышенная водозащита", description: "Приоритет для моделей с подтверждённой защитой от 100 м." },
+        { code: "steel-bracelet", label: "Металлический браслет", description: "Собранная посадка и универсальный внешний вид." },
+        { code: "leather", label: "Кожаный ремешок", description: "Более спокойный и классический характер." },
+        { code: "thin", label: "Небольшая толщина", description: "Когда хочется более аккуратный профиль на руке." },
+        { code: "chronograph", label: "Хронограф", description: "Функция секундомера и более технический характер." },
+        { code: "date", label: "Дата", description: "Практичная повседневная функция." },
+        { code: "functions", label: "Дополнительные функции", description: "GMT, мировое время, будильник, таймер и другие полезные усложнения." },
+        { code: "none", label: "Ничего конкретного", description: "Оставим подбор шире." },
+      ],
+    },
+    {
+      code: "budget",
+      answerKey: "budget",
+      eyebrow: "Шаг 6 из 6",
+      title: "На какой бюджет ориентируемся?",
+      deck: "Мы учитываем только публичную цену в рублях и не используем внутренние закупочные значения.",
+      optional: false,
+      options: [
+        { code: "under_15000", label: "До 15 000 ₽", description: "Самый доступный диапазон текущего каталога." },
+        { code: "range_15000_30000", label: "15 000–30 000 ₽", description: "Практичный стартовый диапазон." },
+        { code: "range_30000_50000", label: "30 000–50 000 ₽", description: "Больше вариантов по дизайну, материалам и механике." },
+        { code: "range_50000_100000", label: "50 000–100 000 ₽", description: "Шире выбор механики и более сложных моделей." },
+        { code: "over_100000", label: "Выше 100 000 ₽", description: "Верхний диапазон текущего каталога." },
+        { code: "unknown", label: "Пока без рамки", description: "Сначала назначение и характер, затем цена." },
       ],
     },
   ],
@@ -156,13 +157,16 @@ const roleLabels: Record<SelectionRecommendationRole, string> = {
   main: "Главный выбор",
   rational_alternative: "Альтернативный баланс",
   expressive_variant: "Другой характер",
-  alternative_direction: "Еще одно направление",
+  alternative_direction: "Ещё одно направление",
 };
 
 const unavailableSelectionImageUrls = new Set([
   "https://orient-watch.com/en/orient/collection/contemporary/others/RA-AB0002S/product_en_file/file/RA-AB0002S_main.webp",
   "https://orient-watch.com/en/orient/collection/contemporary/others/RA-AB0003S/product_en_file/file/RA-AB0003S_main.webp",
 ]);
+
+const thinCaseThresholdMm = 10.5;
+const rubMinor = 100;
 
 function clampScore(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -175,7 +179,7 @@ function scorePart(value: number): number {
 function normalizeText(value: string): string {
   return value
     .normalize("NFKC")
-    .toLowerCase()
+    .toLocaleLowerCase("ru")
     .replace(/ё/g, "е")
     .replace(/[^\p{Letter}\p{Number}.]+/gu, " ")
     .replace(/\s+/g, " ")
@@ -186,28 +190,11 @@ function includesAny(text: string, needles: readonly string[]): boolean {
   return needles.some((needle) => text.includes(needle));
 }
 
-function specValue(watch: CatalogWatchDetail, keys: readonly string[]): string | null {
-  for (const key of keys) {
-    const value = watch.specifications.find((specification) => specification.key === key)?.value.trim();
-    if (value) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
-function numberFromSpec(specification: CatalogPublicSpecification | undefined): number | null {
-  if (!specification) {
-    return null;
-  }
-
-  const match = specification.value.normalize("NFKC").replace(",", ".").match(/\d+(?:\.\d+)?/);
-  if (!match) {
-    return null;
-  }
-
-  const parsed = Number.parseFloat(match[0]);
+function numberFromText(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const match = value.normalize("NFKC").replace(",", ".").match(/\d+(?:\.\d+)?/);
+  if (!match) return null;
+  const parsed = Number.parseFloat(match[0]!);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -219,58 +206,46 @@ function allWatchText(watch: CatalogWatchDetail): string {
       watch.officialName,
       watch.watchModelName,
       watch.brandCollectionName,
-      ...watch.specifications.map((specification) => specification.value),
+      ...watch.specifications
+        .filter((specification) => specification.key !== "dial_color_raw")
+        .map((specification) => specification.value),
     ]
       .filter(Boolean)
       .join(" "),
   );
 }
 
-function caseDiameter(watch: CatalogWatchDetail): number | null {
-  return numberFromSpec(
-    watch.specifications.find((specification) =>
-      ["case_diameter_raw", "case_dimensions_raw"].includes(specification.key),
-    ),
+function caseThicknessMm(watch: CatalogWatchDetail): number | null {
+  return numberFromText(
+    findSpecificationValue(watch.specifications, [
+      "case_thickness_raw",
+      "case_depth_raw",
+      "thickness_raw",
+      "dimensions_thickness_raw",
+    ]),
   );
 }
 
 function waterResistanceMeters(watch: CatalogWatchDetail): number | null {
-  return numberFromSpec(watch.specifications.find((specification) => specification.key === "water_resistance_raw"));
+  const raw = findSpecificationValue(watch.specifications, ["water_resistance_raw"]);
+  if (!raw) return null;
+  const text = raw.normalize("NFKC").toLocaleLowerCase("ru");
+  const meterMatch = text.match(/(\d+)\s*(?:м(?![а-яё])|метр|m\b)/iu);
+  if (meterMatch?.[1]) return Number(meterMatch[1]);
+  const atmMatch = text.match(/(\d+)\s*(?:atm|bar|бар)/iu);
+  if (atmMatch?.[1]) return Number(atmMatch[1]) * 10;
+  return null;
 }
 
-function movementKind(watch: CatalogWatchDetail): SelectionMovementPreference | "unknown" {
-  const movement = normalizeText(specValue(watch, ["movement_type_raw", "movement_raw", "power_source_raw"]) ?? "");
-  const text = allWatchText(watch);
-
-  if (
-    includesAny(text, [
-      "ana digi",
-      "analog digital",
-      "аналого цифров",
-      "аналогово цифров",
-      "стрелочно цифров",
-      "перевод стрелок",
-      "hand shift",
-    ])
-  ) return "ana_digi";
-  if (includesAny(`${movement} ${text}`, ["solar", "солнеч", "tough solar"])) return "solar";
-  if (includesAny(text, ["digital", "цифров"]) && !includesAny(text, ["аналог"])) return "digital";
-  if (includesAny(movement, ["автомат", "automatic"])) return "automatic";
-  if (includesAny(movement, ["механ", "mechanical", "manual"])) return "mechanical";
-  if (includesAny(movement, ["кварц", "quartz"])) return "quartz";
-  return "unknown";
+function actualMovementKey(group: CatalogMechanismGroup | null): SelectionActualMovementKey {
+  if (group === "automatic" || group === "hand_wound") return "mechanical";
+  if (group === "analog_digital") return "analog-digital";
+  return group ?? "unknown";
 }
 
-function attachmentKind(watch: CatalogWatchDetail): SelectionAttachmentCode | "unknown" {
-  const attachment = normalizeText(
-    specValue(watch, ["attachment_material_raw", "strap_material_raw", "bracelet_material_raw"]) ?? "",
-  );
-  const text = allWatchText(watch);
-
-  if (includesAny(attachment, ["сталь", "steel", "браслет", "bracelet"])) return "bracelet";
-  if (includesAny(attachment, ["кожа", "leather"])) return "leather";
-  if (includesAny(`${attachment} ${text}`, ["rubber", "каучук", "resin", "резин", "polymer", "полимер"])) return "rubber";
-  return "unknown";
+function strapKey(group: CatalogStrapMaterialGroup | null): SelectionStrapKey {
+  if (group === "steel_bracelet") return "steel-bracelet";
+  return group ?? "unknown";
 }
 
 function familyKey(watch: CatalogWatchDetail): string {
@@ -282,18 +257,14 @@ export function buildSelectionImageCandidates(
 ): Array<Exclude<CatalogImagePresentation, { kind: "none" }>> {
   const seen = new Set<string>();
   const result: Array<Exclude<CatalogImagePresentation, { kind: "none" }>> = [];
-  const candidates = [
-    { image: watch.primaryImage, galleryIndex: 0 },
-    ...watch.imageGallery.map((image, galleryIndex) => ({ image, galleryIndex })),
-  ];
+  const candidates = [watch.primaryImage, ...watch.imageGallery];
 
-  for (const { image, galleryIndex } of candidates) {
+  for (const [galleryIndex, image] of candidates.entries()) {
+    if (image.kind === "none") continue;
     if (!isSelectionFrontImage(image, galleryIndex)) continue;
     if (image.kind === "remote" && unavailableSelectionImageUrls.has(image.url)) continue;
-
-    const identity = image.kind === "remote" ? image.url : image.imageKey;
-    if (seen.has(identity)) continue;
-    seen.add(identity);
+    if (seen.has(image.src)) continue;
+    seen.add(image.src);
     result.push(image);
   }
 
@@ -308,345 +279,571 @@ function criterion(input: {
   reason: string;
 }): SelectionCriterionEvaluation {
   return {
-    ...input,
+    key: input.key,
+    label: input.label,
+    status: input.status,
     score: clampScore(input.score),
+    reason: input.reason,
   };
 }
 
-export function selectionBudgetContainsPrice(budget: SelectionBudgetCode, priceMinor: number): boolean {
-  if (budget === "under_15000") return priceMinor <= 1500000;
-  if (budget === "range_15000_30000") return priceMinor > 1500000 && priceMinor <= 3000000;
-  if (budget === "range_30000_50000") return priceMinor > 3000000 && priceMinor <= 5000000;
-  if (budget === "range_50000_100000") return priceMinor > 5000000 && priceMinor <= 10000000;
-  if (budget === "over_100000") return priceMinor > 10000000;
+function priceMinor(watch: CatalogWatchDetail): number | null {
+  return watch.publicPrice?.amountMinor ?? null;
+}
+
+type BudgetRange = {
+  minMinor: number | null;
+  maxMinor: number | null;
+};
+
+function budgetRange(budget: SelectionBudgetCode): BudgetRange {
+  switch (budget) {
+    case "under_15000":
+      return { minMinor: null, maxMinor: 15_000 * rubMinor };
+    case "range_15000_30000":
+      return { minMinor: 15_000 * rubMinor, maxMinor: 30_000 * rubMinor };
+    case "range_30000_50000":
+      return { minMinor: 30_000 * rubMinor, maxMinor: 50_000 * rubMinor };
+    case "range_50000_100000":
+      return { minMinor: 50_000 * rubMinor, maxMinor: 100_000 * rubMinor };
+    case "over_100000":
+      return { minMinor: 100_000 * rubMinor, maxMinor: null };
+    case "unknown":
+      return { minMinor: null, maxMinor: null };
+  }
+}
+
+export function selectionBudgetContainsPrice(budget: SelectionBudgetCode, amountMinor: number): boolean {
+  if (budget === "unknown") return true;
+  const range = budgetRange(budget);
+  if (range.minMinor !== null && amountMinor < range.minMinor) return budget !== "over_100000";
+  if (range.maxMinor !== null && amountMinor > range.maxMinor) return false;
   return true;
 }
 
 function budgetEvaluation(watch: CatalogWatchDetail, budget: SelectionBudgetCode): SelectionCriterionEvaluation {
-  const price = watch.publicPrice?.amountMinor ?? null;
-  if (budget === "any") {
+  if (budget === "unknown") {
     return criterion({
       key: "budget",
       label: "Бюджет",
       status: "neutral",
-      score: price === null ? 0.62 : 0.9,
-      reason: "Бюджет оставлен без строгой рамки",
+      score: 0.68,
+      reason: "Бюджет оставлен открытым",
     });
   }
 
-  if (price === null) {
+  const amount = priceMinor(watch);
+  if (amount === null || amount <= 0) {
     return criterion({
       key: "budget",
       label: "Бюджет",
       status: "unknown",
-      score: 0.58,
-      reason: "Цена пока не указана",
+      score: 0.3,
+      reason: "Публичная цена пока не указана",
     });
   }
 
-  const matchesBudget = selectionBudgetContainsPrice(budget, price);
+  const range = budgetRange(budget);
+  if (range.maxMinor !== null && amount > range.maxMinor) {
+    const overBy = amount - range.maxMinor;
+    const slightlyAbove = overBy <= Math.max(2_500 * rubMinor, range.maxMinor * 0.08);
+    return criterion({
+      key: "budget",
+      label: "Бюджет",
+      status: "conflict",
+      score: slightlyAbove ? 0.42 : 0.08,
+      reason: slightlyAbove ? "Цена немного выше выбранного бюджета" : "Цена заметно выше выбранного бюджета",
+    });
+  }
+
+  if (range.minMinor !== null && amount < range.minMinor) {
+    return criterion({
+      key: "budget",
+      label: "Бюджет",
+      status: budget === "over_100000" ? "neutral" : "match",
+      score: budget === "over_100000" ? 0.72 : 0.92,
+      reason: budget === "over_100000" ? "Цена ниже выбранного верхнего диапазона" : "Цена ниже верхней границы бюджета",
+    });
+  }
 
   return criterion({
     key: "budget",
     label: "Бюджет",
-    status: matchesBudget ? "match" : "conflict",
-    score: matchesBudget ? 1 : 0,
-    reason: matchesBudget ? "Цена входит в выбранный диапазон" : "Цена находится вне выбранного диапазона",
+    status: "match",
+    score: 1,
+    reason: "Цена находится в выбранном бюджете",
   });
 }
 
-function scenarioEvaluation(watch: CatalogWatchDetail, scenario: SelectionScenarioCode): SelectionCriterionEvaluation {
+type WatchTraits = {
+  text: string;
+  movement: SelectionActualMovementKey;
+  caseSizeMm: number | null;
+  caseSize: SelectionFitCode | null;
+  thicknessMm: number | null;
+  strap: SelectionStrapKey;
+  waterMeters: number | null;
+  hasHighWaterResistance: boolean | null;
+  hasSapphire: boolean | null;
+  hasChronograph: boolean | null;
+  hasDate: boolean | null;
+  hasAdditionalFunctions: boolean | null;
+  classic: boolean;
+  modern: boolean;
+  sporty: boolean;
+  expressive: boolean;
+};
+
+function booleanFromFeatureText(text: string, raw: string | null, positiveWords: readonly string[]): boolean | null {
+  if (includesAny(text, positiveWords)) return true;
+  if (raw) return false;
+  return null;
+}
+
+function traitsFor(watch: CatalogWatchDetail): WatchTraits {
+  const facets = classifyCatalogFacets(watch);
   const text = allWatchText(watch);
-  const movement = movementKind(watch);
-  const attachment = attachmentKind(watch);
-  const diameter = caseDiameter(watch);
-  const water = waterResistanceMeters(watch);
-  const hasWater = water !== null && water >= 100;
-  const hasFunctions = includesAny(text, ["gmt", "world time", "миров", "chrono", "хронограф", "timer", "таймер", "alarm", "будильник"]);
-  const classic = includesAny(text, ["classic", "класс", "dress", "кожа", "leather", "сапфир", "sapphire"]);
-  const sporty = hasWater || attachment === "rubber" || includesAny(text, ["sport", "diver", "shock", "outdoor"]);
+  const movement = actualMovementKey(facets.movement);
+  const caseSizeMm = normalizeCaseSizeMm(watch);
+  const thicknessMm = caseThicknessMm(watch);
+  const strap = strapKey(facets.strapMaterial);
+  const waterMeters = waterResistanceMeters(watch);
+  const rawFunctions = findSpecificationValue(watch.specifications, ["functions_raw", "features_raw", "calendar_raw"]);
+  const functionText = normalizeText(rawFunctions ?? "");
+  const combinedFunctionText = `${functionText} ${text}`;
+  const hasChronograph = booleanFromFeatureText(combinedFunctionText, rawFunctions, [
+    "chronograph",
+    "chrono",
+    "хронограф",
+    "секундомер",
+    "stopwatch",
+  ]);
+  const hasDate = booleanFromFeatureText(combinedFunctionText, rawFunctions, [
+    "date",
+    "day date",
+    "calendar",
+    "календар",
+    "дата",
+    "число",
+  ]);
+  const hasAdditionalFunctions = booleanFromFeatureText(combinedFunctionText, rawFunctions, [
+    "gmt",
+    "world time",
+    "dual time",
+    "alarm",
+    "timer",
+    "bluetooth",
+    "radio",
+    "radiocontrolled",
+    "радиосинх",
+    "будильник",
+    "таймер",
+    "мировое время",
+    "второй часовой пояс",
+    "moonphase",
+    "moon phase",
+    "power reserve",
+    "запас хода",
+    "многофункц",
+  ]);
 
-  let score = 0.5;
-  let reason = "Модель остается возможным направлением";
+  const classic = includesAny(text, [
+    "classic",
+    "dress",
+    "классичес",
+    "делов",
+    "офис",
+    "roman",
+    "римск",
+  ]) || (strap === "leather" && movement !== "digital" && movement !== "analog-digital");
+  const sporty = includesAny(text, [
+    "sport",
+    "sports",
+    "diver",
+    "дайвер",
+    "g shock",
+    "edifice",
+    "outdoor",
+    "tool",
+    "спортив",
+  ]) || movement === "digital" || movement === "analog-digital" || strap === "rubber" || strap === "polymer" || hasChronograph === true || (waterMeters ?? 0) >= 100;
+  const expressive = includesAny(text, [
+    "skeleton",
+    "open heart",
+    "open-heart",
+    "скелетон",
+    "открытый баланс",
+    "открытое сердце",
+    "moonphase",
+    "moon phase",
+    "бриллиант",
+    "diamond",
+    "перламутр",
+    "авангард",
+  ]);
+  const modern = includesAny(text, [
+    "contemporary",
+    "modern",
+    "современ",
+    "интегрирован",
+    "integrated",
+    "clean",
+    "urban",
+  ]) || (strap === "steel-bracelet" && !classic && !expressive);
 
-  if (scenario === "everyday" || scenario === "universal") {
-    score = 0.7 + (diameter !== null && diameter >= 36 && diameter <= 42 ? 0.15 : 0) + (watch.publicPrice ? 0.08 : 0);
-    reason = scenario === "everyday" ? "Подходит для повседневной носки" : "Подходит для разных ситуаций";
+  return {
+    text,
+    movement,
+    caseSizeMm,
+    caseSize: facets.caseSize,
+    thicknessMm,
+    strap,
+    waterMeters,
+    hasHighWaterResistance: waterMeters === null ? null : waterMeters >= 100,
+    hasSapphire: facets.crystal === null ? null : facets.crystal === "sapphire",
+    hasChronograph,
+    hasDate,
+    hasAdditionalFunctions,
+    classic,
+    modern,
+    sporty,
+    expressive,
+  };
+}
+
+function scenarioEvaluation(
+  watch: CatalogWatchDetail,
+  scenario: SelectionScenarioCode,
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation {
+  const positives: string[] = [];
+  const penalties: string[] = [];
+
+  const add = (condition: boolean | null | undefined, reason: string) => {
+    if (condition === true) positives.push(reason);
+  };
+  const penalize = (condition: boolean | null | undefined, reason: string) => {
+    if (condition === true) penalties.push(reason);
+  };
+
+  switch (scenario) {
+    case "daily":
+      add(traits.caseSize === "medium" || traits.caseSize === "compact", "размер подходит для регулярной носки");
+      add(traits.hasHighWaterResistance === true || (traits.waterMeters ?? 0) >= 50, "есть практичная водозащита");
+      add(["steel-bracelet", "leather", "rubber", "polymer"].includes(traits.strap), "крепление подходит для повседневной носки");
+      add(traits.movement === "quartz" || traits.movement === "solar" || traits.movement === "mechanical", "механизм понятен для повседневного использования");
+      penalize(traits.caseSize === "large" && (traits.caseSizeMm ?? 0) >= 45, "крупный корпус может быть менее универсальным");
+      break;
+    case "work":
+      add(traits.classic || traits.modern, "характер подходит для работы");
+      add(traits.caseSize === "compact" || traits.caseSize === "medium", "размер выглядит сдержанно");
+      add(traits.thicknessMm !== null && traits.thicknessMm <= thinCaseThresholdMm, "корпус с аккуратной толщиной");
+      add(traits.hasSapphire === true, "подтверждено сапфировое стекло");
+      add(traits.strap === "leather" || traits.strap === "steel-bracelet", "ремешок или браслет подходит к деловому образу");
+      penalize(traits.movement === "digital" || traits.sporty, "модель выглядит более спортивной");
+      break;
+    case "occasion":
+      add(traits.classic || traits.expressive, "есть нарядный или выразительный характер");
+      add(traits.thicknessMm !== null && traits.thicknessMm <= thinCaseThresholdMm, "корпус выглядит аккуратно по толщине");
+      add(traits.movement === "mechanical", "механический механизм уместен для особого случая");
+      add(traits.strap === "leather" || traits.strap === "steel-bracelet", "крепление подходит к более собранному образу");
+      penalize(traits.movement === "digital", "цифровая подача менее уместна для нарядного сценария");
+      break;
+    case "sport":
+      add(traits.hasHighWaterResistance === true, "подтверждена водозащита от 100 м");
+      add(traits.strap === "rubber" || traits.strap === "polymer" || traits.strap === "steel-bracelet", "крепление подходит для активной носки");
+      add(traits.hasChronograph === true || traits.hasAdditionalFunctions === true, "есть полезные спортивные функции");
+      add(traits.sporty, "характер модели ближе к спортивному");
+      add(traits.movement === "quartz" || traits.movement === "solar" || traits.movement === "digital" || traits.movement === "analog-digital", "механизм практичен для активного режима");
+      break;
+    case "travel":
+      add(traits.hasHighWaterResistance === true, "водозащита полезна в поездках");
+      add(traits.movement === "solar" || traits.movement === "quartz" || traits.movement === "analog-digital", "механизм практичен в дороге");
+      add(traits.hasAdditionalFunctions === true, "есть полезные функции для поездок");
+      add(traits.hasDate === true, "есть дата");
+      add(["steel-bracelet", "rubber", "polymer", "textile"].includes(traits.strap), "крепление удобно для активного дня");
+      break;
+    case "first-mechanical":
+      add(traits.movement === "mechanical", "механический механизм подтверждён");
+      add((priceMinor(watch) ?? Number.POSITIVE_INFINITY) <= 100_000 * rubMinor, "цена выглядит разумной для первой механики");
+      add(traits.caseSize === "compact" || traits.caseSize === "medium", "размер подходит для знакомства с механикой");
+      add(traits.classic || traits.modern, "дизайн понятен для первой механической модели");
+      penalize((priceMinor(watch) ?? 0) > 150_000 * rubMinor, "модель заметно дороже типичного первого выбора");
+      break;
+    case "universal":
+      add(traits.caseSize === "medium", "средний размер проще сочетать с разными ситуациями");
+      add(traits.hasHighWaterResistance === true || (traits.waterMeters ?? 0) >= 50, "водозащита добавляет универсальности");
+      add(traits.strap === "steel-bracelet" || traits.strap === "leather", "крепление универсально по стилю");
+      add(traits.modern || traits.classic, "характер не слишком узко специализирован");
+      penalize(traits.expressive && traits.sporty, "модель сильнее уходит в специальный характер");
+      break;
   }
 
-  if (scenario === "work") {
-    score = (classic ? 0.86 : 0.58) + (sporty ? -0.18 : 0.08);
-    reason = classic ? "Подходит для офиса и делового ритма" : "Деловой характер выражен умеренно";
+  if (positives.length === 0 && penalties.length === 0) {
+    return criterion({
+      key: "scenario",
+      label: "Сценарий",
+      status: "unknown",
+      score: 0.35,
+      reason: "По этому сценарию не хватает подтверждённых признаков",
+    });
   }
 
-  if (scenario === "special") {
-    score = classic ? 0.92 : 0.54;
-    reason = classic ? "Подходит для более нарядного сценария" : "Нарядный характер не подтвержден";
-  }
-
-  if (scenario === "travel") {
-    score = 0.52 + (hasWater ? 0.18 : 0) + (hasFunctions ? 0.2 : 0) + (movement === "quartz" || movement === "solar" ? 0.08 : 0);
-    reason = hasFunctions ? "Есть функции, полезные в поездках" : "Подходит для поездок по базовым параметрам";
-  }
-
-  if (scenario === "sport") {
-    score = sporty ? 0.92 : 0.36;
-    reason = sporty ? "Подходит для спорта и активной носки" : "Спортивные признаки выражены слабо";
-  }
-
-  if (scenario === "first_mechanical") {
-    const mechanical = movement === "automatic" || movement === "mechanical";
-    score = mechanical ? 0.9 : 0.22;
-    reason = mechanical ? "Механический механизм соответствует сценарию" : "Механический механизм не подтвержден";
-  }
-
-  if (scenario === "collection_gap") {
-    score = 0.72 + (classic && sporty ? 0.08 : 0) + (movement !== "unknown" ? 0.07 : 0);
-    reason = "Модель предлагает отдельное стилевое направление";
-  }
-
-  const finalScore = clampScore(score);
+  const score = clampScore(0.35 + positives.length * 0.18 - penalties.length * 0.12);
+  const status: SelectionCriterionStatus = positives.length >= 2 ? "match" : penalties.length > positives.length ? "conflict" : "neutral";
   return criterion({
     key: "scenario",
     label: "Сценарий",
-    status: finalScore >= 0.66 ? "match" : finalScore <= 0.38 ? "conflict" : "neutral",
-    score: finalScore,
-    reason,
+    status,
+    score,
+    reason: positives[0] ?? penalties[0] ?? "Сценарий учтён как мягкое предпочтение",
   });
 }
 
-function characterEvaluation(watch: CatalogWatchDetail, character: SelectionCharacterCode): SelectionCriterionEvaluation {
-  const text = allWatchText(watch);
-  const technical = includesAny(text, ["chrono", "хронограф", "timer", "таймер", "alarm", "digital", "цифров", "resin", "резин", "diver", "дайвер"]);
-  const classic = includesAny(text, ["classic", "класс", "dress", "leather", "кожа", "roman", "римск", "сапфир"]);
-  const expressive = includesAny(text, ["gold", "золот", "green", "зелен", "blue", "син", "red", "красн"]);
+function fitEvaluation(
+  watch: CatalogWatchDetail,
+  fit: SelectionFitCode,
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation {
+  if (fit === "unknown") {
+    return criterion({
+      key: "fit",
+      label: "Посадка",
+      status: "neutral",
+      score: 0.66,
+      reason: "Размер оставлен открытым",
+    });
+  }
 
-  if (character === "universal") {
+  if (!traits.caseSize) {
+    return criterion({
+      key: "fit",
+      label: "Посадка",
+      status: "unknown",
+      score: 0.32,
+      reason: "Размер корпуса пока не указан",
+    });
+  }
+
+  if (traits.caseSize === fit) {
+    return criterion({
+      key: "fit",
+      label: "Посадка",
+      status: "match",
+      score: 1,
+      reason: fit === "compact" ? "Подтверждён компактный корпус" : fit === "medium" ? "Подтверждён средний размер корпуса" : "Подтверждён крупный корпус",
+    });
+  }
+
+  const adjacent =
+    (fit === "compact" && traits.caseSize === "medium") ||
+    (fit === "medium" && traits.caseSize !== null) ||
+    (fit === "large" && traits.caseSize === "medium");
+
+  return criterion({
+    key: "fit",
+    label: "Посадка",
+    status: adjacent ? "neutral" : "conflict",
+    score: adjacent ? 0.58 : 0.16,
+    reason: adjacent ? "Размер близок к выбранной посадке" : "Размер заметно отличается от выбранной посадки",
+  });
+}
+
+function characterEvaluation(
+  watch: CatalogWatchDetail,
+  character: SelectionCharacterCode,
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation {
+  if (character === "neutral") {
     return criterion({
       key: "character",
       label: "Характер",
       status: "neutral",
-      score: 0.82,
-      reason: "Характер модели остается универсальным",
+      score: 0.66,
+      reason: "Стиль оставлен открытым",
     });
   }
 
-  if (character === "quiet") {
+  const matches = {
+    classic: traits.classic,
+    modern: traits.modern,
+    sporty: traits.sporty,
+    expressive: traits.expressive,
+  } satisfies Record<Exclude<SelectionCharacterCode, "neutral">, boolean>;
+
+  if (matches[character]) {
     return criterion({
       key: "character",
       label: "Характер",
-      status: technical ? "conflict" : "match",
-      score: technical ? 0.34 : 0.92,
-      reason: technical ? "Инструментальный характер заметнее желаемого" : "Дизайн модели остается сдержанным",
+      status: "match",
+      score: 1,
+      reason: character === "classic"
+        ? "Характер модели ближе к классическому"
+        : character === "modern"
+          ? "Модель выглядит современно и универсально"
+          : character === "sporty"
+            ? "Характер модели ближе к спортивному"
+            : "У модели есть выразительные детали",
     });
   }
 
-  if (character === "classic") {
-    return criterion({
-      key: "character",
-      label: "Характер",
-      status: classic ? "match" : technical ? "conflict" : "neutral",
-      score: classic ? 1 : technical ? 0.34 : 0.62,
-      reason: classic ? "Классический характер соответствует предпочтению" : "Классический характер выражен не полностью",
-    });
-  }
-
-  if (character === "instrumental" || character === "sporty") {
-    return criterion({
-      key: "character",
-      label: "Характер",
-      status: technical ? "match" : "neutral",
-      score: technical ? 1 : 0.58,
-      reason: technical ? "Спортивный или утилитарный характер подтвержден" : "Инструментальный характер выражен умеренно",
-    });
-  }
-
+  const anyKnownStyle = traits.classic || traits.modern || traits.sporty || traits.expressive;
   return criterion({
     key: "character",
     label: "Характер",
-    status: expressive ? "match" : "neutral",
-    score: expressive ? 0.94 : 0.62,
-    reason: expressive ? "У модели есть заметный визуальный акцент" : "Выразительность модели умеренная",
+    status: anyKnownStyle ? "conflict" : "unknown",
+    score: anyKnownStyle ? 0.28 : 0.35,
+    reason: anyKnownStyle ? "Характер модели ближе к другому направлению" : "По стилю пока недостаточно подтверждённых данных",
   });
 }
 
-function movementEvaluation(watch: CatalogWatchDetail, preference: SelectionMovementPreference): SelectionCriterionEvaluation {
-  const actual = movementKind(watch);
-  if (preference === "any") {
+function movementEvaluation(
+  watch: CatalogWatchDetail,
+  preference: SelectionMovementPreference,
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation {
+  if (preference === "neutral") {
     return criterion({
       key: "movement",
       label: "Механизм",
       status: "neutral",
-      score: actual === "unknown" ? 0.62 : 1,
-      reason: "Тип механизма оставлен без предпочтений",
+      score: 0.66,
+      reason: "Механизм оставлен открытым",
     });
   }
 
-  if (actual === "unknown") {
+  const actual = traits.movement;
+  if (actual === "unknown" || actual === "other") {
     return criterion({
       key: "movement",
       label: "Механизм",
       status: "unknown",
-      score: 0.58,
+      score: 0.28,
       reason: "Тип механизма пока не указан",
     });
   }
 
-  const mechanicalMatch = preference === "mechanical" && (actual === "mechanical" || actual === "automatic");
-  const quartzFamilyMatch = preference === "quartz" && (actual === "digital" || actual === "ana_digi");
-  const exactMatch = actual === preference || mechanicalMatch || quartzFamilyMatch;
+  const match =
+    (preference === "mechanical" && actual === "mechanical") ||
+    (preference === "quartz" && (actual === "quartz" || actual === "digital" || actual === "analog-digital")) ||
+    (preference === "solar" && actual === "solar");
+
+  const softMatch = preference === "quartz" && actual === "solar";
+
   return criterion({
     key: "movement",
     label: "Механизм",
-    status: exactMatch ? "match" : "conflict",
-    score: exactMatch ? 1 : 0.18,
-    reason: exactMatch ? "Механизм соответствует предпочтению" : "Механизм отличается от выбранного",
+    status: match ? "match" : softMatch ? "neutral" : "conflict",
+    score: match ? 1 : softMatch ? 0.62 : 0.06,
+    reason: match
+      ? "Тип механизма соответствует предпочтению"
+      : softMatch
+        ? "Solar остаётся практичной кварцевой архитектурой"
+        : "Тип механизма отличается от выбранного",
   });
 }
 
-function fitEvaluation(watch: CatalogWatchDetail, fit: SelectionFitCode): SelectionCriterionEvaluation {
-  const diameter = caseDiameter(watch);
-  if (fit === "unknown") {
-    return criterion({
-      key: "fit",
-      label: "Размер",
-      status: "neutral",
-      score: diameter === null ? 0.62 : 1,
-      reason: "Размер оставлен без предпочтений",
-    });
-  }
-
-  if (diameter === null) {
-    return criterion({
-      key: "fit",
-      label: "Размер",
-      status: "unknown",
-      score: 0.58,
-      reason: "Диаметр корпуса пока не указан",
-    });
-  }
-
-  const score =
-    fit === "compact"
-      ? diameter <= 38
-        ? 1
-        : diameter <= 40
-          ? 0.74
-          : 0.28
-      : fit === "medium"
-        ? diameter >= 38 && diameter <= 42
-          ? 1
-          : diameter >= 36 && diameter <= 44
-            ? 0.72
-            : 0.34
-        : diameter >= 42
-          ? 1
-          : diameter >= 40
-            ? 0.68
-            : 0.32;
-
-  return criterion({
-    key: "fit",
-    label: "Размер",
-    status: score >= 0.72 ? "match" : "conflict",
-    score,
-    reason: score >= 0.72 ? "Размер корпуса входит в выбранный диапазон" : "Размер корпуса отличается от предпочтения",
-  });
-}
-
-function attachmentEvaluation(watch: CatalogWatchDetail, attachment: SelectionAttachmentCode): SelectionCriterionEvaluation {
-  const actual = attachmentKind(watch);
-  if (attachment === "any") {
-    return criterion({
-      key: "attachment",
-      label: "Ремень/браслет",
-      status: "neutral",
-      score: actual === "unknown" ? 0.62 : 1,
-      reason: "Крепление оставлено без предпочтений",
-    });
-  }
-
-  if (actual === "unknown") {
-    return criterion({
-      key: "attachment",
-      label: "Ремень/браслет",
-      status: "unknown",
-      score: 0.58,
-      reason: "Данные о креплении требуют уточнения",
-    });
-  }
-
-  return criterion({
-    key: "attachment",
-    label: "Ремень/браслет",
-    status: actual === attachment ? "match" : "conflict",
-    score: actual === attachment ? 1 : 0.28,
-    reason: actual === attachment ? "Крепление соответствует предпочтению" : "Крепление отличается от выбранного",
-  });
-}
-
-function practicalEvaluation(watch: CatalogWatchDetail, practical: SelectionPracticalCode): SelectionCriterionEvaluation {
-  const text = allWatchText(watch);
-  const meters = waterResistanceMeters(watch);
-  if (practical === "none") {
-    return criterion({
-      key: "practical",
-      label: "Практика",
-      status: "neutral",
-      score: 0.84,
-      reason: "Обязательных практических требований нет",
-    });
-  }
-
-  const crystal = normalizeText(specValue(watch, ["crystal_type_raw"]) ?? "");
-  const functions = normalizeText(specValue(watch, ["functions_raw"]) ?? "");
-  const attachment = normalizeText(
-    specValue(watch, ["attachment_material_raw", "strap_material_raw", "bracelet_material_raw"]) ?? "",
-  );
-  const matches: Record<Exclude<SelectionPracticalCode, "none">, boolean | null> = {
-    high_water: meters === null ? null : meters >= 100,
-    sapphire: crystal ? includesAny(crystal, ["sapphire", "сапфир"]) : null,
-    chronograph: functions ? includesAny(functions, ["chronograph", "хронограф", "chrono"]) : null,
-    date: functions ? includesAny(functions, ["date", "дата", "число"]) : null,
-    gmt: functions ? includesAny(functions, ["gmt", "world time", "миров"]) : null,
-    lume: functions ? includesAny(functions, ["lume", "подсвет", "illuminator", "свет"]) : null,
-    shock: functions || attachment ? includesAny(`${functions} ${attachment} ${text}`, ["shock", "удар", "resin", "резин"]) : null,
+function featureEvaluation(
+  watch: CatalogWatchDetail,
+  feature: SelectionFeatureCode,
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation {
+  const featureLabels: Record<SelectionFeatureCode, string> = {
+    sapphire: "Стекло",
+    "water-resistance": "Водозащита",
+    "steel-bracelet": "Браслет",
+    leather: "Ремешок",
+    thin: "Толщина",
+    chronograph: "Хронограф",
+    date: "Дата",
+    functions: "Функции",
+    none: "Особые пожелания",
   };
-  const result = matches[practical];
-  if (result === null) {
+
+  if (feature === "none") {
     return criterion({
-      key: "practical",
-      label: "Практика",
-      status: "unknown",
-      score: 0.58,
-      reason: "Эта характеристика пока не указана",
+      key: "feature:none",
+      label: featureLabels.none,
+      status: "neutral",
+      score: 0.68,
+      reason: "Особые характеристики оставлены открытыми",
     });
   }
 
-  return criterion({
-    key: "practical",
-    label: "Практика",
-    status: result ? "match" : "conflict",
-    score: result ? 1 : 0.24,
-    reason: result ? "Практическое требование подтверждено" : "Практическое требование не подтверждено",
-  });
+  const known = (value: boolean | null, positive: string, negative: string, unknown: string) => {
+    if (value === true) {
+      return criterion({ key: `feature:${feature}`, label: featureLabels[feature], status: "match", score: 1, reason: positive });
+    }
+    if (value === false) {
+      return criterion({ key: `feature:${feature}`, label: featureLabels[feature], status: "conflict", score: 0.22, reason: negative });
+    }
+    return criterion({ key: `feature:${feature}`, label: featureLabels[feature], status: "unknown", score: 0.32, reason: unknown });
+  };
+
+  switch (feature) {
+    case "sapphire":
+      return known(traits.hasSapphire, "Подтверждено сапфировое стекло", "Стекло указано как не сапфировое", "Тип стекла пока не указан");
+    case "water-resistance":
+      return known(traits.hasHighWaterResistance, "Подтверждена водозащита от 100 м", "Водозащита ниже 100 м", "Водозащита пока не указана");
+    case "steel-bracelet":
+      return known(
+        traits.strap === "unknown" ? null : traits.strap === "steel-bracelet",
+        "Подтверждён металлический браслет",
+        "Указан другой тип ремешка или браслета",
+        "Материал ремешка или браслета пока не указан",
+      );
+    case "leather":
+      return known(
+        traits.strap === "unknown" ? null : traits.strap === "leather",
+        "Подтверждён кожаный ремешок",
+        "Указан другой тип ремешка или браслета",
+        "Материал ремешка или браслета пока не указан",
+      );
+    case "thin":
+      return known(
+        traits.thicknessMm === null ? null : traits.thicknessMm <= thinCaseThresholdMm,
+        "Подтверждён аккуратный профиль корпуса",
+        "Толщина корпуса выше выбранного ориентира",
+        "Толщина корпуса пока не указана",
+      );
+    case "chronograph":
+      return known(traits.hasChronograph, "Подтверждён хронограф", "Хронограф не указан среди функций", "Функции пока не указаны");
+    case "date":
+      return known(traits.hasDate, "Подтверждена функция даты", "Дата не указана среди функций", "Функции пока не указаны");
+    case "functions":
+      return known(traits.hasAdditionalFunctions, "Подтверждены дополнительные функции", "Дополнительные функции не указаны", "Функции пока не указаны");
+  }
 }
 
-function dataConfidenceEvaluation(watch: CatalogWatchDetail): SelectionCriterionEvaluation {
+function featureEvaluations(
+  watch: CatalogWatchDetail,
+  features: readonly SelectionFeatureCode[],
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation[] {
+  const activeFeatures = features.length > 0 ? features : (["none"] as const);
+  return activeFeatures.map((feature) => featureEvaluation(watch, feature, traits));
+}
+
+function dataConfidenceEvaluation(
+  watch: CatalogWatchDetail,
+  traits: WatchTraits = traitsFor(watch),
+): SelectionCriterionEvaluation {
   const important = [
-    specValue(watch, ["movement_type_raw", "movement_raw"]),
-    specValue(watch, ["case_diameter_raw", "case_dimensions_raw"]),
-    specValue(watch, ["water_resistance_raw"]),
-    specValue(watch, ["attachment_material_raw", "strap_material_raw", "bracelet_material_raw"]),
+    traits.movement !== "unknown",
+    traits.caseSize !== null,
+    traits.waterMeters !== null,
+    traits.strap !== "unknown",
+    traits.hasSapphire !== null,
+    watch.publicPrice !== null,
   ];
   const present = important.filter(Boolean).length;
-  const score = 0.44 + present * 0.12 + (watch.publicPrice ? 0.05 : 0) + (watch.primaryImage.kind === "none" ? 0 : 0.03);
+  const score = 0.28 + present * 0.1 + (watch.primaryImage.kind === "none" ? 0 : 0.04);
   return criterion({
     key: "data",
     label: "Данные",
-    status: present >= 3 ? "match" : "unknown",
+    status: present >= 4 ? "match" : "unknown",
     score,
-    reason: present >= 3 ? "Основные характеристики указаны" : "Часть характеристик пока не указана",
+    reason: present >= 4 ? "Основные характеристики указаны" : "Часть характеристик пока не указана",
   });
 }
 
@@ -710,75 +907,54 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
     return null;
   }
 
+  const traits = traitsFor(watch);
+  const scenario = scenarioEvaluation(watch, answers.scenario, traits);
+  const fit = fitEvaluation(watch, answers.fit, traits);
+  const character = characterEvaluation(watch, answers.character, traits);
+  const movement = movementEvaluation(watch, answers.movement, traits);
+  const features = featureEvaluations(watch, answers.features, traits);
   const budget = budgetEvaluation(watch, answers.budget);
-  if (budget.status === "conflict") {
-    return null;
-  }
-  const movement = movementEvaluation(watch, answers.movement);
-  if (movement.status === "conflict") {
-    return null;
-  }
+  const data = dataConfidenceEvaluation(watch, traits);
+  const featureAverage = features.reduce((total, item) => total + item.score, 0) / Math.max(features.length, 1);
 
-  const fit = fitEvaluation(watch, answers.fit);
-  const attachment = attachmentEvaluation(watch, answers.attachment);
-  if (answers.attachment !== "any" && attachment.status === "conflict") {
-    return null;
-  }
-  const practical = practicalEvaluation(watch, answers.practical);
-  if (practical.status === "conflict") {
-    return null;
-  }
-
-  const criteria = [
-    scenarioEvaluation(watch, answers.scenario),
-    characterEvaluation(watch, answers.character),
-    budget,
-    movement,
-    fit,
-    attachment,
-    practical,
-    dataConfidenceEvaluation(watch),
-  ];
+  const criteria = [scenario, fit, character, movement, ...features, budget, data];
   const breakdown: SelectionScoreBreakdown = {
-    scenarioFit: scorePart(criteria[0]?.score ?? 0),
-    characterFit: scorePart(criteria[1]?.score ?? 0),
-    budgetFit: scorePart(criteria[2]?.score ?? 0),
-    movementFit: scorePart(criteria[3]?.score ?? 0),
-    fitFit: scorePart(criteria[4]?.score ?? 0),
-    attachmentFit: scorePart(criteria[5]?.score ?? 0),
-    practicalFit: scorePart(criteria[6]?.score ?? 0),
-    dataConfidence: scorePart(criteria[7]?.score ?? 0),
+    scenarioFit: scorePart(scenario.score),
+    fitFit: scorePart(fit.score),
+    characterFit: scorePart(character.score),
+    movementFit: scorePart(movement.score),
+    featureFit: scorePart(featureAverage),
+    budgetFit: scorePart(budget.score),
+    dataConfidence: scorePart(data.score),
   };
 
   const total =
-    breakdown.scenarioFit * 0.23 +
-    breakdown.characterFit * 0.1 +
-    breakdown.budgetFit * 0.16 +
-    breakdown.movementFit * 0.15 +
-    breakdown.fitFit * 0.1 +
-    breakdown.attachmentFit * 0.08 +
-    breakdown.practicalFit * 0.1 +
-    breakdown.dataConfidence * 0.08;
+    breakdown.scenarioFit * selectionScoringWeights.scenario +
+    breakdown.fitFit * selectionScoringWeights.fit +
+    breakdown.characterFit * selectionScoringWeights.character +
+    breakdown.movementFit * selectionScoringWeights.movement +
+    breakdown.featureFit * selectionScoringWeights.features +
+    breakdown.budgetFit * selectionScoringWeights.budget +
+    breakdown.dataConfidence * selectionScoringWeights.dataConfidence;
 
   const conflicts = criteria.filter((item) => item.status === "conflict");
   const matches = criteria.filter((item) => item.status === "match");
   const unknowns = criteria.filter((item) => item.status === "unknown" && item.key !== "data");
   const hardKeys = hardCriterionKeys(answers);
-  const hardUnknowns = unknowns.filter((item) => hardKeys.includes(item.key));
+  const hardUnknowns = unknowns.filter((item) => hardKeys.some((key) => item.key === key || item.key.startsWith(`${key}:`)));
   const isPreliminary = hardUnknowns.length > 0;
   const score = Math.round(total);
-  if (score < 60 || conflicts.length >= 4) {
+  if (score < 25 || conflicts.length >= 5) {
     return null;
   }
 
   const matchLabel = isPreliminary
     ? "Предварительный вариант"
-    : score >= 78 && conflicts.length === 0 && unknowns.length === 0 && matches.length >= 4
+    : score >= 78 && conflicts.length === 0 && matches.length >= 4
       ? "Сильное совпадение"
       : conflicts.length === 0
         ? "Хорошее совпадение"
         : "Компромиссный вариант";
-
   return {
     watch: toCatalogWatchCard(watch),
     imageCandidates: buildSelectionImageCandidates(watch),
@@ -791,15 +967,15 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
       isPreliminary
         ? "Некоторые характеристики требуют уточнения"
         : conflicts.length > 0
-        ? "Есть расхождение"
-        : unknowns.length > 0
-          ? "Не все характеристики указаны"
-          : "Характеристики подтверждены",
+          ? "Есть компромисс"
+          : unknowns.length > 0
+            ? "Не все характеристики указаны"
+            : "Характеристики подтверждены",
     isPreliminary,
     familyKey: familyKey(watch),
-    movementKey: movementKind(watch),
-    caseDiameterMm: caseDiameter(watch),
-    attachmentKey: attachmentKind(watch),
+    movementKey: traits.movement,
+    caseSizeMm: traits.caseSizeMm,
+    strapKey: traits.strap,
     breakdown,
     criteria,
     reasons: matches.filter((item) => item.key !== "data").slice(0, 4).map((item) => item.reason),
@@ -811,11 +987,12 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
 }
 
 function hardCriterionKeys(answers: SelectionAnswers): string[] {
+  const hasRealFeatures = answers.features.some((feature) => feature !== "none");
   return [
-    answers.budget === "any" ? null : "budget",
-    answers.movement === "any" ? null : "movement",
-    answers.practical === "none" ? null : "practical",
-    answers.attachment === "any" ? null : "attachment",
+    answers.budget === "unknown" ? null : "budget",
+    answers.movement === "neutral" ? null : "movement",
+    hasRealFeatures ? "feature" : null,
+    answers.fit === "unknown" ? null : "fit",
   ].filter((key): key is string => key !== null);
 }
 
@@ -826,13 +1003,23 @@ function requiredConfirmationRank(
   const requiredKeys = hardCriterionKeys(answers);
 
   return requiredKeys.reduce((total, key) => {
-    const status = recommendation.criteria.find((criterionItem) => criterionItem.key === key)?.status;
-    return total + (status === "match" ? 3 : status === "neutral" ? 1 : status === "conflict" ? -2 : 0);
+    const statuses = recommendation.criteria
+      .filter((criterionItem) => criterionItem.key === key || criterionItem.key.startsWith(`${key}:`))
+      .map((criterionItem) => criterionItem.status);
+    if (statuses.includes("match")) return total + 3;
+    if (statuses.includes("neutral")) return total + 1;
+    if (statuses.includes("conflict")) return total - 3;
+    if (statuses.includes("unknown")) return total - 1;
+    return total;
   }, 0);
 }
 
 function knownConflictCount(recommendation: SelectionRecommendation): number {
   return recommendation.criteria.filter((criterionItem) => criterionItem.status === "conflict").length;
+}
+
+function criterionStatus(recommendation: SelectionRecommendation, key: string): SelectionCriterionStatus | null {
+  return recommendation.criteria.find((criterionItem) => criterionItem.key === key)?.status ?? null;
 }
 
 function roleForIndex(index: number): SelectionRecommendationRole {
@@ -862,7 +1049,7 @@ function alternativeRole(
   const meaningfulSaving =
     featuredPrice !== null &&
     price !== null &&
-    featuredPrice - price >= Math.max(100_000, featuredPrice * 0.05);
+    featuredPrice - price >= Math.max(10_000 * rubMinor, featuredPrice * 0.05);
   if (meaningfulSaving) {
     return {
       role,
@@ -883,40 +1070,40 @@ function alternativeRole(
     return {
       role,
       label: "Другой бренд",
-      description: `Модель ${recommendation.watch.brandName} с похожим назначением и подтвержденными характеристиками.`,
+      description: `Модель ${recommendation.watch.brandName} с похожим назначением и подтверждёнными характеристиками.`,
     };
   }
 
   if (
-    recommendation.caseDiameterMm !== null &&
-    featured.caseDiameterMm !== null &&
-    Math.abs(recommendation.caseDiameterMm - featured.caseDiameterMm) >= 3
+    recommendation.caseSizeMm !== null &&
+    featured.caseSizeMm !== null &&
+    Math.abs(recommendation.caseSizeMm - featured.caseSizeMm) >= 3
   ) {
     return {
       role,
-      label: recommendation.caseDiameterMm < featured.caseDiameterMm
+      label: recommendation.caseSizeMm < featured.caseSizeMm
         ? "Более компактный вариант"
         : "Более крупный вариант",
-      description: "Подтвержденный диаметр предлагает заметно другую посадку.",
+      description: "Подтверждённый размер корпуса предлагает заметно другую посадку.",
     };
   }
 
   if (
-    recommendation.attachmentKey !== "unknown" &&
-    featured.attachmentKey !== "unknown" &&
-    recommendation.attachmentKey !== featured.attachmentKey
+    recommendation.strapKey !== "unknown" &&
+    featured.strapKey !== "unknown" &&
+    recommendation.strapKey !== featured.strapKey
   ) {
     return {
       role,
       label: "Другое крепление",
-      description: "Подтвержденный материал ремня или браслета дает другой характер носки.",
+      description: "Подтверждённый материал ремешка или браслета даёт другой характер носки.",
     };
   }
 
   if (
     featuredPrice !== null &&
     price !== null &&
-    Math.abs(featuredPrice - price) <= Math.max(100_000, featuredPrice * 0.08)
+    Math.abs(featuredPrice - price) <= Math.max(10_000 * rubMinor, featuredPrice * 0.08)
   ) {
     return {
       role,
@@ -927,8 +1114,8 @@ function alternativeRole(
 
   return {
     role,
-    label: "Еще один сильный вариант",
-    description: "Еще один способ расставить приоритеты без нарушения выбранных условий.",
+    label: "Ещё один сильный вариант",
+    description: "Ещё один способ расставить приоритеты без нарушения выбранных условий.",
   };
 }
 
@@ -992,44 +1179,39 @@ function diversifyRecommendations(scored: SelectionRecommendation[], limit: numb
   });
 }
 
+function scoreSort(input: { answers: SelectionAnswers }) {
+  return (left: SelectionRecommendation, right: SelectionRecommendation) =>
+    right.score - left.score ||
+    right.criteria.filter((item) => item.status === "match").length -
+      left.criteria.filter((item) => item.status === "match").length ||
+    requiredConfirmationRank(right, input.answers) - requiredConfirmationRank(left, input.answers) ||
+    knownConflictCount(left) - knownConflictCount(right) ||
+    Number(right.watch.publicPrice !== null) - Number(left.watch.publicPrice !== null) ||
+    Number(right.imageCandidates.length > 0) - Number(left.imageCandidates.length > 0) ||
+    left.watch.brandName.localeCompare(right.watch.brandName, "ru") ||
+    left.watch.title.localeCompare(right.watch.title, "ru") ||
+    left.watch.referenceNormalized.localeCompare(right.watch.referenceNormalized);
+}
+
 export function buildSelectionRecommendations(input: {
   dataset: CatalogReadDataset;
   answers: SelectionAnswers;
   limit?: number;
 }): SelectionRecommendation[] {
+  const limit = input.limit ?? 4;
   const scored = input.dataset.watches
     .map((watch) => scoreWatch(watch, input.answers))
     .filter((recommendation): recommendation is SelectionRecommendation => recommendation !== null)
-    .sort(
-      (left, right) =>
-        Number(knownConflictCount(left) > 0) - Number(knownConflictCount(right) > 0) ||
-        requiredConfirmationRank(right, input.answers) - requiredConfirmationRank(left, input.answers) ||
-        right.criteria.filter((item) => item.status === "match").length -
-          left.criteria.filter((item) => item.status === "match").length ||
-        (Math.abs(right.score - left.score) <= 3
-          ? Number(right.imageCandidates.length > 0) - Number(left.imageCandidates.length > 0)
-          : right.score - left.score) ||
-        right.score - left.score ||
-        Number(right.watch.publicPrice !== null) - Number(left.watch.publicPrice !== null) ||
-        left.watch.brandName.localeCompare(right.watch.brandName, "ru") ||
-        left.watch.title.localeCompare(right.watch.title, "ru") ||
-        left.watch.referenceNormalized.localeCompare(right.watch.referenceNormalized),
-    );
+    .sort(scoreSort({ answers: input.answers }));
 
-  const hardKeys = hardCriterionKeys(input.answers);
-  if (hardKeys.length === 0) {
-    return diversifyRecommendations(scored, input.limit ?? 4);
-  }
+  const withoutCriticalConflicts = scored.filter((recommendation) => {
+    const budgetOk = criterionStatus(recommendation, "budget") !== "conflict";
+    const movementOk = criterionStatus(recommendation, "movement") !== "conflict";
+    return budgetOk && movementOk;
+  });
+  const pool = withoutCriticalConflicts.length >= limit ? withoutCriticalConflicts : scored;
 
-  const confirmed = scored.filter((recommendation) => !recommendation.isPreliminary);
-  if (confirmed.length === 0) {
-    return [];
-  }
-
-  const eligible = confirmed.length >= 3
-    ? confirmed
-    : [...confirmed, ...scored.filter((recommendation) => recommendation.isPreliminary)];
-  return diversifyRecommendations(eligible, input.limit ?? 4);
+  return diversifyRecommendations(pool, limit);
 }
 
 export function nextSelectionStep(currentStep: SelectionStepCode): SelectionStepCode {
@@ -1048,15 +1230,17 @@ export function resolveSelectionStep(input: {
   requestedStep: SelectionStepCode;
   hasAnswers: boolean;
   searchParams: Record<string, string | string[] | undefined>;
+  answeredKeys?: readonly SelectionAnswerKey[];
 }): SelectionStepCode {
   if (!input.hasAnswers) {
-    return input.requestedStep === "start" ? "start" : input.requestedStep === "results" ? "start" : input.requestedStep;
+    return input.requestedStep === "results" ? "start" : input.requestedStep;
   }
 
   if (input.requestedStep !== "start") return input.requestedStep;
 
+  const answered = new Set(input.answeredKeys);
   for (const step of selectionFormDefinition.steps) {
-    if (!input.searchParams[step.answerKey]) {
+    if (!answered.has(step.answerKey) && !input.searchParams[step.answerKey]) {
       return step.code;
     }
   }
@@ -1069,10 +1253,13 @@ export function selectionStepByCode(step: SelectionStepCode) {
 }
 
 export function selectionAnswerLabel(key: SelectionAnswerKey, value: SelectionAnswers[SelectionAnswerKey]): string {
-  if (key === "scenario" && value === "collection_gap") {
-    return "Другой сценарий";
+  const step = selectionFormDefinition.steps.find((item) => item.answerKey === key);
+  if (key === "features") {
+    const values = Array.isArray(value) ? value : [String(value)];
+    return values
+      .map((feature) => step?.options.find((option) => option.code === feature)?.label ?? feature)
+      .join(", ");
   }
 
-  const step = selectionFormDefinition.steps.find((item) => item.answerKey === key);
   return step?.options.find((option) => option.code === value)?.label ?? String(value);
 }

@@ -59,7 +59,7 @@
 
 .progress {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.45rem;
   margin: 0;
   padding: 0;
@@ -252,6 +252,7 @@
   margin: 0;
   color: var(--text-muted);
   line-height: 1.6;
+  text-wrap: pretty;
 }
 
 .optionFieldset {
@@ -343,12 +344,14 @@
   font-size: 0.94rem;
   font-weight: 680;
   line-height: 1.25;
+  text-wrap: balance;
 }
 
 .optionCopy small {
   color: var(--text-muted);
   font-size: 0.78rem;
   line-height: 1.45;
+  text-wrap: pretty;
 }
 
 .optionIndicator {
@@ -371,6 +374,15 @@
   border-radius: 50%;
   background: var(--selection-champagne);
   content: "";
+}
+
+.optionFieldset[data-multiple="true"] .optionIndicator {
+  border-radius: 0.28rem;
+}
+
+.optionFieldset[data-multiple="true"] .option[data-selected="true"] .optionIndicator::after {
+  inset: 2px;
+  border-radius: 0.18rem;
 }
 
 .continueButton,
@@ -918,6 +930,14 @@
   .option {
     min-height: 86px;
     padding: 0.9rem;
+  }
+
+  .optionCopy strong {
+    font-size: 0.91rem;
+  }
+
+  .optionCopy small {
+    font-size: 0.76rem;
   }
 
   .continueButton,

@@ -1,22 +1,30 @@
 import type { CatalogImagePresentation, CatalogWatchCard } from "@/modules/catalog/domain/read-models";
 
 export type SelectionScenarioCode =
-  | "everyday"
+  | "daily"
   | "work"
-  | "special"
-  | "travel"
+  | "occasion"
   | "sport"
-  | "first_mechanical"
-  | "universal"
-  | "collection_gap";
+  | "travel"
+  | "first-mechanical"
+  | "universal";
 
-export type SelectionCharacterCode =
-  | "quiet"
-  | "universal"
-  | "expressive"
-  | "sporty"
-  | "classic"
-  | "instrumental";
+export type SelectionFitCode = "compact" | "medium" | "large" | "unknown";
+
+export type SelectionCharacterCode = "classic" | "modern" | "sporty" | "expressive" | "neutral";
+
+export type SelectionMovementPreference = "mechanical" | "quartz" | "solar" | "neutral";
+
+export type SelectionFeatureCode =
+  | "sapphire"
+  | "water-resistance"
+  | "steel-bracelet"
+  | "leather"
+  | "thin"
+  | "chronograph"
+  | "date"
+  | "functions"
+  | "none";
 
 export type SelectionBudgetCode =
   | "under_15000"
@@ -24,59 +32,27 @@ export type SelectionBudgetCode =
   | "range_30000_50000"
   | "range_50000_100000"
   | "over_100000"
-  | "any";
-
-export type SelectionMovementPreference =
-  | "any"
-  | "quartz"
-  | "automatic"
-  | "mechanical"
-  | "solar"
-  | "digital"
-  | "ana_digi";
-
-export type SelectionFitCode = "compact" | "medium" | "large" | "unknown";
-
-export type SelectionAttachmentCode = "bracelet" | "leather" | "rubber" | "any";
-
-export type SelectionPracticalCode =
-  | "none"
-  | "high_water"
-  | "sapphire"
-  | "chronograph"
-  | "date"
-  | "gmt"
-  | "lume"
-  | "shock";
+  | "unknown";
 
 export type SelectionStepCode =
   | "start"
   | "scenario"
-  | "character"
-  | "budget"
-  | "movement"
   | "fit"
-  | "attachment"
-  | "practical"
+  | "character"
+  | "movement"
+  | "features"
+  | "budget"
   | "results";
 
-export type SelectionAnswerKey =
-  | "scenario"
-  | "character"
-  | "budget"
-  | "movement"
-  | "fit"
-  | "attachment"
-  | "practical";
+export type SelectionAnswerKey = "scenario" | "fit" | "character" | "movement" | "features" | "budget";
 
 export type SelectionAnswers = {
   scenario: SelectionScenarioCode;
-  character: SelectionCharacterCode;
-  budget: SelectionBudgetCode;
-  movement: SelectionMovementPreference;
   fit: SelectionFitCode;
-  attachment: SelectionAttachmentCode;
-  practical: SelectionPracticalCode;
+  character: SelectionCharacterCode;
+  movement: SelectionMovementPreference;
+  features: SelectionFeatureCode[];
+  budget: SelectionBudgetCode;
 };
 
 export type SelectionOption<TCode extends string> = {
@@ -92,6 +68,7 @@ export type SelectionStepDefinition<TCode extends string = string> = {
   title: string;
   deck: string;
   optional: boolean;
+  multiple?: boolean;
   options: SelectionOption<TCode>[];
 };
 
@@ -111,12 +88,11 @@ export type SelectionCriterionEvaluation = {
 
 export type SelectionScoreBreakdown = {
   scenarioFit: number;
-  characterFit: number;
-  budgetFit: number;
-  movementFit: number;
   fitFit: number;
-  attachmentFit: number;
-  practicalFit: number;
+  characterFit: number;
+  movementFit: number;
+  featureFit: number;
+  budgetFit: number;
   dataConfidence: number;
 };
 
@@ -125,6 +101,25 @@ export type SelectionRecommendationRole =
   | "rational_alternative"
   | "expressive_variant"
   | "alternative_direction";
+
+export type SelectionActualMovementKey =
+  | "mechanical"
+  | "quartz"
+  | "solar"
+  | "digital"
+  | "analog-digital"
+  | "other"
+  | "unknown";
+
+export type SelectionStrapKey =
+  | "steel-bracelet"
+  | "leather"
+  | "rubber"
+  | "polymer"
+  | "textile"
+  | "titanium"
+  | "other"
+  | "unknown";
 
 export type SelectionRecommendation = {
   watch: CatalogWatchCard;
@@ -137,9 +132,9 @@ export type SelectionRecommendation = {
   confidenceLabel: string;
   isPreliminary: boolean;
   familyKey: string;
-  movementKey: string;
-  caseDiameterMm: number | null;
-  attachmentKey: SelectionAttachmentCode | "unknown";
+  movementKey: SelectionActualMovementKey;
+  caseSizeMm: number | null;
+  strapKey: SelectionStrapKey;
   breakdown: SelectionScoreBreakdown;
   criteria: SelectionCriterionEvaluation[];
   reasons: string[];

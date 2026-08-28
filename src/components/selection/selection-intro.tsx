@@ -35,7 +35,7 @@ export function SelectionIntro() {
             <span>под свой ритм</span>
           </h1>
           <p className={styles.deck}>
-            Ответьте на семь коротких вопросов. Мы сопоставим ваши предпочтения с реальными
+            Ответьте на шесть коротких вопросов. Мы сопоставим ваши предпочтения с реальными
             характеристиками моделей и покажем несколько подходящих вариантов с понятным объяснением.
           </p>
         </header>
@@ -43,14 +43,14 @@ export function SelectionIntro() {
         <aside className={styles.process} aria-label="Как проходит подбор">
           <SelectionDialMotif />
           <div className={styles.processCopy}>
-            <p className={styles.processNumber} aria-hidden="true">01 / 07</p>
-            <h2>Семь шагов до вашей подборки</h2>
+            <p className={styles.processNumber} aria-hidden="true">01 / 06</p>
+            <h2>Шесть шагов до вашей подборки</h2>
             <p>Сохраните ссылку, чтобы вернуться к подбору позже. Ей можно поделиться, если хотите обсудить варианты.</p>
           </div>
           <ol className={styles.facts} aria-label="Что входит в подбор">
             <li>
               <span>01</span>
-              <strong>7</strong>
+              <strong>6</strong>
               <small>вопросов</small>
             </li>
             <li>

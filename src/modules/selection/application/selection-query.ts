@@ -1,12 +1,11 @@
 import type {
   SelectionAnswerKey,
   SelectionAnswers,
-  SelectionAttachmentCode,
   SelectionBudgetCode,
   SelectionCharacterCode,
+  SelectionFeatureCode,
   SelectionFitCode,
   SelectionMovementPreference,
-  SelectionPracticalCode,
   SelectionScenarioCode,
   SelectionStepCode,
 } from "@/modules/selection/domain/types";
@@ -14,86 +13,93 @@ import type {
 export type SelectionSearchParams = Record<string, string | string[] | undefined>;
 
 const scenarioCodes: SelectionScenarioCode[] = [
-  "everyday",
+  "daily",
   "work",
-  "special",
-  "travel",
+  "occasion",
   "sport",
-  "first_mechanical",
+  "travel",
+  "first-mechanical",
   "universal",
-  "collection_gap",
 ];
-const characterCodes: SelectionCharacterCode[] = ["quiet", "universal", "expressive", "sporty", "classic", "instrumental"];
+const fitCodes: SelectionFitCode[] = ["compact", "medium", "large", "unknown"];
+const characterCodes: SelectionCharacterCode[] = ["classic", "modern", "sporty", "expressive", "neutral"];
+const movementCodes: SelectionMovementPreference[] = ["mechanical", "quartz", "solar", "neutral"];
+const featureCodes: SelectionFeatureCode[] = [
+  "sapphire",
+  "water-resistance",
+  "steel-bracelet",
+  "leather",
+  "thin",
+  "chronograph",
+  "date",
+  "functions",
+  "none",
+];
 const budgetCodes: SelectionBudgetCode[] = [
   "under_15000",
   "range_15000_30000",
   "range_30000_50000",
   "range_50000_100000",
   "over_100000",
-  "any",
-];
-const movementCodes: SelectionMovementPreference[] = [
-  "any",
-  "quartz",
-  "automatic",
-  "mechanical",
-  "solar",
-  "digital",
-  "ana_digi",
-];
-const fitCodes: SelectionFitCode[] = ["compact", "medium", "large", "unknown"];
-const attachmentCodes: SelectionAttachmentCode[] = ["bracelet", "leather", "rubber", "any"];
-const practicalCodes: SelectionPracticalCode[] = [
-  "none",
-  "high_water",
-  "sapphire",
-  "chronograph",
-  "date",
-  "gmt",
-  "lume",
-  "shock",
+  "unknown",
 ];
 const stepCodes: SelectionStepCode[] = [
   "start",
   "scenario",
-  "character",
-  "budget",
-  "movement",
   "fit",
-  "attachment",
-  "practical",
+  "character",
+  "movement",
+  "features",
+  "budget",
   "results",
 ];
 
 const scenarioAliases: Record<string, SelectionScenarioCode> = {
-  daily: "everyday",
-  everyday: "everyday",
+  daily: "daily",
+  everyday: "daily",
   business: "work",
   work: "work",
-  formal: "special",
-  special: "special",
+  formal: "occasion",
+  special: "occasion",
+  occasion: "occasion",
+  first_mechanical: "first-mechanical",
+  "first-mechanical": "first-mechanical",
+  collection_gap: "universal",
 };
 
-const budgetAliases: Record<string, SelectionBudgetCode> = {
-  under_30000: "range_15000_30000",
-  under_70000: "range_50000_100000",
-  under_120000: "any",
-  over_120000: "over_100000",
+const characterAliases: Record<string, SelectionCharacterCode> = {
+  quiet: "classic",
+  universal: "modern",
+  instrumental: "sporty",
+  technical: "sporty",
+  classic: "classic",
+  expressive: "expressive",
+  sporty: "sporty",
+  neutral: "neutral",
 };
 
 const movementAliases: Record<string, SelectionMovementPreference> = {
-  mechanical: "mechanical",
+  any: "neutral",
   automatic: "mechanical",
+  mechanical: "mechanical",
+  hand_wound: "mechanical",
+  manual: "mechanical",
+  quartz: "quartz",
+  digital: "quartz",
+  ana_digi: "quartz",
+  "analog-digital": "quartz",
+  analog_digital: "quartz",
+  solar: "solar",
+  "eco-drive": "solar",
+  ecodrive: "solar",
 };
 
-const answerParamKeys: Record<SelectionAnswerKey, string[]> = {
-  scenario: ["scenario"],
-  character: ["character", "style"],
-  budget: ["budget"],
-  movement: ["movement"],
-  fit: ["fit", "wrist"],
-  attachment: ["attachment"],
-  practical: ["practical", "water"],
+const budgetAliases: Record<string, SelectionBudgetCode> = {
+  any: "unknown",
+  under_30000: "range_15000_30000",
+  under_70000: "range_50000_100000",
+  under_120000: "unknown",
+  over_120000: "over_100000",
 };
 
 const fitAliases: Record<string, SelectionFitCode> = {
@@ -103,8 +109,31 @@ const fitAliases: Record<string, SelectionFitCode> = {
   large: "large",
 };
 
-const characterAliases: Record<string, SelectionCharacterCode> = {
-  technical: "instrumental",
+const featureAliases: Record<string, SelectionFeatureCode> = {
+  high_water: "water-resistance",
+  water: "water-resistance",
+  swim: "water-resistance",
+  bracelet: "steel-bracelet",
+  steel: "steel-bracelet",
+  steel_bracelet: "steel-bracelet",
+  gmt: "functions",
+  lume: "functions",
+  shock: "functions",
+  any: "none",
+};
+
+const stepAliases: Record<string, SelectionStepCode> = {
+  attachment: "features",
+  practical: "features",
+};
+
+export const answerParamKeys: Record<SelectionAnswerKey, string[]> = {
+  scenario: ["scenario"],
+  fit: ["fit", "wrist"],
+  character: ["character", "style"],
+  movement: ["movement"],
+  features: ["features", "feature", "practical", "water", "attachment"],
+  budget: ["budget"],
 };
 
 function firstParam(value: string | string[] | undefined): string | null {
@@ -113,6 +142,14 @@ function firstParam(value: string | string[] | undefined): string | null {
   }
 
   return value?.trim() || null;
+}
+
+function valuesFromParam(value: string | string[] | undefined): string[] {
+  const rawValues = Array.isArray(value) ? value : value ? [value] : [];
+  return rawValues
+    .flatMap((raw) => raw.split(","))
+    .map((raw) => raw.normalize("NFKC").toLowerCase().trim())
+    .filter(Boolean);
 }
 
 function option<TCode extends string>(input: {
@@ -135,6 +172,27 @@ function option<TCode extends string>(input: {
   return input.allowed.includes(normalized as TCode) ? (normalized as TCode) : input.fallback;
 }
 
+export function normalizeSelectionFeatures(values: readonly string[]): SelectionFeatureCode[] {
+  const selected = values
+    .map((value) => value.normalize("NFKC").toLowerCase().trim())
+    .map((value) => featureAliases[value] ?? value)
+    .filter((value): value is SelectionFeatureCode => featureCodes.includes(value as SelectionFeatureCode));
+
+  const unique = [...new Set(selected)];
+  if (unique.length === 0) {
+    return ["none"];
+  }
+
+  const ordered = featureCodes.filter((feature) => unique.includes(feature));
+
+  if (ordered.includes("none")) {
+    const realFeatures = ordered.filter((feature) => feature !== "none");
+    return realFeatures.length > 0 ? realFeatures : ["none"];
+  }
+
+  return ordered;
+}
+
 export function hasSelectionAnswers(searchParams: SelectionSearchParams): boolean {
   return answeredSelectionKeys(searchParams).length > 0;
 }
@@ -146,30 +204,20 @@ export function answeredSelectionKeys(searchParams: SelectionSearchParams): Sele
 }
 
 export function parseSelectionAnswers(searchParams: SelectionSearchParams): SelectionAnswers {
+  const featureValues = [
+    ...valuesFromParam(searchParams.features),
+    ...valuesFromParam(searchParams.feature),
+    ...valuesFromParam(searchParams.practical),
+    ...valuesFromParam(searchParams.water),
+    ...valuesFromParam(searchParams.attachment),
+  ];
+
   return {
     scenario: option({
       value: searchParams.scenario,
       allowed: scenarioCodes,
-      fallback: "everyday",
+      fallback: "daily",
       aliases: scenarioAliases,
-    }),
-    character: option({
-      value: searchParams.character ?? searchParams.style,
-      allowed: characterCodes,
-      fallback: "universal",
-      aliases: characterAliases,
-    }),
-    budget: option({
-      value: searchParams.budget,
-      allowed: budgetCodes,
-      fallback: "any",
-      aliases: budgetAliases,
-    }),
-    movement: option({
-      value: searchParams.movement,
-      allowed: movementCodes,
-      fallback: "any",
-      aliases: movementAliases,
     }),
     fit: option({
       value: searchParams.fit ?? searchParams.wrist,
@@ -177,16 +225,24 @@ export function parseSelectionAnswers(searchParams: SelectionSearchParams): Sele
       fallback: "unknown",
       aliases: fitAliases,
     }),
-    attachment: option({
-      value: searchParams.attachment,
-      allowed: attachmentCodes,
-      fallback: "any",
+    character: option({
+      value: searchParams.character ?? searchParams.style,
+      allowed: characterCodes,
+      fallback: "neutral",
+      aliases: characterAliases,
     }),
-    practical: option({
-      value: searchParams.practical ?? searchParams.water,
-      allowed: practicalCodes,
-      fallback: "none",
-      aliases: { swim: "high_water", daily: "none", any: "none" },
+    movement: option({
+      value: searchParams.movement,
+      allowed: movementCodes,
+      fallback: "neutral",
+      aliases: movementAliases,
+    }),
+    features: normalizeSelectionFeatures(featureValues),
+    budget: option({
+      value: searchParams.budget,
+      allowed: budgetCodes,
+      fallback: "unknown",
+      aliases: budgetAliases,
     }),
   };
 }
@@ -196,7 +252,17 @@ export function parseSelectionStep(searchParams: SelectionSearchParams): Selecti
     value: searchParams.step,
     allowed: stepCodes,
     fallback: "start",
+    aliases: stepAliases,
   });
+}
+
+function setSelectionParam(params: URLSearchParams, key: SelectionAnswerKey, value: SelectionAnswers[SelectionAnswerKey]) {
+  if (key === "features") {
+    params.set(key, normalizeSelectionFeatures(value as string[]).join(","));
+    return;
+  }
+
+  params.set(key, String(value));
 }
 
 export function selectionAnswersToSearchParams(
@@ -206,7 +272,7 @@ export function selectionAnswersToSearchParams(
   const params = new URLSearchParams();
   const keys = includedKeys ?? (Object.keys(answerParamKeys) as SelectionAnswerKey[]);
   for (const key of keys) {
-    params.set(key, answers[key]);
+    setSelectionParam(params, key, answers[key]);
   }
   return params;
 }

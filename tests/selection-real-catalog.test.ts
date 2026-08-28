@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildSelectionRecommendations } from "@/modules/selection/application/selection-service";
+import { buildSelectionRecommendations, selectionFormDefinition } from "@/modules/selection/application/selection-service";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
@@ -16,12 +16,14 @@ const imagePlan = JSON.parse(
 ) as CatalogImageUploadPlan;
 const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
 
-const scenarios: Record<"A" | "B" | "C" | "D" | "E", SelectionAnswers> = {
-  A: { scenario: "everyday", character: "universal", budget: "under_15000", movement: "quartz", fit: "unknown", attachment: "any", practical: "none" },
-  B: { scenario: "work", character: "classic", budget: "range_30000_50000", movement: "quartz", fit: "medium", attachment: "bracelet", practical: "none" },
-  C: { scenario: "travel", character: "instrumental", budget: "range_15000_30000", movement: "ana_digi", fit: "unknown", attachment: "rubber", practical: "none" },
-  D: { scenario: "special", character: "expressive", budget: "over_100000", movement: "mechanical", fit: "unknown", attachment: "any", practical: "none" },
-  E: { scenario: "universal", character: "universal", budget: "any", movement: "any", fit: "unknown", attachment: "any", practical: "none" },
+const scenarios: Record<"A" | "B" | "C" | "D" | "E" | "F" | "G", SelectionAnswers> = {
+  A: { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", features: ["none"], budget: "range_15000_30000" },
+  B: { scenario: "work", fit: "compact", character: "classic", movement: "quartz", features: ["sapphire", "thin"], budget: "range_30000_50000" },
+  C: { scenario: "occasion", fit: "compact", character: "expressive", movement: "solar", features: ["steel-bracelet"], budget: "range_30000_50000" },
+  D: { scenario: "sport", fit: "large", character: "sporty", movement: "quartz", features: ["water-resistance", "chronograph"], budget: "range_15000_30000" },
+  E: { scenario: "travel", fit: "medium", character: "modern", movement: "solar", features: ["water-resistance", "date"], budget: "range_30000_50000" },
+  F: { scenario: "first-mechanical", fit: "medium", character: "classic", movement: "mechanical", features: ["sapphire"], budget: "range_30000_50000" },
+  G: { scenario: "universal", fit: "unknown", character: "neutral", movement: "neutral", features: ["none"], budget: "unknown" },
 };
 
 function statusFor(result: ReturnType<typeof buildSelectionRecommendations>[number], key: string) {
@@ -29,7 +31,10 @@ function statusFor(result: ReturnType<typeof buildSelectionRecommendations>[numb
 }
 
 describe("selection real catalog scenarios", () => {
-  it("keeps every result canonical and deterministic", () => {
+  it("runs the current full catalog through all representative profiles deterministically", () => {
+    expect(dataset.watches.length).toBeGreaterThanOrEqual(600);
+    expect(selectionFormDefinition.steps).toHaveLength(6);
+
     for (const answers of Object.values(scenarios)) {
       const first = buildSelectionRecommendations({ dataset, answers });
       const second = buildSelectionRecommendations({ dataset, answers });
@@ -41,59 +46,55 @@ describe("selection real catalog scenarios", () => {
       expect(new Set(first.map((item) => item.watch.href)).size).toBe(first.length);
       expect(new Set(first.map((item) => item.watch.referenceNormalized)).size).toBe(first.length);
       expect(first.every((item) => item.score >= 0 && item.score <= 100)).toBe(true);
-      expect(first[0]?.isPreliminary).toBe(false);
     }
   });
 
-  it("A keeps everyday quartz models at or below 15 000 rubles", () => {
-    const [featured] = buildSelectionRecommendations({ dataset, answers: scenarios.A });
-
-    expect(featured?.watch.referenceDisplay).toBe("GBD-200SM-1A5DR");
-    expect(featured?.watch.publicPrice?.amountMinor).toBeLessThanOrEqual(1_500_000);
-    expect(statusFor(featured, "movement")).toBe("match");
-    expect(featured?.imageCandidates.length).toBeGreaterThan(0);
+  it("does not rank noticeably over-budget models first when in-budget alternatives exist", () => {
+    const results = buildSelectionRecommendations({ dataset, answers: scenarios.B, limit: 4 });
+    expect(results[0]?.watch.publicPrice?.amountMinor ?? 0).toBeLessThanOrEqual(5_000_000);
+    expect(statusFor(results[0]!, "budget")).not.toBe("conflict");
   });
 
-  it("B prioritizes confirmed quartz bracelet models in the selected range", () => {
-    const [featured] = buildSelectionRecommendations({ dataset, answers: scenarios.B });
+  it("keeps movement choice meaningful", () => {
+    const mechanical = buildSelectionRecommendations({ dataset, answers: scenarios.F });
+    const solar = buildSelectionRecommendations({ dataset, answers: scenarios.E });
 
-    expect(statusFor(featured, "movement")).toBe("match");
-    expect(statusFor(featured, "attachment")).toBe("match");
-    expect(featured?.watch.publicPrice?.amountMinor).toBeGreaterThan(3_000_000);
-    expect(featured?.watch.publicPrice?.amountMinor).toBeLessThanOrEqual(5_000_000);
+    expect(statusFor(mechanical[0]!, "movement")).toBe("match");
+    expect(statusFor(solar[0]!, "movement")).toBe("match");
   });
 
-  it("C keeps ana-digi and rubber as confirmed requirements", () => {
-    const [featured] = buildSelectionRecommendations({ dataset, answers: scenarios.C });
+  it("keeps feature requests visible in criteria without hiding unknown data", () => {
+    const [featured] = buildSelectionRecommendations({ dataset, answers: scenarios.D });
 
-    expect(featured?.watch.referenceDisplay).toBe("GA-700SK-1ADR");
-    expect(statusFor(featured, "movement")).toBe("match");
-    expect(statusFor(featured, "attachment")).toBe("match");
+    expect(featured?.criteria.some((criterion) => criterion.key === "feature:water-resistance")).toBe(true);
+    expect(featured?.criteria.some((criterion) => criterion.key === "feature:chronograph")).toBe(true);
+    expect(featured?.criteria.every((criterion) => ["match", "unknown", "conflict", "neutral"].includes(criterion.status))).toBe(true);
   });
 
-  it("D uses strictly over 100 000 mechanical models and honest roles", () => {
-    const results = buildSelectionRecommendations({ dataset, answers: scenarios.D });
-    const featured = results[0];
+  it("keeps Seiko women records eligible without a gender question", () => {
+    const compactClassic = buildSelectionRecommendations({
+      dataset,
+      answers: {
+        scenario: "work",
+        fit: "compact",
+        character: "classic",
+        movement: "quartz",
+        features: ["none"],
+        budget: "unknown",
+      },
+      limit: 10,
+    });
 
-    expect(statusFor(featured, "movement")).toBe("match");
-    expect(results.every((item) => (item.watch.publicPrice?.amountMinor ?? 0) > 10_000_000)).toBe(true);
-    expect(results.every((item) => item.movementKey === "mechanical" || item.movementKey === "automatic")).toBe(true);
-    expect(results.slice(1).every((item) => item.roleLabel === "Альтернатива той же марки")).toBe(true);
-    expect(results.every((item) => !item.roleDescription.includes("другого бренда"))).toBe(true);
+    expect(selectionFormDefinition.steps.flatMap((step) => step.options).some((option) => option.code === "gender")).toBe(false);
+    expect(compactClassic.some((item) => item.watch.brandSlug === "seiko")).toBe(true);
   });
 
-  it("E labels same-brand and different-brand alternatives factually", () => {
-    const results = buildSelectionRecommendations({ dataset, answers: scenarios.E });
-    const featured = results[0];
+  it("does not use dial color in selection questions or criteria keys", () => {
+    expect(JSON.stringify(selectionFormDefinition)).not.toMatch(/color|цвет|dial_color/i);
 
-    for (const alternative of results.slice(1)) {
-      if (alternative.watch.brandSlug === featured?.watch.brandSlug) {
-        expect(alternative.roleLabel).toBe("Альтернатива той же марки");
-        expect(alternative.roleDescription).toContain(alternative.watch.brandName);
-      } else {
-        expect(alternative.roleLabel).toBe("Другой бренд");
-        expect(alternative.roleDescription).toContain(alternative.watch.brandName);
-      }
+    for (const answers of Object.values(scenarios)) {
+      const results = buildSelectionRecommendations({ dataset, answers });
+      expect(results.flatMap((item) => item.criteria.map((criterion) => criterion.key)).join(" ")).not.toMatch(/color|dial/i);
     }
   });
 

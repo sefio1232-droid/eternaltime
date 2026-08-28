@@ -106,9 +106,11 @@ The route is private to its user or server-managed guest session and is always n
 app/(shop)/selection/page.tsx
 ```
 
-Selection is structured and deterministic and does not require AI. The prelude, seven questions, and results all use
-`/selection` with validated query-string state (`step` plus the answered fields). Results read the shared Catalog Read
-Repository, apply deterministic hard constraints and ranking, and link directly to canonical
+Selection is structured and deterministic and does not require AI. The prelude, six questions, and results all use
+`/selection` with validated query-string state (`step` plus `scenario`, `fit`, `character`, `movement`,
+multi-select `features`, and `budget`). Legacy seven-step query values are migrated where they map safely. Results read
+the shared Catalog Read Repository, apply explainable recommendation weights with MATCH / UNKNOWN / CONFLICT semantics,
+and link directly to canonical
 `/watches/{brandSlug}/{referenceSlug}` detail routes. There are no session or duplicate results routes in the current
 implementation.
 

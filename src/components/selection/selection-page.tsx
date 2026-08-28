@@ -14,7 +14,7 @@ import {
   selectionFormDefinition,
   selectionStepByCode,
 } from "@/modules/selection/application/selection-service";
-import { selectionAnswersToSearchParams } from "@/modules/selection/application/selection-query";
+import { normalizeSelectionFeatures, selectionAnswersToSearchParams } from "@/modules/selection/application/selection-query";
 import type {
   SelectionAnswerKey,
   SelectionAnswers,
@@ -24,35 +24,53 @@ import type {
 } from "@/modules/selection/domain/types";
 import styles from "./selection-page.module.css";
 
+const totalSteps = selectionFormDefinition.steps.length;
+
 const statusLabels: Record<SelectionCriterionStatus, string> = {
-  match: "Совпадает",
-  unknown: "Данных недостаточно",
-  conflict: "Не соответствует",
-  neutral: "Не учитывалось",
+  match: "Хорошо подходит",
+  unknown: "Нужно уточнить",
+  conflict: "Есть компромисс",
+  neutral: "Оставили открытым",
 };
 
 const summaryLabels: Record<SelectionAnswerKey, string> = {
   scenario: "Сценарий",
+  fit: "Посадка",
   character: "Характер",
-  budget: "Бюджет",
   movement: "Механизм",
-  fit: "Размер",
-  attachment: "Крепление",
-  practical: "Практика",
+  features: "Важно",
+  budget: "Бюджет",
 };
 
 function selectionHref(
   answers: SelectionAnswers,
   answeredKeys: readonly SelectionAnswerKey[],
   step: SelectionStepCode,
-  answer?: { key: SelectionAnswerKey; value: string },
+  answer?: { key: SelectionAnswerKey; value: string | string[] },
 ) {
   const includedKeys = answer
     ? [...new Set<SelectionAnswerKey>([...answeredKeys, answer.key])]
     : answeredKeys;
   const params = selectionAnswersToSearchParams(answers, includedKeys);
-  if (answer) params.set(answer.key, answer.value);
+  if (answer) {
+    if (answer.key === "features") {
+      params.set("features", normalizeSelectionFeatures(Array.isArray(answer.value) ? answer.value : [answer.value]).join(","));
+    } else {
+      params.set(answer.key, String(answer.value));
+    }
+  }
   params.set("step", step);
+  return `/selection?${params.toString()}`;
+}
+
+function multiSelectionHrefBase(
+  answers: SelectionAnswers,
+  answeredKeys: readonly SelectionAnswerKey[],
+  nextStep: SelectionStepCode,
+) {
+  const includedKeys = answeredKeys.filter((key) => key !== "features");
+  const params = selectionAnswersToSearchParams(answers, includedKeys);
+  params.set("step", nextStep);
   return `/selection?${params.toString()}`;
 }
 
@@ -67,14 +85,16 @@ function SelectionProgress({
 }>) {
   const activeIndex =
     currentStep === "results"
-      ? selectionFormDefinition.steps.length
+      ? totalSteps
       : Math.max(0, selectionFormDefinition.steps.findIndex((step) => step.code === currentStep));
   const answerCount = answeredKeys.length;
   const answerLabel = answerCount === 1 ? "ответ" : answerCount >= 2 && answerCount <= 4 ? "ответа" : "ответов";
 
   return (
     <div className={styles.progressBlock}>
-      <span className={styles.progressStep}>{currentStep === "results" ? "Подбор завершен" : `Шаг ${activeIndex + 1} из 7`}</span>
+      <span className={styles.progressStep}>
+        {currentStep === "results" ? "Подбор завершён" : `Шаг ${activeIndex + 1} из ${totalSteps}`}
+      </span>
       <ol className={styles.progress} aria-label="Шаги подбора">
         {selectionFormDefinition.steps.map((step, index) => {
           const state = index < activeIndex || currentStep === "results" ? "complete" : index === activeIndex ? "current" : "next";
@@ -149,7 +169,7 @@ function SelectionSummary(props: Readonly<{
         <Link href="/watches" className={styles.catalogLink}>Открыть весь каталог</Link>
       </aside>
       <details className={styles.summaryMobile}>
-        <summary>Ваши ответы <span>{props.answeredKeys.length} из 7</span></summary>
+        <summary>Ваши ответы <span>{props.answeredKeys.length} из {totalSteps}</span></summary>
         <div className={styles.summaryMobilePanel}>
           <AnswerSummaryList {...props} />
           <Link href="/watches" className={styles.catalogLink}>Открыть весь каталог</Link>
@@ -175,7 +195,10 @@ function SelectionQuestion({
 
   const nextStep = nextSelectionStep(step.code);
   const previousStep = previousSelectionStep(step.code);
-  const selectedValue = answeredKeys.includes(step.answerKey) ? answers[step.answerKey] : null;
+  const selectedValue = answeredKeys.includes(step.answerKey) && step.answerKey !== "features"
+    ? String(answers[step.answerKey])
+    : null;
+  const selectedValues = step.answerKey === "features" && answeredKeys.includes("features") ? answers.features : [];
   const optionLinks = step.options.map((option) => ({
     ...option,
     href: selectionHref(answers, answeredKeys, nextStep, { key: step.answerKey, value: option.code }),
@@ -194,15 +217,15 @@ function SelectionQuestion({
         legend={step.title}
         options={optionLinks}
         selectedValue={selectedValue}
+        selectedValues={selectedValues}
+        multiple={step.multiple}
+        multiHrefBase={step.answerKey === "features" ? multiSelectionHrefBase(answers, answeredKeys, nextStep) : undefined}
         continueLabel={nextStep === "results" ? "Показать варианты" : "Продолжить"}
       />
       {step.code !== "scenario" ? (
         <nav className={styles.questionActions} aria-label="Навигация по вопросам">
           <Link href={previousStep === "start" ? "/selection" : selectionHref(answers, answeredKeys, previousStep)}>
             Назад
-          </Link>
-          <Link href={selectionHref(answers, answeredKeys, nextStep)} className={styles.skipLink}>
-            Пропустить
           </Link>
         </nav>
       ) : null}
@@ -231,7 +254,7 @@ function CriteriaList({ recommendation }: Readonly<{ recommendation: SelectionRe
 function SelectionDataNotice({ recommendation }: Readonly<{ recommendation: SelectionRecommendation }>) {
   if (recommendation.compromises.length === 0) return null;
   return (
-    <div className={styles.dataNotice} data-notice={recommendation.confidenceLabel === "Есть расхождение" ? "conflict" : "unknown"}>
+    <div className={styles.dataNotice} data-notice={recommendation.confidenceLabel === "Есть компромисс" ? "conflict" : "unknown"}>
       <strong>{recommendation.confidenceLabel}</strong>
       <span>{recommendation.compromises.join(". ")}.</span>
     </div>
@@ -323,7 +346,7 @@ function SelectionResults({
       ) : (
         <EmptyState
           title="Подходящих моделей не найдено"
-          description="Попробуйте расширить бюджет, снять обязательное требование к механизму или выбрать более широкий сценарий."
+          description="Попробуйте расширить бюджет, оставить механизм открытым или выбрать более широкий сценарий."
         />
       )}
 
@@ -380,7 +403,7 @@ export function SelectionPageView({
       {showCompactIntro ? (
         <header className={styles.compactHeader}>
           <p className={styles.eyebrow}>Подбор часов</p>
-          <h1>Семь шагов до вашей подборки</h1>
+          <h1>Шесть шагов до вашей подборки</h1>
         </header>
       ) : null}
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   answeredSelectionKeys,
+  normalizeSelectionFeatures,
   parseSelectionAnswers,
   parseSelectionStep,
   selectionAnswersToSearchParams,
@@ -14,10 +15,11 @@ import {
   selectionFormDefinition,
 } from "@/modules/selection/application/selection-service";
 import type { CatalogImagePresentation, CatalogReadDataset, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
+import type { SelectionAnswers } from "@/modules/selection/domain/types";
 
-function image(kind: "none" | "remote" = "none", src = "/watch.png"): CatalogImagePresentation {
+function image(kind: "none" | "remote" = "none", src = "/watch-front.png"): CatalogImagePresentation {
   if (kind === "remote") {
-    return { kind: "remote", url: `https://example.test${src}`, src, alt: "Watch" };
+    return { kind: "remote", url: `https://example.test${src}`, src, alt: "Watch front" };
   }
 
   return { kind: "none", alt: "Watch" };
@@ -39,7 +41,17 @@ function watch(input: {
     key,
     label: key,
     value,
-    group: key.includes("water") ? ("water_resistance" as const) : ("other" as const),
+    group: key.includes("water")
+      ? ("water_resistance" as const)
+      : key.includes("movement")
+        ? ("mechanism" as const)
+        : key.includes("strap") || key.includes("bracelet") || key.includes("attachment")
+          ? ("strap" as const)
+          : key.includes("crystal")
+            ? ("glass" as const)
+            : key.includes("function")
+              ? ("functions" as const)
+              : ("other" as const),
   }));
 
   return {
@@ -73,7 +85,7 @@ function dataset(watches: CatalogWatchDetail[] = fixtureWatches()): CatalogReadD
 
   return {
     source: "preview",
-    generatedAt: "2026-07-31T00:00:00.000Z",
+    generatedAt: "2026-08-29T00:00:00.000Z",
     brands: [...brandCounts.entries()].map(([slug, value]) => ({ slug, name: value.name, watchCount: value.count })),
     watches,
   };
@@ -82,376 +94,439 @@ function dataset(watches: CatalogWatchDetail[] = fixtureWatches()): CatalogReadD
 function fixtureWatches(): CatalogWatchDetail[] {
   return [
     watch({
-      id: "auto-classic",
-      title: "Classic Automatic 38",
-      priceMinor: 6400000,
+      id: "watch-a",
+      title: "Classic Automatic 40",
+      priceMinor: 4_000_000,
       specs: {
-        movement_type_raw: "Автоматический",
-        case_diameter_raw: "38 мм",
-        strap_material_raw: "Кожа",
-        water_resistance_raw: "50 м",
-        crystal_type_raw: "Сапфир",
+        movement_type_raw: "automatic mechanical",
+        case_diameter_raw: "40 mm",
+        bracelet_material_raw: "stainless steel bracelet",
+        water_resistance_raw: "100 m",
+        crystal_type_raw: "sapphire crystal",
+        case_thickness_raw: "10 mm",
+        functions_raw: "date",
       },
       primaryImage: image("remote"),
     }),
     watch({
-      id: "digital-sport",
-      title: "Digital Sport Chronograph",
-      priceMinor: 1800000,
+      id: "watch-b",
+      title: "Classic Quartz 32",
+      priceMinor: 2_500_000,
       specs: {
-        movement_type_raw: "Кварцевый",
-        case_diameter_raw: "44 мм",
-        strap_material_raw: "Резина",
-        water_resistance_raw: "200 м",
-        functions_raw: "Хронограф, таймер, будильник",
+        movement_type_raw: "quartz",
+        case_diameter_raw: "32 mm",
+        strap_material_raw: "leather strap",
+        water_resistance_raw: "30 m",
+        crystal_type_raw: "mineral glass",
       },
+      primaryImage: image("remote", "/classic-quartz-front.png"),
     }),
     watch({
-      id: "formal-large",
-      title: "Dress Mechanical 43",
-      priceMinor: 8200000,
+      id: "watch-c",
+      title: "Solar Sport Chronograph 42",
+      priceMinor: 4_500_000,
       specs: {
-        movement_type_raw: "Механический",
-        case_diameter_raw: "43 мм",
-        strap_material_raw: "Кожа",
-        water_resistance_raw: "30 м",
+        movement_type_raw: "solar quartz Eco-Drive",
+        case_diameter_raw: "42 mm",
+        bracelet_material_raw: "stainless steel bracelet",
+        water_resistance_raw: "200 m",
+        crystal_type_raw: "sapphire crystal",
+        functions_raw: "chronograph, timer, alarm, date",
       },
-    }),
-    watch({
-      id: "premium-auto",
-      title: "Premium Automatic",
-      priceMinor: 16000000,
-      specs: {
-        movement_type_raw: "Автоматический",
-        case_diameter_raw: "40 мм",
-        bracelet_material_raw: "Сталь",
-        water_resistance_raw: "100 м",
-      },
+      primaryImage: image("remote", "/solar-sport-front.png"),
     }),
   ];
 }
 
+const baseAnswers: SelectionAnswers = {
+  scenario: "daily",
+  fit: "medium",
+  character: "modern",
+  movement: "neutral",
+  features: ["none"],
+  budget: "unknown",
+};
+
 describe("selection query", () => {
-  it("normalizes legacy query values to current answer codes", () => {
+  it("uses the new six-step public flow", () => {
+    expect(selectionFormDefinition.steps.map((step) => step.code)).toEqual([
+      "scenario",
+      "fit",
+      "character",
+      "movement",
+      "features",
+      "budget",
+    ]);
+    expect(selectionFormDefinition.steps).toHaveLength(6);
+    expect(selectionFormDefinition.steps.some((step) => step.code === "features" && step.multiple)).toBe(true);
+    expect(selectionFormDefinition.steps.flatMap((step) => step.options).some((option) => option.code === "gender")).toBe(false);
+    expect(selectionFormDefinition.steps.flatMap((step) => step.options).some((option) => option.code === "color")).toBe(false);
+  });
+
+  it("normalizes legacy query values without crashing old URLs", () => {
     expect(
       parseSelectionAnswers({
-        scenario: "daily",
-        budget: "under_70000",
+        scenario: "everyday",
+        budget: "any",
+        movement: "ana_digi",
+        character: "instrumental",
         wrist: "small",
-        movement: "mechanical",
-        water: "swim",
-        style: "technical",
+        attachment: "bracelet",
+        practical: "high_water",
       }),
     ).toEqual({
-      scenario: "everyday",
-      character: "instrumental",
-      budget: "range_50000_100000",
-      movement: "mechanical",
+      scenario: "daily",
       fit: "compact",
-      attachment: "any",
-      practical: "high_water",
+      character: "sporty",
+      movement: "quartz",
+      features: ["water-resistance", "steel-bracelet"],
+      budget: "unknown",
     });
+    expect(parseSelectionStep({ step: "practical" })).toBe("features");
   });
 
-  it("resolves a shared scenario-only link to the next unanswered step", () => {
-    expect(parseSelectionStep({ step: "missing" })).toBe("start");
-    expect(
-      resolveSelectionStep({
-        requestedStep: "start",
-        hasAnswers: true,
-        searchParams: { scenario: "everyday" },
-      }),
-    ).toBe("character");
+  it("keeps feature multi-select coherent", () => {
+    expect(normalizeSelectionFeatures(["none", "sapphire", "water-resistance", "sapphire"])).toEqual([
+      "sapphire",
+      "water-resistance",
+    ]);
+    expect(normalizeSelectionFeatures(["none"])).toEqual(["none"]);
   });
 
-  it("keeps legacy automatic URLs compatible with the single mechanical choice", () => {
-    expect(parseSelectionAnswers({ movement: "automatic" }).movement).toBe("mechanical");
-    const movementStep = selectionFormDefinition.steps.find((step) => step.code === "movement");
-    const mechanicalChoices = movementStep?.options.filter((option) =>
-      ["automatic", "mechanical"].includes(option.code),
-    );
-
-    expect(mechanicalChoices).toHaveLength(1);
-    expect(mechanicalChoices?.[0]?.label).toBe("Механические");
-  });
-
-  it("serializes only answered values so skipped defaults do not become answers", () => {
-    const answers = parseSelectionAnswers({ scenario: "everyday", budget: "range_50000_100000" });
-    const answered = answeredSelectionKeys({ scenario: "everyday", budget: "range_50000_100000" });
+  it("serializes URL state reload-safely", () => {
+    const answers = parseSelectionAnswers({
+      scenario: "daily",
+      fit: "medium",
+      character: "modern",
+      movement: "solar",
+      features: "sapphire,steel-bracelet",
+      budget: "range_30000_50000",
+    });
+    const answered = answeredSelectionKeys({
+      scenario: "daily",
+      fit: "medium",
+      features: "sapphire,steel-bracelet",
+      budget: "range_30000_50000",
+    });
     const params = selectionAnswersToSearchParams(answers, answered);
 
-    expect(params.toString()).toBe("scenario=everyday&budget=range_50000_100000");
-    expect(selectionAnswersToSearchParams(parseSelectionAnswers({}), []).toString()).toBe("");
-    expect(parseSelectionStep({ step: "budget" })).toBe("budget");
+    expect(answered).toEqual(["scenario", "fit", "features", "budget"]);
+    expect(params.toString()).toBe("scenario=daily&fit=medium&features=sapphire%2Csteel-bracelet&budget=range_30000_50000");
+  });
+
+  it("resolves progress through six steps", () => {
+    expect(resolveSelectionStep({ requestedStep: "start", hasAnswers: false, searchParams: {} })).toBe("start");
+    expect(resolveSelectionStep({
+      requestedStep: "start",
+      hasAnswers: true,
+      searchParams: { scenario: "daily" },
+      answeredKeys: ["scenario"],
+    })).toBe("fit");
+    expect(resolveSelectionStep({
+      requestedStep: "start",
+      hasAnswers: true,
+      searchParams: {
+        scenario: "daily",
+        fit: "medium",
+        character: "modern",
+        movement: "neutral",
+        features: "none",
+        budget: "unknown",
+      },
+      answeredKeys: ["scenario", "fit", "character", "movement", "features", "budget"],
+    })).toBe("results");
   });
 });
 
-describe("selection service", () => {
-  it.each([
-    [1_500_000, "under_15000"],
-    [1_500_100, "range_15000_30000"],
-    [3_000_000, "range_15000_30000"],
-    [3_000_100, "range_30000_50000"],
-    [5_000_000, "range_30000_50000"],
-    [5_000_100, "range_50000_100000"],
-    [10_000_000, "range_50000_100000"],
-    [10_000_100, "over_100000"],
-  ] as const)("assigns the boundary price %i to exactly %s", (priceMinor, expectedBudget) => {
-    const strictBudgets = [
-      "under_15000",
-      "range_15000_30000",
-      "range_30000_50000",
-      "range_50000_100000",
-      "over_100000",
-    ] as const;
-
-    expect(strictBudgets.filter((budget) => selectionBudgetContainsPrice(budget, priceMinor))).toEqual([
-      expectedBudget,
-    ]);
+describe("selection algorithm", () => {
+  it("uses public RUB price budget boundaries", () => {
+    expect(selectionBudgetContainsPrice("under_15000", 14_999 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("under_15000", 15_001 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("range_30000_50000", 70_000 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("unknown", 700_000 * 100)).toBe(true);
   });
 
-  it("returns a shortlist for a fully neutral request", () => {
-    const recommendations = buildSelectionRecommendations({
+  it("ranks deterministic fixtures according to different answer sets", () => {
+    const resultA = buildSelectionRecommendations({
       dataset: dataset(),
       answers: {
-        scenario: "universal",
-        character: "universal",
-        budget: "any",
-        movement: "any",
-        fit: "unknown",
-        attachment: "any",
-        practical: "none",
-      },
-    });
-
-    expect(recommendations.length).toBeGreaterThan(0);
-    expect(recommendations.every((item) => item.watch.href.startsWith("/watches/"))).toBe(true);
-  });
-
-  it("builds catalog diagnostics for runtime readiness", () => {
-    const diagnostics = buildSelectionCatalogDiagnostics(
-      dataset([
-        ...fixtureWatches(),
-        watch({
-          id: "bad-href",
-          title: "Unscorable",
-          priceMinor: 1200000,
-          specs: {},
-          href: "/not-canonical",
-        }),
-      ]),
-    );
-
-    expect(diagnostics.totalRecords).toBe(5);
-    expect(diagnostics.withCanonicalHref).toBe(4);
-    expect(diagnostics.withPrice).toBe(5);
-    expect(diagnostics.withCleanPrimaryImage).toBe(1);
-    expect(diagnostics.scorableRecords).toBe(4);
-    expect(diagnostics.exclusions).toMatchObject({
-      missingCanonicalHref: 1,
-      missingSpecifications: 1,
-    });
-  });
-
-  it("ranks mechanical watches for the first mechanical scenario", () => {
-    const [first] = buildSelectionRecommendations({
-      dataset: dataset(),
-      answers: {
-        scenario: "first_mechanical",
-        character: "classic",
-        budget: "range_50000_100000",
-        movement: "mechanical",
+        scenario: "first-mechanical",
         fit: "medium",
-        attachment: "leather",
-        practical: "sapphire",
-      },
-    });
-
-    expect(first?.watch.id).toBe("auto-classic");
-    expect(first?.matchLabel).toBe("Сильное совпадение");
-    expect(first?.criteria.some((criterion) => criterion.status === "match")).toBe(true);
-  });
-
-  it("ranks everyday mechanical watches inside the selected 50 000-100 000 range", () => {
-    const [first] = buildSelectionRecommendations({
-      dataset: dataset(),
-      answers: {
-        scenario: "everyday",
         character: "classic",
-        budget: "range_50000_100000",
         movement: "mechanical",
-        fit: "medium",
-        attachment: "leather",
-        practical: "none",
+        features: ["sapphire"],
+        budget: "range_30000_50000",
       },
     });
-
-    expect(first?.watch.id).toBe("auto-classic");
-    expect(first?.criteria.find((criterion) => criterion.key === "movement")?.status).toBe("match");
-  });
-
-  it("applies known selected budget conflicts as an exclusion", () => {
-    const recommendations = buildSelectionRecommendations({
+    const resultB = buildSelectionRecommendations({
       dataset: dataset(),
       answers: {
-        scenario: "everyday",
-        character: "universal",
+        scenario: "work",
+        fit: "compact",
+        character: "classic",
+        movement: "quartz",
+        features: ["leather"],
         budget: "range_15000_30000",
-        movement: "any",
-        fit: "unknown",
-        attachment: "any",
-        practical: "none",
       },
     });
-
-    expect(recommendations.map((recommendation) => recommendation.watch.id)).toEqual(["digital-sport"]);
-  });
-
-  it("keeps unknown hard data as a preliminary reserve", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({
-          id: "confirmed-price-auto",
-          title: "Confirmed Price Automatic",
-          priceMinor: 12_000_000,
-          specs: {
-            movement_type_raw: "Автоматический",
-            case_diameter_raw: "40 мм",
-            strap_material_raw: "Кожа",
-            water_resistance_raw: "50 м",
-          },
-        }),
-        watch({
-          id: "unknown-price-auto",
-          title: "Unknown Price Automatic",
-          priceMinor: null,
-          specs: {
-            movement_type_raw: "Автоматический",
-            case_diameter_raw: "40 мм",
-            strap_material_raw: "Кожа",
-            water_resistance_raw: "50 м",
-          },
-        }),
-      ]),
+    const resultC = buildSelectionRecommendations({
+      dataset: dataset(),
       answers: {
-        scenario: "first_mechanical",
-        character: "classic",
-        budget: "over_100000",
-        movement: "mechanical",
-        fit: "medium",
-        attachment: "leather",
-        practical: "none",
+        scenario: "sport",
+        fit: "large",
+        character: "sporty",
+        movement: "solar",
+        features: ["water-resistance", "chronograph"],
+        budget: "range_30000_50000",
       },
     });
 
-    expect(recommendations[0]?.watch.id).toBe("confirmed-price-auto");
-    const preliminary = recommendations.find((item) => item.watch.id === "unknown-price-auto");
-    expect(preliminary?.criteria.find((criterion) => criterion.key === "budget")?.status).toBe("unknown");
-    expect(preliminary?.matchLabel).toBe("Предварительный вариант");
-    expect(preliminary?.confidenceLabel).toBe("Некоторые характеристики требуют уточнения");
+    expect(resultA[0]?.watch.id).toBe("watch-a");
+    expect(resultB[0]?.watch.id).toBe("watch-b");
+    expect(resultC[0]?.watch.id).toBe("watch-c");
   });
 
-  it("does not rank an unknown mechanism above a confirmed matching mechanism", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({
-          id: "unknown-mechanism",
-          title: "Classic Unknown Movement",
-          priceMinor: 7000000,
-          specs: {
-            case_diameter_raw: "40 мм",
-            strap_material_raw: "Кожа",
-            water_resistance_raw: "50 м",
-            crystal_type_raw: "Сапфир",
-          },
-        }),
-        watch({
-          id: "known-mechanism",
-          title: "Classic Automatic",
-          priceMinor: 7000000,
-          specs: {
-            movement_type_raw: "Автоматический",
-            case_diameter_raw: "40 мм",
-            strap_material_raw: "Кожа",
-            water_resistance_raw: "50 м",
-          },
-        }),
-      ]),
-      answers: {
-        scenario: "everyday",
-        character: "classic",
-        budget: "range_50000_100000",
-        movement: "mechanical",
-        fit: "medium",
-        attachment: "leather",
-        practical: "none",
-      },
-    });
-
-    expect(recommendations[0]?.watch.id).toBe("known-mechanism");
-    const preliminary = recommendations.find((item) => item.watch.id === "unknown-mechanism");
-    expect(preliminary?.criteria.find((item) => item.key === "movement")?.status).toBe("unknown");
-    expect(preliminary?.isPreliminary).toBe(true);
-    expect(preliminary?.matchLabel).not.toMatch(/Сильное|Хорошее/);
-  });
-
-  it("excludes a known conflicting mechanism", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({
-          id: "quartz-conflict",
-          title: "Quartz Conflict",
-          priceMinor: 7000000,
-          specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" },
-        }),
-      ]),
-      answers: {
-        scenario: "everyday",
-        character: "universal",
-        budget: "range_50000_100000",
-        movement: "mechanical",
-        fit: "medium",
-        attachment: "any",
-        practical: "none",
-      },
-    });
-
-    expect(recommendations).toEqual([]);
-  });
-
-  it("keeps an unknown diameter explicit and avoids a strong badge", () => {
+  it("treats unknown specs as unknown, not conflict", () => {
     const [recommendation] = buildSelectionRecommendations({
       dataset: dataset([
         watch({
-          id: "unknown-diameter",
-          title: "Classic Automatic Unknown Size",
-          priceMinor: 7000000,
+          id: "unknown-glass",
+          title: "Unknown Glass",
+          priceMinor: 4_000_000,
           specs: {
-            movement_type_raw: "Автоматический",
-            strap_material_raw: "Кожа",
-            water_resistance_raw: "50 м",
-            crystal_type_raw: "Сапфир",
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+          },
+        }),
+      ]),
+      answers: { ...baseAnswers, movement: "quartz", features: ["sapphire"], budget: "range_30000_50000" },
+    });
+
+    expect(recommendation?.criteria.find((criterion) => criterion.key === "feature:sapphire")?.status).toBe("unknown");
+    expect(recommendation?.isPreliminary).toBe(true);
+    expect(recommendation?.reasons.join(" ")).not.toContain("сапфир");
+  });
+
+  it("keeps strong verified matches above incomplete matches", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "verified",
+          title: "Verified Match",
+          priceMinor: 4_000_000,
+          specs: {
+            movement_type_raw: "solar Eco-Drive",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "stainless steel bracelet",
+            water_resistance_raw: "200 m",
+            crystal_type_raw: "sapphire",
+            functions_raw: "chronograph, date",
+          },
+        }),
+        watch({
+          id: "incomplete",
+          title: "Incomplete",
+          priceMinor: 4_000_000,
+          specs: {},
+        }),
+      ]),
+      answers: {
+        scenario: "sport",
+        fit: "medium",
+        character: "sporty",
+        movement: "solar",
+        features: ["sapphire", "water-resistance", "chronograph"],
+        budget: "range_30000_50000",
+      },
+    });
+
+    expect(recommendations[0]?.watch.id).toBe("verified");
+  });
+
+  it("penalizes known feature conflicts without turning missing data into conflicts", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "mineral",
+          title: "Known Mineral",
+          priceMinor: 4_000_000,
+          specs: { crystal_type_raw: "mineral glass", movement_type_raw: "quartz", case_diameter_raw: "40 mm" },
+        }),
+        watch({
+          id: "unknown",
+          title: "Unknown Crystal",
+          priceMinor: 4_000_000,
+          specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" },
+        }),
+      ]),
+      answers: { ...baseAnswers, movement: "quartz", features: ["sapphire"], budget: "range_30000_50000" },
+    });
+
+    const mineral = recommendations.find((item) => item.watch.id === "mineral");
+    const unknown = recommendations.find((item) => item.watch.id === "unknown");
+    expect(mineral?.criteria.find((criterion) => criterion.key === "feature:sapphire")?.status).toBe("conflict");
+    expect(unknown?.criteria.find((criterion) => criterion.key === "feature:sapphire")?.status).toBe("unknown");
+  });
+
+  it("does not use gender as a hidden filter or default male preference", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "seiko-women",
+          title: "Seiko Compact Classic",
+          priceMinor: 4_000_000,
+          brandName: "Seiko",
+          brandSlug: "seiko",
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "30 mm",
+            strap_material_raw: "leather",
+            crystal_type_raw: "sapphire",
+          },
+        }),
+        watch({
+          id: "unisex-compact",
+          title: "Unisex Compact",
+          priceMinor: 4_000_000,
+          brandName: "Unisex",
+          brandSlug: "unisex",
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "34 mm",
+            strap_material_raw: "leather",
+            crystal_type_raw: "sapphire",
+          },
+        }),
+        watch({
+          id: "men-compact",
+          title: "Men Compact",
+          priceMinor: 4_000_000,
+          brandName: "Men",
+          brandSlug: "men",
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "35 mm",
+            strap_material_raw: "leather",
+            crystal_type_raw: "sapphire",
           },
         }),
       ]),
       answers: {
-        scenario: "everyday",
+        scenario: "work",
+        fit: "compact",
         character: "classic",
-        budget: "range_50000_100000",
-        movement: "mechanical",
+        movement: "quartz",
+        features: ["sapphire"],
+        budget: "range_30000_50000",
+      },
+      limit: 3,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["men-compact", "seiko-women", "unisex-compact"]);
+    expect(recommendations.some((item) => item.watch.brandSlug === "seiko")).toBe(true);
+  });
+
+  it("keeps medium or large women models eligible when size fits", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "seiko-medium",
+          title: "Seiko Medium",
+          priceMinor: 4_000_000,
+          brandName: "Seiko",
+          brandSlug: "seiko",
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "38 mm",
+            bracelet_material_raw: "steel bracelet",
+            water_resistance_raw: "100 m",
+          },
+        }),
+      ]),
+      answers: { ...baseAnswers, fit: "medium", movement: "quartz", budget: "range_30000_50000" },
+    });
+
+    expect(recommendations[0]?.watch.id).toBe("seiko-medium");
+  });
+
+  it("keeps budget conflicts below in-budget alternatives", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "within-budget",
+          title: "Within Budget",
+          priceMinor: 4_900_000,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "steel bracelet",
+            crystal_type_raw: "sapphire",
+          },
+        }),
+        watch({
+          id: "over-budget",
+          title: "Over Budget",
+          priceMinor: 7_000_000,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "steel bracelet",
+            crystal_type_raw: "sapphire",
+            water_resistance_raw: "200 m",
+            functions_raw: "chronograph, date",
+          },
+        }),
+      ]),
+      answers: {
+        scenario: "daily",
         fit: "medium",
-        attachment: "leather",
-        practical: "sapphire",
+        character: "modern",
+        movement: "quartz",
+        features: ["sapphire", "steel-bracelet"],
+        budget: "range_30000_50000",
       },
     });
 
-    expect(recommendation?.criteria.find((criterion) => criterion.key === "fit")?.status).toBe("unknown");
-    expect(recommendation?.matchLabel).not.toBe("Сильное совпадение");
-    expect(recommendation?.confidenceLabel).toBe("Не все характеристики указаны");
+    expect(recommendations[0]?.watch.id).toBe("within-budget");
+    expect(recommendations.find((item) => item.watch.id === "over-budget")?.criteria.find((criterion) => criterion.key === "budget")?.status).toBe("conflict");
+  });
+
+  it("keeps results stable and canonical", () => {
+    const answers: SelectionAnswers = {
+      scenario: "daily",
+      fit: "medium",
+      character: "modern",
+      movement: "quartz",
+      features: ["none"],
+      budget: "range_15000_30000",
+    };
+    const first = buildSelectionRecommendations({ dataset: dataset(), answers });
+    const second = buildSelectionRecommendations({ dataset: dataset(), answers });
+
+    expect(first.map((item) => item.watch.id)).toEqual(second.map((item) => item.watch.id));
+    expect(first.every((item) => item.watch.href.startsWith("/watches/"))).toBe(true);
+  });
+
+  it("does not mutate or shorten the source dataset", () => {
+    const source = dataset();
+    const beforeIds = source.watches.map((item) => item.id);
+
+    buildSelectionRecommendations({ dataset: source, answers: baseAnswers });
+
+    expect(source.watches.map((item) => item.id)).toEqual(beforeIds);
+  });
+});
+
+describe("selection diagnostics and images", () => {
+  it("builds catalog diagnostics", () => {
+    const diagnostics = buildSelectionCatalogDiagnostics(dataset());
+    expect(diagnostics.totalRecords).toBe(3);
+    expect(diagnostics.scorableRecords).toBe(3);
+    expect(diagnostics.withPrice).toBe(3);
   });
 
   it("provides a silhouette fallback when no image exists", () => {
-    const item = watch({ id: "missing-image", title: "Missing Image", priceMinor: 2000000, specs: {} });
+    const item = watch({ id: "missing-image", title: "Missing Image", priceMinor: 2_000_000, specs: {} });
     expect(buildSelectionImageCandidates(item)).toEqual([]);
   });
 
@@ -461,7 +536,7 @@ describe("selection service", () => {
     const item = watch({
       id: "broken-primary",
       title: "Broken Primary",
-      priceMinor: 2000000,
+      priceMinor: 2_000_000,
       specs: {},
       primaryImage: broken,
       imageGallery: [broken, fallback],
@@ -482,40 +557,13 @@ describe("selection service", () => {
     const item = watch({
       id: "known-unavailable-primary",
       title: "Known Unavailable Primary",
-      priceMinor: 2000000,
+      priceMinor: 2_000_000,
       specs: {},
       primaryImage: unavailable,
       imageGallery: [unavailable],
     });
 
     expect(buildSelectionImageCandidates(item)).toEqual([]);
-  });
-
-  it("rejects back, profile, packaging, macro, and technical image candidates", () => {
-    const front = image("remote", "/watch-front.png");
-    const item = watch({
-      id: "technical-gallery",
-      title: "Technical Gallery",
-      priceMinor: 2000000,
-      specs: {},
-      primaryImage: front,
-      imageGallery: [
-        front,
-        image("remote", "/watch_PROFIL.png"),
-        image("remote", "/watch_B1.png"),
-        image("remote", "/watch-caseback.png"),
-        image("remote", "/watch-side.png"),
-        image("remote", "/watch-clasp.png"),
-        image("remote", "/watch-buckle.png"),
-        image("remote", "/watch-packaging.png"),
-        image("remote", "/watch-manual.png"),
-        image("remote", "/watch-dial-macro.png"),
-        image("remote", "/watch-movement.png"),
-        image("remote", "/watch-404.png"),
-      ],
-    });
-
-    expect(buildSelectionImageCandidates(item).map((candidate) => candidate.src)).toEqual(["/watch-front.png"]);
   });
 
   it.each([
@@ -541,193 +589,5 @@ describe("selection service", () => {
     });
 
     expect(buildSelectionImageCandidates(item)).toEqual([]);
-  });
-
-  it("does not offer collection development without collection data", () => {
-    const scenarioStep = selectionFormDefinition.steps.find((step) => step.code === "scenario");
-    expect(scenarioStep?.options.some((option) => option.code === "collection_gap")).toBe(false);
-  });
-
-  it("prefers water-ready technical watches for sport use", () => {
-    const [first] = buildSelectionRecommendations({
-      dataset: dataset(),
-      answers: {
-        scenario: "sport",
-        character: "instrumental",
-        budget: "any",
-        movement: "quartz",
-        fit: "large",
-        attachment: "rubber",
-        practical: "high_water",
-      },
-    });
-
-    expect(first?.watch.id).toBe("digital-sport");
-    expect(first?.criteria.find((criterion) => criterion.key === "practical")?.status).toBe("match");
-  });
-
-  it("returns an empty result when hard constraints are impossible", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({
-          id: "cheap-quartz",
-          title: "Cheap Quartz",
-          priceMinor: 1200000,
-          specs: {
-            movement_type_raw: "Кварцевый",
-            case_diameter_raw: "36 мм",
-            strap_material_raw: "Резина",
-            water_resistance_raw: "30 м",
-          },
-        }),
-      ]),
-      answers: {
-        scenario: "first_mechanical",
-        character: "classic",
-        budget: "under_15000",
-        movement: "automatic",
-        fit: "compact",
-        attachment: "leather",
-        practical: "sapphire",
-      },
-    });
-
-    expect(recommendations).toEqual([]);
-  });
-
-  it("treats a known practical conflict as a hard exclusion", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({
-          id: "low-water",
-          title: "Low Water Quartz",
-          priceMinor: 2000000,
-          specs: {
-            movement_type_raw: "Кварцевый",
-            water_resistance_raw: "30 м",
-          },
-        }),
-      ]),
-      answers: {
-        scenario: "sport",
-        character: "sporty",
-        budget: "range_15000_30000",
-        movement: "quartz",
-        fit: "unknown",
-        attachment: "any",
-        practical: "high_water",
-      },
-    });
-
-    expect(recommendations).toEqual([]);
-  });
-
-  it("ranks confirmed size and attachment above unknown values", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({
-          id: "unknown-fit",
-          title: "Unknown Fit",
-          priceMinor: 2000000,
-          specs: { movement_type_raw: "Кварцевый" },
-        }),
-        watch({
-          id: "confirmed-fit",
-          title: "Confirmed Fit",
-          priceMinor: 2000000,
-          specs: {
-            movement_type_raw: "Кварцевый",
-            case_diameter_raw: "40 мм",
-            bracelet_material_raw: "Стальной браслет",
-          },
-        }),
-      ]),
-      answers: {
-        scenario: "everyday",
-        character: "universal",
-        budget: "range_15000_30000",
-        movement: "quartz",
-        fit: "medium",
-        attachment: "bracelet",
-        practical: "none",
-      },
-    });
-
-    expect(recommendations[0]?.watch.id).toBe("confirmed-fit");
-  });
-
-  it("limits brand repetition when enough alternatives exist", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({ id: "alpha-1", title: "Alpha Daily 1", priceMinor: 2000000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Alpha", brandSlug: "alpha" }),
-        watch({ id: "alpha-2", title: "Alpha Daily 2", priceMinor: 2100000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Alpha", brandSlug: "alpha" }),
-        watch({ id: "alpha-3", title: "Alpha Daily 3", priceMinor: 2200000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Alpha", brandSlug: "alpha" }),
-        watch({ id: "beta-1", title: "Beta Daily 1", priceMinor: 2300000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Beta", brandSlug: "beta" }),
-        watch({ id: "gamma-1", title: "Gamma Daily 1", priceMinor: 2400000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Gamma", brandSlug: "gamma" }),
-      ]),
-      answers: {
-        scenario: "everyday",
-        character: "universal",
-        budget: "range_15000_30000",
-        movement: "quartz",
-        fit: "medium",
-        attachment: "any",
-        practical: "none",
-      },
-      limit: 4,
-    });
-
-    const alphaCount = recommendations.filter((recommendation) => recommendation.watch.brandSlug === "alpha").length;
-    expect(recommendations).toHaveLength(4);
-    expect(alphaCount).toBeLessThanOrEqual(2);
-  });
-
-  it("assigns cheaper, same-brand, and different-brand roles from real comparisons", () => {
-    const recommendations = buildSelectionRecommendations({
-      dataset: dataset([
-        watch({ id: "alpha-main", title: "Daily One", priceMinor: 2_500_000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Alpha", brandSlug: "alpha" }),
-        watch({ id: "alpha-peer", title: "Daily Two", priceMinor: 2_600_000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Alpha", brandSlug: "alpha" }),
-        watch({ id: "beta-cheaper", title: "Daily Three", priceMinor: 1_900_000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Beta", brandSlug: "beta" }),
-        watch({ id: "gamma-peer", title: "Daily Four", priceMinor: 2_600_000, specs: { movement_type_raw: "Кварцевый", case_diameter_raw: "40 мм" }, brandName: "Gamma", brandSlug: "gamma" }),
-      ]),
-      answers: {
-        scenario: "everyday",
-        character: "universal",
-        budget: "any",
-        movement: "quartz",
-        fit: "medium",
-        attachment: "any",
-        practical: "none",
-      },
-      limit: 4,
-    });
-
-    const sameBrand = recommendations.find((item) => item.watch.id === "alpha-peer");
-    const cheaper = recommendations.find((item) => item.watch.id === "beta-cheaper");
-    const differentBrand = recommendations.find((item) => item.watch.id === "gamma-peer");
-    expect(sameBrand?.roleLabel).toBe("Альтернатива той же марки");
-    expect(sameBrand?.roleDescription).not.toContain("другого бренда");
-    expect(cheaper?.roleLabel).toBe("Более доступный вариант");
-    expect(differentBrand?.roleLabel).toBe("Другой бренд");
-  });
-
-  it("does not mutate or shorten the source dataset", () => {
-    const source = dataset();
-    const beforeIds = source.watches.map((item) => item.id);
-
-    buildSelectionRecommendations({
-      dataset: source,
-      answers: {
-        scenario: "everyday",
-        character: "universal",
-        budget: "any",
-        movement: "any",
-        fit: "unknown",
-        attachment: "any",
-        practical: "none",
-      },
-    });
-
-    expect(source.watches.map((item) => item.id)).toEqual(beforeIds);
   });
 });

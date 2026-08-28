@@ -20,7 +20,7 @@ import {
 export const metadata: Metadata = {
   title: "Подбор часов под ваш ритм",
   description:
-    "Семь коротких вопросов помогут выбрать несколько моделей Eternal Time по назначению, бюджету, размеру и характеристикам.",
+    "Шесть коротких вопросов помогут выбрать несколько моделей Eternal Time по назначению, посадке, характеру, механизму, важным характеристикам и бюджету.",
   alternates: {
     canonical: "/selection",
   },
@@ -42,6 +42,7 @@ export default async function SelectionPage({
     requestedStep,
     hasAnswers,
     searchParams: resolvedSearchParams,
+    answeredKeys,
   });
   const datasetState = await getCatalogReadDataset()
     .then((dataset) => ({ type: "ok" as const, dataset }))
