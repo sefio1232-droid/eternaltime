@@ -127,7 +127,7 @@ describe("mobile-first production refinement contracts", () => {
     expect(hero).toContain("--orbit-x: 83cqw !important");
     expect(hero).toContain(".leftWatch .watchAction");
     expect(hero).toContain("pointer-events: none");
-    expect(hero).toContain("height: clamp(300px, 58svh, 400px)");
+    expect(hero).toContain("height: clamp(420px, 62svh, 470px)");
   });
 
   it("uses mobile-native collection recommendation stacks instead of desktop carousel overflow", () => {
