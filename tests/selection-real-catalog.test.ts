@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildSelectionRecommendations, selectionFormDefinition } from "@/modules/selection/application/selection-service";
+import {
+  buildSelectionRecommendations,
+  evaluateBudgetFit,
+  selectionFormDefinition,
+} from "@/modules/selection/application/selection-service";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
@@ -30,6 +34,10 @@ function statusFor(result: ReturnType<typeof buildSelectionRecommendations>[numb
   return result.criteria.find((criterion) => criterion.key === key)?.status;
 }
 
+function priceRub(result: ReturnType<typeof buildSelectionRecommendations>[number]) {
+  return (result.watch.publicPrice?.amountMinor ?? 0) / 100;
+}
+
 describe("selection real catalog scenarios", () => {
   it("runs the current full catalog through all representative profiles deterministically", () => {
     expect(dataset.watches.length).toBeGreaterThanOrEqual(600);
@@ -53,6 +61,40 @@ describe("selection real catalog scenarios", () => {
     const results = buildSelectionRecommendations({ dataset, answers: scenarios.B, limit: 4 });
     expect(results[0]?.watch.publicPrice?.amountMinor ?? 0).toBeLessThanOrEqual(5_000_000);
     expect(statusFor(results[0]!, "budget")).not.toBe("conflict");
+  });
+
+  it("treats selected budgets as target bands across the real catalog", () => {
+    const profiles: SelectionAnswers[] = [
+      { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", features: ["none"], budget: "range_15000_30000" },
+      { scenario: "sport", fit: "large", character: "sporty", movement: "quartz", features: ["water-resistance", "chronograph"], budget: "range_15000_30000" },
+      { scenario: "work", fit: "compact", character: "classic", movement: "quartz", features: ["leather"], budget: "range_15000_30000" },
+    ];
+
+    for (const answers of profiles) {
+      const results = buildSelectionRecommendations({ dataset, answers, limit: 3 });
+      const prices = results.map(priceRub);
+      expect(prices.every((price) => price >= 15_000 && price <= 30_000)).toBe(true);
+      expect(prices.some((price) => price <= 6_000)).toBe(false);
+    }
+  });
+
+  it("keeps extreme lower-band outliers out of normal top results for higher budget ranges", () => {
+    const matrix: Array<{ budget: SelectionAnswers["budget"]; extremeCeiling: number }> = [
+      { budget: "range_30000_50000", extremeCeiling: 8_000 },
+      { budget: "range_50000_100000", extremeCeiling: 15_000 },
+      { budget: "over_100000", extremeCeiling: 25_000 },
+    ];
+
+    for (const item of matrix) {
+      const results = buildSelectionRecommendations({
+        dataset,
+        answers: { ...scenarios.A, budget: item.budget },
+        limit: 3,
+      });
+
+      expect(results.some((result) => priceRub(result) <= item.extremeCeiling)).toBe(false);
+      expect(results.filter((result) => evaluateBudgetFit(item.budget, result.watch.publicPrice?.amountMinor ?? null).status === "ideal").length).toBeGreaterThanOrEqual(2);
+    }
   });
 
   it("keeps movement choice meaningful", () => {

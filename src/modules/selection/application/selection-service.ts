@@ -17,6 +17,8 @@ import type {
   SelectionAnswerKey,
   SelectionAnswers,
   SelectionBudgetCode,
+  SelectionBudgetFallbackTier,
+  SelectionBudgetFit,
   SelectionCatalogDiagnostics,
   SelectionCharacterCode,
   SelectionCriterionEvaluation,
@@ -313,65 +315,144 @@ function budgetRange(budget: SelectionBudgetCode): BudgetRange {
   }
 }
 
-export function selectionBudgetContainsPrice(budget: SelectionBudgetCode, amountMinor: number): boolean {
-  if (budget === "unknown") return true;
+function budgetRangeWidth(range: BudgetRange): number {
+  if (range.minMinor !== null && range.maxMinor !== null) {
+    return range.maxMinor - range.minMinor;
+  }
+  if (range.maxMinor !== null) return range.maxMinor;
+  if (range.minMinor !== null) return range.minMinor;
+  return 0;
+}
+
+function lowTolerance(range: BudgetRange): number {
+  if (range.minMinor === null) return 0;
+  const width = budgetRangeWidth(range);
+  return Math.max(1_500 * rubMinor, Math.min(5_000 * rubMinor, width * 0.12, range.minMinor * 0.08));
+}
+
+function broadLowTolerance(range: BudgetRange): number {
+  if (range.minMinor === null) return 0;
+  const width = budgetRangeWidth(range);
+  return Math.max(3_500 * rubMinor, Math.min(18_000 * rubMinor, width * 0.35, range.minMinor * 0.22));
+}
+
+function highTolerance(range: BudgetRange): number {
+  if (range.maxMinor === null) return 0;
+  const width = budgetRangeWidth(range);
+  return Math.max(1_500 * rubMinor, Math.min(6_000 * rubMinor, width * 0.1, range.maxMinor * 0.06));
+}
+
+function broadHighTolerance(range: BudgetRange): number {
+  if (range.maxMinor === null) return 0;
+  const width = budgetRangeWidth(range);
+  return Math.max(3_000 * rubMinor, Math.min(16_000 * rubMinor, width * 0.22, range.maxMinor * 0.13));
+}
+
+export function evaluateBudgetFit(budget: SelectionBudgetCode, amountMinor: number | null): SelectionBudgetFit {
+  if (budget === "unknown") {
+    return {
+      status: "unknown",
+      criterionStatus: "neutral",
+      score: 0.68,
+      distance: 0,
+      tier: "budget_neutral",
+      reason: "Бюджет оставлен открытым",
+    };
+  }
+
+  if (amountMinor === null || amountMinor <= 0) {
+    return {
+      status: "unknown",
+      criterionStatus: "unknown",
+      score: 0.3,
+      distance: 1,
+      tier: "unknown_price",
+      reason: "Публичная цена пока не указана",
+    };
+  }
+
   const range = budgetRange(budget);
-  if (range.minMinor !== null && amountMinor < range.minMinor) return budget !== "over_100000";
-  if (range.maxMinor !== null && amountMinor > range.maxMinor) return false;
-  return true;
+  if (range.maxMinor !== null && amountMinor > range.maxMinor) {
+    const overBy = amountMinor - range.maxMinor;
+    const distance = overBy / Math.max(range.maxMinor, 1);
+    const near = highTolerance(range);
+    const broad = broadHighTolerance(range);
+
+    if (overBy <= near) {
+      return {
+        status: "acceptable_high",
+        criterionStatus: "conflict",
+        score: 0.54,
+        distance,
+        tier: "slightly_above",
+        reason: "Цена немного выше выбранного ценового диапазона",
+      };
+    }
+
+    return {
+      status: "too_expensive",
+      criterionStatus: "conflict",
+      score: overBy <= broad ? 0.22 : 0.04,
+      distance,
+      tier: "broader_above",
+      reason: overBy <= broad
+        ? "Цена заметно выше выбранного ценового диапазона"
+        : "Цена сильно выше выбранного ценового диапазона",
+    };
+  }
+
+  if (range.minMinor !== null && amountMinor < range.minMinor) {
+    const underBy = range.minMinor - amountMinor;
+    const distance = underBy / Math.max(range.minMinor, 1);
+    const near = lowTolerance(range);
+    const broad = broadLowTolerance(range);
+
+    if (underBy <= near) {
+      return {
+        status: "acceptable_low",
+        criterionStatus: "neutral",
+        score: 0.78,
+        distance,
+        tier: "slightly_below",
+        reason: "Цена чуть ниже выбранного ценового диапазона",
+      };
+    }
+
+    return {
+      status: "too_cheap",
+      criterionStatus: "conflict",
+      score: underBy <= broad ? 0.36 : 0.08,
+      distance,
+      tier: "broader_below",
+      reason: underBy <= broad
+        ? "Цена заметно ниже выбранного ценового класса"
+        : "Цена сильно ниже выбранного ценового класса",
+    };
+  }
+
+  return {
+    status: "ideal",
+    criterionStatus: "match",
+    score: 1,
+    distance: 0,
+    tier: "exact_budget_band",
+    reason: "Цена находится в выбранном ценовом диапазоне",
+  };
+}
+
+export function selectionBudgetContainsPrice(budget: SelectionBudgetCode, amountMinor: number): boolean {
+  const fit = evaluateBudgetFit(budget, amountMinor);
+  return fit.tier === "budget_neutral" || fit.tier === "exact_budget_band" || fit.tier === "slightly_below";
 }
 
 function budgetEvaluation(watch: CatalogWatchDetail, budget: SelectionBudgetCode): SelectionCriterionEvaluation {
-  if (budget === "unknown") {
-    return criterion({
-      key: "budget",
-      label: "Бюджет",
-      status: "neutral",
-      score: 0.68,
-      reason: "Бюджет оставлен открытым",
-    });
-  }
-
-  const amount = priceMinor(watch);
-  if (amount === null || amount <= 0) {
-    return criterion({
-      key: "budget",
-      label: "Бюджет",
-      status: "unknown",
-      score: 0.3,
-      reason: "Публичная цена пока не указана",
-    });
-  }
-
-  const range = budgetRange(budget);
-  if (range.maxMinor !== null && amount > range.maxMinor) {
-    const overBy = amount - range.maxMinor;
-    const slightlyAbove = overBy <= Math.max(2_500 * rubMinor, range.maxMinor * 0.08);
-    return criterion({
-      key: "budget",
-      label: "Бюджет",
-      status: "conflict",
-      score: slightlyAbove ? 0.42 : 0.08,
-      reason: slightlyAbove ? "Цена немного выше выбранного бюджета" : "Цена заметно выше выбранного бюджета",
-    });
-  }
-
-  if (range.minMinor !== null && amount < range.minMinor) {
-    return criterion({
-      key: "budget",
-      label: "Бюджет",
-      status: budget === "over_100000" ? "neutral" : "match",
-      score: budget === "over_100000" ? 0.72 : 0.92,
-      reason: budget === "over_100000" ? "Цена ниже выбранного верхнего диапазона" : "Цена ниже верхней границы бюджета",
-    });
-  }
-
+  const fit = evaluateBudgetFit(budget, priceMinor(watch));
   return criterion({
     key: "budget",
     label: "Бюджет",
-    status: "match",
-    score: 1,
-    reason: "Цена находится в выбранном бюджете",
+    status: fit.criterionStatus,
+    score: fit.score,
+    reason: fit.reason,
   });
 }
 
@@ -1022,6 +1103,50 @@ function criterionStatus(recommendation: SelectionRecommendation, key: string): 
   return recommendation.criteria.find((criterionItem) => criterionItem.key === key)?.status ?? null;
 }
 
+function recommendationBudgetTier(
+  recommendation: SelectionRecommendation,
+  budget: SelectionBudgetCode,
+): SelectionBudgetFallbackTier {
+  return evaluateBudgetFit(budget, recommendation.watch.publicPrice?.amountMinor ?? null).tier;
+}
+
+function phaseRecommendationsByBudget(
+  scored: SelectionRecommendation[],
+  answers: SelectionAnswers,
+): SelectionRecommendation[] {
+  if (answers.budget === "unknown") return scored;
+
+  const movementCompatible = scored.filter((recommendation) => criterionStatus(recommendation, "movement") !== "conflict");
+  const movementPool = movementCompatible.length > 0 ? movementCompatible : scored;
+  const orderedTiers: SelectionBudgetFallbackTier[] = [
+    "exact_budget_band",
+    "slightly_below",
+    "slightly_above",
+    "broader_below",
+    "unknown_price",
+    "broader_above",
+  ];
+
+  const phased: SelectionRecommendation[] = [];
+  const used = new Set<string>();
+  for (const tier of orderedTiers) {
+    for (const recommendation of movementPool) {
+      if (used.has(recommendation.watch.href)) continue;
+      if (recommendationBudgetTier(recommendation, answers.budget) !== tier) continue;
+      phased.push(recommendation);
+      used.add(recommendation.watch.href);
+    }
+  }
+
+  for (const recommendation of scored) {
+    if (used.has(recommendation.watch.href)) continue;
+    phased.push(recommendation);
+    used.add(recommendation.watch.href);
+  }
+
+  return phased;
+}
+
 function roleForIndex(index: number): SelectionRecommendationRole {
   if (index === 0) return "main";
   if (index === 1) return "rational_alternative";
@@ -1204,12 +1329,7 @@ export function buildSelectionRecommendations(input: {
     .filter((recommendation): recommendation is SelectionRecommendation => recommendation !== null)
     .sort(scoreSort({ answers: input.answers }));
 
-  const withoutCriticalConflicts = scored.filter((recommendation) => {
-    const budgetOk = criterionStatus(recommendation, "budget") !== "conflict";
-    const movementOk = criterionStatus(recommendation, "movement") !== "conflict";
-    return budgetOk && movementOk;
-  });
-  const pool = withoutCriticalConflicts.length >= limit ? withoutCriticalConflicts : scored;
+  const pool = phaseRecommendationsByBudget(scored, input.answers);
 
   return diversifyRecommendations(pool, limit);
 }

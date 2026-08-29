@@ -34,6 +34,32 @@ export type SelectionBudgetCode =
   | "over_100000"
   | "unknown";
 
+export type SelectionBudgetFitStatus =
+  | "ideal"
+  | "acceptable_low"
+  | "acceptable_high"
+  | "too_cheap"
+  | "too_expensive"
+  | "unknown";
+
+export type SelectionBudgetFallbackTier =
+  | "exact_budget_band"
+  | "slightly_below"
+  | "slightly_above"
+  | "broader_below"
+  | "broader_above"
+  | "unknown_price"
+  | "budget_neutral";
+
+export type SelectionBudgetFit = {
+  status: SelectionBudgetFitStatus;
+  criterionStatus: SelectionCriterionStatus;
+  score: number;
+  distance: number;
+  tier: SelectionBudgetFallbackTier;
+  reason: string;
+};
+
 export type SelectionStepCode =
   | "start"
   | "scenario"

@@ -10,6 +10,7 @@ import {
   buildSelectionCatalogDiagnostics,
   buildSelectionImageCandidates,
   buildSelectionRecommendations,
+  evaluateBudgetFit,
   resolveSelectionStep,
   selectionBudgetContainsPrice,
   selectionFormDefinition,
@@ -242,8 +243,103 @@ describe("selection algorithm", () => {
   it("uses public RUB price budget boundaries", () => {
     expect(selectionBudgetContainsPrice("under_15000", 14_999 * 100)).toBe(true);
     expect(selectionBudgetContainsPrice("under_15000", 15_001 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("range_15000_30000", 14_999 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_15000_30000", 12_000 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("range_15000_30000", 6_000 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("range_15000_30000", 30_000 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_15000_30000", 30_001 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("range_30000_50000", 30_000 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_30000_50000", 50_000 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_30000_50000", 50_001 * 100)).toBe(false);
     expect(selectionBudgetContainsPrice("range_30000_50000", 70_000 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("range_50000_100000", 50_000 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_50000_100000", 100_000 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_50000_100000", 100_001 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("over_100000", 99_999 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("over_100000", 25_000 * 100)).toBe(false);
+    expect(selectionBudgetContainsPrice("over_100000", 100_001 * 100)).toBe(true);
     expect(selectionBudgetContainsPrice("unknown", 700_000 * 100)).toBe(true);
+  });
+
+  it("classifies budget as a target price band, not only as a maximum cap", () => {
+    expect(evaluateBudgetFit("range_15000_30000", 22_000 * 100).status).toBe("ideal");
+    expect(evaluateBudgetFit("range_15000_30000", 14_000 * 100).status).toBe("acceptable_low");
+    expect(evaluateBudgetFit("range_15000_30000", 12_000 * 100).status).toBe("too_cheap");
+    expect(evaluateBudgetFit("range_15000_30000", 6_000 * 100).status).toBe("too_cheap");
+    expect(evaluateBudgetFit("range_15000_30000", 35_000 * 100).status).toBe("too_expensive");
+    expect(evaluateBudgetFit("range_15000_30000", 100_000 * 100).score).toBeLessThan(0.1);
+    expect(evaluateBudgetFit("range_30000_50000", 8_000 * 100).status).toBe("too_cheap");
+    expect(evaluateBudgetFit("range_50000_100000", 15_000 * 100).status).toBe("too_cheap");
+    expect(evaluateBudgetFit("over_100000", 25_000 * 100).status).toBe("too_cheap");
+    expect(evaluateBudgetFit("unknown", null).tier).toBe("budget_neutral");
+  });
+
+  it("does not rank 4k or 6k watches as normal top recommendations for a 15-30k target band", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "ideal-22k",
+          title: "Ideal 22k",
+          priceMinor: 22_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "stainless steel bracelet",
+            crystal_type_raw: "sapphire crystal",
+          },
+        }),
+        watch({
+          id: "ideal-25k",
+          title: "Ideal 25k",
+          priceMinor: 25_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "stainless steel bracelet",
+            water_resistance_raw: "100 m",
+          },
+        }),
+        watch({
+          id: "cheap-6k",
+          title: "Cheap 6k",
+          priceMinor: 6_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "stainless steel bracelet",
+            crystal_type_raw: "sapphire crystal",
+            water_resistance_raw: "200 m",
+            functions_raw: "chronograph, date",
+          },
+        }),
+        watch({
+          id: "cheap-4k",
+          title: "Cheap 4k",
+          priceMinor: 4_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "stainless steel bracelet",
+            crystal_type_raw: "sapphire crystal",
+            water_resistance_raw: "200 m",
+            functions_raw: "chronograph, date",
+          },
+        }),
+      ]),
+      answers: {
+        scenario: "daily",
+        fit: "medium",
+        character: "modern",
+        movement: "quartz",
+        features: ["sapphire", "steel-bracelet"],
+        budget: "range_15000_30000",
+      },
+      limit: 2,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["ideal-22k", "ideal-25k"]);
+    expect(recommendations.some((item) => item.watch.id === "cheap-6k")).toBe(false);
+    expect(recommendations.some((item) => item.watch.id === "cheap-4k")).toBe(false);
   });
 
   it("ranks deterministic fixtures according to different answer sets", () => {
