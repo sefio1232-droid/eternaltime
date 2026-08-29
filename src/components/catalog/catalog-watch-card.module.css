@@ -151,25 +151,35 @@
   line-height: 1.18;
   overflow: hidden;
   display: -webkit-box;
+  text-wrap: balance;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
 .reference {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--catalog-muted, #748087);
   font-family: var(--font-reference, ui-monospace, monospace);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
   line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .price {
   margin-top: 0.2rem;
   color: var(--catalog-ink, #10171b);
   font-size: clamp(1.375rem, 0.3vw + 1.25rem, 1.5625rem);
+  font-variant-numeric: tabular-nums;
   font-weight: 640;
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .specs {

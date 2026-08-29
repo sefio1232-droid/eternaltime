@@ -42,22 +42,26 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
       </header>
       <main>{children}</main>
       <CompareTray />
-      <footer className="border-t border-[var(--border)] bg-[var(--canvas)]">
-        <EditorialContainer className="grid gap-5 py-8 text-sm md:grid-cols-[1fr_auto]">
-          <p className="max-w-xl text-[var(--text-muted)]">
+      <footer className="public-footer">
+        <EditorialContainer className="public-footer-inner">
+          <p className="public-footer-copy">
             Каталог, журнал и личная коллекция для осознанного выбора часов.
           </p>
-          <nav aria-label="Информационные разделы" className="flex flex-wrap gap-5">
-            <Link href="/journal" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Читать журнал</Link>
-            <Link href="/faq" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Частые вопросы</Link>
-            <Link href="/legal" className="text-[var(--accent-strong)] hover:text-[var(--text)]">Юридические документы</Link>
-            {legalDocuments
-              .filter((document) => ["seller-details", "public-offer", "privacy", "terms", "returns", "delivery-and-payment"].includes(document.slug))
-              .map((document) => (
-                <Link key={document.slug} href={document.route} className="text-[var(--accent-strong)] hover:text-[var(--text)]">
-                  {document.title}
-                </Link>
-              ))}
+          <nav aria-label="Информационные разделы" className="public-footer-nav">
+            <div className="public-footer-primary">
+              <Link href="/journal">Читать журнал</Link>
+              <Link href="/faq">Частые вопросы</Link>
+              <Link href="/legal">Юридические документы</Link>
+            </div>
+            <div className="public-footer-legal">
+              {legalDocuments
+                .filter((document) => ["seller-details", "public-offer", "privacy", "terms", "returns", "delivery-and-payment"].includes(document.slug))
+                .map((document) => (
+                  <Link key={document.slug} href={document.route}>
+                    {document.title}
+                  </Link>
+                ))}
+            </div>
           </nav>
         </EditorialContainer>
       </footer>

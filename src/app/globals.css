@@ -164,12 +164,16 @@ select {
   font-family: var(--font-reference);
   font-size: 0.76rem;
   letter-spacing: 0.02em;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .type-price {
   font-family: var(--font-display);
   font-weight: 590;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .control-surface {
@@ -268,6 +272,9 @@ select {
   min-height: 42px;
   align-items: center;
   padding: 0;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .card-cta-line {
@@ -2040,14 +2047,83 @@ select {
   min-height: 104px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .public-nav,
   .public-actions {
     display: flex;
   }
+}
 
+@media (min-width: 768px) {
   .journal-topline {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.public-footer {
+  border-top: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 16% 0, rgb(185 138 69 / 0.1), transparent 15rem),
+    var(--canvas);
+}
+
+.public-footer-inner {
+  display: grid;
+  gap: clamp(1.2rem, 3vw, 2rem);
+  padding-block: clamp(1.7rem, 4vw, 2.7rem);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.public-footer-copy {
+  max-width: 48ch;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.public-footer-nav {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.public-footer-primary,
+.public-footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.15rem;
+}
+
+.public-footer a {
+  color: var(--accent-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.public-footer a:hover,
+.public-footer a:focus-visible {
+  color: var(--text);
+}
+
+.public-footer-legal a {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+@media (min-width: 768px) {
+  .public-footer-inner {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+  }
+
+  .public-footer-nav {
+    justify-items: end;
+    text-align: right;
+  }
+
+  .public-footer-primary,
+  .public-footer-legal {
+    justify-content: flex-end;
   }
 }
 
@@ -4248,7 +4324,7 @@ select {
   }
 
   .public-header {
-    background: rgb(251 250 248 / 0.94);
+    background: #fbfaf8;
     backdrop-filter: blur(16px);
   }
 

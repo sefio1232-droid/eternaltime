@@ -200,6 +200,8 @@
   color: var(--text-muted);
   font-family: var(--font-reference, ui-monospace, monospace);
   font-size: 0.72rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .drawerFooter {
@@ -310,6 +312,11 @@
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.totals strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .totalStrong {
@@ -915,6 +922,10 @@
   .deliveryChoice {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .totals div {
+    align-items: baseline;
   }
 
   .cdekMapPrompt {

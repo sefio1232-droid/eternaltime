@@ -37,7 +37,7 @@ export function MobileNavigation({
   }, [isOpen]);
 
   return (
-    <div className="mobile-navigation-controls ml-auto flex items-center gap-2 md:hidden">
+    <div className="mobile-navigation-controls ml-auto flex items-center gap-2 lg:hidden">
       <SearchDialog compact />
       <CommerceCartIcon />
       <ProfileMenu mobile />

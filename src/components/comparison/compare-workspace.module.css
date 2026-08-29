@@ -244,6 +244,10 @@
   color: #788187;
   font-family: var(--font-reference);
   font-size: 0.58rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .watchCard > button {
@@ -345,6 +349,10 @@
   color: #8a9296;
   font-family: var(--font-reference);
   font-size: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .detailChapters {

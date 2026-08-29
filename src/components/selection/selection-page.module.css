@@ -222,6 +222,7 @@
 }
 
 .questionCopy h2 {
+  scroll-margin-top: calc(76px + 1rem);
   margin: 0;
   font-family: var(--font-body);
   font-size: 2.15rem;
@@ -237,6 +238,7 @@
 }
 
 .resultsHead h1 {
+  scroll-margin-top: calc(76px + 1rem);
   margin: 0;
   font-family: var(--font-editorial);
   font-size: 2.75rem;
@@ -647,17 +649,25 @@
 }
 
 .watchIdentity > span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--text-soft);
   font-family: var(--font-reference);
   font-size: 0.7rem;
   line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .price {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 650;
+  white-space: nowrap;
 }
 
 .reasons {
@@ -919,6 +929,7 @@
 
   .questionCopy h2,
   .resultsHead h1 {
+    scroll-margin-top: calc(56px + env(safe-area-inset-top, 0px) + 1rem);
     font-size: 1.8rem;
     line-height: 1.12;
   }

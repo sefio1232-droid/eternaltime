@@ -31,6 +31,15 @@ describe("production catalog image assets", () => {
     expect(route).not.toContain('process.env.NODE_ENV === "production"');
   });
 
+  it("keeps missing archive images visually safe instead of returning a broken-image 404", () => {
+    const route = readSrc("src/app/api/catalog/dev-images/[imageKey]/route.ts");
+
+    expect(route).toContain("missingCatalogImagePlaceholderSvg");
+    expect(route).toContain('"Content-Type": "image/svg+xml; charset=utf-8"');
+    expect(route).toContain('"X-Catalog-Image-Fallback": result.status');
+    expect(route).not.toContain("status: 404");
+  });
+
   it("deploys all catalog photo asset sources required by archive and import-plan image keys", () => {
     const deploy = readSrc("scripts/deploy-production.ps1");
 
