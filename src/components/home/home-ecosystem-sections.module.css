@@ -260,7 +260,9 @@
   font-size: 0.82rem;
   font-style: normal;
   line-height: 1.28;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .watchFigure figcaption strong {
@@ -1030,7 +1032,9 @@
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 500;
   letter-spacing: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .journalLead strong {

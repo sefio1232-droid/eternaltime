@@ -186,7 +186,9 @@
 
 .answerSummary a {
   display: block;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .catalogLink {
@@ -641,7 +643,9 @@
   font-weight: 620;
   letter-spacing: 0;
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .resultCard[data-variant="featured"] .watchIdentity h2 {

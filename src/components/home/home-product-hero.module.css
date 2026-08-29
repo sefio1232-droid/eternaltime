@@ -35,7 +35,7 @@
   grid-template-areas:
     "message stage"
     "rail rail";
-  grid-template-columns: minmax(360px, 34%) minmax(0, 66%);
+  grid-template-columns: minmax(400px, 38%) minmax(0, 62%);
   grid-template-rows: minmax(560px, 1fr) auto;
   column-gap: clamp(1rem, 2.2vw, 2.6rem);
   row-gap: clamp(0.8rem, 1vw, 1rem);
@@ -80,7 +80,7 @@
   z-index: 5;
   grid-area: message;
   display: flex;
-  max-width: 27rem;
+  max-width: 31rem;
   flex-direction: column;
   align-self: center;
   gap: clamp(1.08rem, 1.75vw, 1.45rem);
@@ -97,18 +97,25 @@
 }
 
 .permanentHeadline {
-  max-width: 9.5ch;
+  max-width: 11.25ch;
   margin: 0;
   color: #111417;
-  font-size: clamp(4.375rem, 6vw, 5.75rem);
+  font-size: clamp(4rem, 5.25vw, 5.35rem);
   font-weight: 780;
   letter-spacing: 0;
   line-height: 0.92;
+  overflow-wrap: normal;
   text-transform: uppercase;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .permanentHeadline span {
   display: block;
+}
+
+.permanentHeadline span:nth-child(-n + 3) {
+  white-space: nowrap;
 }
 
 .permanentHeadline span:nth-child(n + 3) {
@@ -494,7 +501,9 @@
   font-size: clamp(1.12rem, 1.35vw, 1.38rem);
   line-height: 1.16;
   text-transform: uppercase;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .productMetaSpecs {
@@ -680,7 +689,9 @@
   font-size: 0.7rem;
   font-style: normal;
   line-height: 1.28;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .scenarioProgress {
@@ -774,7 +785,7 @@
 .reviewPanel dd {
   max-width: 28rem;
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font-weight: 700;
 }
 
@@ -796,7 +807,7 @@
 
 .reviewAssetAudit p {
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   color: rgb(17 20 23 / 0.68);
   font-size: 0.68rem;
   line-height: 1.35;
@@ -1143,6 +1154,12 @@
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+  }
+}
+
+@media (max-width: 359px) {
+  .actions {
+    grid-template-columns: 1fr;
   }
 }
 

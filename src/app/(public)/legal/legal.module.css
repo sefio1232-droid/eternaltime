@@ -52,7 +52,9 @@
   letter-spacing: -0.028em;
   line-height: 1.02;
   text-wrap: balance;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .hero p {
@@ -94,7 +96,9 @@
   font-size: clamp(1.25rem, 2vw, 1.7rem);
   font-weight: 500;
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .documentCard span {
@@ -124,7 +128,7 @@
   color: var(--text-muted);
   font-size: 0.84rem;
   line-height: 1.55;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .content {
@@ -141,14 +145,16 @@
   font-weight: 500;
   letter-spacing: -0.014em;
   line-height: 1.12;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .content p {
   color: #31383d;
   font-size: clamp(1rem, 1.15vw, 1.08rem);
   line-height: 1.78;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .documentTitleLine {

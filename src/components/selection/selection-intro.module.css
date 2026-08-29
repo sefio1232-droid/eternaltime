@@ -141,7 +141,9 @@
 .facts strong,
 .facts small {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .facts strong {

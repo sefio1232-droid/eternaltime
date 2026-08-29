@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { CatalogImagePresentation } from "@/modules/catalog/domain/read-models";
 import {
   resolveCatalogImagePresentation,
@@ -54,12 +54,36 @@ export function CatalogImage({
   imageIndex?: number;
   galleryCount?: number;
 }>) {
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const safeImage = normalizeCatalogImagePresentation(image);
+  const imageSrc = safeImage.kind === "none" ? "" : safeImage.src;
   const composition = compositionSlot
     ? resolveCatalogImagePresentation({ image: safeImage, slot: compositionSlot, imageIndex, galleryCount })
     : null;
+
+  useEffect(() => {
+    const schedule = window.requestAnimationFrame ?? ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+    const cancel = window.cancelAnimationFrame ?? window.clearTimeout;
+    const animationFrame = schedule(() => {
+      setFailed(false);
+      setLoaded(false);
+
+      const currentImage = imageRef.current;
+      if (!currentImage || !imageSrc) return;
+
+      if (currentImage.complete) {
+        if (currentImage.naturalWidth > 0) {
+          setLoaded(true);
+        } else {
+          setFailed(true);
+        }
+      }
+    });
+
+    return () => cancel(animationFrame);
+  }, [imageSrc]);
 
   if (safeImage.kind === "none" || failed) {
     return (
@@ -83,6 +107,7 @@ export function CatalogImage({
   return (
     // eslint-disable-next-line @next/next/no-img-element -- catalog images can come from dev ZIP resolver or remote source URLs.
     <img
+      ref={imageRef}
       src={safeImage.src}
       alt={safeImage.alt}
       className={`catalog-image catalog-image--${presentation} ${composition ? "catalog-image--composed" : ""} ${loaded ? "catalog-image--loaded" : "catalog-image--loading"} ${className}`}

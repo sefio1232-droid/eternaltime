@@ -371,7 +371,8 @@ describe("collection experience route and navigation boundaries", () => {
     expect(collectionPage).not.toContain("My Collection");
     expect(addPage).not.toContain("Add a watch manually");
     expect(styles).toContain("  .catalogResults {\n    grid-template-columns: 1fr;");
-    expect(styles).toContain("overflow-wrap: anywhere;");
+    expect(styles).not.toContain("overflow-wrap: anywhere;");
+    expect(styles).toContain("hyphens: manual;");
   });
 
   it("provides compact real collection navigation with mobile scrolling and focus states", () => {

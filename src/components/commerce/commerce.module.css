@@ -201,7 +201,8 @@
   font-family: var(--font-reference, ui-monospace, monospace);
   font-size: 0.72rem;
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .drawerFooter {

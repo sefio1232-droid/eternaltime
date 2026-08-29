@@ -316,8 +316,9 @@
 /* Second-pass composition refinement (moved from globals.css, same cascade order preserved) */
 
 .title {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
+  hyphens: manual;
 }
 
 .titleShort {
@@ -535,18 +536,13 @@ details[open] .specGroupPreview {
   }
 
   .actions {
-    position: sticky;
-    bottom: 0;
-    z-index: 24;
     max-width: none;
-    margin-inline: calc(-1 * var(--page-gutter));
-    padding:
-      0.75rem
-      var(--page-gutter)
-      calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid rgb(16 19 22 / 0.12);
-    background: rgb(251 250 248 / 0.94);
-    backdrop-filter: blur(16px);
+    margin-top: 1rem;
+    margin-inline: 0;
+    padding: 0;
+    border-top: 0;
+    background: transparent;
+    backdrop-filter: none;
   }
 
   .actions a:global(.inline-flex),

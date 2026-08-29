@@ -117,7 +117,9 @@
   letter-spacing: 0;
   line-height: 0.96;
   text-wrap: balance;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .mastheadCopy > p:not(.eyebrow),
@@ -129,7 +131,7 @@
   font-size: clamp(1rem, 1.1vw, 1.125rem);
   line-height: 1.6;
   text-wrap: pretty;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .actions {
@@ -705,8 +707,9 @@
   font-size: 1.22rem;
   font-weight: 520;
   line-height: 1.2;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
+  hyphens: manual;
 }
 
 .shelfGrid[data-layout="single"] .watchMeta strong {
@@ -715,7 +718,8 @@
 
 .watchMeta small {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
   color: var(--text-muted);
   font-size: 0.68rem;
 }
@@ -978,8 +982,9 @@
   font-size: 1.35rem;
   font-weight: 520;
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
+  hyphens: manual;
 }
 
 .recommendationCopy h3 {
@@ -1204,7 +1209,9 @@
   font-family: var(--font-editorial), Georgia, serif;
   font-size: 2rem;
   font-weight: 500;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .addPreview > p:not(.eyebrow) {
@@ -1510,8 +1517,9 @@
   margin-top: 0.35rem;
   font-size: 1.15rem;
   display: block;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
+  hyphens: manual;
 }
 
 .catalogResult p {
@@ -1646,7 +1654,8 @@
 }
 
 .reference {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
   margin-top: 0.5rem;
   color: var(--collection-steel);
   font-size: 0.72rem;
@@ -1674,7 +1683,7 @@
 
 .detailFacts dd {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font-size: 0.75rem;
 }
 
@@ -1881,7 +1890,9 @@
   font-size: 1.9rem;
   font-weight: 500;
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 
 .deleteDialog p:not(.eyebrow) {

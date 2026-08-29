@@ -83,7 +83,9 @@ canvas {
 }
 
 :where(h1, h2, h3, .type-display, .type-editorial, .type-page, .type-section) {
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
   text-wrap: balance;
 }
 
@@ -1558,7 +1560,9 @@ select {
   font-size: 0.78rem;
   font-weight: 720;
   letter-spacing: 0.04em;
+  text-align: center;
   text-transform: uppercase;
+  white-space: nowrap;
   transition:
     opacity var(--motion-fast) var(--ease-out),
     transform var(--motion-fast) var(--ease-out);

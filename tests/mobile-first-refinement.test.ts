@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -6,6 +6,16 @@ const projectRoot = path.resolve(__dirname, "..");
 
 function readSrc(relativePath: string): string {
   return readFileSync(path.join(projectRoot, relativePath), "utf8");
+}
+
+function listCssFiles(relativeDirectory: string): string[] {
+  const absoluteDirectory = path.join(projectRoot, relativeDirectory);
+  return readdirSync(absoluteDirectory).flatMap((entry) => {
+    const relativePath = path.join(relativeDirectory, entry);
+    const absolutePath = path.join(projectRoot, relativePath);
+    if (statSync(absolutePath).isDirectory()) return listCssFiles(relativePath);
+    return relativePath.endsWith(".css") ? [relativePath] : [];
+  });
 }
 
 describe("mobile-first production refinement contracts", () => {
@@ -66,13 +76,15 @@ describe("mobile-first production refinement contracts", () => {
     expect(fields).toContain("font-size: 16px");
   });
 
-  it("adds mobile-native sticky purchase/cart/checkout surfaces without changing commerce rules", () => {
+  it("keeps mobile commerce surfaces touch-safe without overlaying watch detail typography", () => {
     const detail = readSrc("src/components/catalog/watch-detail.module.css");
     const commerce = readSrc("src/components/commerce/commerce.module.css");
     const cart = readSrc("src/components/cart/cart-experience.module.css");
 
     expect(detail).toContain(".actions");
-    expect(detail).toContain("position: sticky");
+    expect(detail).toContain("backdrop-filter: none");
+    expect(detail).not.toMatch(/\.actions\s*\{[^}]*position:\s*sticky/);
+    expect(detail).not.toMatch(/\.actions\s*\{[^}]*bottom:\s*0/);
     expect(detail).toContain("env(safe-area-inset-bottom");
     expect(detail).toContain(".mediaShell");
     expect(detail).toContain("order: -1");
@@ -160,6 +172,16 @@ describe("mobile-first production refinement contracts", () => {
     expect(favicon).toContain("ET");
   });
 
+  it("marks already-complete catalog images as loaded instead of leaving invisible placeholders", () => {
+    const catalogImage = readSrc("src/components/catalog/catalog-image.tsx");
+
+    expect(catalogImage).toContain("useRef<HTMLImageElement | null>(null)");
+    expect(catalogImage).toContain("currentImage.complete");
+    expect(catalogImage).toContain("currentImage.naturalWidth > 0");
+    expect(catalogImage).toContain("setLoaded(true)");
+    expect(catalogImage).toContain('ref={imageRef}');
+  });
+
   it("keeps production UI free of temporary diagnostics and developer placeholder copy", () => {
     const checkout = readSrc("src/components/commerce/checkout-experience.tsx");
     const commerceStyles = readSrc("src/components/commerce/commerce.module.css");
@@ -173,5 +195,19 @@ describe("mobile-first production refinement contracts", () => {
     expect(missingImage).not.toContain("Изображение готовится");
     expect(missingImage).not.toContain("Фото временно недоступно");
     expect(missingImage).toContain("нейтральная карточка модели без фотографии");
+  });
+
+  it("prevents unsafe Russian word fragmentation in public app and component CSS", () => {
+    const cssFiles = [...listCssFiles("src/app"), ...listCssFiles("src/components")].filter(
+      (relativePath) => !relativePath.includes(`${path.sep}admin${path.sep}`),
+    );
+
+    for (const relativePath of cssFiles) {
+      const css = readSrc(relativePath);
+
+      expect(css, relativePath).not.toMatch(/overflow-wrap:\s*anywhere/);
+      expect(css, relativePath).not.toMatch(/word-break:\s*break-all/);
+      expect(css, relativePath).not.toMatch(/hyphens:\s*auto/);
+    }
   });
 });

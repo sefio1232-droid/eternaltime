@@ -499,7 +499,9 @@ describe("homepage production multi-watch hero", () => {
     expect(heroCss).toContain("--home-ivory: #f3f0e8");
     expect(heroCss).toContain("--home-paper-light: #fcfbf8");
     expect(heroCss).toContain("--home-champagne: #b98a45");
-    expect(heroCss).toContain("font-size: clamp(4.375rem, 6vw, 5.75rem)");
+    expect(heroCss).toContain("font-size: clamp(4rem, 5.25vw, 5.35rem)");
+    expect(heroCss).toContain("max-width: 11.25ch");
+    expect(heroCss).not.toContain("overflow-wrap: anywhere");
 
     expect(ecosystemCss).toContain("--home-navy-light: #102f3d");
     expect(ecosystemCss).toContain("--home-dark-line: rgb(255 255 255 / 0.14)");
