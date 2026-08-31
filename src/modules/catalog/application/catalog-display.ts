@@ -263,7 +263,7 @@ const knownWaterResistanceBuckets = new Set([30, 50, 100, 200]);
  * known field that doesn't match a known label (never invents a label for data it can't read).
  */
 export function formatCatalogCardTrait(spec: CatalogPublicSpecification): string {
-  if (spec.key === "movement_raw" || spec.key === "movement_type_raw") {
+  if (spec.key === "movement_raw" || spec.key === "movement_family_raw" || spec.key === "movement_type_raw") {
     const group = normalizeMechanismGroup(spec.value);
     if (group) {
       return mechanismGroupCardLabels[group];
@@ -348,7 +348,7 @@ function specByKeys(specifications: CatalogPublicSpecification[], keys: string[]
 
 export function buildFactualWatchDescription(watch: CatalogWatchDetail): string {
   const title = displayWatchTitle({ brandName: watch.brandName, title: watch.title, referenceDisplay: watch.referenceDisplay });
-  const movement = specByKeys(watch.specifications, ["movement_type_raw", "movement_raw"]);
+  const movement = specByKeys(watch.specifications, ["movement_type_raw", "movement_family_raw", "movement_raw"]);
   const caseMaterial = specByKeys(watch.specifications, ["case_material_raw"]);
   const crystal = specByKeys(watch.specifications, ["crystal_type_raw"]);
   const strap = specByKeys(watch.specifications, ["strap_material_raw", "bracelet_material_raw", "strap_bracelet_raw"]);

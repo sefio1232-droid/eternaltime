@@ -41,9 +41,10 @@ type RowDefinition = {
 
 const rowDefinitions: RowDefinition[] = [
   { key: "price", label: "Цена", group: "commercial", value: (watch) => watch.publicPrice ? formatCatalogMoney(watch.publicPrice) : null },
-  { key: "movement", label: "Механизм", group: "mechanism", specificationKeys: ["movement_type_raw", "movement_raw"] },
+  { key: "movement", label: "Механизм", group: "mechanism", specificationKeys: ["movement_type_raw", "movement_family_raw", "movement_raw"] },
   { key: "case-material", label: "Материал корпуса", group: "case", specificationKeys: ["case_material_raw"] },
-  { key: "case-size", label: "Размер корпуса", group: "dimensions", specificationKeys: ["case_diameter_raw", "case_dimensions_raw"] },
+  { key: "case-size", label: "Размер корпуса", group: "dimensions", specificationKeys: ["case_width_raw", "case_diameter_raw", "case_dimensions_raw"] },
+  { key: "case-thickness", label: "Толщина", group: "dimensions", specificationKeys: ["case_thickness_raw"] },
   { key: "weight", label: "Вес", group: "dimensions", specificationKeys: ["weight_raw"] },
   { key: "crystal", label: "Стекло", group: "glass", specificationKeys: ["crystal_type_raw"] },
   { key: "attachment", label: "Ремешок или браслет", group: "wear", specificationKeys: ["attachment_material_raw", "strap_material_raw", "bracelet_material_raw"] },

@@ -59,10 +59,12 @@ const groupOrder: CatalogSpecificationGroup[] = [
 
 const highlightKeys = [
   "movement_type_raw",
+  "movement_family_raw",
   "movement_raw",
   "crystal_type_raw",
   "case_material_raw",
   "water_resistance_raw",
+  "case_width_raw",
   "case_diameter_raw",
   "case_dimensions_raw",
 ];

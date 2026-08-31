@@ -14,6 +14,8 @@
     "catalog:import:preview": "tsx src/modules/imports/catalog/cli/catalog-preview.ts",
     "catalog:import:apply:dry-run": "tsx src/modules/imports/catalog/cli/catalog-apply-dry-run.ts",
     "catalog:import:apply": "tsx src/modules/imports/catalog/cli/catalog-apply.ts",
+    "catalog:master-characteristics:dry-run": "tsx scripts/master-characteristics-import.ts --dry-run",
+    "catalog:master-characteristics:apply": "tsx scripts/master-characteristics-import.ts --apply",
     "catalog:read:coverage": "tsx src/modules/catalog/cli/catalog-read-coverage.ts",
     "catalog:public:hygiene": "tsx src/modules/imports/catalog/cli/catalog-public-hygiene.ts",
     "public:experience:inventory": "tsx src/modules/public-experience/cli/public-experience-inventory.ts",

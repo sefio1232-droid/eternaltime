@@ -20,6 +20,10 @@ import type { CatalogSiteImportOverlayEntry, CatalogSiteImportOverlayManifest } 
 import { classifyCatalogImageRejection, selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
 import { sanitizeCatalogPublicText } from "@/modules/catalog/application/catalog-public-sanitation";
+import {
+  masterSpecificationDefinitions,
+  masterSpecificationOrder,
+} from "@/modules/imports/catalog/application/master-characteristics-import";
 import type {
   CatalogImagePresentation,
   CatalogPublicSpecification,
@@ -39,6 +43,7 @@ type SpecificationDefinition = {
 };
 
 const specificationDefinitions: Record<string, SpecificationDefinition> = {
+  ...masterSpecificationDefinitions,
   movement_raw: { label: "Механизм", group: "mechanism" },
   movement_type_raw: { label: "Тип механизма", group: "mechanism" },
   caliber_raw: { label: "Калибр", group: "mechanism" },
@@ -87,6 +92,7 @@ const specificationDefinitions: Record<string, SpecificationDefinition> = {
 };
 
 const specificationOrder = [
+  ...masterSpecificationOrder,
   "movement_type_raw",
   "movement_raw",
   "caliber_raw",
@@ -134,10 +140,12 @@ const specificationOrder = [
 
 const keySpecificationPriority = [
   "movement_type_raw",
+  "movement_family_raw",
   "movement_raw",
   "case_material_raw",
   "water_resistance_raw",
   "crystal_type_raw",
+  "case_width_raw",
   "case_dimensions_raw",
 ];
 

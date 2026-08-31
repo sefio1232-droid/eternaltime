@@ -2,6 +2,7 @@ import {
   normalizeCatalogSearchText,
   normalizeReferenceSearchText,
 } from "@/modules/catalog/application/catalog-read-query";
+import { resolveCatalogReferenceAlias } from "@/modules/catalog/application/catalog-reference-aliases";
 import { classifyCatalogImageRejection } from "@/modules/catalog/application/catalog-image-presentation-policy";
 import { mechanismGroupLabels, normalizeMechanismGroup } from "@/modules/catalog/application/catalog-mechanism-taxonomy";
 import { waterResistanceGroupLabels, normalizeWaterResistanceGroup } from "@/modules/catalog/application/catalog-water-resistance-taxonomy";
@@ -33,7 +34,7 @@ import type {
 } from "@/modules/catalog/domain/read-models";
 
 const filterSpecKeys = {
-  movement: ["movement_type_raw", "movement_raw"],
+  movement: ["movement_type_raw", "movement_family_raw", "movement_raw"],
   waterResistance: ["water_resistance_raw"],
   caseMaterial: ["case_material_raw"],
   crystal: ["crystal_type_raw"],
@@ -624,11 +625,18 @@ export function getCatalogWatchByRoute(
   input: { brandSlug: string; referenceSlug: string },
 ): CatalogWatchDetail | null {
   const normalizedReference = normalizeReferenceSearchText(input.referenceSlug);
+  const alias = resolveCatalogReferenceAlias({
+    brandSlug: input.brandSlug,
+    referenceSlug: input.referenceSlug,
+    referenceNormalized: normalizedReference,
+  });
+  const normalizedReferenceOrAlias = alias?.toReferenceNormalized ?? normalizedReference;
+  const referenceSlugOrAlias = alias?.toReferenceSlug ?? input.referenceSlug;
   return dataset.watches.find(
     (watch) =>
       watch.brandSlug === input.brandSlug &&
-      (watch.referenceSlug === input.referenceSlug ||
-        (normalizedReference !== null && watch.referenceNormalized === normalizedReference)),
+      (watch.referenceSlug === referenceSlugOrAlias ||
+        (normalizedReferenceOrAlias !== null && watch.referenceNormalized === normalizedReferenceOrAlias)),
   ) ?? null;
 }
 
@@ -640,11 +648,13 @@ export function getCatalogWatchByRoute(
 // keeps its original relative position, appended after every known key in its group.
 const specificationKeyOrder: string[] = [
   "movement_raw",
+  "movement_family_raw",
   "movement_type_raw",
   "caliber_raw",
   "display_raw",
   "power_source_raw",
   "power_reserve_raw",
+  "full_charge_runtime_raw",
   "accuracy_raw",
   "certification_raw",
   "jewel_count_raw",
@@ -655,9 +665,12 @@ const specificationKeyOrder: string[] = [
   "construction_raw",
   "caseback_raw",
   "crown_raw",
+  "case_width_raw",
   "case_diameter_raw",
+  "case_length_raw",
   "case_thickness_raw",
   "case_dimensions_raw",
+  "lug_to_lug_raw",
   "weight_raw",
   "crystal_type_raw",
   "dial_raw",
@@ -672,6 +685,7 @@ const specificationKeyOrder: string[] = [
   "strap_width_raw",
   "clasp_raw",
   "strap_features_raw",
+  "anti_reflective_raw",
   "water_resistance_raw",
   "functions_raw",
   "watch_type_raw",
@@ -702,7 +716,9 @@ export function groupSpecificationsByPublicSection(specifications: CatalogPublic
 }
 
 function movementGroupOf(specifications: CatalogPublicSpecification[]): string | null {
-  const spec = specifications.find((entry) => entry.key === "movement_type_raw" || entry.key === "movement_raw");
+  const spec = specifications.find(
+    (entry) => entry.key === "movement_type_raw" || entry.key === "movement_family_raw" || entry.key === "movement_raw",
+  );
   return spec ? normalizeMechanismGroup(spec.value) : null;
 }
 
@@ -780,7 +796,9 @@ export function pickCatalogCuratorialPaths(dataset: CatalogReadDataset): Catalog
   }
 
   const firstMechanical = take((watch) => {
-    const spec = watch.specifications.find((entry) => entry.key === "movement_type_raw" || entry.key === "movement_raw");
+    const spec = watch.specifications.find(
+      (entry) => entry.key === "movement_type_raw" || entry.key === "movement_family_raw" || entry.key === "movement_raw",
+    );
     return spec ? normalizeMechanismGroup(spec.value) === "automatic" : false;
   });
 

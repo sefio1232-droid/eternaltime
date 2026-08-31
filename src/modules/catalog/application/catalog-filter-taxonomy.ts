@@ -167,8 +167,9 @@ function parseCaseSizeMm(rawValue: string | null): number | null {
 
 export function normalizeCaseSizeMm(watch: CatalogWatchDetail): number | null {
   return (
+    parseCaseSizeMm(findSpecificationValue(watch.specifications, ["case_width_raw"])) ??
     parseCaseSizeMm(findSpecificationValue(watch.specifications, ["case_diameter_raw"])) ??
-    parseCaseSizeMm(findSpecificationValue(watch.specifications, ["case_dimensions_raw"]))
+    null
   );
 }
 
@@ -177,14 +178,13 @@ export function normalizeCaseSizeGroup(caseSizeMm: number | null): CatalogCaseSi
     return null;
   }
 
-  // Evidence-based against the current 620-model audit: known compact references cluster below
-  // 36 mm, medium dress/everyday cases are rare but present from 36-40.9 mm, and sports/tool
-  // watches begin at roughly 41 mm. This is a watch-size facet, not a gender inference.
-  if (caseSizeMm < 36) {
+  // MASTER characteristics contract: compact <38 mm, medium 38–42 mm, large >42 mm. The size
+  // class is derived only from confirmed case width/diameter fields, never from gender/positioning.
+  if (caseSizeMm < 38) {
     return "compact";
   }
 
-  if (caseSizeMm < 41) {
+  if (caseSizeMm <= 42) {
     return "medium";
   }
 
@@ -217,12 +217,12 @@ export function normalizeDialColorGroup(rawValue: string | null | undefined): Ca
   }
 
   if (/перламутр|mother|pearl/iu.test(text)) return "mother_of_pearl";
-  if (/черн|black/iu.test(text)) return "black";
+  if (/ч[её]рн|black/iu.test(text)) return "black";
   if (/бел|white/iu.test(text)) return "white";
   if (/сереб|silver/iu.test(text)) return "silver";
   if (/голуб|ice\s*blue|light\s*blue|turquoise|aqua/iu.test(text)) return "light_blue";
   if (/син|blue|navy/iu.test(text)) return "blue";
-  if (/зелен|green/iu.test(text)) return "green";
+  if (/зел[её]н|green/iu.test(text)) return "green";
   if (/беж|крем|ivory|cream|taupe|champagne/iu.test(text)) return "cream";
   if (/золот|gold/iu.test(text)) return "gold";
   if (/роз|pink|rose|mauve/iu.test(text)) return "pink";
@@ -267,7 +267,7 @@ export function classifyCatalogFacets(watch: CatalogWatchDetail): CatalogFacetCl
     ...gender,
     caseSizeMm,
     caseSize: normalizeCaseSizeGroup(caseSizeMm),
-    movement: normalizeMechanismGroup(findSpecificationValue(watch.specifications, ["movement_type_raw", "movement_raw"])),
+    movement: normalizeMechanismGroup(findSpecificationValue(watch.specifications, ["movement_type_raw", "movement_family_raw", "movement_raw"])),
     dialColor: normalizeDialColorGroup(findSpecificationValue(watch.specifications, ["dial_color_raw"])),
     strapMaterial: normalizeStrapMaterialGroup(
       findSpecificationValue(watch.specifications, ["attachment_material_raw", "strap_material_raw", "bracelet_material_raw"]),
