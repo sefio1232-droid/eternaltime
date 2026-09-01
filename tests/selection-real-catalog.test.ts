@@ -41,6 +41,16 @@ function priceRub(result: ReturnType<typeof buildSelectionRecommendations>[numbe
 }
 
 describe("selection real catalog scenarios", () => {
+  it("keeps the public intro copy aligned with the seven-step flow", () => {
+    const intro = readFileSync(path.join(root, "src", "components", "selection", "selection-intro.tsx"), "utf8");
+
+    expect(intro).toContain("семь коротких вопросов");
+    expect(intro).toContain("01 / 07");
+    expect(intro).toContain("Семь шагов до вашей подборки");
+    expect(intro).not.toContain("шесть коротких вопросов");
+    expect(intro).not.toContain("01 / 06");
+  });
+
   it("runs the current full catalog through all representative profiles deterministically", () => {
     expect(dataset.watches.length).toBeGreaterThanOrEqual(600);
     expect(selectionFormDefinition.steps).toHaveLength(7);
