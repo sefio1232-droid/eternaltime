@@ -11,6 +11,7 @@ import {
   buildSelectionImageCandidates,
   buildSelectionRecommendations,
   evaluateBudgetFit,
+  selectionDialColorBucketFromRaw,
   resolveSelectionStep,
   selectionBudgetContainsPrice,
   selectionFormDefinition,
@@ -100,6 +101,7 @@ function fixtureWatches(): CatalogWatchDetail[] {
       priceMinor: 4_000_000,
       specs: {
         movement_type_raw: "automatic mechanical",
+        dial_color_raw: "white",
         case_diameter_raw: "40 mm",
         bracelet_material_raw: "stainless steel bracelet",
         water_resistance_raw: "100 m",
@@ -115,6 +117,7 @@ function fixtureWatches(): CatalogWatchDetail[] {
       priceMinor: 2_500_000,
       specs: {
         movement_type_raw: "quartz",
+        dial_color_raw: "black",
         case_diameter_raw: "32 mm",
         strap_material_raw: "leather strap",
         water_resistance_raw: "30 m",
@@ -128,6 +131,7 @@ function fixtureWatches(): CatalogWatchDetail[] {
       priceMinor: 4_500_000,
       specs: {
         movement_type_raw: "solar quartz Eco-Drive",
+        dial_color_raw: "blue",
         case_diameter_raw: "42 mm",
         bracelet_material_raw: "stainless steel bracelet",
         water_resistance_raw: "200 m",
@@ -144,24 +148,26 @@ const baseAnswers: SelectionAnswers = {
   fit: "medium",
   character: "modern",
   movement: "neutral",
+  dialColor: "neutral",
   features: ["none"],
   budget: "unknown",
 };
 
 describe("selection query", () => {
-  it("uses the new six-step public flow", () => {
+  it("uses the new seven-step public flow with a dedicated dial color step", () => {
     expect(selectionFormDefinition.steps.map((step) => step.code)).toEqual([
       "scenario",
       "fit",
       "character",
       "movement",
+      "dial-color",
       "features",
       "budget",
     ]);
-    expect(selectionFormDefinition.steps).toHaveLength(6);
+    expect(selectionFormDefinition.steps).toHaveLength(7);
+    expect(selectionFormDefinition.steps.find((step) => step.code === "dial-color")?.title).toBe("Какой цвет циферблата вам ближе?");
     expect(selectionFormDefinition.steps.some((step) => step.code === "features" && step.multiple)).toBe(true);
     expect(selectionFormDefinition.steps.flatMap((step) => step.options).some((option) => option.code === "gender")).toBe(false);
-    expect(selectionFormDefinition.steps.flatMap((step) => step.options).some((option) => option.code === "color")).toBe(false);
   });
 
   it("normalizes legacy query values without crashing old URLs", () => {
@@ -180,6 +186,7 @@ describe("selection query", () => {
       fit: "compact",
       character: "sporty",
       movement: "quartz",
+      dialColor: "neutral",
       features: ["water-resistance", "steel-bracelet"],
       budget: "unknown",
     });
@@ -200,22 +207,24 @@ describe("selection query", () => {
       fit: "medium",
       character: "modern",
       movement: "solar",
+      dialColor: "blue",
       features: "sapphire,steel-bracelet",
       budget: "range_30000_50000",
     });
     const answered = answeredSelectionKeys({
       scenario: "daily",
       fit: "medium",
+      dialColor: "blue",
       features: "sapphire,steel-bracelet",
       budget: "range_30000_50000",
     });
     const params = selectionAnswersToSearchParams(answers, answered);
 
-    expect(answered).toEqual(["scenario", "fit", "features", "budget"]);
-    expect(params.toString()).toBe("scenario=daily&fit=medium&features=sapphire%2Csteel-bracelet&budget=range_30000_50000");
+    expect(answered).toEqual(["scenario", "fit", "dialColor", "features", "budget"]);
+    expect(params.toString()).toBe("scenario=daily&fit=medium&dialColor=blue&features=sapphire%2Csteel-bracelet&budget=range_30000_50000");
   });
 
-  it("resolves progress through six steps", () => {
+  it("resolves progress through seven steps", () => {
     expect(resolveSelectionStep({ requestedStep: "start", hasAnswers: false, searchParams: {} })).toBe("start");
     expect(resolveSelectionStep({
       requestedStep: "start",
@@ -231,11 +240,61 @@ describe("selection query", () => {
         fit: "medium",
         character: "modern",
         movement: "neutral",
+        dialColor: "neutral",
         features: "none",
         budget: "unknown",
       },
-      answeredKeys: ["scenario", "fit", "character", "movement", "features", "budget"],
+      answeredKeys: ["scenario", "fit", "character", "movement", "dialColor", "features", "budget"],
     })).toBe("results");
+  });
+});
+
+describe("selection dial color", () => {
+  it.each([
+    ["white", "light"],
+    ["silver", "light"],
+    ["champagne", "light"],
+    ["ivory", "light"],
+    ["mother_of_pearl", "light"],
+    ["black", "dark"],
+    ["dark grey", "dark"],
+    ["blue", "blue"],
+    ["mother_of_pearl_blue", "blue"],
+    ["green", "green"],
+    ["olive", "green"],
+    ["pink", "other"],
+    ["burgundy", "other"],
+    ["gold-tone", "other"],
+    ["brown", "other"],
+    [null, "unknown"],
+    ["", "unknown"],
+  ] as const)("maps MASTER dial_color %s to %s", (raw, bucket) => {
+    expect(selectionDialColorBucketFromRaw(raw)).toBe(bucket);
+  });
+
+  it("scores color as match, conflict, unknown and neutral without hard filtering", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "blue", title: "Blue", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm", dial_color_raw: "blue" } }),
+        watch({ id: "black", title: "Black", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm", dial_color_raw: "black" } }),
+        watch({ id: "unknown", title: "Unknown", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" } }),
+      ]),
+      answers: { ...baseAnswers, movement: "quartz", dialColor: "blue", budget: "range_15000_30000" },
+      limit: 3,
+    });
+
+    expect(recommendations[0]?.watch.id).toBe("blue");
+    expect(recommendations.find((item) => item.watch.id === "blue")?.criteria.find((criterion) => criterion.key === "dialColor")?.status).toBe("match");
+    expect(recommendations.find((item) => item.watch.id === "black")?.criteria.find((criterion) => criterion.key === "dialColor")?.status).toBe("conflict");
+    expect(recommendations.find((item) => item.watch.id === "unknown")?.criteria.find((criterion) => criterion.key === "dialColor")?.status).toBe("unknown");
+
+    const neutral = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "any", title: "Any", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm", dial_color_raw: "black" } }),
+      ]),
+      answers: { ...baseAnswers, movement: "quartz", dialColor: "neutral", budget: "range_15000_30000" },
+    });
+    expect(neutral[0]?.criteria.find((criterion) => criterion.key === "dialColor")?.status).toBe("neutral");
   });
 });
 
@@ -331,6 +390,7 @@ describe("selection algorithm", () => {
         fit: "medium",
         character: "modern",
         movement: "quartz",
+        dialColor: "neutral",
         features: ["sapphire", "steel-bracelet"],
         budget: "range_15000_30000",
       },
@@ -350,6 +410,7 @@ describe("selection algorithm", () => {
         fit: "medium",
         character: "classic",
         movement: "mechanical",
+        dialColor: "neutral",
         features: ["sapphire"],
         budget: "range_30000_50000",
       },
@@ -361,6 +422,7 @@ describe("selection algorithm", () => {
         fit: "compact",
         character: "classic",
         movement: "quartz",
+        dialColor: "neutral",
         features: ["leather"],
         budget: "range_15000_30000",
       },
@@ -372,6 +434,7 @@ describe("selection algorithm", () => {
         fit: "large",
         character: "sporty",
         movement: "solar",
+        dialColor: "neutral",
         features: ["water-resistance", "chronograph"],
         budget: "range_30000_50000",
       },
@@ -431,6 +494,7 @@ describe("selection algorithm", () => {
         fit: "medium",
         character: "sporty",
         movement: "solar",
+        dialColor: "neutral",
         features: ["sapphire", "water-resistance", "chronograph"],
         budget: "range_30000_50000",
       },
@@ -512,6 +576,7 @@ describe("selection algorithm", () => {
         fit: "compact",
         character: "classic",
         movement: "quartz",
+        dialColor: "neutral",
         features: ["sapphire"],
         budget: "range_30000_50000",
       },
@@ -578,6 +643,7 @@ describe("selection algorithm", () => {
         fit: "medium",
         character: "modern",
         movement: "quartz",
+        dialColor: "neutral",
         features: ["sapphire", "steel-bracelet"],
         budget: "range_30000_50000",
       },
@@ -587,12 +653,60 @@ describe("selection algorithm", () => {
     expect(recommendations.find((item) => item.watch.id === "over-budget")?.criteria.find((criterion) => criterion.key === "budget")?.status).toBe("conflict");
   });
 
+  it("does not let dial color override the budget phase", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "within-budget-black",
+          title: "Within Budget Black",
+          priceMinor: 25_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            dial_color_raw: "black",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "steel bracelet",
+            crystal_type_raw: "sapphire",
+          },
+        }),
+        watch({
+          id: "far-over-budget-blue",
+          title: "Far Over Budget Blue",
+          priceMinor: 125_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            dial_color_raw: "blue",
+            case_diameter_raw: "40 mm",
+            bracelet_material_raw: "steel bracelet",
+            crystal_type_raw: "sapphire",
+            water_resistance_raw: "200 m",
+            functions_raw: "chronograph, date",
+          },
+        }),
+      ]),
+      answers: {
+        scenario: "daily",
+        fit: "medium",
+        character: "modern",
+        movement: "quartz",
+        dialColor: "blue",
+        features: ["sapphire", "steel-bracelet"],
+        budget: "range_15000_30000",
+      },
+      limit: 2,
+    });
+
+    expect(recommendations[0]?.watch.id).toBe("within-budget-black");
+    expect(recommendations.find((item) => item.watch.id === "far-over-budget-blue")?.criteria.find((criterion) => criterion.key === "dialColor")?.status).toBe("match");
+    expect(recommendations.find((item) => item.watch.id === "far-over-budget-blue")?.criteria.find((criterion) => criterion.key === "budget")?.status).toBe("conflict");
+  });
+
   it("keeps results stable and canonical", () => {
     const answers: SelectionAnswers = {
       scenario: "daily",
       fit: "medium",
       character: "modern",
       movement: "quartz",
+      dialColor: "neutral",
       features: ["none"],
       budget: "range_15000_30000",
     };

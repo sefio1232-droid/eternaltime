@@ -9,10 +9,22 @@ import {
   buildMasterSpecifications,
   countProhibitedSpecifications,
   parseMasterWorkbook,
+  type MasterBrandSlug,
 } from "@/modules/imports/catalog/application/master-characteristics-import";
 
 const orientWorkbookPath = "C:/Users/Sergey/Downloads/EternalTime_Orient_MASTER_FINAL_v2 (1).xlsx";
 const citizenWorkbookPath = "C:/Users/Sergey/Downloads/EternalTime_Citizen_MASTER_FINAL.xlsx";
+const tissotWorkbookPath = "C:/Users/Sergey/Downloads/EternalTime_Tissot_MASTER_FINAL_160.xlsx";
+const casioWorkbookPath = "C:/Users/Sergey/Downloads/EternalTime_Casio_MASTER_FINAL_215 (1).xlsx";
+const seikoWorkbookPath = "C:/Users/Sergey/Downloads/EternalTime_Seiko_MASTER_FINAL_73 (1).xlsx";
+
+const masterSources: Array<{ brandSlug: MasterBrandSlug; sourceFile: string; expectedRows: number }> = [
+  { brandSlug: "orient", sourceFile: orientWorkbookPath, expectedRows: 82 },
+  { brandSlug: "citizen", sourceFile: citizenWorkbookPath, expectedRows: 25 },
+  { brandSlug: "tissot", sourceFile: tissotWorkbookPath, expectedRows: 160 },
+  { brandSlug: "casio", sourceFile: casioWorkbookPath, expectedRows: 215 },
+  { brandSlug: "seiko", sourceFile: seikoWorkbookPath, expectedRows: 73 },
+];
 
 function watch(input: Partial<CatalogWatchDetail> = {}): CatalogWatchDetail {
   return {
@@ -38,17 +50,15 @@ function watch(input: Partial<CatalogWatchDetail> = {}): CatalogWatchDetail {
   };
 }
 
-describe("MASTER characteristics import — Orient + Citizen", () => {
+describe("MASTER characteristics import — 5 brand scope", () => {
   it("parses the exact scoped MASTER files without duplicates", () => {
-    const orient = parseMasterWorkbook({ brandSlug: "orient", sourceFile: orientWorkbookPath });
-    const citizen = parseMasterWorkbook({ brandSlug: "citizen", sourceFile: citizenWorkbookPath });
+    for (const source of masterSources) {
+      const workbook = parseMasterWorkbook({ brandSlug: source.brandSlug, sourceFile: source.sourceFile });
 
-    expect(orient.products).toHaveLength(82);
-    expect(new Set(orient.products.map((row) => row.referenceNormalized)).size).toBe(82);
-    expect(citizen.products).toHaveLength(25);
-    expect(new Set(citizen.products.map((row) => row.referenceNormalized)).size).toBe(25);
-    expect(orient.warnings).toEqual([]);
-    expect(citizen.warnings).toEqual([]);
+      expect(workbook.products, source.brandSlug).toHaveLength(source.expectedRows);
+      expect(new Set(workbook.products.map((row) => row.referenceNormalized)).size, source.brandSlug).toBe(source.expectedRows);
+      expect(workbook.warnings, source.brandSlug).toEqual([]);
+    }
   });
 
   it("normalizes the Orient P0 reference correction without creating a duplicate route", () => {
@@ -58,6 +68,7 @@ describe("MASTER characteristics import — Orient + Citizen", () => {
 
     expect(corrected).toBeDefined();
     expect(corrected?.lookupReferenceNormalized).toBe("RAAK0803S10B");
+    expect(corrected?.lookupReferenceNormalizedCandidates).toContain("RAAK0803S10B");
     expect(corrected?.referenceSlug).toBe("raak0803y10b");
 
     const patchedWatch = applyMasterPatchToWatch(
@@ -83,6 +94,17 @@ describe("MASTER characteristics import — Orient + Citizen", () => {
     expect(getCatalogWatchByRoute(dataset, { brandSlug: "orient", referenceSlug: "raak0803y10b" })?.referenceNormalized).toBe("RAAK0803Y10B");
   });
 
+  it("matches Casio reference_live corrections while keeping the MASTER canonical reference", () => {
+    const casio = parseMasterWorkbook({ brandSlug: "casio", sourceFile: casioWorkbookPath });
+    const patches = buildMasterImportPatches([casio]);
+    const corrected = patches.find((patch) => patch.referenceNormalized === "MWA300H1AVD");
+
+    expect(corrected).toBeDefined();
+    expect(corrected?.lookupReferenceNormalizedCandidates).toContain("NWA300H1AVD");
+    expect(corrected?.referenceDisplay).toBe("MWA-300H-1AVD");
+    expect(corrected?.referenceSlug).toBe("mwa300h1avd");
+  });
+
   it("maps Citizen Eco-Drive as solar, not quartz/unknown", () => {
     const citizen = parseMasterWorkbook({ brandSlug: "citizen", sourceFile: citizenWorkbookPath });
     const product = citizen.products.find((row) => row.referenceNormalized === "AW181859L");
@@ -104,6 +126,15 @@ describe("MASTER characteristics import — Orient + Citizen", () => {
     expect(mechanicalSpecs.find((spec) => spec.key === "power_reserve_raw")?.value).toContain("40");
     expect(mechanicalSpecs.find((spec) => spec.key === "full_charge_runtime_raw")).toBeUndefined();
     expect(solarSpecs.find((spec) => spec.key === "power_reserve_raw")).toBeUndefined();
+  });
+
+  it("imports Casio battery life as its own non-mechanical characteristic", () => {
+    const casio = parseMasterWorkbook({ brandSlug: "casio", sourceFile: casioWorkbookPath });
+    const product = casio.products.find((row) => row.referenceNormalized === "A158WA1DF");
+    const specifications = buildMasterSpecifications({ product: product!, functions: casio.functions });
+
+    expect(specifications.find((spec) => spec.key === "battery_life_raw")?.value).toContain("лет");
+    expect(specifications.find((spec) => spec.key === "power_reserve_raw")).toBeUndefined();
   });
 
   it("uses MASTER size boundaries and only width/diameter for size classification", () => {
@@ -132,11 +163,24 @@ describe("MASTER characteristics import — Orient + Citizen", () => {
   });
 
   it("does not emit case/band/strap/bracelet color or visual_positioning public characteristics", () => {
-    const orient = parseMasterWorkbook({ brandSlug: "orient", sourceFile: orientWorkbookPath });
-    const citizen = parseMasterWorkbook({ brandSlug: "citizen", sourceFile: citizenWorkbookPath });
-    const patches = buildMasterImportPatches([orient, citizen]);
+    const workbooks = masterSources.map((source) =>
+      parseMasterWorkbook({ brandSlug: source.brandSlug, sourceFile: source.sourceFile }),
+    );
+    const patches = buildMasterImportPatches(workbooks);
 
     expect(patches.reduce((sum, patch) => sum + countProhibitedSpecifications(patch.specifications), 0)).toBe(0);
+  });
+
+  it("keeps MASTER SEO separate from prices and out of CatalogWatchDetail", () => {
+    const tissot = parseMasterWorkbook({ brandSlug: "tissot", sourceFile: tissotWorkbookPath });
+    const patch = buildMasterImportPatches([tissot]).find((row) => row.referenceNormalized === "T0062071103601")!;
+    const after = applyMasterPatchToWatch(watch({ brandName: "Tissot", brandSlug: "tissot" }), patch);
+
+    expect(patch.seo?.title).toContain("Tissot");
+    expect(patch.seo?.metaDescription).toBeTruthy();
+    expect(patch.seo?.overview).toBeTruthy();
+    expect("seoOverlay" in after).toBe(false);
+    expect(after.publicPrice).toEqual({ amountMinor: 1710000, currencyCode: "RUB" });
   });
 
   it("does not modify existing commercial price snapshots when applying a characteristics patch", () => {

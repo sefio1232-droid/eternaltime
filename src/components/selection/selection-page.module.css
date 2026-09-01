@@ -59,8 +59,8 @@
 
 .progress {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.45rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(0.28rem, 1vw, 0.45rem);
   margin: 0;
   padding: 0;
   list-style: none;

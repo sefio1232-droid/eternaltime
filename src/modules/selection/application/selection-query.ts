@@ -3,6 +3,7 @@ import type {
   SelectionAnswers,
   SelectionBudgetCode,
   SelectionCharacterCode,
+  SelectionDialColorPreference,
   SelectionFeatureCode,
   SelectionFitCode,
   SelectionMovementPreference,
@@ -24,6 +25,7 @@ const scenarioCodes: SelectionScenarioCode[] = [
 const fitCodes: SelectionFitCode[] = ["compact", "medium", "large", "unknown"];
 const characterCodes: SelectionCharacterCode[] = ["classic", "modern", "sporty", "expressive", "neutral"];
 const movementCodes: SelectionMovementPreference[] = ["mechanical", "quartz", "solar", "neutral"];
+const dialColorCodes: SelectionDialColorPreference[] = ["light", "dark", "blue", "green", "other", "neutral"];
 const featureCodes: SelectionFeatureCode[] = [
   "sapphire",
   "water-resistance",
@@ -49,6 +51,7 @@ const stepCodes: SelectionStepCode[] = [
   "fit",
   "character",
   "movement",
+  "dial-color",
   "features",
   "budget",
   "results",
@@ -102,6 +105,28 @@ const budgetAliases: Record<string, SelectionBudgetCode> = {
   over_120000: "over_100000",
 };
 
+const dialColorAliases: Record<string, SelectionDialColorPreference> = {
+  any: "neutral",
+  indifferent: "neutral",
+  neutral: "neutral",
+  none: "neutral",
+  white: "light",
+  silver: "light",
+  champagne: "light",
+  cream: "light",
+  ivory: "light",
+  beige: "light",
+  mop: "light",
+  mother_of_pearl: "light",
+  black: "dark",
+  charcoal: "dark",
+  grey: "dark",
+  gray: "dark",
+  blue: "blue",
+  navy: "blue",
+  green: "green",
+};
+
 const fitAliases: Record<string, SelectionFitCode> = {
   any: "unknown",
   small: "compact",
@@ -125,6 +150,10 @@ const featureAliases: Record<string, SelectionFeatureCode> = {
 const stepAliases: Record<string, SelectionStepCode> = {
   attachment: "features",
   practical: "features",
+  dial: "dial-color",
+  color: "dial-color",
+  dial_color: "dial-color",
+  dialcolor: "dial-color",
 };
 
 export const answerParamKeys: Record<SelectionAnswerKey, string[]> = {
@@ -132,6 +161,7 @@ export const answerParamKeys: Record<SelectionAnswerKey, string[]> = {
   fit: ["fit", "wrist"],
   character: ["character", "style"],
   movement: ["movement"],
+  dialColor: ["dialColor", "dial", "dial_color"],
   features: ["features", "feature", "practical", "water", "attachment"],
   budget: ["budget"],
 };
@@ -236,6 +266,12 @@ export function parseSelectionAnswers(searchParams: SelectionSearchParams): Sele
       allowed: movementCodes,
       fallback: "neutral",
       aliases: movementAliases,
+    }),
+    dialColor: option({
+      value: searchParams.dialColor ?? searchParams.dial_color ?? searchParams.dial,
+      allowed: dialColorCodes,
+      fallback: "neutral",
+      aliases: dialColorAliases,
     }),
     features: normalizeSelectionFeatures(featureValues),
     budget: option({

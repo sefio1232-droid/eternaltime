@@ -15,6 +15,10 @@ export type SelectionCharacterCode = "classic" | "modern" | "sporty" | "expressi
 
 export type SelectionMovementPreference = "mechanical" | "quartz" | "solar" | "neutral";
 
+export type SelectionDialColorPreference = "light" | "dark" | "blue" | "green" | "other" | "neutral";
+
+export type SelectionDialColorBucket = "light" | "dark" | "blue" | "green" | "other" | "unknown";
+
 export type SelectionFeatureCode =
   | "sapphire"
   | "water-resistance"
@@ -66,17 +70,26 @@ export type SelectionStepCode =
   | "fit"
   | "character"
   | "movement"
+  | "dial-color"
   | "features"
   | "budget"
   | "results";
 
-export type SelectionAnswerKey = "scenario" | "fit" | "character" | "movement" | "features" | "budget";
+export type SelectionAnswerKey =
+  | "scenario"
+  | "fit"
+  | "character"
+  | "movement"
+  | "dialColor"
+  | "features"
+  | "budget";
 
 export type SelectionAnswers = {
   scenario: SelectionScenarioCode;
   fit: SelectionFitCode;
   character: SelectionCharacterCode;
   movement: SelectionMovementPreference;
+  dialColor: SelectionDialColorPreference;
   features: SelectionFeatureCode[];
   budget: SelectionBudgetCode;
 };
@@ -117,6 +130,7 @@ export type SelectionScoreBreakdown = {
   fitFit: number;
   characterFit: number;
   movementFit: number;
+  dialColorFit: number;
   featureFit: number;
   budgetFit: number;
   dataConfidence: number;
@@ -159,6 +173,7 @@ export type SelectionRecommendation = {
   isPreliminary: boolean;
   familyKey: string;
   movementKey: SelectionActualMovementKey;
+  dialColorBucket: SelectionDialColorBucket;
   caseSizeMm: number | null;
   strapKey: SelectionStrapKey;
   breakdown: SelectionScoreBreakdown;

@@ -23,6 +23,8 @@ import type {
   SelectionCharacterCode,
   SelectionCriterionEvaluation,
   SelectionCriterionStatus,
+  SelectionDialColorBucket,
+  SelectionDialColorPreference,
   SelectionFeatureCode,
   SelectionFitCode,
   SelectionFormDefinition,
@@ -40,16 +42,18 @@ export const selectionStepOrder = [
   "fit",
   "character",
   "movement",
+  "dial-color",
   "features",
   "budget",
 ] as const;
 
 export const selectionScoringWeights = {
-  scenario: 0.16,
-  fit: 0.16,
-  character: 0.12,
-  movement: 0.18,
-  features: 0.17,
+  scenario: 0.14,
+  fit: 0.15,
+  character: 0.11,
+  movement: 0.17,
+  dialColor: 0.08,
+  features: 0.14,
   budget: 0.18,
   dataConfidence: 0.03,
 } as const;
@@ -105,7 +109,7 @@ export const selectionFormDefinition: SelectionFormDefinition = {
     {
       code: "movement",
       answerKey: "movement",
-      eyebrow: "Шаг 4 из 6",
+      eyebrow: "Шаг 4 из 7",
       title: "Какой механизм вы предпочитаете?",
       deck: "Если не уверены, можно оставить этот выбор открытым.",
       optional: false,
@@ -117,9 +121,25 @@ export const selectionFormDefinition: SelectionFormDefinition = {
       ],
     },
     {
+      code: "dial-color",
+      answerKey: "dialColor",
+      eyebrow: "Шаг 5 из 7",
+      title: "Какой цвет циферблата вам ближе?",
+      deck: "Это мягкое эстетическое предпочтение: оно помогает уточнить подбор, но не перебивает бюджет, посадку и механизм.",
+      optional: false,
+      options: [
+        { code: "light", label: "Светлый", description: "Белый, серебристый, кремовый, шампань или светлый перламутр." },
+        { code: "dark", label: "Темный", description: "Черный, графитовый, тёмно-серый или близкие спокойные оттенки." },
+        { code: "blue", label: "Синий", description: "От тёмно-синего до более светлого голубого циферблата." },
+        { code: "green", label: "Зеленый", description: "Зелёный, оливковый, мятный и близкие оттенки." },
+        { code: "other", label: "Другой цвет", description: "Розовый, красный, бордовый, золотистый, коричневый или иной выразительный цвет." },
+        { code: "neutral", label: "Неважно", description: "Не будем учитывать цвет циферблата в ранжировании." },
+      ],
+    },
+    {
       code: "features",
       answerKey: "features",
-      eyebrow: "Шаг 5 из 6",
+      eyebrow: "Шаг 6 из 7",
       title: "Что для вас особенно важно?",
       deck: "Можно выбрать несколько вариантов.",
       optional: false,
@@ -139,7 +159,7 @@ export const selectionFormDefinition: SelectionFormDefinition = {
     {
       code: "budget",
       answerKey: "budget",
-      eyebrow: "Шаг 6 из 6",
+      eyebrow: "Шаг 7 из 7",
       title: "На какой бюджет ориентируемся?",
       deck: "Мы учитываем только публичную цену в рублях и не используем внутренние закупочные значения.",
       optional: false,
@@ -459,6 +479,7 @@ function budgetEvaluation(watch: CatalogWatchDetail, budget: SelectionBudgetCode
 type WatchTraits = {
   text: string;
   movement: SelectionActualMovementKey;
+  dialColor: SelectionDialColorBucket;
   caseSizeMm: number | null;
   caseSize: SelectionFitCode | null;
   thicknessMm: number | null;
@@ -475,6 +496,50 @@ type WatchTraits = {
   expressive: boolean;
 };
 
+export function selectionDialColorBucketFromRaw(rawValue: string | null | undefined): SelectionDialColorBucket {
+  if (!rawValue) return "unknown";
+
+  const text = normalizeText(rawValue);
+  if (!text) return "unknown";
+
+  const has = (patterns: readonly RegExp[]) => patterns.some((pattern) => pattern.test(text));
+
+  if (has([/син/u, /\bblue\b/u, /\bnavy\b/u, /голуб/u, /turquoise/u, /\baqua\b/u])) return "blue";
+  if (has([/зел/u, /\bgreen\b/u, /\bolive\b/u, /\bmint\b/u])) return "green";
+  if (has([/черн/u, /\bblack\b/u, /графит/u, /\bcharcoal\b/u, /антрацит/u, /\banthracite\b/u])) return "dark";
+  if (
+    has([
+      /темн/u,
+      /\bdark\b/u,
+      /сер(?:ы|о|еб)/u,
+      /\bsilver\b/u,
+      /\bgrey\b/u,
+      /\bgray\b/u,
+      /бел/u,
+      /\bwhite\b/u,
+      /крем/u,
+      /\bcream\b/u,
+      /\bivory\b/u,
+      /беж/u,
+      /\bbeige\b/u,
+      /шамп/u,
+      /\bchampagne\b/u,
+      /перламутр/u,
+      /\bmother\b/u,
+      /\bpearl\b/u,
+    ])
+  ) {
+    if (has([/темн/u, /\bdark\b/u, /темно корич/u, /\bdark brown\b/u])) return "dark";
+    return "light";
+  }
+
+  if (has([/роз/u, /\bpink\b/u, /\bmauve\b/u, /крас/u, /\bred\b/u, /бордо/u, /\bburgundy\b/u, /фиолет/u, /\bpurple\b/u, /оранж/u, /\borange\b/u, /желт/u, /\byellow\b/u, /золот/u, /\bgold\b/u, /корич/u, /\bbrown\b/u, /мульти/u, /\bmulticolou?r\b/u])) {
+    return "other";
+  }
+
+  return "unknown";
+}
+
 function booleanFromFeatureText(text: string, raw: string | null, positiveWords: readonly string[]): boolean | null {
   if (includesAny(text, positiveWords)) return true;
   if (raw) return false;
@@ -485,6 +550,7 @@ function traitsFor(watch: CatalogWatchDetail): WatchTraits {
   const facets = classifyCatalogFacets(watch);
   const text = allWatchText(watch);
   const movement = actualMovementKey(facets.movement);
+  const dialColor = selectionDialColorBucketFromRaw(findSpecificationValue(watch.specifications, ["dial_color_raw"]));
   const caseSizeMm = normalizeCaseSizeMm(watch);
   const thicknessMm = caseThicknessMm(watch);
   const strap = strapKey(facets.strapMaterial);
@@ -575,6 +641,7 @@ function traitsFor(watch: CatalogWatchDetail): WatchTraits {
   return {
     text,
     movement,
+    dialColor,
     caseSizeMm,
     caseSize: facets.caseSize,
     thicknessMm,
@@ -820,7 +887,50 @@ function movementEvaluation(
       ? "Тип механизма соответствует предпочтению"
       : softMatch
         ? "Solar остаётся практичной кварцевой архитектурой"
-        : "Тип механизма отличается от выбранного",
+      : "Тип механизма отличается от выбранного",
+  });
+}
+
+function dialColorEvaluation(
+  preference: SelectionDialColorPreference,
+  traits: WatchTraits,
+): SelectionCriterionEvaluation {
+  if (preference === "neutral") {
+    return criterion({
+      key: "dialColor",
+      label: "Циферблат",
+      status: "neutral",
+      score: 0.66,
+      reason: "Цвет циферблата оставлен открытым",
+    });
+  }
+
+  if (traits.dialColor === "unknown") {
+    return criterion({
+      key: "dialColor",
+      label: "Циферблат",
+      status: "unknown",
+      score: 0.4,
+      reason: "Цвет циферблата пока не указан в MASTER-характеристиках",
+    });
+  }
+
+  const labels: Record<Exclude<SelectionDialColorPreference, "neutral">, string> = {
+    light: "светлый циферблат",
+    dark: "тёмный циферблат",
+    blue: "синий циферблат",
+    green: "зелёный циферблат",
+    other: "другой цвет циферблата",
+  };
+
+  return criterion({
+    key: "dialColor",
+    label: "Циферблат",
+    status: traits.dialColor === preference ? "match" : "conflict",
+    score: traits.dialColor === preference ? 1 : 0.3,
+    reason: traits.dialColor === preference
+      ? `Подтверждён ${labels[preference]}`
+      : "Цвет циферблата отличается от выбранного предпочтения",
   });
 }
 
@@ -914,6 +1024,7 @@ function dataConfidenceEvaluation(
     traits.caseSize !== null,
     traits.waterMeters !== null,
     traits.strap !== "unknown",
+    traits.dialColor !== "unknown",
     traits.hasSapphire !== null,
     watch.publicPrice !== null,
   ];
@@ -993,17 +1104,19 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
   const fit = fitEvaluation(watch, answers.fit, traits);
   const character = characterEvaluation(watch, answers.character, traits);
   const movement = movementEvaluation(watch, answers.movement, traits);
+  const dialColor = dialColorEvaluation(answers.dialColor, traits);
   const features = featureEvaluations(watch, answers.features, traits);
   const budget = budgetEvaluation(watch, answers.budget);
   const data = dataConfidenceEvaluation(watch, traits);
   const featureAverage = features.reduce((total, item) => total + item.score, 0) / Math.max(features.length, 1);
 
-  const criteria = [scenario, fit, character, movement, ...features, budget, data];
+  const criteria = [scenario, fit, character, movement, dialColor, ...features, budget, data];
   const breakdown: SelectionScoreBreakdown = {
     scenarioFit: scorePart(scenario.score),
     fitFit: scorePart(fit.score),
     characterFit: scorePart(character.score),
     movementFit: scorePart(movement.score),
+    dialColorFit: scorePart(dialColor.score),
     featureFit: scorePart(featureAverage),
     budgetFit: scorePart(budget.score),
     dataConfidence: scorePart(data.score),
@@ -1014,6 +1127,7 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
     breakdown.fitFit * selectionScoringWeights.fit +
     breakdown.characterFit * selectionScoringWeights.character +
     breakdown.movementFit * selectionScoringWeights.movement +
+    breakdown.dialColorFit * selectionScoringWeights.dialColor +
     breakdown.featureFit * selectionScoringWeights.features +
     breakdown.budgetFit * selectionScoringWeights.budget +
     breakdown.dataConfidence * selectionScoringWeights.dataConfidence;
@@ -1055,6 +1169,7 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
     isPreliminary,
     familyKey: familyKey(watch),
     movementKey: traits.movement,
+    dialColorBucket: traits.dialColor,
     caseSizeMm: traits.caseSizeMm,
     strapKey: traits.strap,
     breakdown,

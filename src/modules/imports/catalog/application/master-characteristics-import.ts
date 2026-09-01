@@ -9,7 +9,7 @@ import type {
 
 export const masterCharacteristicsApplyConfirmationPhrase = "APPLY_ETERNAL_TIME_MASTER_CHARACTERISTICS";
 
-export type MasterBrandSlug = "orient" | "citizen";
+export type MasterBrandSlug = "orient" | "citizen" | "tissot" | "casio" | "seiko";
 
 export type MasterWorkbookSource = {
   brandSlug: MasterBrandSlug;
@@ -41,6 +41,7 @@ export type MasterProductRow = {
   brand: string;
   referenceDisplay: string;
   referenceNormalized: string;
+  lookupReferenceNormalizedCandidates: string[];
   displayNameCurrent: string | null;
   model: string | null;
   collection: string | null;
@@ -52,6 +53,7 @@ export type MasterProductRow = {
   caliber: string | null;
   mechanicalPowerReserveHours: number | null;
   fullChargeRuntimeMonths: number | null;
+  batteryLifeYears: number | null;
   powerReserveRaw: string | null;
   powerSource: string | null;
   accuracyRaw: string | null;
@@ -104,6 +106,7 @@ export type MasterImportPatch = {
   referenceDisplay: string;
   referenceNormalized: string;
   lookupReferenceNormalized: string;
+  lookupReferenceNormalizedCandidates: string[];
   referenceSlug: string;
   specifications: CatalogPublicSpecification[];
   keySpecifications: CatalogPublicSpecification[];
@@ -123,6 +126,7 @@ export const masterSpecificationDefinitions: Record<string, SpecDefinition> = {
   power_source_raw: { label: "Питание", group: "mechanism" },
   power_reserve_raw: { label: "Запас хода", group: "mechanism" },
   full_charge_runtime_raw: { label: "Работа от полного заряда", group: "mechanism" },
+  battery_life_raw: { label: "Срок службы батареи", group: "mechanism" },
   accuracy_raw: { label: "Точность хода", group: "mechanism" },
   case_material_raw: { label: "Материал корпуса", group: "case" },
   case_shape_raw: { label: "Форма корпуса", group: "case" },
@@ -156,6 +160,7 @@ export const masterSpecificationOrder = [
   "power_source_raw",
   "power_reserve_raw",
   "full_charge_runtime_raw",
+  "battery_life_raw",
   "accuracy_raw",
   "display_raw",
   "case_material_raw",
@@ -228,21 +233,42 @@ const enumLabels: Record<string, string> = {
   automatic_and_manual: "автоматический и ручной завод",
   EcoDrive: "Eco-Drive",
   "Eco-Drive": "Eco-Drive",
+  tough_solar: "Tough Solar",
   mainspring: "пружинный механизм",
+  battery: "батарея",
+  solar_cell: "солнечный элемент",
   solar_rechargeable_cell: "солнечный аккумулятор",
   stainless_steel: "нержавеющая сталь",
+  stainless_steel_316l: "нержавеющая сталь 316L",
+  titanium: "титан",
+  ceramic: "керамика",
   leather: "кожа",
+  rubber: "каучук",
+  silicone: "силикон",
+  textile: "текстиль",
+  carbon: "карбон",
   sapphire: "сапфировое",
   mineral: "минеральное",
   hardlex: "Hardlex",
   acrylic: "акриловое",
   hesalite: "Hesalite",
   resin: "полимерное",
+  resin_glass: "полимерное",
+  bio_based_resin: "биополимер",
   bracelet: "браслет",
   strap: "ремешок",
   integrated: "интегрированный браслет",
   analog: "аналоговая",
+  analog_digital: "аналогово-цифровая",
+  ana_digi: "аналогово-цифровая",
+  lcd: "LCD",
   arabic: "арабские цифры",
+  indexes: "индексы",
+  baton: "метки-батоны",
+  roman: "римские цифры",
+  lumi_brite: "LumiBrite",
+  neobrite: "Neobrite",
+  super_luminova: "Super-LumiNova",
   pin_buckle: "классическая пряжка",
   three_fold_clasp: "тройная раскладывающаяся застёжка",
   mens: "мужские",
@@ -283,6 +309,10 @@ const enumLabels: Record<string, string> = {
   safety_folding_buckle: "раскладывающаяся застёжка с фиксатором",
   sliding: "скользящая застёжка",
   trifold_push_button: "тройная застёжка с кнопками",
+  folding_clasp: "раскладывающаяся застёжка",
+  fold_over_clasp: "раскладывающаяся застёжка",
+  fold_over: "раскладывающаяся застёжка",
+  hook_buckle: "крючковая застёжка",
 };
 
 function cellText(row: Record<string, unknown>, key: string): string | null {
@@ -327,6 +357,11 @@ function formatMonths(value: number | null): string | null {
   return `${String(value).replace(".", ",")} мес.`;
 }
 
+function formatYears(value: number | null): string | null {
+  if (value === null) return null;
+  return `${String(value).replace(".", ",")} лет`;
+}
+
 function normalizeReferenceForBrand(brandSlug: MasterBrandSlug, raw: string): string {
   const normalized = normalizeManufacturerReference(raw);
   const alias = catalogReferenceAliases.find(
@@ -340,6 +375,20 @@ function referenceDisplayForBrand(brandSlug: MasterBrandSlug, rawDisplay: string
     (candidate) => candidate.brandSlug === brandSlug && candidate.toReferenceNormalized === normalized,
   );
   return alias?.toReferenceDisplay ?? rawDisplay;
+}
+
+function lookupReferenceCandidatesForBrand(brandSlug: MasterBrandSlug, row: Record<string, unknown>): string[] {
+  const rawCandidates = [
+    cellText(row, "reference_live"),
+    cellText(row, "reference"),
+    cellText(row, "reference_normalized"),
+  ].filter((value): value is string => Boolean(value));
+  const normalized = rawCandidates.map((value) => normalizeManufacturerReference(value));
+  const aliasCandidates = catalogReferenceAliases
+    .filter((alias) => alias.brandSlug === brandSlug && normalized.includes(alias.toReferenceNormalized))
+    .flatMap((alias) => [alias.fromReferenceNormalized, alias.toReferenceNormalized]);
+
+  return [...new Set([...normalized, ...aliasCandidates])].filter(Boolean);
 }
 
 function sheetRows(workbook: XLSX.WorkBook, sheetName: string): Record<string, unknown>[] {
@@ -374,6 +423,7 @@ export function parseMasterWorkbook(input: MasterWorkbookSource): ParsedMasterWo
       brand,
       referenceDisplay: referenceDisplayForBrand(input.brandSlug, rawDisplay, referenceNormalized),
       referenceNormalized,
+      lookupReferenceNormalizedCandidates: lookupReferenceCandidatesForBrand(input.brandSlug, row),
       displayNameCurrent: cellText(row, "display_name_current"),
       model: cellText(row, "model"),
       collection: cellText(row, "collection"),
@@ -385,6 +435,7 @@ export function parseMasterWorkbook(input: MasterWorkbookSource): ParsedMasterWo
       caliber: cellText(row, "caliber"),
       mechanicalPowerReserveHours: cellNumber(row, "mechanical_power_reserve_hours") ?? cellNumber(row, "power_reserve_hours"),
       fullChargeRuntimeMonths: cellNumber(row, "full_charge_runtime_months"),
+      batteryLifeYears: cellNumber(row, "battery_life_years"),
       powerReserveRaw: cellText(row, "power_reserve_raw"),
       powerSource: cellText(row, "power_source"),
       accuracyRaw: cellText(row, "accuracy_raw"),
@@ -540,6 +591,9 @@ export function buildMasterSpecifications(input: {
   if (product.movementFamily === "solar" || /eco-?drive/i.test(product.movementTechnology ?? "")) {
     addSpec(specs, "full_charge_runtime_raw", formatMonths(product.fullChargeRuntimeMonths));
   }
+  if (product.movementFamily !== "mechanical") {
+    addSpec(specs, "battery_life_raw", formatYears(product.batteryLifeYears));
+  }
   addSpec(specs, "accuracy_raw", product.accuracyRaw);
   addSpec(specs, "display_raw", displayEnum(product.displayType));
   addSpec(specs, "case_material_raw", displayEnum(product.caseMaterial));
@@ -600,9 +654,9 @@ export function buildMasterImportPatches(workbooks: ParsedMasterWorkbook[]): Mas
         referenceDisplay: product.referenceDisplay,
         referenceNormalized: product.referenceNormalized,
         lookupReferenceNormalized:
-          catalogReferenceAliases.find(
-            (alias) => alias.brandSlug === product.brandSlug && alias.toReferenceNormalized === product.referenceNormalized,
-          )?.fromReferenceNormalized ?? product.referenceNormalized,
+          product.lookupReferenceNormalizedCandidates.find((candidate) => candidate !== product.referenceNormalized) ??
+          product.referenceNormalized,
+        lookupReferenceNormalizedCandidates: product.lookupReferenceNormalizedCandidates,
         referenceSlug: referenceSlugFromNormalized(product.referenceNormalized),
         specifications,
         keySpecifications: buildMasterKeySpecifications(specifications),
@@ -614,6 +668,8 @@ export function buildMasterImportPatches(workbooks: ParsedMasterWorkbook[]): Mas
 }
 
 export function applyMasterPatchToWatch(watch: CatalogWatchDetail, patch: MasterImportPatch): CatalogWatchDetail {
+  const watchWithoutSeo = { ...watch } as CatalogWatchDetail & { seoOverlay?: unknown };
+  delete watchWithoutSeo.seoOverlay;
   const alias = catalogReferenceAliases.find(
     (candidate) => candidate.brandSlug === patch.brandSlug && candidate.toReferenceNormalized === patch.referenceNormalized,
   );
@@ -629,7 +685,7 @@ export function applyMasterPatchToWatch(watch: CatalogWatchDetail, patch: Master
     };
   };
   const next: CatalogWatchDetail = {
-    ...watch,
+    ...watchWithoutSeo,
     id: `${patch.brandSlug}/${patch.referenceSlug}`,
     href: `/watches/${patch.brandSlug}/${patch.referenceSlug}`,
     title: replaceAliasReference(watch.title) ?? watch.title,
@@ -657,6 +713,7 @@ export function attachMasterSiblingReferences(watches: CatalogWatchDetail[]): Ca
           sibling.brandSlug === watch.brandSlug &&
           sibling.watchModelName === watch.watchModelName,
       )
+      .sort((left, right) => left.referenceSlug.localeCompare(right.referenceSlug))
       .slice(0, 8)
       .map((sibling) => ({
         id: sibling.id,

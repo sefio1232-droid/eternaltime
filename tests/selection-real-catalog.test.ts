@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildSelectionRecommendations,
   evaluateBudgetFit,
+  selectionDialColorBucketFromRaw,
   selectionFormDefinition,
 } from "@/modules/selection/application/selection-service";
+import { findSpecificationValue } from "@/modules/catalog/application/catalog-filter-taxonomy";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
@@ -21,13 +23,13 @@ const imagePlan = JSON.parse(
 const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
 
 const scenarios: Record<"A" | "B" | "C" | "D" | "E" | "F" | "G", SelectionAnswers> = {
-  A: { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", features: ["none"], budget: "range_15000_30000" },
-  B: { scenario: "work", fit: "compact", character: "classic", movement: "quartz", features: ["sapphire", "thin"], budget: "range_30000_50000" },
-  C: { scenario: "occasion", fit: "compact", character: "expressive", movement: "solar", features: ["steel-bracelet"], budget: "range_30000_50000" },
-  D: { scenario: "sport", fit: "large", character: "sporty", movement: "quartz", features: ["water-resistance", "chronograph"], budget: "range_15000_30000" },
-  E: { scenario: "travel", fit: "medium", character: "modern", movement: "solar", features: ["water-resistance", "date"], budget: "range_30000_50000" },
-  F: { scenario: "first-mechanical", fit: "medium", character: "classic", movement: "mechanical", features: ["sapphire"], budget: "range_30000_50000" },
-  G: { scenario: "universal", fit: "unknown", character: "neutral", movement: "neutral", features: ["none"], budget: "unknown" },
+  A: { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", dialColor: "blue", features: ["none"], budget: "range_15000_30000" },
+  B: { scenario: "work", fit: "compact", character: "classic", movement: "quartz", dialColor: "dark", features: ["sapphire", "thin"], budget: "range_30000_50000" },
+  C: { scenario: "occasion", fit: "compact", character: "expressive", movement: "solar", dialColor: "green", features: ["steel-bracelet"], budget: "range_30000_50000" },
+  D: { scenario: "sport", fit: "large", character: "sporty", movement: "quartz", dialColor: "dark", features: ["water-resistance", "chronograph"], budget: "range_15000_30000" },
+  E: { scenario: "travel", fit: "medium", character: "modern", movement: "solar", dialColor: "blue", features: ["water-resistance", "date"], budget: "range_30000_50000" },
+  F: { scenario: "first-mechanical", fit: "medium", character: "classic", movement: "mechanical", dialColor: "light", features: ["sapphire"], budget: "range_30000_50000" },
+  G: { scenario: "universal", fit: "unknown", character: "neutral", movement: "neutral", dialColor: "neutral", features: ["none"], budget: "unknown" },
 };
 
 function statusFor(result: ReturnType<typeof buildSelectionRecommendations>[number], key: string) {
@@ -41,7 +43,7 @@ function priceRub(result: ReturnType<typeof buildSelectionRecommendations>[numbe
 describe("selection real catalog scenarios", () => {
   it("runs the current full catalog through all representative profiles deterministically", () => {
     expect(dataset.watches.length).toBeGreaterThanOrEqual(600);
-    expect(selectionFormDefinition.steps).toHaveLength(6);
+    expect(selectionFormDefinition.steps).toHaveLength(7);
 
     for (const answers of Object.values(scenarios)) {
       const first = buildSelectionRecommendations({ dataset, answers });
@@ -54,6 +56,7 @@ describe("selection real catalog scenarios", () => {
       expect(new Set(first.map((item) => item.watch.href)).size).toBe(first.length);
       expect(new Set(first.map((item) => item.watch.referenceNormalized)).size).toBe(first.length);
       expect(first.every((item) => item.score >= 0 && item.score <= 100)).toBe(true);
+      expect(first.every((item) => item.criteria.some((criterion) => criterion.key === "dialColor"))).toBe(true);
     }
   });
 
@@ -65,9 +68,9 @@ describe("selection real catalog scenarios", () => {
 
   it("treats selected budgets as target bands across the real catalog", () => {
     const profiles: SelectionAnswers[] = [
-      { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", features: ["none"], budget: "range_15000_30000" },
-      { scenario: "sport", fit: "large", character: "sporty", movement: "quartz", features: ["water-resistance", "chronograph"], budget: "range_15000_30000" },
-      { scenario: "work", fit: "compact", character: "classic", movement: "quartz", features: ["leather"], budget: "range_15000_30000" },
+      { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", dialColor: "blue", features: ["none"], budget: "range_15000_30000" },
+      { scenario: "sport", fit: "large", character: "sporty", movement: "quartz", dialColor: "dark", features: ["water-resistance", "chronograph"], budget: "range_15000_30000" },
+      { scenario: "work", fit: "compact", character: "classic", movement: "quartz", dialColor: "light", features: ["leather"], budget: "range_15000_30000" },
     ];
 
     for (const answers of profiles) {
@@ -121,6 +124,7 @@ describe("selection real catalog scenarios", () => {
         fit: "compact",
         character: "classic",
         movement: "quartz",
+        dialColor: "light",
         features: ["none"],
         budget: "unknown",
       },
@@ -131,13 +135,27 @@ describe("selection real catalog scenarios", () => {
     expect(compactClassic.some((item) => item.watch.brandSlug === "seiko")).toBe(true);
   });
 
-  it("does not use dial color in selection questions or criteria keys", () => {
-    expect(JSON.stringify(selectionFormDefinition)).not.toMatch(/color|цвет|dial_color/i);
+  it("uses MASTER dial_color_raw as a soft selection criterion without image or title inference", () => {
+    expect(selectionFormDefinition.steps.find((step) => step.code === "dial-color")?.options.map((option) => option.code)).toEqual([
+      "light",
+      "dark",
+      "blue",
+      "green",
+      "other",
+      "neutral",
+    ]);
 
-    for (const answers of Object.values(scenarios)) {
-      const results = buildSelectionRecommendations({ dataset, answers });
-      expect(results.flatMap((item) => item.criteria.map((criterion) => criterion.key)).join(" ")).not.toMatch(/color|dial/i);
-    }
+    const scoped = dataset.watches.filter((watch) => ["orient", "citizen", "tissot", "casio", "seiko"].includes(watch.brandSlug));
+    const buckets = new Set(scoped.map((watch) => selectionDialColorBucketFromRaw(findSpecificationValue(watch.specifications, ["dial_color_raw"]))));
+    expect(scoped.length).toBeGreaterThanOrEqual(555);
+    expect(buckets.has("light")).toBe(true);
+    expect(buckets.has("dark")).toBe(true);
+    expect(buckets.has("blue")).toBe(true);
+    expect(buckets.has("green")).toBe(true);
+
+    const blueResults = buildSelectionRecommendations({ dataset, answers: scenarios.A, limit: 4 });
+    expect(blueResults.some((item) => item.criteria.find((criterion) => criterion.key === "dialColor")?.status === "match")).toBe(true);
+    expect(blueResults.every((item) => item.criteria.find((criterion) => criterion.key === "dialColor")?.status !== undefined)).toBe(true);
   });
 
   it("never exposes known technical image URLs in the shortlist", () => {

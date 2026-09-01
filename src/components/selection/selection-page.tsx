@@ -38,6 +38,7 @@ const summaryLabels: Record<SelectionAnswerKey, string> = {
   fit: "Посадка",
   character: "Характер",
   movement: "Механизм",
+  dialColor: "Циферблат",
   features: "Важно",
   budget: "Бюджет",
 };
@@ -403,7 +404,7 @@ export function SelectionPageView({
       {showCompactIntro ? (
         <header className={styles.compactHeader}>
           <p className={styles.eyebrow}>Подбор часов</p>
-          <h1>Шесть шагов до вашей подборки</h1>
+          <h1>Семь шагов до вашей подборки</h1>
         </header>
       ) : null}
 
