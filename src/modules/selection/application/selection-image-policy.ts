@@ -2,7 +2,7 @@ import { imageOrderFromAlt } from "@/modules/catalog/application/catalog-image-p
 import type { CatalogImagePresentation } from "@/modules/catalog/domain/read-models";
 
 const blockedSelectionImagePattern =
-  /(?:caseback|case[-_ ]?back|back|rear|[_-]b\d+(?:\.|[_-])|clasp|buckle|strap[-_ ]?only|bracelet[-_ ]?detail|packag|box|manual|diagram|schematic|screenshot|technical|drawing|dial[-_ ]?(?:macro|detail)|macro|crown|movement|caliber|profile|profil|soldat|side|lifestyle|wristshot|on[-_ ]?hand|broken|404|unavailable|задн|крышк|застеж|ремешок|упаков|короб|инструкц|схем|чертеж|механизм|калибр|профил|вид сбоку)/i;
+  /(?:caseback|case[-_ ]?back|back|rear|[_-]b\d+(?:\.|[_-])|clasp|buckle|strap[-_ ]?only|bracelet[-_ ]?detail|packag|box|manual|diagram|schematic|screenshot|technical|drawing|dial[-_ ]?(?:macro|detail)|macro|crown|movement|caliber|(?:^|[^a-z])profile(?:$|[^a-z])|(?:^|[^a-z])profil(?:$|[^a-z])|soldat|(?:^|[^a-z])side(?:$|[^a-z])|lifestyle|wristshot|on[-_ ]?hand|placeholder|fallback|brand[-_ ]?image|logo|broken|404|unavailable|задн|крышк|застеж|ремешок|упаков|короб|инструкц|схем|чертеж|механизм|калибр|профил|вид сбоку)/i;
 
 function imageText(image: Exclude<CatalogImagePresentation, { kind: "none" }>): string {
   return [image.alt, image.src, image.kind === "remote" ? image.url : ""]

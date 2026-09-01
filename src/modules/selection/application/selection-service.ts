@@ -85,7 +85,7 @@ export const selectionFormDefinition: SelectionFormDefinition = {
       deck: "Размер корпуса сильно влияет на то, как часы смотрятся на руке.",
       optional: false,
       options: [
-        { code: "compact", label: "Компактная", description: "Небольшие часы; сюда также относится большинство женских моделей." },
+        { code: "compact", label: "Компактная", description: "Небольшие часы с корпусом до 38 мм по подтверждённым характеристикам." },
         { code: "medium", label: "Средняя", description: "Универсальный размер для большинства запястий." },
         { code: "large", label: "Крупная", description: "Более заметные часы на руке." },
         { code: "unknown", label: "Не знаю", description: "Не будем ограничивать подбор по размеру." },
@@ -293,6 +293,28 @@ export function buildSelectionImageCandidates(
   return result;
 }
 
+export function selectionHasValidPrimaryImage(watch: CatalogWatchDetail): boolean {
+  return buildSelectionImageCandidates(watch).length > 0;
+}
+
+function selectionSizeMatchesHardConstraint(
+  selectedFit: SelectionFitCode,
+  traits: WatchTraits,
+): boolean {
+  if (selectedFit === "unknown") return true;
+  return traits.caseSize === selectedFit;
+}
+
+export function selectionMovementMatchesPreference(
+  selectedMovement: SelectionMovementPreference,
+  actual: SelectionActualMovementKey,
+): boolean {
+  if (selectedMovement === "neutral") return true;
+  if (selectedMovement === "mechanical") return actual === "mechanical";
+  if (selectedMovement === "solar") return actual === "solar";
+  return actual === "quartz" || actual === "digital" || actual === "analog-digital";
+}
+
 function criterion(input: {
   key: string;
   label: string;
@@ -481,7 +503,7 @@ type WatchTraits = {
   movement: SelectionActualMovementKey;
   dialColor: SelectionDialColorBucket;
   caseSizeMm: number | null;
-  caseSize: SelectionFitCode | null;
+  caseSize: Exclude<SelectionFitCode, "unknown"> | null;
   thicknessMm: number | null;
   strap: SelectionStrapKey;
   waterMeters: number | null;
@@ -783,17 +805,12 @@ function fitEvaluation(
     });
   }
 
-  const adjacent =
-    (fit === "compact" && traits.caseSize === "medium") ||
-    (fit === "medium" && traits.caseSize !== null) ||
-    (fit === "large" && traits.caseSize === "medium");
-
   return criterion({
     key: "fit",
     label: "Посадка",
-    status: adjacent ? "neutral" : "conflict",
-    score: adjacent ? 0.58 : 0.16,
-    reason: adjacent ? "Размер близок к выбранной посадке" : "Размер заметно отличается от выбранной посадки",
+    status: "conflict",
+    score: 0.16,
+    reason: "Размер корпуса не соответствует выбранной посадке",
   });
 }
 
@@ -871,22 +888,15 @@ function movementEvaluation(
     });
   }
 
-  const match =
-    (preference === "mechanical" && actual === "mechanical") ||
-    (preference === "quartz" && (actual === "quartz" || actual === "digital" || actual === "analog-digital")) ||
-    (preference === "solar" && actual === "solar");
-
-  const softMatch = preference === "quartz" && actual === "solar";
+  const match = selectionMovementMatchesPreference(preference, actual);
 
   return criterion({
     key: "movement",
     label: "Механизм",
-    status: match ? "match" : softMatch ? "neutral" : "conflict",
-    score: match ? 1 : softMatch ? 0.62 : 0.06,
+    status: match ? "match" : "conflict",
+    score: match ? 1 : 0.06,
     reason: match
       ? "Тип механизма соответствует предпочтению"
-      : softMatch
-        ? "Solar остаётся практичной кварцевой архитектурой"
       : "Тип механизма отличается от выбранного",
   });
 }
@@ -1100,6 +1110,25 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
   }
 
   const traits = traitsFor(watch);
+  const imageCandidates = buildSelectionImageCandidates(watch);
+
+  // Selection v4 eligibility pipeline:
+  // PUBLIC CANDIDATES -> VALID PRODUCT -> VALID PRIMARY IMAGE -> HARD SIZE -> HARD MECHANISM
+  // before budget phasing and soft scoring. This intentionally returns fewer than three results
+  // when exact eligible candidates are scarce; it never fills cards with no-image or wrong-size
+  // watches just to make the layout look full.
+  if (imageCandidates.length === 0) {
+    return null;
+  }
+
+  if (!selectionSizeMatchesHardConstraint(answers.fit, traits)) {
+    return null;
+  }
+
+  if (!selectionMovementMatchesPreference(answers.movement, traits.movement)) {
+    return null;
+  }
+
   const scenario = scenarioEvaluation(watch, answers.scenario, traits);
   const fit = fitEvaluation(watch, answers.fit, traits);
   const character = characterEvaluation(watch, answers.character, traits);
@@ -1152,7 +1181,7 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
         : "Компромиссный вариант";
   return {
     watch: toCatalogWatchCard(watch),
-    imageCandidates: buildSelectionImageCandidates(watch),
+    imageCandidates,
     score,
     matchLabel,
     role: "alternative_direction",
@@ -1171,6 +1200,7 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
     movementKey: traits.movement,
     dialColorBucket: traits.dialColor,
     caseSizeMm: traits.caseSizeMm,
+    sizeClass: traits.caseSize,
     strapKey: traits.strap,
     breakdown,
     criteria,
@@ -1183,11 +1213,8 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
 }
 
 function hardCriterionKeys(answers: SelectionAnswers): string[] {
-  const hasRealFeatures = answers.features.some((feature) => feature !== "none");
   return [
-    answers.budget === "unknown" ? null : "budget",
     answers.movement === "neutral" ? null : "movement",
-    hasRealFeatures ? "feature" : null,
     answers.fit === "unknown" ? null : "fit",
   ].filter((key): key is string => key !== null);
 }
@@ -1237,9 +1264,9 @@ function phaseRecommendationsByBudget(
     "exact_budget_band",
     "slightly_below",
     "slightly_above",
+    "broader_above",
     "broader_below",
     "unknown_price",
-    "broader_above",
   ];
 
   const phased: SelectionRecommendation[] = [];
@@ -1257,6 +1284,18 @@ function phaseRecommendationsByBudget(
     if (used.has(recommendation.watch.href)) continue;
     phased.push(recommendation);
     used.add(recommendation.watch.href);
+  }
+
+  const hasUsableBudgetTier = phased.some((recommendation) => {
+    const tier = recommendationBudgetTier(recommendation, answers.budget);
+    return tier === "exact_budget_band" ||
+      tier === "slightly_below" ||
+      tier === "slightly_above" ||
+      tier === "broader_above";
+  });
+
+  if (hasUsableBudgetTier) {
+    return phased.filter((recommendation) => recommendationBudgetTier(recommendation, answers.budget) !== "broader_below");
   }
 
   return phased;

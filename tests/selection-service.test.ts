@@ -11,11 +11,13 @@ import {
   buildSelectionImageCandidates,
   buildSelectionRecommendations,
   evaluateBudgetFit,
+  selectionMovementMatchesPreference,
   selectionDialColorBucketFromRaw,
   resolveSelectionStep,
   selectionBudgetContainsPrice,
   selectionFormDefinition,
 } from "@/modules/selection/application/selection-service";
+import { normalizeCaseSizeGroup } from "@/modules/catalog/application/catalog-filter-taxonomy";
 import type { CatalogImagePresentation, CatalogReadDataset, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
 import type { SelectionAnswers } from "@/modules/selection/domain/types";
 
@@ -70,8 +72,8 @@ function watch(input: {
     brandLineName: null,
     watchModelName: input.title,
     publicPrice: input.priceMinor === null ? null : { amountMinor: input.priceMinor, currencyCode: "RUB" },
-    primaryImage: input.primaryImage ?? image(),
-    imageGallery: input.imageGallery ?? [input.primaryImage ?? image()],
+    primaryImage: input.primaryImage ?? image("remote", `/${input.id}-front.png`),
+    imageGallery: input.imageGallery ?? [input.primaryImage ?? image("remote", `/${input.id}-front.png`)],
     keySpecifications: specifications.slice(0, 3),
     specifications,
     siblingReferences: [],
@@ -132,7 +134,7 @@ function fixtureWatches(): CatalogWatchDetail[] {
       specs: {
         movement_type_raw: "solar quartz Eco-Drive",
         dial_color_raw: "blue",
-        case_diameter_raw: "42 mm",
+        case_diameter_raw: "42.1 mm",
         bracelet_material_raw: "stainless steel bracelet",
         water_resistance_raw: "200 m",
         crystal_type_raw: "sapphire crystal",
@@ -402,6 +404,209 @@ describe("selection algorithm", () => {
     expect(recommendations.some((item) => item.watch.id === "cheap-4k")).toBe(false);
   });
 
+  it("excludes candidates without a valid selection image before ranking", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "missing-photo-perfect",
+          title: "Missing Photo Perfect",
+          priceMinor: 25_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+            dial_color_raw: "blue",
+            bracelet_material_raw: "stainless steel bracelet",
+            crystal_type_raw: "sapphire crystal",
+            water_resistance_raw: "200 m",
+          },
+          primaryImage: image("none"),
+          imageGallery: [image("none")],
+        }),
+        watch({
+          id: "valid-photo-basic",
+          title: "Valid Photo Basic",
+          priceMinor: 25_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            case_diameter_raw: "40 mm",
+          },
+        }),
+      ]),
+      answers: { ...baseAnswers, fit: "medium", movement: "quartz", dialColor: "blue", budget: "range_15000_30000" },
+      limit: 3,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["valid-photo-basic"]);
+    expect(recommendations.every((item) => item.imageCandidates.length > 0)).toBe(true);
+  });
+
+  it("does not count placeholder, technical or broken metadata as a valid selection image", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "placeholder",
+          title: "Placeholder",
+          priceMinor: 25_000 * 100,
+          specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" },
+          primaryImage: image("remote", "/placeholder-watch.png"),
+          imageGallery: [image("remote", "/placeholder-watch.png")],
+        }),
+        watch({
+          id: "caseback",
+          title: "Caseback",
+          priceMinor: 25_000 * 100,
+          specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" },
+          primaryImage: image("remote", "/watch-caseback.png"),
+          imageGallery: [image("remote", "/watch-caseback.png")],
+        }),
+        watch({
+          id: "broken",
+          title: "Broken",
+          priceMinor: 25_000 * 100,
+          specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" },
+          primaryImage: image("remote", "/watch-broken-404.png"),
+          imageGallery: [image("remote", "/watch-broken-404.png")],
+        }),
+        watch({
+          id: "front",
+          title: "Front",
+          priceMinor: 25_000 * 100,
+          specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" },
+        }),
+      ]),
+      answers: { ...baseAnswers, fit: "medium", movement: "quartz", budget: "range_15000_30000" },
+      limit: 4,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["front"]);
+  });
+
+  it.each([
+    [37.9, "compact"],
+    [38.0, "medium"],
+    [42.0, "medium"],
+    [42.1, "large"],
+  ] as const)("uses MASTER size boundary %s mm => %s", (mm, bucket) => {
+    expect(normalizeCaseSizeGroup(mm)).toBe(bucket);
+  });
+
+  it.each([
+    ["compact", "compact-37", "37.9 mm"],
+    ["medium", "medium-38", "38.0 mm"],
+    ["medium", "medium-42", "42.0 mm"],
+    ["large", "large-421", "42.1 mm"],
+  ] as const)("keeps %s selection to exact size class only", (fit, expectedId, expectedSize) => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "compact-37", title: "Compact", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "37.9 mm" } }),
+        watch({ id: "medium-38", title: "Medium 38", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "38.0 mm" } }),
+        watch({ id: "medium-42", title: "Medium 42", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "42.0 mm" } }),
+        watch({ id: "large-421", title: "Large", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "42.1 mm" } }),
+        watch({ id: "unknown-size", title: "Unknown", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz" } }),
+      ]),
+      answers: { ...baseAnswers, fit, movement: "quartz", budget: "range_15000_30000" },
+      limit: 5,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toContain(expectedId);
+    expect(recommendations.every((item) => item.sizeClass === fit)).toBe(true);
+    expect(recommendations.every((item) => item.caseSizeMm !== null)).toBe(true);
+    expect(recommendations.some((item) => item.watch.id === "unknown-size")).toBe(false);
+    expect(recommendations.find((item) => item.watch.id === expectedId)?.criteria.find((criterion) => criterion.key === "fit")?.status).toBe("match");
+    expect(expectedSize).toBeTruthy();
+  });
+
+  it("allows all known size classes when size is neutral", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "compact", title: "Compact", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "36 mm" } }),
+        watch({ id: "medium", title: "Medium", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" } }),
+        watch({ id: "large", title: "Large", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "44 mm" } }),
+      ]),
+      answers: { ...baseAnswers, fit: "unknown", movement: "quartz", budget: "range_15000_30000" },
+      limit: 4,
+    });
+
+    expect(new Set(recommendations.map((item) => item.sizeClass))).toEqual(new Set(["compact", "medium", "large"]));
+  });
+
+  it("does not allow budget, color or character to override hard size", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({
+          id: "medium-perfect",
+          title: "Medium Perfect",
+          priceMinor: 20_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            dial_color_raw: "blue",
+            case_diameter_raw: "40 mm",
+            crystal_type_raw: "sapphire",
+            bracelet_material_raw: "steel bracelet",
+          },
+        }),
+        watch({
+          id: "compact-basic",
+          title: "Compact Basic",
+          priceMinor: 35_000 * 100,
+          specs: {
+            movement_type_raw: "quartz",
+            dial_color_raw: "black",
+            case_diameter_raw: "36 mm",
+          },
+        }),
+      ]),
+      answers: { scenario: "daily", fit: "compact", character: "modern", movement: "quartz", dialColor: "blue", features: ["sapphire", "steel-bracelet"], budget: "range_15000_30000" },
+      limit: 3,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["compact-basic"]);
+    expect(recommendations.every((item) => item.sizeClass === "compact")).toBe(true);
+  });
+
+  it("does not force result count to three when hard constraints leave fewer exact matches", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "compact-one", title: "Compact One", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "36 mm" } }),
+        watch({ id: "medium-wrong", title: "Medium Wrong", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" } }),
+      ]),
+      answers: { ...baseAnswers, fit: "compact", movement: "quartz", budget: "range_15000_30000" },
+      limit: 3,
+    });
+
+    expect(recommendations).toHaveLength(1);
+    expect(recommendations[0]?.watch.id).toBe("compact-one");
+  });
+
+  it("returns an empty exact-match state instead of wrong-size fallbacks", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "medium", title: "Medium", priceMinor: 25_000 * 100, specs: { movement_type_raw: "quartz", case_diameter_raw: "40 mm" } }),
+      ]),
+      answers: { ...baseAnswers, fit: "compact", movement: "quartz", budget: "range_15000_30000" },
+      limit: 3,
+    });
+
+    expect(recommendations).toEqual([]);
+  });
+
+  it("treats explicit movement choice as a hard eligibility constraint", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "mechanical", title: "Mechanical", priceMinor: 35_000 * 100, specs: { movement_type_raw: "automatic mechanical", case_diameter_raw: "40 mm" } }),
+        watch({ id: "solar", title: "Solar", priceMinor: 35_000 * 100, specs: { movement_type_raw: "Eco-Drive solar", case_diameter_raw: "40 mm" } }),
+        watch({ id: "unknown", title: "Unknown", priceMinor: 35_000 * 100, specs: { case_diameter_raw: "40 mm" } }),
+      ]),
+      answers: { ...baseAnswers, fit: "medium", movement: "mechanical", budget: "range_30000_50000" },
+      limit: 3,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["mechanical"]);
+    expect(recommendations.every((item) => item.movementKey === "mechanical")).toBe(true);
+    expect(selectionMovementMatchesPreference("solar", "solar")).toBe(true);
+    expect(selectionMovementMatchesPreference("mechanical", "solar")).toBe(false);
+  });
+
   it("ranks deterministic fixtures according to different answer sets", () => {
     const resultA = buildSelectionRecommendations({
       dataset: dataset(),
@@ -462,7 +667,7 @@ describe("selection algorithm", () => {
     });
 
     expect(recommendation?.criteria.find((criterion) => criterion.key === "feature:sapphire")?.status).toBe("unknown");
-    expect(recommendation?.isPreliminary).toBe(true);
+    expect(recommendation?.isPreliminary).toBe(false);
     expect(recommendation?.reasons.join(" ")).not.toContain("сапфир");
   });
 
@@ -736,7 +941,14 @@ describe("selection diagnostics and images", () => {
   });
 
   it("provides a silhouette fallback when no image exists", () => {
-    const item = watch({ id: "missing-image", title: "Missing Image", priceMinor: 2_000_000, specs: {} });
+    const item = watch({
+      id: "missing-image",
+      title: "Missing Image",
+      priceMinor: 2_000_000,
+      specs: {},
+      primaryImage: image("none"),
+      imageGallery: [image("none")],
+    });
     expect(buildSelectionImageCandidates(item)).toEqual([]);
   });
 

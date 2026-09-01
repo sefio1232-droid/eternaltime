@@ -175,6 +175,7 @@ export type SelectionRecommendation = {
   movementKey: SelectionActualMovementKey;
   dialColorBucket: SelectionDialColorBucket;
   caseSizeMm: number | null;
+  sizeClass: Exclude<SelectionFitCode, "unknown"> | null;
   strapKey: SelectionStrapKey;
   breakdown: SelectionScoreBreakdown;
   criteria: SelectionCriterionEvaluation[];

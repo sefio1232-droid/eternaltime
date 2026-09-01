@@ -97,7 +97,7 @@ export function isLikelyTechnicalAngle(image: CatalogImagePresentation, imageInd
   }
 
   const text = imageText(image);
-  if (/(caseback|back|clasp|buckle|side|задн|крышк|заст[её]ж|вид сбоку|браслет detail|bracelet detail)/i.test(text)) {
+  if (/(caseback|back|clasp|buckle|(?:^|[^a-z])side(?:$|[^a-z])|задн|крышк|заст[её]ж|вид сбоку|браслет detail|bracelet detail)/i.test(text)) {
     return true;
   }
 
@@ -314,7 +314,7 @@ function technicalCaption(image: CatalogImagePresentation, imageIndex: number): 
     return "Задняя крышка";
   }
 
-  if (/side|вид сбоку/.test(text)) {
+  if (/(?:^|[^a-z])side(?:$|[^a-z])|вид сбоку/.test(text)) {
     return "Вид сбоку";
   }
 

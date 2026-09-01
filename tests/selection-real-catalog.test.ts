@@ -9,6 +9,12 @@ import {
 } from "@/modules/selection/application/selection-service";
 import { findSpecificationValue } from "@/modules/catalog/application/catalog-filter-taxonomy";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
+import { SITE_IMPORT_OVERLAY_OUTPUT_PATH, type CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
+import { CASIO_MANIFEST_OUTPUT_PATH, type CasioPhotoArchiveManifest } from "@/modules/catalog/infrastructure/casio-photo-archive-types";
+import { CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH, type CitizenOfficialPhotoManifest } from "@/modules/catalog/infrastructure/citizen-official-photo-types";
+import { ORIENT_MANIFEST_OUTPUT_PATH, type OrientPhotoArchiveManifest } from "@/modules/catalog/infrastructure/orient-photo-archive-types";
+import { SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH, type SeikoOfficialPhotoManifest } from "@/modules/catalog/infrastructure/seiko-official-photo-types";
+import { TISSOT_MANIFEST_OUTPUT_PATH, type TissotPhotoArchiveManifest } from "@/modules/catalog/infrastructure/tissot-photo-archive-types";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
 import type { SelectionAnswers } from "@/modules/selection/domain/types";
@@ -20,7 +26,34 @@ const preview = JSON.parse(
 const imagePlan = JSON.parse(
   readFileSync(path.join(root, "imports", "generated", "catalog-image-upload-plan.json"), "utf8"),
 ) as CatalogImageUploadPlan;
-const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
+const casioPhotoManifest = JSON.parse(
+  readFileSync(path.join(root, CASIO_MANIFEST_OUTPUT_PATH), "utf8"),
+) as CasioPhotoArchiveManifest;
+const orientPhotoManifest = JSON.parse(
+  readFileSync(path.join(root, ORIENT_MANIFEST_OUTPUT_PATH), "utf8"),
+) as OrientPhotoArchiveManifest;
+const tissotPhotoManifest = JSON.parse(
+  readFileSync(path.join(root, TISSOT_MANIFEST_OUTPUT_PATH), "utf8"),
+) as TissotPhotoArchiveManifest;
+const citizenOfficialPhotoManifest = JSON.parse(
+  readFileSync(path.join(root, CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH), "utf8"),
+) as CitizenOfficialPhotoManifest;
+const seikoOfficialPhotoManifest = JSON.parse(
+  readFileSync(path.join(root, SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH), "utf8"),
+) as SeikoOfficialPhotoManifest;
+const siteImportOverlay = JSON.parse(
+  readFileSync(path.join(root, SITE_IMPORT_OVERLAY_OUTPUT_PATH), "utf8"),
+) as CatalogSiteImportOverlayManifest;
+const dataset = catalogReadDatasetFromPreview({
+  preview,
+  imagePlan,
+  casioPhotoManifest,
+  orientPhotoManifest,
+  tissotPhotoManifest,
+  citizenOfficialPhotoManifest,
+  seikoOfficialPhotoManifest,
+  siteImportOverlay,
+});
 
 const scenarios: Record<"A" | "B" | "C" | "D" | "E" | "F" | "G", SelectionAnswers> = {
   A: { scenario: "daily", fit: "medium", character: "modern", movement: "quartz", dialColor: "blue", features: ["none"], budget: "range_15000_30000" },
@@ -86,8 +119,13 @@ describe("selection real catalog scenarios", () => {
     for (const answers of profiles) {
       const results = buildSelectionRecommendations({ dataset, answers, limit: 3 });
       const prices = results.map(priceRub);
-      expect(prices.every((price) => price >= 15_000 && price <= 30_000)).toBe(true);
+      const exact = results.filter((result) => evaluateBudgetFit(answers.budget, result.watch.publicPrice?.amountMinor ?? null).tier === "exact_budget_band");
+      if (exact.length > 0) {
+        expect(evaluateBudgetFit(answers.budget, results[0]?.watch.publicPrice?.amountMinor ?? null).tier).toBe("exact_budget_band");
+      }
       expect(prices.some((price) => price <= 6_000)).toBe(false);
+      expect(results.every((result) => result.sizeClass === answers.fit)).toBe(true);
+      expect(results.every((result) => result.imageCandidates.length > 0)).toBe(true);
     }
   });
 
@@ -105,8 +143,13 @@ describe("selection real catalog scenarios", () => {
         limit: 3,
       });
 
-      expect(results.some((result) => priceRub(result) <= item.extremeCeiling)).toBe(false);
-      expect(results.filter((result) => evaluateBudgetFit(item.budget, result.watch.publicPrice?.amountMinor ?? null).status === "ideal").length).toBeGreaterThanOrEqual(2);
+      const exactCount = results.filter((result) => evaluateBudgetFit(item.budget, result.watch.publicPrice?.amountMinor ?? null).status === "ideal").length;
+      if (exactCount > 0) {
+        expect(results.slice(0, exactCount).every((result) => evaluateBudgetFit(item.budget, result.watch.publicPrice?.amountMinor ?? null).status === "ideal")).toBe(true);
+        expect(results.slice(0, exactCount).some((result) => priceRub(result) <= item.extremeCeiling)).toBe(false);
+      }
+      expect(results.every((result) => result.sizeClass === scenarios.A.fit)).toBe(true);
+      expect(results.every((result) => result.imageCandidates.length > 0)).toBe(true);
     }
   });
 

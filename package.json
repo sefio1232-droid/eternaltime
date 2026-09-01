@@ -33,7 +33,9 @@
     "home-hero:prepare-final-assets": "node scripts/prepare-home-hero-final-assets.mjs",
     "home-hero:prepare-orbit-assets": "node scripts/prepare-home-hero-orbit-assets.mjs",
     "homepage:prepare-premium-assets": "node scripts/prepare-homepage-premium-assets.mjs",
-    "secrets:scan": "node scripts/secrets-scan.mjs"
+    "secrets:scan": "node scripts/secrets-scan.mjs",
+    "photo:coverage:recovery": "tsx scripts/photo-coverage-recovery.ts",
+    "selection:hard:v4:audit": "tsx scripts/selection-hard-constraints-v4-audit.ts"
   },
   "dependencies": {
     "@cdek-it/widget": "^3.11.1",
