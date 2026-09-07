@@ -54,6 +54,14 @@ export function SelectionOptionGroup({
     });
   }
 
+  function chooseSingleOption(option: SelectionOptionLink) {
+    if (multiple || isNavigating) return;
+    setSelection(option.code);
+    if (!option.href) return;
+    setIsNavigating(true);
+    router.push(option.href);
+  }
+
   function continueToNextStep() {
     if (!canContinue || isNavigating) return;
     let href = selectedOption?.href;
@@ -102,7 +110,7 @@ export function SelectionOptionGroup({
               className={styles.option}
               data-selected={checked ? "true" : undefined}
               tabIndex={multiple ? 0 : checked || (!selection && index === 0) ? 0 : -1}
-              onClick={() => multiple ? toggleMulti(option.code) : setSelection(option.code)}
+              onClick={() => multiple ? toggleMulti(option.code) : chooseSingleOption(option)}
               onKeyDown={(event) => moveRadioFocus(event, index)}
             >
               <span className={styles.optionNumber} aria-hidden="true">

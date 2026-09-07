@@ -228,9 +228,17 @@ export function hasSelectionAnswers(searchParams: SelectionSearchParams): boolea
 }
 
 export function answeredSelectionKeys(searchParams: SelectionSearchParams): SelectionAnswerKey[] {
-  return (Object.keys(answerParamKeys) as SelectionAnswerKey[]).filter((answerKey) =>
+  const answered = (Object.keys(answerParamKeys) as SelectionAnswerKey[]).filter((answerKey) =>
     answerParamKeys[answerKey].some((paramKey) => firstParam(searchParams[paramKey])),
   );
+  const scenario = option({
+    value: searchParams.scenario,
+    allowed: scenarioCodes,
+    fallback: "daily",
+    aliases: scenarioAliases,
+  });
+
+  return scenario === "first-mechanical" ? answered.filter((answerKey) => answerKey !== "movement") : answered;
 }
 
 export function parseSelectionAnswers(searchParams: SelectionSearchParams): SelectionAnswers {
@@ -242,13 +250,15 @@ export function parseSelectionAnswers(searchParams: SelectionSearchParams): Sele
     ...valuesFromParam(searchParams.attachment),
   ];
 
+  const scenario = option({
+    value: searchParams.scenario,
+    allowed: scenarioCodes,
+    fallback: "daily",
+    aliases: scenarioAliases,
+  });
+
   return {
-    scenario: option({
-      value: searchParams.scenario,
-      allowed: scenarioCodes,
-      fallback: "daily",
-      aliases: scenarioAliases,
-    }),
+    scenario,
     fit: option({
       value: searchParams.fit ?? searchParams.wrist,
       allowed: fitCodes,
@@ -261,12 +271,14 @@ export function parseSelectionAnswers(searchParams: SelectionSearchParams): Sele
       fallback: "neutral",
       aliases: characterAliases,
     }),
-    movement: option({
-      value: searchParams.movement,
-      allowed: movementCodes,
-      fallback: "neutral",
-      aliases: movementAliases,
-    }),
+    movement: scenario === "first-mechanical"
+      ? "mechanical"
+      : option({
+          value: searchParams.movement,
+          allowed: movementCodes,
+          fallback: "neutral",
+          aliases: movementAliases,
+        }),
     dialColor: option({
       value: searchParams.dialColor ?? searchParams.dial_color ?? searchParams.dial,
       allowed: dialColorCodes,
@@ -306,7 +318,10 @@ export function selectionAnswersToSearchParams(
   includedKeys?: readonly SelectionAnswerKey[],
 ): URLSearchParams {
   const params = new URLSearchParams();
-  const keys = includedKeys ?? (Object.keys(answerParamKeys) as SelectionAnswerKey[]);
+  const rawKeys = includedKeys ?? (Object.keys(answerParamKeys) as SelectionAnswerKey[]);
+  const keys = answers.scenario === "first-mechanical"
+    ? rawKeys.filter((key) => key !== "movement")
+    : rawKeys;
   for (const key of keys) {
     setSelectionParam(params, key, answers[key]);
   }

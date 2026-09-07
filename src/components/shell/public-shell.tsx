@@ -45,7 +45,7 @@ export function PublicShell({ children }: Readonly<{ children: React.ReactNode }
       <footer className="public-footer">
         <EditorialContainer className="public-footer-inner">
           <p className="public-footer-copy">
-            Каталог, журнал и личная коллекция для осознанного выбора часов.
+            Интернет-магазин оригинальных наручных часов: каталог, подбор, журнал и личная коллекция для осознанного выбора.
           </p>
           <nav aria-label="Информационные разделы" className="public-footer-nav">
             <div className="public-footer-primary">

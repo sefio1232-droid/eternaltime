@@ -11,8 +11,8 @@ import {
   nextSelectionStep,
   previousSelectionStep,
   selectionAnswerLabel,
-  selectionFormDefinition,
   selectionStepByCode,
+  selectionStepsForAnswers,
 } from "@/modules/selection/application/selection-service";
 import { normalizeSelectionFeatures, selectionAnswersToSearchParams } from "@/modules/selection/application/selection-query";
 import type {
@@ -23,8 +23,6 @@ import type {
   SelectionStepCode,
 } from "@/modules/selection/domain/types";
 import styles from "./selection-page.module.css";
-
-const totalSteps = selectionFormDefinition.steps.length;
 
 const statusLabels: Record<SelectionCriterionStatus, string> = {
   match: "Хорошо подходит",
@@ -49,10 +47,20 @@ function selectionHref(
   step: SelectionStepCode,
   answer?: { key: SelectionAnswerKey; value: string | string[] },
 ) {
+  const effectiveAnswers = answer
+    ? ({
+        ...answers,
+        [answer.key]: answer.key === "features" ? normalizeSelectionFeatures(Array.isArray(answer.value) ? answer.value : [answer.value]) : answer.value,
+        movement: answer.key === "scenario" && answer.value === "first-mechanical" ? "mechanical" : answers.movement,
+      } as SelectionAnswers)
+    : answers;
   const includedKeys = answer
     ? [...new Set<SelectionAnswerKey>([...answeredKeys, answer.key])]
     : answeredKeys;
-  const params = selectionAnswersToSearchParams(answers, includedKeys);
+  const effectiveKeys = effectiveAnswers.scenario === "first-mechanical"
+    ? includedKeys.filter((key) => key !== "movement")
+    : includedKeys;
+  const params = selectionAnswersToSearchParams(effectiveAnswers, effectiveKeys);
   if (answer) {
     if (answer.key === "features") {
       params.set("features", normalizeSelectionFeatures(Array.isArray(answer.value) ? answer.value : [answer.value]).join(","));
@@ -84,10 +92,12 @@ function SelectionProgress({
   answeredKeys: readonly SelectionAnswerKey[];
   currentStep: SelectionStepCode;
 }>) {
+  const activeSteps = selectionStepsForAnswers(answers);
+  const totalSteps = activeSteps.length;
   const activeIndex =
     currentStep === "results"
       ? totalSteps
-      : Math.max(0, selectionFormDefinition.steps.findIndex((step) => step.code === currentStep));
+      : Math.max(0, activeSteps.findIndex((step) => step.code === currentStep));
   const answerCount = answeredKeys.length;
   const answerLabel = answerCount === 1 ? "ответ" : answerCount >= 2 && answerCount <= 4 ? "ответа" : "ответов";
 
@@ -97,7 +107,7 @@ function SelectionProgress({
         {currentStep === "results" ? "Подбор завершён" : `Шаг ${activeIndex + 1} из ${totalSteps}`}
       </span>
       <ol className={styles.progress} aria-label="Шаги подбора">
-        {selectionFormDefinition.steps.map((step, index) => {
+        {activeSteps.map((step, index) => {
           const state = index < activeIndex || currentStep === "results" ? "complete" : index === activeIndex ? "current" : "next";
           const content = <span aria-hidden="true" />;
           return (
@@ -135,7 +145,7 @@ function AnswerSummaryList({
   answeredKeys: readonly SelectionAnswerKey[];
   currentStep: SelectionStepCode;
 }>) {
-  const answered = selectionFormDefinition.steps.filter((step) => answeredKeys.includes(step.answerKey));
+  const answered = selectionStepsForAnswers(answers).filter((step) => answeredKeys.includes(step.answerKey));
 
   if (answered.length === 0) {
     return <p className={styles.summaryEmpty}>Здесь появятся выбранные ответы.</p>;
@@ -162,6 +172,7 @@ function SelectionSummary(props: Readonly<{
   answeredKeys: readonly SelectionAnswerKey[];
   currentStep: SelectionStepCode;
 }>) {
+  const totalSteps = selectionStepsForAnswers(props.answers).length;
   return (
     <>
       <aside className={styles.summaryDesktop} aria-label="Ваши ответы">
@@ -194,8 +205,11 @@ function SelectionQuestion({
   const step = selectionStepByCode(stepCode);
   if (!step) return null;
 
-  const nextStep = nextSelectionStep(step.code);
-  const previousStep = previousSelectionStep(step.code);
+  const activeSteps = selectionStepsForAnswers(answers);
+  const totalSteps = activeSteps.length;
+  const activeIndex = Math.max(0, activeSteps.findIndex((item) => item.code === step.code));
+  const nextStep = nextSelectionStep(step.code, answers);
+  const previousStep = previousSelectionStep(step.code, answers);
   const selectedValue = answeredKeys.includes(step.answerKey) && step.answerKey !== "features"
     ? String(answers[step.answerKey])
     : null;
@@ -209,7 +223,7 @@ function SelectionQuestion({
     <section className={styles.question} aria-labelledby="selection-question-title" key={step.code}>
       <SelectionStepFocus targetId="selection-question-title" active={shouldFocus} />
       <div className={styles.questionCopy}>
-        <p className={styles.eyebrow}>{step.eyebrow}</p>
+        <p className={styles.eyebrow}>Шаг {activeIndex + 1} из {totalSteps}</p>
         <h2 id="selection-question-title" tabIndex={-1}>{step.title}</h2>
         <p>{step.deck}</p>
       </div>

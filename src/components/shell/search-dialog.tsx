@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 function SearchSymbol() {
   return (
@@ -13,7 +13,9 @@ function SearchSymbol() {
 
 export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const suggestionListId = useId();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -35,6 +37,27 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
       document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || suggestions.length > 0) return;
+
+    const controller = new AbortController();
+
+    fetch("/api/catalog/search-suggestions", {
+      cache: "force-cache",
+      signal: controller.signal,
+    })
+      .then((response) => response.ok ? response.json() : { suggestions: [] })
+      .then((payload: { suggestions?: unknown }) => {
+        if (!Array.isArray(payload.suggestions)) return;
+        setSuggestions(payload.suggestions.filter((item): item is string => typeof item === "string" && item.trim().length > 0));
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      });
+
+    return () => controller.abort();
+  }, [isOpen, suggestions.length]);
 
   return (
     <>
@@ -79,9 +102,15 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
                 <input
                   name="q"
                   autoFocus
+                  list={suggestionListId}
                   className="h-14 border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-lg outline-none"
                   placeholder="Например, PRX или A158WA"
                 />
+                <datalist id={suggestionListId}>
+                  {suggestions.map((suggestion) => (
+                    <option key={suggestion} value={suggestion} />
+                  ))}
+                </datalist>
               </label>
               <button
                 type="submit"

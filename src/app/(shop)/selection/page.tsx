@@ -43,6 +43,7 @@ export default async function SelectionPage({
     hasAnswers,
     searchParams: resolvedSearchParams,
     answeredKeys,
+    answers,
   });
   const datasetState = await getCatalogReadDataset()
     .then((dataset) => ({ type: "ok" as const, dataset }))

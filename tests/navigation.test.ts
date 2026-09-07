@@ -27,6 +27,7 @@ describe("foundation navigation", () => {
 
   it("keeps the reset public header navigation focused", () => {
     expect(publicNavigation.map((item) => item.href)).toEqual([
+      "/",
       "/watches",
       "/selection",
       "/journal",

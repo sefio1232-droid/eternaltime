@@ -5,7 +5,8 @@ export type NavigationItem = {
 };
 
 export const publicNavigation: NavigationItem[] = [
-  { label: "Часы", href: "/watches" },
+  { label: "Главная", href: "/" },
+  { label: "Каталог", href: "/watches" },
   { label: "Подбор", href: "/selection" },
   { label: "Журнал", href: "/journal" },
 ];

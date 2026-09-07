@@ -55,8 +55,8 @@ export function SelectionIntro() {
             </li>
             <li>
               <span>02</span>
-              <strong>3–4</strong>
-              <small>варианта</small>
+              <strong>До 4</strong>
+              <small>точных варианта</small>
             </li>
             <li>
               <span>03</span>

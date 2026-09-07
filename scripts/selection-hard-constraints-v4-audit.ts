@@ -20,6 +20,7 @@ import {
   buildSelectionImageCandidates,
   buildSelectionRecommendations,
   evaluateBudgetFit,
+  normalizeSelectionAnswersForLogic,
   selectionDialColorBucketFromRaw,
   selectionFormDefinition,
   selectionMovementMatchesPreference,
@@ -336,17 +337,18 @@ function generatedProfiles(count = 500): SelectionAnswers[] {
 }
 
 function auditProfile(dataset: CatalogReadDataset, answers: SelectionAnswers, index: number, kind: "hand" | "generated") {
+  const effectiveAnswers = normalizeSelectionAnswersForLogic(answers);
   const recommendations = buildSelectionRecommendations({ dataset, answers, limit: 4 });
   const failures = [];
   for (const recommendation of recommendations) {
     if (recommendation.imageCandidates.length === 0) {
       failures.push({ type: "IMAGE_VIOLATION", reference: recommendation.watch.referenceDisplay });
     }
-    if (answers.fit !== "unknown" && recommendation.sizeClass !== answers.fit) {
-      failures.push({ type: "SIZE_VIOLATION", reference: recommendation.watch.referenceDisplay, expected: answers.fit, actual: recommendation.sizeClass });
+    if (effectiveAnswers.fit !== "unknown" && recommendation.sizeClass !== effectiveAnswers.fit) {
+      failures.push({ type: "SIZE_VIOLATION", reference: recommendation.watch.referenceDisplay, expected: effectiveAnswers.fit, actual: recommendation.sizeClass });
     }
-    if (!selectionMovementMatchesPreference(answers.movement, recommendation.movementKey)) {
-      failures.push({ type: "MECHANISM_VIOLATION", reference: recommendation.watch.referenceDisplay, expected: answers.movement, actual: recommendation.movementKey });
+    if (!selectionMovementMatchesPreference(effectiveAnswers.movement, recommendation.movementKey)) {
+      failures.push({ type: "MECHANISM_VIOLATION", reference: recommendation.watch.referenceDisplay, expected: effectiveAnswers.movement, actual: recommendation.movementKey });
     }
   }
 

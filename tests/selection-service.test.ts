@@ -16,6 +16,7 @@ import {
   resolveSelectionStep,
   selectionBudgetContainsPrice,
   selectionFormDefinition,
+  selectionStepsForAnswers,
 } from "@/modules/selection/application/selection-service";
 import { normalizeCaseSizeGroup } from "@/modules/catalog/application/catalog-filter-taxonomy";
 import type { CatalogImagePresentation, CatalogReadDataset, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
@@ -249,6 +250,43 @@ describe("selection query", () => {
       answeredKeys: ["scenario", "fit", "character", "movement", "dialColor", "features", "budget"],
     })).toBe("results");
   });
+
+  it("keeps first-mechanical coherent by forcing mechanical movement and skipping the movement step", () => {
+    const answers = parseSelectionAnswers({
+      scenario: "first-mechanical",
+      movement: "solar",
+      fit: "medium",
+      character: "classic",
+      dialColor: "neutral",
+      features: "none",
+      budget: "range_30000_50000",
+    });
+    const answered = answeredSelectionKeys({
+      scenario: "first-mechanical",
+      movement: "solar",
+      fit: "medium",
+      character: "classic",
+    });
+
+    expect(answers.movement).toBe("mechanical");
+    expect(answered).toEqual(["scenario", "fit", "character"]);
+    expect(selectionStepsForAnswers(answers).map((step) => step.code)).toEqual([
+      "scenario",
+      "fit",
+      "character",
+      "dial-color",
+      "features",
+      "budget",
+    ]);
+    expect(selectionAnswersToSearchParams(answers, ["scenario", "movement", "fit"]).toString()).toBe("scenario=first-mechanical&fit=medium");
+    expect(resolveSelectionStep({
+      requestedStep: "movement",
+      hasAnswers: true,
+      searchParams: { scenario: "first-mechanical", fit: "medium", character: "classic" },
+      answeredKeys: answered,
+      answers,
+    })).toBe("dial-color");
+  });
 });
 
 describe("selection dial color", () => {
@@ -304,7 +342,7 @@ describe("selection algorithm", () => {
   it("uses public RUB price budget boundaries", () => {
     expect(selectionBudgetContainsPrice("under_15000", 14_999 * 100)).toBe(true);
     expect(selectionBudgetContainsPrice("under_15000", 15_001 * 100)).toBe(false);
-    expect(selectionBudgetContainsPrice("range_15000_30000", 14_999 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("range_15000_30000", 14_999 * 100)).toBe(false);
     expect(selectionBudgetContainsPrice("range_15000_30000", 12_000 * 100)).toBe(false);
     expect(selectionBudgetContainsPrice("range_15000_30000", 6_000 * 100)).toBe(false);
     expect(selectionBudgetContainsPrice("range_15000_30000", 30_000 * 100)).toBe(true);
@@ -316,7 +354,7 @@ describe("selection algorithm", () => {
     expect(selectionBudgetContainsPrice("range_50000_100000", 50_000 * 100)).toBe(true);
     expect(selectionBudgetContainsPrice("range_50000_100000", 100_000 * 100)).toBe(true);
     expect(selectionBudgetContainsPrice("range_50000_100000", 100_001 * 100)).toBe(false);
-    expect(selectionBudgetContainsPrice("over_100000", 99_999 * 100)).toBe(true);
+    expect(selectionBudgetContainsPrice("over_100000", 99_999 * 100)).toBe(false);
     expect(selectionBudgetContainsPrice("over_100000", 25_000 * 100)).toBe(false);
     expect(selectionBudgetContainsPrice("over_100000", 100_001 * 100)).toBe(true);
     expect(selectionBudgetContainsPrice("unknown", 700_000 * 100)).toBe(true);
@@ -605,6 +643,28 @@ describe("selection algorithm", () => {
     expect(recommendations.every((item) => item.movementKey === "mechanical")).toBe(true);
     expect(selectionMovementMatchesPreference("solar", "solar")).toBe(true);
     expect(selectionMovementMatchesPreference("mechanical", "solar")).toBe(false);
+  });
+
+  it("does not allow the first-mechanical scenario to be contradicted by a later solar movement answer", () => {
+    const recommendations = buildSelectionRecommendations({
+      dataset: dataset([
+        watch({ id: "mechanical", title: "Mechanical", priceMinor: 35_000 * 100, specs: { movement_type_raw: "automatic mechanical", case_diameter_raw: "40 mm" } }),
+        watch({ id: "solar", title: "Solar", priceMinor: 35_000 * 100, specs: { movement_type_raw: "Eco-Drive solar", case_diameter_raw: "40 mm" } }),
+      ]),
+      answers: {
+        scenario: "first-mechanical",
+        fit: "medium",
+        character: "classic",
+        movement: "solar",
+        dialColor: "neutral",
+        features: ["none"],
+        budget: "range_30000_50000",
+      },
+      limit: 3,
+    });
+
+    expect(recommendations.map((item) => item.watch.id)).toEqual(["mechanical"]);
+    expect(recommendations.every((item) => item.movementKey === "mechanical")).toBe(true);
   });
 
   it("ranks deterministic fixtures according to different answer sets", () => {

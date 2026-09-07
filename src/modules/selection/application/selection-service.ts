@@ -63,7 +63,7 @@ export const selectionFormDefinition: SelectionFormDefinition = {
     {
       code: "scenario",
       answerKey: "scenario",
-      eyebrow: "Шаг 1 из 6",
+      eyebrow: "Шаг 1 из 7",
       title: "Для чего вы выбираете часы?",
       deck: "Выберите основной сценарий — дальше уточним посадку, характер и характеристики.",
       optional: false,
@@ -80,7 +80,7 @@ export const selectionFormDefinition: SelectionFormDefinition = {
     {
       code: "fit",
       answerKey: "fit",
-      eyebrow: "Шаг 2 из 6",
+      eyebrow: "Шаг 2 из 7",
       title: "Какая посадка вам ближе?",
       deck: "Размер корпуса сильно влияет на то, как часы смотрятся на руке.",
       optional: false,
@@ -94,7 +94,7 @@ export const selectionFormDefinition: SelectionFormDefinition = {
     {
       code: "character",
       answerKey: "character",
-      eyebrow: "Шаг 3 из 6",
+      eyebrow: "Шаг 3 из 7",
       title: "Какой характер часов вам нравится?",
       deck: "Выберите то, как часы должны ощущаться визуально.",
       optional: false,
@@ -174,6 +174,19 @@ export const selectionFormDefinition: SelectionFormDefinition = {
     },
   ],
 };
+
+export function normalizeSelectionAnswersForLogic(answers: SelectionAnswers): SelectionAnswers {
+  return answers.scenario === "first-mechanical"
+    ? { ...answers, movement: "mechanical" }
+    : answers;
+}
+
+export function selectionStepsForAnswers(answers?: SelectionAnswers) {
+  const normalized = answers ? normalizeSelectionAnswersForLogic(answers) : null;
+  return normalized?.scenario === "first-mechanical"
+    ? selectionFormDefinition.steps.filter((step) => step.code !== "movement")
+    : selectionFormDefinition.steps;
+}
 
 const roleLabels: Record<SelectionRecommendationRole, string> = {
   main: "Главный выбор",
@@ -484,7 +497,7 @@ export function evaluateBudgetFit(budget: SelectionBudgetCode, amountMinor: numb
 
 export function selectionBudgetContainsPrice(budget: SelectionBudgetCode, amountMinor: number): boolean {
   const fit = evaluateBudgetFit(budget, amountMinor);
-  return fit.tier === "budget_neutral" || fit.tier === "exact_budget_band" || fit.tier === "slightly_below";
+  return fit.tier === "budget_neutral" || fit.tier === "exact_budget_band";
 }
 
 function budgetEvaluation(watch: CatalogWatchDetail, budget: SelectionBudgetCode): SelectionCriterionEvaluation {
@@ -1213,9 +1226,10 @@ function scoreWatch(watch: CatalogWatchDetail, answers: SelectionAnswers): Selec
 }
 
 function hardCriterionKeys(answers: SelectionAnswers): string[] {
+  const normalized = normalizeSelectionAnswersForLogic(answers);
   return [
-    answers.movement === "neutral" ? null : "movement",
-    answers.fit === "unknown" ? null : "fit",
+    normalized.movement === "neutral" ? null : "movement",
+    normalized.fit === "unknown" ? null : "fit",
   ].filter((key): key is string => key !== null);
 }
 
@@ -1478,26 +1492,29 @@ export function buildSelectionRecommendations(input: {
   limit?: number;
 }): SelectionRecommendation[] {
   const limit = input.limit ?? 4;
+  const answers = normalizeSelectionAnswersForLogic(input.answers);
   const scored = input.dataset.watches
-    .map((watch) => scoreWatch(watch, input.answers))
+    .map((watch) => scoreWatch(watch, answers))
     .filter((recommendation): recommendation is SelectionRecommendation => recommendation !== null)
-    .sort(scoreSort({ answers: input.answers }));
+    .sort(scoreSort({ answers }));
 
-  const pool = phaseRecommendationsByBudget(scored, input.answers);
+  const pool = phaseRecommendationsByBudget(scored, answers);
 
   return diversifyRecommendations(pool, limit);
 }
 
-export function nextSelectionStep(currentStep: SelectionStepCode): SelectionStepCode {
-  const index = selectionStepOrder.indexOf(currentStep as Exclude<SelectionStepCode, "start" | "results">);
+export function nextSelectionStep(currentStep: SelectionStepCode, answers?: SelectionAnswers): SelectionStepCode {
+  const activeStepOrder = selectionStepsForAnswers(answers).map((step) => step.code);
+  const index = activeStepOrder.indexOf(currentStep as Exclude<SelectionStepCode, "start" | "results">);
   if (index === -1) return "scenario";
-  return selectionStepOrder[index + 1] ?? "results";
+  return activeStepOrder[index + 1] ?? "results";
 }
 
-export function previousSelectionStep(currentStep: SelectionStepCode): SelectionStepCode {
-  const index = selectionStepOrder.indexOf(currentStep as Exclude<SelectionStepCode, "start" | "results">);
+export function previousSelectionStep(currentStep: SelectionStepCode, answers?: SelectionAnswers): SelectionStepCode {
+  const activeStepOrder = selectionStepsForAnswers(answers).map((step) => step.code);
+  const index = activeStepOrder.indexOf(currentStep as Exclude<SelectionStepCode, "start" | "results">);
   if (index <= 0) return "start";
-  return selectionStepOrder[index - 1] ?? "start";
+  return activeStepOrder[index - 1] ?? "start";
 }
 
 export function resolveSelectionStep(input: {
@@ -1505,15 +1522,28 @@ export function resolveSelectionStep(input: {
   hasAnswers: boolean;
   searchParams: Record<string, string | string[] | undefined>;
   answeredKeys?: readonly SelectionAnswerKey[];
+  answers?: SelectionAnswers;
 }): SelectionStepCode {
+  const activeSteps = selectionStepsForAnswers(input.answers);
+  const activeStepCodes = new Set(activeSteps.map((step) => step.code));
+
   if (!input.hasAnswers) {
-    return input.requestedStep === "results" ? "start" : input.requestedStep;
+    if (input.requestedStep === "results") return "start";
+    if (input.requestedStep === "start") return "start";
+    return activeStepCodes.has(input.requestedStep as Exclude<SelectionStepCode, "start" | "results">)
+      ? input.requestedStep
+      : "scenario";
   }
 
-  if (input.requestedStep !== "start") return input.requestedStep;
+  if (input.requestedStep !== "start") {
+    if (input.requestedStep === "results") return "results";
+    if (activeStepCodes.has(input.requestedStep as Exclude<SelectionStepCode, "start" | "results">)) {
+      return input.requestedStep;
+    }
+  }
 
   const answered = new Set(input.answeredKeys);
-  for (const step of selectionFormDefinition.steps) {
+  for (const step of activeSteps) {
     if (!answered.has(step.answerKey) && !input.searchParams[step.answerKey]) {
       return step.code;
     }

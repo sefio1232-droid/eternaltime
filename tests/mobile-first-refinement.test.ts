@@ -39,12 +39,19 @@ describe("mobile-first production refinement contracts", () => {
 
   it("gives mobile search a real dialog, Escape handling, body lock and 44px trigger surface", () => {
     const search = readSrc("src/components/shell/search-dialog.tsx");
+    const suggestionsRoute = readSrc("src/app/api/catalog/search-suggestions/route.ts");
     const globals = readSrc("src/app/globals.css");
 
     expect(search).toContain('role="dialog"');
     expect(search).toContain('aria-modal="true"');
     expect(search).toContain('event.key !== "Escape"');
     expect(search).toContain('document.body.style.overflow = "hidden"');
+    expect(search).toContain('fetch("/api/catalog/search-suggestions"');
+    expect(search).toContain("<datalist id={suggestionListId}>");
+    expect(suggestionsRoute).toContain("getCatalogReadDataset");
+    expect(suggestionsRoute).toContain("brandCollectionName");
+    expect(suggestionsRoute).toContain("referenceDisplay");
+    expect(suggestionsRoute).toContain("maxSuggestions = 120");
     expect(globals).toContain(".search-dialog-panel");
     expect(globals).toMatch(/min-height:\s*44px/);
   });
