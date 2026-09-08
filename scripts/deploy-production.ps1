@@ -7,6 +7,7 @@ param(
   [switch]$DeployCatalogAssets,
   [switch]$UpdateProductionEnv,
   [switch]$BootstrapServer,
+  [switch]$DeferReleaseRetention,
   [switch]$SkipLocalChecks
 )
 
@@ -65,6 +66,7 @@ $remoteScript = "/tmp/eternal-time-$releaseId-deploy.sh"
 $deployCatalogAssetsValue = if ($DeployCatalogAssets) { "1" } else { "0" }
 $updateProductionEnvValue = if ($UpdateProductionEnv) { "1" } else { "0" }
 $bootstrapServerValue = if ($BootstrapServer) { "1" } else { "0" }
+$deferReleaseRetentionValue = if ($DeferReleaseRetention) { "1" } else { "0" }
 
 $requiredEnvKeys = @(
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -191,6 +193,7 @@ ASSET_DIR="`$APP_DIR/shared/catalog-image-assets"
 DEPLOY_CATALOG_ASSETS="$deployCatalogAssetsValue"
 UPDATE_PRODUCTION_ENV="$updateProductionEnvValue"
 BOOTSTRAP_SERVER="$bootstrapServerValue"
+DEFER_RELEASE_RETENTION="$deferReleaseRetentionValue"
 APP_USER="eternaltime"
 CERT_PATH="/etc/letsencrypt/live/`$DOMAIN/fullchain.pem"
 CERT_KEY_PATH="/etc/letsencrypt/live/`$DOMAIN/privkey.pem"
@@ -386,6 +389,15 @@ if [ "`$DEPLOY_CATALOG_ASSETS" = "1" ]; then
   rm -f "$remoteAssetArchive"
 fi
 echo "deploy_ok release=`$RELEASE_ID"
+
+# Retention independently verifies the exact current target, both services,
+# local/public health and public home (exact HTTP 200). No pruning on failure.
+node "`$RELEASE_DIR/scripts/production-release-retention.mjs" --dry-run --expected-current "`$RELEASE_DIR"
+if [ "`$DEFER_RELEASE_RETENTION" = "1" ]; then
+  echo "Retention deferred for explicit production content QA; dry-run only."
+else
+  node "`$RELEASE_DIR/scripts/production-release-retention.mjs" --apply --expected-current "`$RELEASE_DIR"
+fi
 "@
 
 $remoteScriptPath = Join-Path $deployDir "deploy-$releaseId.sh"

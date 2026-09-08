@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SelectionExplanation } from "@/components/selection/selection-explanation";
-import { SelectionIntro } from "@/components/selection/selection-intro";
+import { SelectionIntro, selectionStepHeadline } from "@/components/selection/selection-intro";
 import { SelectionOptionGroup } from "@/components/selection/selection-option-group";
 import { SelectionWatchImage } from "@/components/selection/selection-watch-image";
 import { SelectionStepFocus } from "@/components/selection/selection-step-focus";
@@ -410,7 +410,7 @@ export function SelectionPageView({
     <EditorialContainer className={`${styles.page} public-page`}>
       {isFirstStep ? (
         <div className={styles.initialExperience}>
-          <SelectionIntro />
+          <SelectionIntro stepCount={selectionStepsForAnswers(answers).length} />
           {flow}
         </div>
       ) : null}
@@ -418,7 +418,7 @@ export function SelectionPageView({
       {showCompactIntro ? (
         <header className={styles.compactHeader}>
           <p className={styles.eyebrow}>Подбор часов</p>
-          <h1>Семь шагов до вашей подборки</h1>
+          <h1>{selectionStepHeadline(selectionStepsForAnswers(answers).length)}</h1>
         </header>
       ) : null}
 

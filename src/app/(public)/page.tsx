@@ -17,7 +17,7 @@ import { listPublishedJournalArticles } from "@/modules/journal/application/jour
 
 export const metadata: Metadata = {
   title: "Eternal Time",
-  description: "\u0427\u0430\u0441\u044b, \u0436\u0443\u0440\u043d\u0430\u043b \u0438 \u043b\u0438\u0447\u043d\u0430\u044f \u043a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u044f \u0432 \u043e\u0434\u043d\u043e\u0439 \u0441\u043f\u043e\u043a\u043e\u0439\u043d\u043e\u0439 \u0441\u0438\u0441\u0442\u0435\u043c\u0435 \u0432\u044b\u0431\u043e\u0440\u0430.",
+  description: "Оригинальные наручные часы в интернет-магазине Eternal Time. Каталог моделей, подбор по вашим предпочтениям и журнал о часах.",
   alternates: { canonical: "/" },
 };
 

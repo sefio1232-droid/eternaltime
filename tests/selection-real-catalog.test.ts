@@ -1,11 +1,13 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { selectionStepHeadline } from "@/components/selection/selection-intro";
 import {
   buildSelectionRecommendations,
   evaluateBudgetFit,
   selectionDialColorBucketFromRaw,
   selectionFormDefinition,
+  selectionStepsForAnswers,
 } from "@/modules/selection/application/selection-service";
 import { findSpecificationValue } from "@/modules/catalog/application/catalog-filter-taxonomy";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
@@ -74,13 +76,14 @@ function priceRub(result: ReturnType<typeof buildSelectionRecommendations>[numbe
 }
 
 describe("selection real catalog scenarios", () => {
-  it("keeps the public intro copy aligned with the seven-step flow", () => {
+  it("derives normal and first-mechanical headlines from the active flow", () => {
     const intro = readFileSync(path.join(root, "src", "components", "selection", "selection-intro.tsx"), "utf8");
 
-    expect(intro).toContain("семь коротких вопросов");
-    expect(intro).toContain("01 / 07");
-    expect(intro).toContain("Семь шагов до вашей подборки");
-    expect(intro).not.toContain("шесть коротких вопросов");
+    expect(selectionStepHeadline(selectionStepsForAnswers(scenarios.A).length)).toBe("Семь шагов до вашей подборки");
+    expect(selectionStepHeadline(selectionStepsForAnswers(scenarios.F).length)).toBe("Шесть шагов до вашей подборки");
+    expect(intro).toContain("{questionCount} коротких вопросов");
+    expect(intro).toContain("{selectionStepHeadline(stepCount)}");
+    expect(intro).not.toContain("01 / 07");
     expect(intro).not.toContain("01 / 06");
   });
 

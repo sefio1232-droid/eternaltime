@@ -24,7 +24,13 @@ function SelectionDialMotif() {
   );
 }
 
-export function SelectionIntro() {
+export function selectionStepHeadline(stepCount: number) {
+  const word = stepCount === 6 ? "Шесть" : stepCount === 7 ? "Семь" : String(stepCount);
+  return `${word} шагов до вашей подборки`;
+}
+
+export function SelectionIntro({ stepCount = 7 }: Readonly<{ stepCount?: number }>) {
+  const questionCount = stepCount === 6 ? "шесть" : stepCount === 7 ? "семь" : String(stepCount);
   return (
     <section className={styles.prelude} aria-labelledby="selection-intro-title">
       <div className={styles.composition}>
@@ -35,7 +41,7 @@ export function SelectionIntro() {
             <span>под свой ритм</span>
           </h1>
           <p className={styles.deck}>
-            Ответьте на семь коротких вопросов. Мы сопоставим ваши предпочтения с реальными
+            Ответьте на {questionCount} коротких вопросов. Мы сопоставим ваши предпочтения с реальными
             характеристиками моделей и покажем несколько подходящих вариантов с понятным объяснением.
           </p>
         </header>
@@ -43,14 +49,14 @@ export function SelectionIntro() {
         <aside className={styles.process} aria-label="Как проходит подбор">
           <SelectionDialMotif />
           <div className={styles.processCopy}>
-            <p className={styles.processNumber} aria-hidden="true">01 / 07</p>
-            <h2>Семь шагов до вашей подборки</h2>
+            <p className={styles.processNumber} aria-hidden="true">01 / {String(stepCount).padStart(2, "0")}</p>
+            <h2>{selectionStepHeadline(stepCount)}</h2>
             <p>Сохраните ссылку, чтобы вернуться к подбору позже. Ей можно поделиться, если хотите обсудить варианты.</p>
           </div>
           <ol className={styles.facts} aria-label="Что входит в подбор">
             <li>
               <span>01</span>
-              <strong>7</strong>
+              <strong>{stepCount}</strong>
               <small>вопросов</small>
             </li>
             <li>
