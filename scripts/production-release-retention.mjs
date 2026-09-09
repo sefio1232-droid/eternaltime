@@ -173,12 +173,20 @@ async function main() {
     else throw new Error("Usage: node production-release-retention.mjs [--dry-run|--apply] [--expected-current /opt/eternal-time/releases/TIMESTAMP]");
   }
   const result = await runRetention({ apply, expectedCurrent, onPlan: (plan) => {
-    console.log(JSON.stringify({ CURRENT: plan.current, KEEP: plan.keep, DELETE: plan.delete.map((entry) => ({ path: entry.path, bytes: entry.bytes })), SKIP: plan.skip, SPACE_POTENTIALLY_FREED: plan.estimatedBytes }, null, 2));
+    console.log(JSON.stringify({ CURRENT: plan.current, KEEP: plan.keep, DELETE: plan.delete.map((entry) => ({ path: entry.path, bytes: entry.bytes })), SKIP: plan.skip, DRY_RUN: !apply, SPACE_POTENTIALLY_FREED: plan.estimatedBytes }, null, 2));
   } });
   console.log(JSON.stringify({ mode: apply ? "APPLY" : "DRY_RUN", deleted: result.deleted, errors: result.rejected }, null, 2));
   if (result.rejected.length) process.exitCode = 1;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main().catch((error) => { console.error(`RETENTION STOPPED: ${error.message}`); process.exitCode = 1; });
+// Node resolves an ESM module URL through symlinks, but argv retains the
+// caller's path (including /current). Compare filesystem identities, not text.
+// This does NOT derive or relax the fixed production deletion allowlist.
+if (process.argv[1]) {
+  try {
+    if (await realpath(process.argv[1]) === await realpath(fileURLToPath(import.meta.url))) await main();
+  } catch (error) {
+    console.error(`RETENTION STOPPED: ${error.message}`);
+    process.exitCode = 1;
+  }
 }
