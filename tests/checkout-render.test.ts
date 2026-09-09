@@ -170,9 +170,9 @@ async function renderCheckout(options: {
       ready: true,
       apiKey: "public-test-key",
       servicePath: "/api/delivery/cdek/widget-service",
-      from: null,
+      from: { code: 44, postal_code: null, country_code: "RU", city: null, address: null },
       tariffs: { office: [136], door: [137] },
-      goods: [],
+      goods: [{ weight: 500, length: 15, width: 10, height: 8 }],
     };
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -357,11 +357,31 @@ describe("checkout client render", () => {
     await waitFor(() => expect(view.widgetOptions[0]).toBeTruthy());
     expect(view.widgetOptions[0].defaultLocation).toEqual([37.6173, 55.7558]);
     expect(view.widgetOptions[0].tariffs).toMatchObject({ office: [136], door: [137], pickup: [] });
-    expect(view.widgetOptions[0].from).toBeNull();
-    expect(view.widgetOptions[0].goods).toEqual([]);
+    expect(view.widgetOptions[0].from).toEqual({ code: 44, postal_code: null, country_code: "RU", city: null, address: null });
+    expect(view.widgetOptions[0].goods).toEqual([{ weight: 500, length: 15, width: 10, height: 8 }]);
     await waitFor(() => expect(view.queryByText(/Загружаем карту пунктов выдачи/)).toBeNull());
     expect(view.queryByText(/WIDGET_READY|MAP_TIMEOUT|MAP_VISIBLE/)).toBeNull();
     expect(view.queryByText(/Диагностический код/)).toBeNull();
+  });
+
+  it("treats visible CDEK map DOM as ready when the widget does not emit onReady", async () => {
+    const view = await renderCheckout();
+    window.ymaps3 = {};
+    window.CDEKWidget = class {
+      constructor(options: Record<string, unknown>) {
+        view.widgetOptions.push(options);
+        const root = document.getElementById(String(options.root));
+        const map = document.createElement("canvas");
+        map.className = "ymaps3x0--map";
+        root?.append(map);
+      }
+    };
+
+    fireEvent.click(await view.findByRole("button", { name: "Пункт выдачи СДЭК" }));
+    fireEvent.click(view.getByRole("button", { name: "Выбрать пункт на карте" }));
+
+    await waitFor(() => expect(view.queryByText(/Загружаем карту пунктов выдачи/)).toBeNull());
+    expect(view.queryByText("Не удалось загрузить карту пунктов выдачи.")).toBeNull();
   });
 
   it("uses the bundled CDEK widget constructor without injecting a third-party script", async () => {

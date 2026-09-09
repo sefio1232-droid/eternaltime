@@ -491,6 +491,9 @@ describe("checkout backend activation", () => {
     expect(checkout).toContain("cdekWidgetDefaultLocation");
     expect(checkout).toContain("defaultLocation: cdekWidgetDefaultLocation");
     expect(checkout).toContain("waitForCdekContainer");
+    expect(checkout).toContain("waitForCdekWidgetRender");
+    expect(checkout).toContain("cdekWidgetHasVisibleMap");
+    expect(checkout).toContain("window.ymaps3");
     expect(checkout).toContain("ResizeObserver");
     expect(checkout).toContain("cdekWidgetReadyTimeoutMs");
     expect(checkout).toContain("preloadCdekWidgetResources");
@@ -506,8 +509,11 @@ describe("checkout backend activation", () => {
     expect(configRoute).toContain("env.cdek.widgetYandexMapsApiKey");
     expect(configRoute).toContain("/api/delivery/cdek/widget-service");
     expect(configRoute).toContain('servicePath: "/api/delivery/cdek/widget-service"');
-    expect(configRoute).toContain("from: null");
-    expect(configRoute).toContain("goods: []");
+    expect(configRoute).toContain("const originCode = env.cdek.fromLocationCode");
+    expect(configRoute).toContain("const packagePolicy = env.cdek.packagePolicy");
+    expect(configRoute).toContain("code: originCode");
+    expect(configRoute).toContain('country_code: "RU"');
+    expect(configRoute).toContain("weight: packagePolicy.weightGrams");
     expect(configRoute).toContain("pickup: []");
     expect(configRoute).not.toContain("cdn.jsdelivr.net");
     expect(configRoute).not.toContain("new URL(request.url)");

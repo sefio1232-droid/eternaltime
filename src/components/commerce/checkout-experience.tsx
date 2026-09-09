@@ -40,7 +40,13 @@ type CdekWidgetConfig =
       ready: true;
       apiKey: string;
       servicePath: string;
-      from: { country_code: "RU"; code: number } | null;
+      from: {
+        code: number;
+        postal_code: string | null;
+        country_code: "RU";
+        city: string | null;
+        address: string | null;
+      };
       tariffs: { office: number[]; door: number[]; pickup?: number[] };
       goods: Array<{ width: number; height: number; length: number; weight: number }>;
     }
@@ -76,6 +82,7 @@ type CdekWidgetConstructor = new (options: {
 declare global {
   interface Window {
     CDEKWidget?: CdekWidgetConstructor;
+    ymaps3?: unknown;
   }
 }
 
@@ -108,6 +115,7 @@ const emptyContact: CheckoutContactInput = {
 
 const cdekWidgetDefaultLocation: CdekWidgetDefaultLocation = [37.6173, 55.7558];
 const cdekWidgetReadyTimeoutMs = 35_000;
+const cdekRenderedMapSelector = "canvas, ymaps, ymaps3, [class*='ymaps'], [class*='map'], [class*='Map']";
 let cdekWidgetConstructorPromise: Promise<CdekWidgetConstructor> | null = null;
 
 function sourceItems(source: CheckoutSource, cartItems: CommerceCartItemInput[]) {
@@ -252,6 +260,71 @@ function waitForCdekContainer(root: HTMLElement, isCancelled: () => boolean): Pr
   });
 }
 
+function cdekWidgetHasVisibleMap(root: HTMLElement) {
+  if (typeof window === "undefined" || typeof window.ymaps3 === "undefined") {
+    return false;
+  }
+
+  const mapNodes = Array.from(root.querySelectorAll(cdekRenderedMapSelector));
+  return mapNodes.some((node) => {
+    const element = node instanceof HTMLElement ? node : node.parentElement;
+    if (!element) return false;
+
+    const summary = cdekElementSummary(element);
+    return summary.width > 0 && summary.height > 0 && summary.display !== "none" && summary.visibility !== "hidden";
+  });
+}
+
+function waitForCdekWidgetRender(root: HTMLElement, isCancelled: () => boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (cdekWidgetHasVisibleMap(root)) {
+      resolve();
+      return;
+    }
+
+    let settled = false;
+    let frame = 0;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    let observer: MutationObserver | null = null;
+
+    const cleanup = () => {
+      if (timeout) clearTimeout(timeout);
+      if (frame) cancelAnimationFrame(frame);
+      observer?.disconnect();
+    };
+
+    const finish = () => {
+      if (settled || isCancelled()) return;
+      if (!cdekWidgetHasVisibleMap(root)) return;
+
+      settled = true;
+      cleanup();
+      resolve();
+    };
+
+    const scheduleFrame = () => {
+      frame = requestAnimationFrame(() => {
+        finish();
+        if (!settled) scheduleFrame();
+      });
+    };
+
+    if ("MutationObserver" in window) {
+      observer = new MutationObserver(finish);
+      observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style"] });
+    }
+
+    scheduleFrame();
+
+    timeout = setTimeout(() => {
+      if (settled || isCancelled()) return;
+      settled = true;
+      cleanup();
+      reject(new Error("cdek_widget_map_render_timeout"));
+    }, cdekWidgetReadyTimeoutMs);
+  });
+}
+
 function clearPickupState(contact: CheckoutContactInput): CheckoutContactInput {
   return {
     ...contact,
@@ -332,17 +405,17 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
     if (!widgetOpen) return;
 
     let cancelled = false;
-    let readyTimeout: ReturnType<typeof setTimeout> | null = null;
+    let widgetSettled = false;
 
-    function clearReadyTimeout() {
-      if (readyTimeout) {
-        clearTimeout(readyTimeout);
-        readyTimeout = null;
-      }
+    function markWidgetReady() {
+      if (cancelled || widgetSettled) return;
+      widgetSettled = true;
+      setWidgetStatus("ready");
     }
 
     function failWidget() {
-      if (cancelled) return;
+      if (cancelled || widgetSettled) return;
+      widgetSettled = true;
       setWidgetStatus("failed");
       setWidgetError("Не удалось загрузить карту пунктов выдачи.");
     }
@@ -382,10 +455,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
         await waitForCdekContainer(root, () => cancelled);
         if (cancelled) return;
 
-        readyTimeout = setTimeout(() => {
-          failWidget();
-        }, cdekWidgetReadyTimeoutMs);
-
         widgetInstanceRef.current = new CdekWidget({
           from: config.from,
           root: rootId,
@@ -399,10 +468,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           defaultLocation: cdekWidgetDefaultLocation,
           lang: "rus",
           currency: "RUB",
-          onReady: () => {
-            clearReadyTimeout();
-            setWidgetStatus("ready");
-          },
+          onReady: markWidgetReady,
           onChoose: (mode, tariff, address) => {
             const point = normalizeCdekWidgetPickupPoint(mode, tariff, address);
             if (!point) {
@@ -430,9 +496,11 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
             setWidgetOpen(false);
           },
         });
+        void waitForCdekWidgetRender(root, () => cancelled).then(markWidgetReady).catch(() => {
+          failWidget();
+        });
       } catch (error) {
         if (cancelled) return;
-        clearReadyTimeout();
         void error;
         failWidget();
       }
@@ -442,7 +510,6 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
 
     return () => {
       cancelled = true;
-      clearReadyTimeout();
       destroyCdekWidget(widgetInstanceRef.current);
       widgetInstanceRef.current = null;
     };
