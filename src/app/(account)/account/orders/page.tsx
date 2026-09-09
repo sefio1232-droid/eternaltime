@@ -22,7 +22,7 @@ export default async function AccountOrdersPage() {
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Заказы</p>
         <h1>Мои заказы</h1>
-        <span>История покупок, статус оплаты и этап исполнения заказа.</span>
+        <span>История покупок, состав заказа, оплата и понятный статус доставки без внутренних технических кодов.</span>
       </header>
       <OrdersListView orders={orders} />
     </EditorialContainer>

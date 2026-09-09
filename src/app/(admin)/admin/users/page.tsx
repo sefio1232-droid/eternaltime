@@ -102,6 +102,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                   <th>Last sign in</th>
                   <th>Профиль</th>
                   <th>Заказы</th>
+                  <th>Последний заказ</th>
                   <th>Paid</th>
                   <th>Коллекция</th>
                   <th>Действия</th>
@@ -126,6 +127,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                       <p className={styles.meta}>{user.phone ?? "—"} · {user.city ?? "—"}</p>
                     </td>
                     <td>{user.ordersCount}</td>
+                    <td>{formatDate(user.lastOrderAt)}</td>
                     <td>
                       <p>{user.paidOrdersCount} заказов</p>
                       <p className={styles.meta}>{formatCommerceMoney(user.lifetimePaidAmountMinor)}</p>

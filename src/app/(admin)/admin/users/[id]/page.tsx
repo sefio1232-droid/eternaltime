@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
-import { formatCommerceMoney, orderStatusLabels, paymentStatusLabels } from "@/modules/commerce/domain/labels";
+import { formatCommerceMoney, orderStatusLabels, paymentStatusLabels, shipmentStatusLabels } from "@/modules/commerce/domain/labels";
 import { getAdminUserDetail } from "@/modules/admin/infrastructure/admin-repository.server";
 import styles from "@/components/admin/admin.module.css";
 
@@ -15,6 +15,12 @@ type AdminUserDetailPageProps = {
 
 function formatDate(value: string | null): string {
   return value ? new Date(value).toLocaleString("ru-RU") : "—";
+}
+
+function shipmentLabel(status: keyof typeof shipmentStatusLabels | null) {
+  if (!status) return "Нет отправления";
+  if (status === "creation_failed") return "Ошибка создания отправления";
+  return shipmentStatusLabels[status];
 }
 
 export default async function AdminUserDetailPage({ params }: AdminUserDetailPageProps) {
@@ -32,7 +38,7 @@ export default async function AdminUserDetailPage({ params }: AdminUserDetailPag
           </div>
           <Link className={styles.linkButton} href="/admin/users">К списку</Link>
         </div>
-        <p>Только безопасная витрина Auth/Profile/Orders/Collection. Закрытые поля авторизации не запрашиваются и не выводятся.</p>
+        <p>Безопасная витрина Supabase Auth/Profile/Orders/Collection. Пароли, токены и закрытые auth-поля не запрашиваются и не выводятся.</p>
       </header>
 
       <div className={styles.twoColumn}>
@@ -48,35 +54,39 @@ export default async function AdminUserDetailPage({ params }: AdminUserDetailPag
               <p><span className={styles.label}>Preferred contact</span><br />{user.preferredContact ?? "—"}</p>
               <p><span className={styles.label}>Регистрация</span><br />{formatDate(user.createdAt)}</p>
               <p><span className={styles.label}>Last sign in</span><br />{formatDate(user.lastSignInAt)}</p>
+              <p><span className={styles.label}>Последний заказ</span><br />{formatDate(user.lastOrderAt)}</p>
             </div>
           </article>
 
           <article className={styles.card}>
-            <h2>Последние заказы</h2>
+            <h2>Заказы пользователя</h2>
             {user.recentOrders.length ? (
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Заказ</th>
-                      <th>Дата</th>
-                      <th>Оплата</th>
-                      <th>Статус</th>
-                      <th>Сумма</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {user.recentOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td><Link href={`/admin/orders/${order.orderNumber}`}>№{order.orderNumber}</Link></td>
-                        <td>{formatDate(order.createdAt)}</td>
-                        <td>{paymentStatusLabels[order.paymentStatus]}</td>
-                        <td>{orderStatusLabels[order.orderStatus]}</td>
-                        <td>{formatCommerceMoney(order.totalAmountMinor)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className={styles.orderRows}>
+                {user.recentOrders.map((order) => (
+                  <article key={order.id} className={styles.orderRow}>
+                    <div>
+                      <p className={styles.eyebrow}>{formatDate(order.createdAt)}</p>
+                      <h2><Link href={`/admin/orders/${order.orderNumber}`}>№{order.orderNumber}</Link></h2>
+                      <p className={styles.meta}>{order.id}</p>
+                    </div>
+                    <div className={styles.orderRowMain}>
+                      <strong>{order.itemSummary}</strong>
+                      <p className={styles.meta}>
+                        {order.deliveryMethod === "cdek_pickup" ? "ПВЗ CDEK" : "Курьер"} · {order.city}
+                        {order.pickupPointCode ? ` · ${order.pickupPointCode}` : ""}
+                      </p>
+                    </div>
+                    <div className={styles.orderRowAside}>
+                      <strong>{formatCommerceMoney(order.totalAmountMinor)}</strong>
+                      <div className={styles.statusRow}>
+                        <span className={styles.status}>{paymentStatusLabels[order.paymentStatus]}</span>
+                        <span className={styles.status}>{orderStatusLabels[order.orderStatus]}</span>
+                        <span className={order.lastErrorCode ? styles.issue : styles.status}>{shipmentLabel(order.shipmentStatus)}</span>
+                      </div>
+                      <Link className={styles.linkButton} href={`/admin/orders/${order.orderNumber}`}>Открыть заказ</Link>
+                    </div>
+                  </article>
+                ))}
               </div>
             ) : (
               <div className={styles.empty}>Заказов пока нет.</div>
@@ -90,9 +100,7 @@ export default async function AdminUserDetailPage({ params }: AdminUserDetailPag
             <div className={styles.statusRow}>
               {(user.roles.length ? user.roles : ["customer"]).map((role) => <span key={role} className={styles.status}>{role}</span>)}
             </div>
-            <p className={styles.help}>
-              Управление ролями оставлено read-only в этой фазе: безопасная mutation требует защиты от снятия последнего admin и отдельного confirmation/audit сценария.
-            </p>
+            <p className={styles.help}>Роли показаны read-only: права не выводятся из email и управляются серверной RBAC-архитектурой.</p>
           </section>
 
           <section className={styles.card}>

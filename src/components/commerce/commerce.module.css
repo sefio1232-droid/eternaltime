@@ -201,8 +201,8 @@
   font-family: var(--font-reference, ui-monospace, monospace);
   font-size: 0.72rem;
   line-height: 1.4;
-  overflow-wrap: normal;
-  word-break: keep-all;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .drawerFooter {
@@ -271,6 +271,127 @@
 .cartLines {
   display: grid;
   gap: 1rem;
+}
+
+.orderCards,
+.orderDetailStack,
+.statusStack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.orderCard,
+.orderProductLine {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--canvas) 94%, white 6%), transparent),
+    color-mix(in srgb, var(--canvas) 86%, transparent);
+  padding: clamp(0.85rem, 2vw, 1.15rem);
+}
+
+.orderCardMain {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.orderCardAside,
+.productPriceBlock {
+  display: grid;
+  min-width: 8rem;
+  justify-items: end;
+  gap: 0.55rem;
+  text-align: right;
+}
+
+.orderItemSummary {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-editorial);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 520;
+  line-height: 1.2;
+}
+
+.orderThumb {
+  display: grid;
+  width: 5.6rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-muted);
+  font-family: var(--font-editorial);
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  overflow: hidden;
+}
+
+.orderThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.quietLink {
+  color: var(--accent-strong);
+  font-size: 0.76rem;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-underline-offset: 4px;
+}
+
+.failurePanel {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid color-mix(in srgb, #9f5f21 56%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #f5dfbf 22%, transparent), transparent),
+    color-mix(in srgb, var(--canvas) 88%, transparent);
+  padding: clamp(1rem, 3vw, 1.35rem);
+}
+
+.failurePanel h2 {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 520;
+}
+
+.failurePanel p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.metaGrid div {
+  border-top: 1px solid var(--border);
+  padding-top: 0.55rem;
+}
+
+.metaGrid dt {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.metaGrid dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: break-word;
 }
 
 .cartLine {
@@ -873,6 +994,28 @@
   .cartLine {
     grid-template-columns: 5rem minmax(0, 1fr);
     gap: 0.75rem;
+  }
+
+  .orderCard,
+  .orderProductLine {
+    grid-template-columns: 4.8rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .orderThumb {
+    width: 4.8rem;
+  }
+
+  .orderCardAside,
+  .productPriceBlock {
+    grid-column: 1 / -1;
+    min-width: 0;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .statusStack {
+    align-items: start;
   }
 
   .quantityRow input,

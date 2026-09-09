@@ -42,6 +42,12 @@ function pageHref(page: number, filters: AdminOrderFilters) {
   return `/admin/orders?${params.toString()}`;
 }
 
+function shipmentLabel(status: keyof typeof shipmentStatusLabels | null) {
+  if (!status) return "Нет отправления";
+  if (status === "creation_failed") return "Ошибка создания отправления";
+  return shipmentStatusLabels[status];
+}
+
 export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageProps) {
   const params = await searchParams;
   const filters: AdminOrderFilters = {
@@ -67,7 +73,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             <p className={styles.eyebrow}>Admin / Orders</p>
             <h1>Заказы</h1>
           </div>
-          <p className={styles.note}>Найдено: {result.total}. Серверная фильтрация, сортировка и pagination без загрузки всей базы в браузер.</p>
+          <p className={styles.note}>Найдено: {result.total}. Карточки показывают кто заказал, что купил, куда отправлять и что нужно сделать дальше.</p>
         </div>
       </header>
 
@@ -75,7 +81,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
         <form className={styles.filters}>
           <label className={styles.field}>
             <span className={styles.label}>Поиск</span>
-            <input name="q" defaultValue={filters.query ?? ""} placeholder="номер, email, телефон, tracking" />
+            <input name="q" defaultValue={filters.query ?? ""} placeholder="номер, email, телефон, tracking, reference" />
           </label>
           <label className={styles.field}>
             <span className={styles.label}>Номер</span>
@@ -139,53 +145,35 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
 
       <section className={styles.card}>
         {result.items.length ? (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Заказ</th>
-                  <th>Создан</th>
-                  <th>Клиент</th>
-                  <th>Сумма</th>
-                  <th>Оплата</th>
-                  <th>Статус</th>
-                  <th>Доставка</th>
-                  <th>CDEK</th>
-                  <th>Обновлён</th>
-                  <th>Действия</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.items.map((order) => (
-                  <tr key={order.id}>
-                    <td>
-                      <Link href={`/admin/orders/${order.orderNumber}`}>№{order.orderNumber}</Link>
-                      <p className={styles.meta}>{order.id}</p>
-                    </td>
-                    <td>{new Date(order.createdAt).toLocaleString("ru-RU")}</td>
-                    <td>
-                      <strong>{order.customerName}</strong>
-                      <p className={styles.meta}>{order.customerEmail}</p>
-                      <p className={styles.meta}>{order.customerPhone}</p>
-                    </td>
-                    <td>{formatCommerceMoney(order.totalAmountMinor)}</td>
-                    <td><span className={styles.status}>{paymentStatusLabels[order.paymentStatus]}</span></td>
-                    <td><span className={styles.status}>{orderStatusLabels[order.orderStatus]}</span></td>
-                    <td>
-                      <span className={styles.status}>{order.shipmentStatus ? shipmentStatusLabels[order.shipmentStatus] : "Нет отправления"}</span>
-                      <p className={styles.meta}>{order.deliveryMethod} · {order.city}</p>
-                    </td>
-                    <td>
-                      <p className={styles.meta}>{order.cdekOrderNumber ?? "—"}</p>
-                      <p className={styles.meta}>{order.trackingNumber ?? "—"}</p>
-                      {order.lastErrorCode ? <span className={styles.issue}>{order.lastErrorCode}</span> : null}
-                    </td>
-                    <td>{new Date(order.updatedAt).toLocaleString("ru-RU")}</td>
-                    <td><Link className={styles.linkButton} href={`/admin/orders/${order.orderNumber}`}>Открыть</Link></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={styles.orderRows}>
+            {result.items.map((order) => (
+              <article key={order.id} className={styles.orderRow}>
+                <div>
+                  <p className={styles.eyebrow}>{new Date(order.createdAt).toLocaleString("ru-RU")}</p>
+                  <h2><Link href={`/admin/orders/${order.orderNumber}`}>№{order.orderNumber}</Link></h2>
+                  <p className={styles.meta}>{order.id}</p>
+                </div>
+                <div className={styles.orderRowMain}>
+                  <strong>{order.itemSummary}</strong>
+                  <p className={styles.meta}>{order.customerName} · {order.customerEmail} · {order.customerPhone}</p>
+                  <p className={styles.meta}>
+                    {order.deliveryMethod === "cdek_pickup" ? "ПВЗ CDEK" : "Курьер"} · {order.city}
+                    {order.pickupPointCode ? ` · ${order.pickupPointCode}` : ""}
+                  </p>
+                </div>
+                <div className={styles.orderRowAside}>
+                  <strong>{formatCommerceMoney(order.totalAmountMinor)}</strong>
+                  <div className={styles.statusRow}>
+                    <span className={styles.status}>{paymentStatusLabels[order.paymentStatus]}</span>
+                    <span className={styles.status}>{orderStatusLabels[order.orderStatus]}</span>
+                    <span className={order.lastErrorCode ? styles.issue : styles.status}>{shipmentLabel(order.shipmentStatus)}</span>
+                  </div>
+                  <p className={styles.meta}>Обновлён: {new Date(order.updatedAt).toLocaleString("ru-RU")}</p>
+                  {order.lastErrorCode ? <p className={styles.meta}>Тех. код: {order.lastErrorCode}</p> : null}
+                  <Link className={styles.linkButton} href={`/admin/orders/${order.orderNumber}`}>Открыть заказ</Link>
+                </div>
+              </article>
+            ))}
           </div>
         ) : (
           <div className={styles.empty}>

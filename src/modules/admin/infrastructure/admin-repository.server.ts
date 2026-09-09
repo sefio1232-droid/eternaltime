@@ -282,6 +282,7 @@ export type AdminUserListItem = {
   ordersCount: number;
   paidOrdersCount: number;
   lifetimePaidAmountMinor: number;
+  lastOrderAt: string | null;
   collectionWatchesCount: number;
 };
 
@@ -1532,7 +1533,7 @@ async function listAdminUsersRaw(): Promise<AdminUserListItem[]> {
   const [{ data: profiles }, { data: roleRows }, { data: orders }, { data: watches }, authUsers] = await Promise.all([
     client.from("profiles").select("id, display_name, phone, city, created_at"),
     client.from("user_roles").select("user_id, roles!inner(code)").is("revoked_at", null),
-    client.from("orders").select("user_id, payment_status, total_amount_minor"),
+    client.from("orders").select("user_id, payment_status, total_amount_minor, created_at"),
     client.from("user_watches").select("user_id"),
     client.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ]);
@@ -1557,11 +1558,23 @@ async function listAdminUsersRaw(): Promise<AdminUserListItem[]> {
     if (!current.includes(code)) current.push(code);
     rolesByUser.set(userId, current);
   }
-  const ordersByUser = new Map<string, { ordersCount: number; paidOrdersCount: number; lifetimePaidAmountMinor: number }>();
+  const ordersByUser = new Map<
+    string,
+    { ordersCount: number; paidOrdersCount: number; lifetimePaidAmountMinor: number; lastOrderAt: string | null }
+  >();
   for (const order of orders ?? []) {
     const userId = String(order.user_id);
-    const current = ordersByUser.get(userId) ?? { ordersCount: 0, paidOrdersCount: 0, lifetimePaidAmountMinor: 0 };
+    const current = ordersByUser.get(userId) ?? {
+      ordersCount: 0,
+      paidOrdersCount: 0,
+      lifetimePaidAmountMinor: 0,
+      lastOrderAt: null,
+    };
     current.ordersCount += 1;
+    const createdAt = "created_at" in order ? String(order.created_at ?? "") : "";
+    if (createdAt && (!current.lastOrderAt || createdAt > current.lastOrderAt)) {
+      current.lastOrderAt = createdAt;
+    }
     if (order.payment_status === "succeeded") {
       current.paidOrdersCount += 1;
       current.lifetimePaidAmountMinor += Number(order.total_amount_minor);
@@ -1576,7 +1589,12 @@ async function listAdminUsersRaw(): Promise<AdminUserListItem[]> {
 
   const users = authUsers.data.users.map((user) => {
     const profile = profileById.get(user.id);
-    const orderStats = ordersByUser.get(user.id) ?? { ordersCount: 0, paidOrdersCount: 0, lifetimePaidAmountMinor: 0 };
+    const orderStats = ordersByUser.get(user.id) ?? {
+      ordersCount: 0,
+      paidOrdersCount: 0,
+      lifetimePaidAmountMinor: 0,
+      lastOrderAt: null,
+    };
     return {
       userId: user.id,
       email: user.email ?? null,
@@ -1589,6 +1607,7 @@ async function listAdminUsersRaw(): Promise<AdminUserListItem[]> {
       ordersCount: orderStats.ordersCount,
       paidOrdersCount: orderStats.paidOrdersCount,
       lifetimePaidAmountMinor: orderStats.lifetimePaidAmountMinor,
+      lastOrderAt: orderStats.lastOrderAt,
       collectionWatchesCount: watchesByUser.get(user.id) ?? 0,
     };
   });
@@ -1632,7 +1651,7 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
       .select("*, order_items(*), order_shipments(*), payment_attempts(*)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(12),
+      .limit(100),
     client
       .from("user_watches")
       .select("id, display_name, source_kind, ownership_status, created_at")

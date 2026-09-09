@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getServerEnv } from "@/config/server-env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { mapCdekStatusToShipmentStatus } from "@/modules/commerce/domain/shipping";
+import { ensureUserWatchesForDeliveredOrder } from "@/modules/commerce/infrastructure/cdek-shipping-repository.server";
 
 const cdekWebhookSchema = z
   .object({
@@ -93,6 +94,18 @@ export async function POST(request: Request) {
     message: mapped.customerMessage,
     customer_visible: true,
   });
+
+  if (mapped.status === "delivered") {
+    await client
+      .from("orders")
+      .update({ status: "completed", completed_at: latestStatus?.date_time ?? new Date().toISOString() })
+      .eq("id", shipment.order_id);
+    await ensureUserWatchesForDeliveredOrder({
+      orderId: shipment.order_id,
+      deliveredAt: latestStatus?.date_time ?? null,
+      client,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -245,6 +245,48 @@
   gap: 0.85rem;
 }
 
+.orderRows {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.orderRow {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.85fr) minmax(0, 1.3fr) minmax(14rem, 0.95fr);
+  gap: 0.9rem;
+  align-items: start;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--canvas) 94%, white 6%), transparent),
+    color-mix(in srgb, var(--canvas) 88%, transparent);
+  padding: clamp(0.85rem, 2vw, 1.1rem);
+}
+
+.orderRow h2 {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 540;
+  letter-spacing: -0.02em;
+}
+
+.orderRowMain,
+.orderRowAside {
+  display: grid;
+  min-width: 0;
+  gap: 0.45rem;
+}
+
+.orderRowMain strong,
+.orderRowAside strong {
+  overflow-wrap: anywhere;
+}
+
+.orderRowAside {
+  justify-items: end;
+  text-align: right;
+}
+
 .twoColumn {
   display: grid;
   gap: 0.9rem;
@@ -376,5 +418,14 @@
 
   .table {
     min-width: 760px;
+  }
+
+  .orderRow {
+    grid-template-columns: 1fr;
+  }
+
+  .orderRowAside {
+    justify-items: stretch;
+    text-align: left;
   }
 }

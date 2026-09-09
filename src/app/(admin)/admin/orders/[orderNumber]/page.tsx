@@ -24,10 +24,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderPagePro
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Admin / заказ</p>
         <h1>№{detail.order.order_number}</h1>
-        <span>
-          Покупатель, состав, платежи, доставка, CDEK-идентификаторы, tracking, фактическая себестоимость и история
-          статусов.
-        </span>
+        <span>Кто заказал, что купил, куда отправлять и какое следующее действие нужно менеджеру.</span>
       </header>
       <OrderDetailView detail={detail} admin />
     </EditorialContainer>

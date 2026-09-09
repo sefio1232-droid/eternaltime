@@ -2099,6 +2099,8 @@ export type Database = {
           personal_note: string | null
           provisional_watch_identity_id: string | null
           public_visibility: string
+          source_order_id: string | null
+          source_order_item_id: string | null
           source_kind: string
           updated_at: string
           user_id: string
@@ -2121,6 +2123,8 @@ export type Database = {
           personal_note?: string | null
           provisional_watch_identity_id?: string | null
           public_visibility?: string
+          source_order_id?: string | null
+          source_order_item_id?: string | null
           source_kind: string
           updated_at?: string
           user_id: string
@@ -2143,6 +2147,8 @@ export type Database = {
           personal_note?: string | null
           provisional_watch_identity_id?: string | null
           public_visibility?: string
+          source_order_id?: string | null
+          source_order_item_id?: string | null
           source_kind?: string
           updated_at?: string
           user_id?: string
@@ -2162,6 +2168,20 @@ export type Database = {
             columns: ["provisional_watch_identity_id"]
             isOneToOne: false
             referencedRelation: "provisional_watch_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_watches_source_order_id_fkey"
+            columns: ["source_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_watches_source_order_item_id_fkey"
+            columns: ["source_order_item_id"]
+            isOneToOne: true
+            referencedRelation: "order_items"
             referencedColumns: ["id"]
           },
           {

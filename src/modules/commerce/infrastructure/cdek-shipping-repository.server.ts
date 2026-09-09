@@ -88,7 +88,10 @@ type ShipmentOrderSnapshot = {
 };
 
 type ShipmentItemSnapshot = {
+  id?: string;
   display_name_snapshot: string;
+  brand_slug?: string;
+  reference_code_normalized?: string;
   quantity: number;
   unit_price_minor: number;
   line_total_minor: number;
@@ -251,6 +254,75 @@ function classifyShipmentError(error: unknown) {
   return { code: "shipment_error", status: "creation_failed" as OrderShipmentStatus };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function compactJson(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(compactJson);
+  }
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key, nested]) => {
+        const normalized = key.toLowerCase();
+        return (
+          nested !== undefined &&
+          !normalized.includes("secret") &&
+          !normalized.includes("token") &&
+          !normalized.includes("authorization")
+        );
+      })
+      .map(([key, nested]) => [key, compactJson(nested)]),
+  );
+}
+
+function extractCdekProviderErrors(responseBody: unknown): Array<{ code: string | null; message: string | null }> {
+  if (!isRecord(responseBody) || !Array.isArray(responseBody.requests)) {
+    return [];
+  }
+
+  return responseBody.requests.flatMap((request) => {
+    if (!isRecord(request) || !Array.isArray(request.errors)) {
+      return [];
+    }
+    return request.errors
+      .filter(isRecord)
+      .map((error) => ({
+        code: typeof error.code === "string" ? error.code : null,
+        message: typeof error.message === "string" ? error.message : null,
+      }));
+  });
+}
+
+function cdekFailureReason(error: unknown): string {
+  if (error instanceof CdekShipmentCreationError) {
+    const providerError = extractCdekProviderErrors(error.responseBody)
+      .map((item) => [item.code, item.message].filter(Boolean).join(": "))
+      .filter(Boolean)
+      .join("; ");
+    return providerError || error.message;
+  }
+
+  return error instanceof Error ? error.message : "Unknown CDEK shipment creation error.";
+}
+
+function cdekFailureSnapshot(error: unknown, requestPayload: Record<string, unknown> | null): Record<string, unknown> {
+  return compactJson({
+    failedAt: new Date().toISOString(),
+    errorName: error instanceof Error ? error.name : "UnknownError",
+    message: error instanceof Error ? error.message : "Unknown CDEK shipment creation error.",
+    providerHttpStatus: error instanceof CdekShipmentCreationError ? error.status ?? null : null,
+    providerErrors: error instanceof CdekShipmentCreationError ? extractCdekProviderErrors(error.responseBody) : [],
+    providerResponse: error instanceof CdekShipmentCreationError ? error.responseBody ?? null : null,
+    requestPayload,
+  }) as Record<string, unknown>;
+}
+
 async function insertOrderEvent(
   client: Client,
   input: {
@@ -287,6 +359,158 @@ async function loadShipmentOrder(client: Client, orderNumberOrId: { orderNumber?
   const { data } = await query;
   const row = data?.[0] as (ShipmentOrderSnapshot & { order_items?: ShipmentItemSnapshot[] }) | undefined;
   return row ?? null;
+}
+
+async function ensureDefaultUserWatchCollection(client: Client, userId: string): Promise<string> {
+  const { data: existing } = await client
+    .from("user_watch_collections")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_default", true)
+    .limit(1);
+
+  if (existing?.[0]?.id) {
+    return String(existing[0].id);
+  }
+
+  const { data: created, error } = await client
+    .from("user_watch_collections")
+    .insert({ user_id: userId, is_default: true, title: "Моя коллекция" })
+    .select("id")
+    .single();
+
+  if (error || !created) {
+    const retry = await client
+      .from("user_watch_collections")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_default", true)
+      .limit(1);
+    const fallbackId = retry.data?.[0]?.id;
+    if (!fallbackId) {
+      throw new Error(error?.message ?? "user_watch_collection_create_failed");
+    }
+    return String(fallbackId);
+  }
+
+  return String(created.id);
+}
+
+async function resolveWatchReferenceIdForOrderItem(client: Client, item: ShipmentItemSnapshot): Promise<string | null> {
+  if (!item.brand_slug || !item.reference_code_normalized) {
+    return null;
+  }
+
+  const { data } = await client
+    .from("watch_references")
+    .select("id, brands!inner(slug)")
+    .eq("reference_code_normalized", item.reference_code_normalized)
+    .eq("brands.slug", item.brand_slug)
+    .in("status", ["published", "archival"])
+    .limit(1);
+
+  return data?.[0]?.id ? String(data[0].id) : null;
+}
+
+export async function ensureUserWatchesForDeliveredOrder(input: {
+  orderId: string;
+  deliveredAt?: string | null;
+  actorUserId?: string | null;
+  client?: Client | null;
+}): Promise<{ created: number; skipped: number }> {
+  const client = input.client ?? createSupabaseAdminClient();
+  if (!client) {
+    throw new Error("admin_secret_missing");
+  }
+
+  const { data: orderData } = await client.from("orders").select("*, order_items(*)").eq("id", input.orderId).limit(1);
+  const order = orderData?.[0] as (ShipmentOrderSnapshot & { user_id?: string; order_items?: ShipmentItemSnapshot[] }) | undefined;
+  if (!order?.user_id || order.status === "cancelled" || order.payment_status !== "succeeded") {
+    return { created: 0, skipped: order?.order_items?.length ?? 0 };
+  }
+
+  const items = order.order_items ?? [];
+  if (!items.length) {
+    return { created: 0, skipped: 0 };
+  }
+
+  const collectionId = await ensureDefaultUserWatchCollection(client, order.user_id);
+  let created = 0;
+  let skipped = 0;
+
+  for (const item of items) {
+    if (!item.id) {
+      skipped += 1;
+      continue;
+    }
+
+    const acquisitionSource = `Order ${order.order_number} / item ${item.id}`;
+    const referenceId = await resolveWatchReferenceIdForOrderItem(client, item);
+    if (!referenceId) {
+      skipped += 1;
+      continue;
+    }
+
+    const { data: existing } = await client
+      .from("user_watches")
+      .select("id")
+      .eq("user_id", order.user_id)
+      .eq("watch_reference_id", referenceId)
+      .eq("acquisition_source", acquisitionSource)
+      .is("deleted_at", null)
+      .limit(1);
+    if (existing?.[0]?.id) {
+      skipped += 1;
+      continue;
+    }
+
+    const basePayload = {
+      user_watch_collection_id: collectionId,
+      user_id: order.user_id,
+      watch_reference_id: referenceId,
+      source_kind: "catalog",
+      display_name: item.display_name_snapshot,
+      ownership_status: "owned",
+      acquired_at: (input.deliveredAt ?? new Date().toISOString()).slice(0, 10),
+      acquisition_price_minor: item.unit_price_minor,
+      acquisition_currency_code: "RUB",
+      acquisition_source: acquisitionSource,
+    };
+    const { error } = await client.from("user_watches").insert({
+      ...basePayload,
+      source_order_id: order.id,
+      source_order_item_id: item.id,
+    });
+
+    if (error) {
+      if (error.message.toLowerCase().includes("duplicate")) {
+        skipped += 1;
+        continue;
+      }
+      if (error.message.toLowerCase().includes("source_order")) {
+        const retry = await client.from("user_watches").insert(basePayload);
+        if (!retry.error) {
+          created += 1;
+          continue;
+        }
+      }
+      throw new Error(error.message);
+    }
+    created += 1;
+  }
+
+  if (created > 0) {
+    await insertOrderEvent(client, {
+      orderId: order.id,
+      eventType: "collection_watch_created",
+      nextStatus: "completed",
+      message: "Доставленные часы добавлены в коллекцию покупателя.",
+      customerVisible: true,
+      actorUserId: input.actorUserId ?? undefined,
+    });
+  }
+
+  return { created, skipped };
 }
 
 function buildCdekOrderPayload(order: ShipmentOrderSnapshot, items: ShipmentItemSnapshot[]) {
@@ -423,12 +647,15 @@ export async function ensureCdekShipmentForPaidOrder(input: {
     return (latest as OrderShipmentRow | null) ?? null;
   }
 
+  let createPayload: Record<string, unknown> | null = null;
+
   try {
-    const payload = buildCdekOrderPayload(order, order.order_items ?? []);
-    const response = await createCdekOrder(payload);
+    createPayload = buildCdekOrderPayload(order, order.order_items ?? []);
+    const response = await createCdekOrder(createPayload);
     const cdekUuid = response.entity?.uuid ?? response.requests?.[0]?.request_uuid ?? null;
     const cdekNumber = response.entity?.cdek_number ?? response.entity?.number ?? null;
     const statusFromRequest = response.requests?.[0]?.state;
+    const previousMetadata = isRecord(claimedShipment.raw_carrier_metadata) ? claimedShipment.raw_carrier_metadata : {};
 
     const { data: updated, error } = await client
       .from("order_shipments")
@@ -441,7 +668,7 @@ export async function ensureCdekShipmentForPaidOrder(input: {
         carrier_status_name: statusFromRequest ?? null,
         carrier_status_updated_at: new Date().toISOString(),
         last_sync_at: new Date().toISOString(),
-        raw_carrier_metadata: { createResponse: response } as Json,
+        raw_carrier_metadata: { ...previousMetadata, createRequest: compactJson(createPayload), createResponse: response } as Json,
         safe_admin_note: cdekUuid ? "Отправление создано." : "Запрос на создание отправления принят СДЭК.",
       })
       .eq("id", claimedShipment.id)
@@ -465,13 +692,18 @@ export async function ensureCdekShipmentForPaidOrder(input: {
     return updated as OrderShipmentRow;
   } catch (error) {
     const classified = classifyShipmentError(error);
+    const previousMetadata = isRecord(claimedShipment.raw_carrier_metadata) ? claimedShipment.raw_carrier_metadata : {};
+    const failureReason = cdekFailureReason(error);
     const { data: updated } = await client
       .from("order_shipments")
       .update({
         shipment_status: classified.status,
+        carrier_status_code: error instanceof CdekShipmentCreationError && error.status ? String(error.status) : null,
+        carrier_status_name: failureReason,
         last_error_code: classified.code,
         last_error_at: new Date().toISOString(),
-        safe_admin_note: "Не удалось создать отправление. Можно повторить из админки.",
+        raw_carrier_metadata: { ...previousMetadata, createFailure: cdekFailureSnapshot(error, createPayload) } as Json,
+        safe_admin_note: `Не удалось создать отправление CDEK. Причина: ${failureReason}`,
       })
       .eq("id", claimedShipment.id)
       .select("*")
@@ -524,6 +756,7 @@ export async function refreshCdekShipmentStatus(input: {
   const info = await getCdekOrderInfo(shipment.cdek_order_uuid);
   const lastStatus = info.entity?.statuses?.[0];
   const mapped = mapCdekStatusToShipmentStatus({ code: lastStatus?.code, name: lastStatus?.name });
+  const previousMetadata = isRecord(shipment.raw_carrier_metadata) ? shipment.raw_carrier_metadata : {};
 
   const { data: updated, error } = await client
     .from("order_shipments")
@@ -533,7 +766,7 @@ export async function refreshCdekShipmentStatus(input: {
       carrier_status_name: lastStatus?.name ?? shipment.carrier_status_name,
       carrier_status_updated_at: lastStatus?.date_time ?? new Date().toISOString(),
       last_sync_at: new Date().toISOString(),
-      raw_carrier_metadata: { statusResponse: info } as Json,
+      raw_carrier_metadata: { ...previousMetadata, statusResponse: info } as Json,
     })
     .eq("id", shipment.id)
     .select("*")
@@ -551,6 +784,16 @@ export async function refreshCdekShipmentStatus(input: {
     customerVisible: true,
     actorUserId: input.actorUserId,
   });
+
+  if (mapped.status === "delivered") {
+    await client.from("orders").update({ status: "completed", completed_at: lastStatus?.date_time ?? new Date().toISOString() }).eq("id", shipment.order_id);
+    await ensureUserWatchesForDeliveredOrder({
+      orderId: shipment.order_id,
+      deliveredAt: lastStatus?.date_time ?? null,
+      actorUserId: input.actorUserId,
+      client,
+    });
+  }
 
   return updated as OrderShipmentRow;
 }

@@ -25,6 +25,7 @@ describe("database migrations", () => {
       "20260813010000_fix_catalog_apply_variable_scope.sql",
       "20260813011000_catalog_public_read_projection.sql",
       "20260813012000_cdek_order_shipments.sql",
+      "20260909090000_order_collection_provenance.sql",
     ]);
   });
 
@@ -151,5 +152,18 @@ describe("database migrations", () => {
     expect(collectionMigration).toContain("grant execute on function public.create_catalog_user_watch");
     expect(collectionMigration).toContain("grant execute on function public.create_manual_user_watch");
     expect(collectionMigration).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
+  });
+
+  it("adds order provenance for idempotent delivered-order collection ownership", () => {
+    const provenanceMigration = migrations.find(
+      (migration) => migration.file === "20260909090000_order_collection_provenance.sql",
+    )?.sql ?? "";
+
+    expect(provenanceMigration).toContain("add column if not exists source_order_id");
+    expect(provenanceMigration).toContain("add column if not exists source_order_item_id");
+    expect(provenanceMigration).toContain("references public.orders(id)");
+    expect(provenanceMigration).toContain("references public.order_items(id)");
+    expect(provenanceMigration).toContain("user_watches_source_order_item_unique");
+    expect(provenanceMigration).toContain("where source_order_item_id is not null and deleted_at is null");
   });
 });

@@ -33,7 +33,7 @@ export default async function AccountOrderDetailPage({ params }: OrderPageProps)
       <header className={styles.commerceHeading}>
         <p className={styles.eyebrow}>Заказ</p>
         <h1>№{detail.order.order_number}</h1>
-        <span>Подтвержденная сумма, состав, доставка и история статусов.</span>
+        <span>Подтверждённая сумма, состав покупки, адрес доставки и история статусов.</span>
       </header>
       <OrderDetailView detail={detail} />
     </EditorialContainer>

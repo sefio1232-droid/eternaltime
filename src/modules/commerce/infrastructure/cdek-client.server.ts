@@ -100,11 +100,13 @@ export class CdekRateError extends Error {
 
 export class CdekShipmentCreationError extends Error {
   readonly status?: number;
+  readonly responseBody?: unknown;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, responseBody?: unknown) {
     super(message);
     this.name = "CdekShipmentCreationError";
     this.status = status;
+    this.responseBody = responseBody;
   }
 }
 
@@ -232,12 +234,17 @@ async function cdekFetch<T>(
   });
 
   const text = await response.text();
+  const parsed = safeJsonParse(text);
   if (!response.ok) {
     if (options.errorKind === "rate") {
       throw new CdekRateError(`CDEK rate request failed with HTTP ${response.status}.`);
     }
     if (options.errorKind === "shipment") {
-      throw new CdekShipmentCreationError(`CDEK shipment request failed with HTTP ${response.status}.`, response.status);
+      throw new CdekShipmentCreationError(
+        `CDEK shipment request failed with HTTP ${response.status}.`,
+        response.status,
+        parsed ?? text.slice(0, 2000),
+      );
     }
     if (response.status === 400 || response.status === 422) {
       throw new CdekValidationError(`CDEK validation failed with HTTP ${response.status}.`);
@@ -245,7 +252,7 @@ async function cdekFetch<T>(
     throw new CdekUnavailableError(`CDEK API request failed with HTTP ${response.status}.`, response.status);
   }
 
-  return safeJsonParse(text) as T;
+  return parsed as T;
 }
 
 function cleanWidgetServicePayload(input: Record<string, unknown>) {
