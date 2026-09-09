@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import XLSX from "xlsx";
@@ -10,6 +11,8 @@ import { buildImportApplyPlan } from "@/modules/imports/catalog/application/appl
 import { buildStagedPricing, parseMoneyToMinorUnits } from "@/modules/imports/catalog/domain/pricing";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview, PriceSource, SourceProvenance } from "@/modules/imports/catalog/domain/types";
+
+XLSX.set_fs(fs);
 
 const rootDir = process.cwd();
 const priceWorkbookPath =

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
+import * as fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -18,6 +19,8 @@ import {
 } from "@/modules/catalog/infrastructure/citizen-official-photo-types";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
+
+XLSX.set_fs(fs);
 
 const execFileAsync = promisify(execFile);
 

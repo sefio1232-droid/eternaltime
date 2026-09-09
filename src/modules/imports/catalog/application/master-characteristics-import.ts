@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as XLSX from "xlsx";
 import { catalogReferenceAliases } from "@/modules/catalog/application/catalog-reference-aliases";
 import { normalizeManufacturerReference, referenceSlugFromNormalized } from "@/modules/catalog/domain/reference-normalization";
@@ -6,6 +7,8 @@ import type {
   CatalogSpecificationGroup,
   CatalogWatchDetail,
 } from "@/modules/catalog/domain/read-models";
+
+XLSX.set_fs(fs);
 
 export const masterCharacteristicsApplyConfirmationPhrase = "APPLY_ETERNAL_TIME_MASTER_CHARACTERISTICS";
 

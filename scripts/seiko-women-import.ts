@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
+import * as fs from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -29,6 +30,8 @@ import type {
   RawCatalogRow,
   SourceProvenance,
 } from "@/modules/imports/catalog/domain/types";
+
+XLSX.set_fs(fs);
 
 const execFileAsync = promisify(execFile);
 const workbookPath =
