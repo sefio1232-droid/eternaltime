@@ -289,11 +289,13 @@ function SelectionResultCard({
   return (
     <article className={styles.resultCard} data-variant={variant}>
       <Link href={watch.href} className={styles.resultMedia} aria-label={`Открыть ${watch.title}`}>
-        <SelectionWatchImage
-          images={recommendation.imageCandidates}
-          alt={`${watch.brandName} ${watch.title}`}
-          priority={variant === "featured"}
-        />
+        <span className={styles.imageStage}>
+          <SelectionWatchImage
+            images={recommendation.imageCandidates}
+            alt={`${watch.brandName} ${watch.title}`}
+            priority={variant === "featured"}
+          />
+        </span>
       </Link>
       <div className={styles.resultCopy}>
         <div className={styles.resultRole}>
