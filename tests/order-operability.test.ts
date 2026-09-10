@@ -64,17 +64,19 @@ describe("first real order operability safeguards", () => {
     expect(usersPage).toContain("styles.userRows");
     expect(usersPage).toContain("styles.userRow");
     expect(usersPage).toContain("styles.userRowsHeader");
-    expect(usersPage).toContain("orderCountLabel(user.ordersCount)");
+    expect(usersPage).toContain("<strong>{user.ordersCount}</strong>");
     expect(usersPage).toContain("formatCommerceMoney(user.lifetimePaidAmountMinor)");
     expect(usersPage).toContain("formatDateShort(user.lastOrderAt)");
     expect(usersPage).toContain("watchCountLabel(user.collectionWatchesCount)");
-    expect(usersPage).toContain("Открыть пользователя");
+    expect(usersPage).toContain("Открыть →");
     expect(usersPage).not.toContain("<table");
     expect(usersPage).not.toContain("user.userId}</p>");
     expect(css).toContain(".userRowsHeader");
     expect(css).toContain(".userRow");
     expect(css).toContain(".userMobileLabel");
-    expect(css).toContain("@media (max-width: 860px)");
+    expect(css).toContain("@media (max-width: 1180px)");
+    expect(css).toContain("grid-template-columns:");
+    expect(css).toContain("white-space: nowrap");
   });
 
   it("preserves immutable item and delivery snapshots for order history", () => {

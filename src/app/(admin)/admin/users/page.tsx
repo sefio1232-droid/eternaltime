@@ -119,7 +119,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
               <span>Регистрация</span>
               <span>Активность</span>
               <span>Заказы</span>
-              <span>Paid</span>
+              <span>Оплачено</span>
               <span>Коллекция</span>
               <span>Действие</span>
             </div>
@@ -147,11 +147,11 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                   <div>
                     <span className={styles.userMobileLabel}>Активность</span>
                     <strong className={styles.valueText}>{formatDateShort(lastActivityAt)}</strong>
-                    <p className={styles.meta}>{lastActivityAt ? "последний вход / заказ" : "нет данных"}</p>
+                    <p className={styles.meta}>{lastActivityAt ? "последняя активность" : "нет данных"}</p>
                   </div>
                   <div className={styles.userKpi}>
                     <span className={styles.userMobileLabel}>Заказы</span>
-                    <strong>{orderCountLabel(user.ordersCount)}</strong>
+                    <strong>{user.ordersCount}</strong>
                     <p className={styles.meta}>последний: {formatDateShort(user.lastOrderAt)}</p>
                   </div>
                   <div className={styles.userKpi}>
@@ -164,7 +164,9 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                     <strong>{watchCountLabel(user.collectionWatchesCount)}</strong>
                   </div>
                   <div className={styles.userAction}>
-                    <Link className={styles.linkButton} href={`/admin/users/${user.userId}`}>Открыть пользователя</Link>
+                    <Link className={styles.linkButton} href={`/admin/users/${user.userId}`} aria-label={`Открыть пользователя ${user.email ?? user.userId}`}>
+                      Открыть →
+                    </Link>
                   </div>
                 </article>
               );
