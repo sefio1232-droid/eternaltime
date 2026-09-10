@@ -3,8 +3,31 @@ import { foundationPublicRoutes } from "@/config/navigation";
 import { getPublicEnv } from "@/config/public-env";
 import { legalRoutes } from "@/content/legal";
 import { listPublishedJournalArticles } from "@/modules/journal/application/journal-repository";
+import { getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+async function listCatalogSitemapRoutes(appUrl: string): Promise<MetadataRoute.Sitemap> {
+  try {
+    const dataset = await getCatalogReadDataset();
+    const brandRoutes: MetadataRoute.Sitemap = dataset.brands.map((brand) => ({
+      url: `${appUrl}/watches/${brand.slug}`,
+      changeFrequency: "weekly",
+      priority: 0.75,
+      lastModified: dataset.generatedAt,
+    }));
+    const productRoutes: MetadataRoute.Sitemap = dataset.watches.map((watch) => ({
+      url: `${appUrl}${watch.href}`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+      lastModified: dataset.generatedAt,
+    }));
+
+    return [...brandRoutes, ...productRoutes];
+  } catch {
+    return [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const env = getPublicEnv();
   const staticRoutes: MetadataRoute.Sitemap = foundationPublicRoutes.map((route) => ({
     url: `${env.appUrl}${route}`,
@@ -22,6 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "yearly",
     priority: 0.5,
   }));
+  const catalogRoutes = await listCatalogSitemapRoutes(env.appUrl);
 
-  return [...staticRoutes, ...articleRoutes, ...legalSitemapRoutes];
+  return [...staticRoutes, ...catalogRoutes, ...articleRoutes, ...legalSitemapRoutes];
 }
