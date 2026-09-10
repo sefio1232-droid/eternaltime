@@ -26,6 +26,26 @@ function formatDate(value: string | null): string {
   return value ? new Date(value).toLocaleString("ru-RU") : "—";
 }
 
+function formatDateShort(value: string | null): string {
+  return value ? new Date(value).toLocaleDateString("ru-RU") : "—";
+}
+
+function orderCountLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} заказ`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} заказа`;
+  return `${count} заказов`;
+}
+
+function watchCountLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} час`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} часов`;
+  return `${count} часов`;
+}
+
 function pageHref(page: number, filters: AdminUserFilters) {
   const params = new URLSearchParams();
   if (filters.query) params.set("q", filters.query);
@@ -92,52 +112,63 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
       <section className={styles.card}>
         {result.items.length ? (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Роли</th>
-                  <th>Регистрация</th>
-                  <th>Last sign in</th>
-                  <th>Профиль</th>
-                  <th>Заказы</th>
-                  <th>Последний заказ</th>
-                  <th>Paid</th>
-                  <th>Коллекция</th>
-                  <th>Действия</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.items.map((user) => (
-                  <tr key={user.userId}>
-                    <td>
-                      <strong>{user.email ?? "Email не указан"}</strong>
-                      <p className={styles.meta}>{user.userId}</p>
-                    </td>
-                    <td>
-                      <div className={styles.statusRow}>
-                        {(user.roles.length ? user.roles : ["customer"]).map((role) => <span key={role} className={styles.status}>{role}</span>)}
-                      </div>
-                    </td>
-                    <td>{formatDate(user.createdAt)}</td>
-                    <td>{formatDate(user.lastSignInAt)}</td>
-                    <td>
-                      <p>{user.displayName ?? "—"}</p>
-                      <p className={styles.meta}>{user.phone ?? "—"} · {user.city ?? "—"}</p>
-                    </td>
-                    <td>{user.ordersCount}</td>
-                    <td>{formatDate(user.lastOrderAt)}</td>
-                    <td>
-                      <p>{user.paidOrdersCount} заказов</p>
-                      <p className={styles.meta}>{formatCommerceMoney(user.lifetimePaidAmountMinor)}</p>
-                    </td>
-                    <td>{user.collectionWatchesCount}</td>
-                    <td><Link className={styles.linkButton} href={`/admin/users/${user.userId}`}>Открыть</Link></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={styles.userRows}>
+            <div className={styles.userRowsHeader} aria-hidden="true">
+              <span>Пользователь</span>
+              <span>Роль</span>
+              <span>Регистрация</span>
+              <span>Активность</span>
+              <span>Заказы</span>
+              <span>Paid</span>
+              <span>Коллекция</span>
+              <span>Действие</span>
+            </div>
+            {result.items.map((user) => {
+              const lastActivityAt = user.lastSignInAt ?? user.lastOrderAt;
+              return (
+                <article key={user.userId} className={styles.userRow}>
+                  <div className={styles.userIdentity}>
+                    <span className={styles.userMobileLabel}>Пользователь</span>
+                    <strong>{user.displayName ?? user.email ?? "Пользователь без email"}</strong>
+                    {user.displayName && user.email ? <p className={styles.meta}>{user.email}</p> : null}
+                    <p className={styles.meta}>{[user.phone, user.city].filter(Boolean).join(" · ") || "Профиль не заполнен"}</p>
+                  </div>
+                  <div>
+                    <span className={styles.userMobileLabel}>Роль</span>
+                    <div className={styles.statusRow}>
+                      {(user.roles.length ? user.roles : ["customer"]).map((role) => <span key={role} className={styles.status}>{role}</span>)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className={styles.userMobileLabel}>Регистрация</span>
+                    <strong className={styles.valueText}>{formatDateShort(user.createdAt)}</strong>
+                    <p className={styles.meta}>{formatDate(user.createdAt)}</p>
+                  </div>
+                  <div>
+                    <span className={styles.userMobileLabel}>Активность</span>
+                    <strong className={styles.valueText}>{formatDateShort(lastActivityAt)}</strong>
+                    <p className={styles.meta}>{lastActivityAt ? "последний вход / заказ" : "нет данных"}</p>
+                  </div>
+                  <div className={styles.userKpi}>
+                    <span className={styles.userMobileLabel}>Заказы</span>
+                    <strong>{orderCountLabel(user.ordersCount)}</strong>
+                    <p className={styles.meta}>последний: {formatDateShort(user.lastOrderAt)}</p>
+                  </div>
+                  <div className={styles.userKpi}>
+                    <span className={styles.userMobileLabel}>Оплачено</span>
+                    <strong>{formatCommerceMoney(user.lifetimePaidAmountMinor)}</strong>
+                    <p className={styles.meta}>{orderCountLabel(user.paidOrdersCount)}</p>
+                  </div>
+                  <div className={styles.userKpi}>
+                    <span className={styles.userMobileLabel}>Коллекция</span>
+                    <strong>{watchCountLabel(user.collectionWatchesCount)}</strong>
+                  </div>
+                  <div className={styles.userAction}>
+                    <Link className={styles.linkButton} href={`/admin/users/${user.userId}`}>Открыть пользователя</Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className={styles.empty}>

@@ -57,6 +57,26 @@ describe("first real order operability safeguards", () => {
     expect(repository).toContain('.select("user_id, payment_status, total_amount_minor, created_at")');
   });
 
+  it("renders admin users as operational rows/cards with aggregates and without UUID noise in the list", () => {
+    const usersPage = read("src/app/(admin)/admin/users/page.tsx");
+    const css = read("src/components/admin/admin.module.css");
+
+    expect(usersPage).toContain("styles.userRows");
+    expect(usersPage).toContain("styles.userRow");
+    expect(usersPage).toContain("styles.userRowsHeader");
+    expect(usersPage).toContain("orderCountLabel(user.ordersCount)");
+    expect(usersPage).toContain("formatCommerceMoney(user.lifetimePaidAmountMinor)");
+    expect(usersPage).toContain("formatDateShort(user.lastOrderAt)");
+    expect(usersPage).toContain("watchCountLabel(user.collectionWatchesCount)");
+    expect(usersPage).toContain("Открыть пользователя");
+    expect(usersPage).not.toContain("<table");
+    expect(usersPage).not.toContain("user.userId}</p>");
+    expect(css).toContain(".userRowsHeader");
+    expect(css).toContain(".userRow");
+    expect(css).toContain(".userMobileLabel");
+    expect(css).toContain("@media (max-width: 860px)");
+  });
+
   it("preserves immutable item and delivery snapshots for order history", () => {
     const repository = read("src/modules/commerce/infrastructure/commerce-repository.server.ts");
 
@@ -110,6 +130,20 @@ describe("first real order operability safeguards", () => {
     expect(webhook).toContain("ensureUserWatchesForDeliveredOrder");
     expect(webhook).toContain('mapped.status === "delivered"');
     expect(migration).toContain("user_watches_source_order_item_unique");
+  });
+
+  it("persists ownership provenance and treats duplicate delivered events as one watch", () => {
+    const shipping = read("src/modules/commerce/infrastructure/cdek-shipping-repository.server.ts");
+    const migration = read("supabase/migrations/20260909090000_order_collection_provenance.sql");
+
+    expect(shipping).toContain("order.status === \"cancelled\" || order.payment_status !== \"succeeded\"");
+    expect(shipping).toContain("source_order_id: order.id");
+    expect(shipping).toContain("source_order_item_id: item.id");
+    expect(shipping).toContain("error.message.toLowerCase().includes(\"duplicate\")");
+    expect(shipping).toContain("skipped += 1");
+    expect(migration).toContain("add column if not exists source_order_id");
+    expect(migration).toContain("add column if not exists source_order_item_id");
+    expect(migration).toContain("create unique index if not exists user_watches_source_order_item_unique");
   });
 
   it("uses responsive cards for admin orders instead of a huge operational spreadsheet", () => {

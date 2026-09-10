@@ -245,6 +245,84 @@
   gap: 0.85rem;
 }
 
+.userRows {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.userRowsHeader,
+.userRow {
+  display: grid;
+  grid-template-columns:
+    minmax(13rem, 1.35fr)
+    minmax(6.4rem, 0.55fr)
+    minmax(7.2rem, 0.65fr)
+    minmax(7.2rem, 0.65fr)
+    minmax(7rem, 0.62fr)
+    minmax(7.5rem, 0.7fr)
+    minmax(7rem, 0.62fr)
+    minmax(9.2rem, 0.75fr);
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.userRowsHeader {
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  padding: 0 0.35rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.userRow {
+  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--canvas) 94%, white 6%), transparent),
+    color-mix(in srgb, var(--canvas) 90%, transparent);
+  padding: clamp(0.8rem, 1.45vw, 1rem);
+}
+
+.userIdentity,
+.userKpi,
+.userAction {
+  display: grid;
+  min-width: 0;
+  gap: 0.24rem;
+}
+
+.userIdentity strong,
+.userKpi strong,
+.valueText {
+  overflow-wrap: break-word;
+}
+
+.userIdentity strong {
+  font-size: 0.98rem;
+}
+
+.userKpi strong,
+.valueText {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1rem;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+}
+
+.userAction {
+  justify-items: end;
+}
+
+.userAction .linkButton {
+  width: 100%;
+  max-width: 11.5rem;
+}
+
+.userMobileLabel {
+  display: none;
+}
+
 .orderRows {
   display: grid;
   gap: 0.8rem;
@@ -296,6 +374,34 @@
   .twoColumn {
     grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.42fr);
     align-items: start;
+  }
+}
+
+@media (max-width: 860px) {
+  .userRowsHeader {
+    display: none;
+  }
+
+  .userRow {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .userMobileLabel {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.64rem;
+    font-weight: 820;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .userAction {
+    justify-items: stretch;
+  }
+
+  .userAction .linkButton {
+    max-width: none;
   }
 }
 
