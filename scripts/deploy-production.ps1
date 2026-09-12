@@ -4,6 +4,9 @@ param(
   [string]$SshKey = "$env:USERPROFILE\.ssh\eternal_time_deploy",
   [string]$RemoteAppDir = "/opt/eternal-time",
   [string]$RemoteUser = "root",
+  [string]$RepositoryUrl = "https://github.com/sefio1232-droid/eternaltime.git",
+  [string]$RepositoryBranch = "ai/codex-integration",
+  [switch]$UploadSourceArchive,
   [switch]$DeployCatalogAssets,
   [switch]$UpdateProductionEnv,
   [switch]$BootstrapServer,
@@ -67,6 +70,11 @@ $deployCatalogAssetsValue = if ($DeployCatalogAssets) { "1" } else { "0" }
 $updateProductionEnvValue = if ($UpdateProductionEnv) { "1" } else { "0" }
 $bootstrapServerValue = if ($BootstrapServer) { "1" } else { "0" }
 $deferReleaseRetentionValue = if ($DeferReleaseRetention) { "1" } else { "0" }
+$uploadSourceArchiveValue = if ($UploadSourceArchive) { "1" } else { "0" }
+$sourceCommit = (& git -C $repoRoot rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($sourceCommit)) {
+  throw "Unable to resolve local HEAD for production deploy."
+}
 
 $requiredEnvKeys = @(
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -138,21 +146,25 @@ if ($UpdateProductionEnv) {
 
 Push-Location $repoRoot
 try {
-  Invoke-CheckedNative "tar" @(
-    "--exclude=.git",
-    "--exclude=node_modules",
-    "--exclude=.next",
-    "--exclude=.env",
-    "--exclude=.env.local",
-    "--exclude=.env.production",
-    "--exclude=.tmp",
-    "--exclude=incoming",
-    "--exclude=imports/raw",
-    "--exclude=imports/tmp",
-    "-czf",
-    $archivePath,
-    "."
-  )
+  if ($UploadSourceArchive) {
+    Invoke-CheckedNative "tar" @(
+      "--exclude=.git",
+      "--exclude=node_modules",
+      "--exclude=.next",
+      "--exclude=.env",
+      "--exclude=.env.local",
+      "--exclude=.env.production",
+      "--exclude=.tmp",
+      "--exclude=incoming",
+      "--exclude=imports/raw",
+      "--exclude=imports/tmp",
+      "-czf",
+      $archivePath,
+      "."
+    )
+  } else {
+    Write-Host "Skipping source archive upload. Default code-only deploy checks out $sourceCommit from $RepositoryUrl on the server."
+  }
 
   if ($DeployCatalogAssets) {
     $assetPaths = @(
@@ -190,6 +202,10 @@ DOMAIN="$Domain"
 RELEASE_ID="$releaseId"
 RELEASE_DIR="`$APP_DIR/releases/`$RELEASE_ID"
 ASSET_DIR="`$APP_DIR/shared/catalog-image-assets"
+REPO_URL="$RepositoryUrl"
+REPO_BRANCH="$RepositoryBranch"
+SOURCE_COMMIT="$sourceCommit"
+UPLOAD_SOURCE_ARCHIVE="$uploadSourceArchiveValue"
 DEPLOY_CATALOG_ASSETS="$deployCatalogAssetsValue"
 UPDATE_PRODUCTION_ENV="$updateProductionEnvValue"
 BOOTSTRAP_SERVER="$bootstrapServerValue"
@@ -239,7 +255,19 @@ fi
 install -d -m 0755 "`$APP_DIR/releases" "`$APP_DIR/shared"
 install -d -m 0755 "`$RELEASE_DIR"
 install -d -m 0755 "`$ASSET_DIR"
-tar -xzf "$remoteArchive" -C "`$RELEASE_DIR"
+if [ "`$UPLOAD_SOURCE_ARCHIVE" = "1" ]; then
+  tar -xzf "$remoteArchive" -C "`$RELEASE_DIR"
+else
+  rm -rf "`$RELEASE_DIR"
+  git clone --no-tags --single-branch --branch "`$REPO_BRANCH" "`$REPO_URL" "`$RELEASE_DIR"
+  cd "`$RELEASE_DIR"
+  git checkout --detach "`$SOURCE_COMMIT"
+  actual_commit="`$(git rev-parse HEAD)"
+  if [ "`$actual_commit" != "`$SOURCE_COMMIT" ]; then
+    echo "Wrong checkout: `$actual_commit != `$SOURCE_COMMIT" >&2
+    exit 1
+  fi
+fi
 if [ "`$DEPLOY_CATALOG_ASSETS" = "1" ]; then
   rm -rf "`$ASSET_DIR/incoming" "`$ASSET_DIR/imports/raw/catalog" "`$ASSET_DIR/imports/raw/home-hero/final" "`$ASSET_DIR/imports/generated" "`$ASSET_DIR/.tmp/casio-photo-import" "`$ASSET_DIR/.tmp/orient-photo-import" "`$ASSET_DIR/.tmp/tissot-photo-import" "`$ASSET_DIR/.tmp/catalog-site-import-overlay"
   tar -xzf "$remoteAssetArchive" -C "`$ASSET_DIR"
@@ -405,7 +433,11 @@ $remoteScriptPath = Join-Path $deployDir "deploy-$releaseId.sh"
 
 $sshTarget = "$RemoteUser@$HostName"
 $sshOptions = @("-4", "-i", $SshKey, "-o", "ConnectTimeout=30", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4", "-o", "IPQoS=none")
-Invoke-CheckedNative "scp" @($sshOptions + @($archivePath, "${sshTarget}:$remoteArchive"))
+if ($UploadSourceArchive) {
+  Invoke-CheckedNative "scp" @($sshOptions + @($archivePath, "${sshTarget}:$remoteArchive"))
+} else {
+  Write-Host "Source archive upload skipped for default remote-git code-only deploy."
+}
 if ($DeployCatalogAssets) {
   Invoke-CheckedNative "scp" @($sshOptions + @($assetArchivePath, "${sshTarget}:$remoteAssetArchive"))
 } else {
