@@ -43,7 +43,7 @@ describe("Seiko Women 73 staged import", () => {
     }
   });
 
-  it("adds all 73 Seiko watches to the staged read model with public RUB selling prices only", () => {
+  it("keeps all 73 Seiko staged rows but publishes only the non-LUKIA public subset with RUB selling prices", () => {
     const preview = readJson<CatalogImportPreview>("imports/generated/catalog-import-preview.json");
     const imagePlan = readJson<CatalogImageUploadPlan>("imports/generated/catalog-image-upload-plan.json");
     const manifest = readJson<SeikoOfficialPhotoManifest>("src/content/catalog/seiko-official-photo-manifest.json");
@@ -55,8 +55,9 @@ describe("Seiko Women 73 staged import", () => {
     const srpl64 = seiko.find((watch) => watch.referenceDisplay === "SRPL64J1");
     const seikoRecords = preview.records.filter((record) => record.candidateId.startsWith("seiko-women:"));
 
-    expect(seiko).toHaveLength(73);
-    expect(seiko.filter((watch) => watch.publicPrice?.currencyCode === "RUB")).toHaveLength(73);
+    expect(seiko).toHaveLength(48);
+    expect(seiko.some((watch) => /LUKIA/i.test(`${watch.title} ${watch.officialName ?? ""} ${watch.brandCollectionName ?? ""}`))).toBe(false);
+    expect(seiko.filter((watch) => watch.publicPrice?.currencyCode === "RUB")).toHaveLength(48);
     expect(seiko.some((watch) => watch.publicPrice?.amountMinor === 0)).toBe(false);
     expect(Math.min(...seikoPrices)).toBe(2_490_000);
     expect(Math.max(...seikoPrices)).toBe(6_500_000);
@@ -68,10 +69,10 @@ describe("Seiko Women 73 staged import", () => {
     expect(seikoRecords.every((record) => record.pricing.selectedPublicPriceSource?.currency === "RUB")).toBe(true);
     expect(seikoRecords.every((record) => record.pricing.internalAnalyticalValues.some((source) => source.rawFieldName === "Закуп в рублях"))).toBe(true);
     expect(seikoRecords.every((record) => record.pricing.nonRubPriceSources.some((source) => source.rawFieldName === "Цена в юанях (CNY)"))).toBe(true);
-    expect(seiko.filter((watch) => watch.primaryImage.kind !== "none")).toHaveLength(59);
+    expect(seiko.filter((watch) => watch.primaryImage.kind !== "none")).toHaveLength(35);
     expect(imagePlan.items.filter((item) => item.brandSlug === "seiko")).toHaveLength(122);
     expect(new Set(brandScopedReferenceKeys).size).toBe(brandScopedReferenceKeys.length);
-    expect(dataset.brands.find((brand) => brand.slug === "seiko")).toMatchObject({ name: "Seiko", watchCount: 73 });
+    expect(dataset.brands.find((brand) => brand.slug === "seiko")).toMatchObject({ name: "Seiko", watchCount: 48 });
     expect(dataset.brands.find((brand) => brand.slug === "casio")?.watchCount).toBe(222);
     expect(dataset.brands.find((brand) => brand.slug === "orient")?.watchCount).toBe(82);
     expect(dataset.brands.find((brand) => brand.slug === "tissot")?.watchCount).toBe(218);
@@ -115,28 +116,33 @@ describe("Seiko Women 73 staged import", () => {
     }
   });
 
-  it("keeps SSQW094 manual for images but preserves limited-edition metadata", () => {
+  it("keeps SSQW094 in raw/manifest data but excludes its LUKIA public detail", () => {
     const preview = readJson<CatalogImportPreview>("imports/generated/catalog-import-preview.json");
     const imagePlan = readJson<CatalogImageUploadPlan>("imports/generated/catalog-image-upload-plan.json");
     const manifest = readJson<SeikoOfficialPhotoManifest>("src/content/catalog/seiko-official-photo-manifest.json");
     const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
     const watch = dataset.watches.find((candidate) => candidate.brandSlug === "seiko" && candidate.referenceDisplay === "SSQW094");
     const model = manifest.models.find((candidate) => candidate.reference === "SSQW094");
+    const rawRecord = preview.records.find((record) => record.candidateId === "seiko-women:SSQW094");
 
     expect(model?.status).toBe("official_source_not_found");
     expect(model?.uniqueProductImages).toBe(0);
-    expect(watch?.primaryImage.kind).toBe("none");
-    expect(watch?.specifications.find((spec) => spec.key === "lifecycle_status_raw")?.value).toBe("Limited edition");
+    expect(rawRecord?.hierarchy.brandCollection).toBe("LUKIA");
+    expect(rawRecord?.specifications.firstClass.lifecycle_status_raw).toBe("Limited edition");
+    expect(watch).toBeUndefined();
   });
 
-  it("keeps SSVW196 discontinued status in the existing specification model", () => {
+  it("keeps SSVW196 discontinued status in raw import data but excludes its LUKIA public detail", () => {
     const preview = readJson<CatalogImportPreview>("imports/generated/catalog-import-preview.json");
     const imagePlan = readJson<CatalogImageUploadPlan>("imports/generated/catalog-image-upload-plan.json");
     const dataset = catalogReadDatasetFromPreview({ preview, imagePlan });
     const watch = dataset.watches.find((candidate) => candidate.brandSlug === "seiko" && candidate.referenceDisplay === "SSVW196");
+    const rawRecord = preview.records.find((record) => record.candidateId === "seiko-women:SSVW196");
 
-    expect(watch?.publicPrice?.amountMinor).toBeGreaterThan(0);
-    expect(watch?.specifications.find((spec) => spec.key === "lifecycle_status_raw")?.value).toBe("Discontinued");
+    expect(rawRecord?.pricing.publicPriceCandidate?.amountMinor).toBeGreaterThan(0);
+    expect(rawRecord?.hierarchy.brandCollection).toBe("LUKIA");
+    expect(rawRecord?.specifications.firstClass.lifecycle_status_raw).toBe("Discontinued");
+    expect(watch).toBeUndefined();
   });
 
   it("keeps checkout and structured-data offers guarded by server-side public price presence", () => {

@@ -24,7 +24,11 @@ import {
   SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH,
   type SeikoOfficialPhotoManifest,
 } from "@/modules/catalog/infrastructure/seiko-official-photo-types";
-import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
+import {
+  isPublicCatalogSpecification,
+  isPublicCatalogWatch,
+  sanitizeCatalogSpecificationValue,
+} from "@/modules/catalog/application/catalog-display";
 
 type CatalogPublicReadModelRow = {
   read_model_json: CatalogWatchDetail;
@@ -221,8 +225,8 @@ function applyProductionSpecificationPolicy(watch: CatalogWatchDetail): CatalogW
 
   return {
     ...watch,
-    specifications: watch.specifications.map(sanitize),
-    keySpecifications: watch.keySpecifications.map(sanitize),
+    specifications: watch.specifications.map(sanitize).filter(isPublicCatalogSpecification),
+    keySpecifications: watch.keySpecifications.map(sanitize).filter(isPublicCatalogSpecification),
   };
 }
 
@@ -243,6 +247,7 @@ function datasetFromRows(rows: CatalogPublicReadModelRow[], manifests: CatalogPh
     .map((row) => ({
       ...row.read_model_json,
     }))
+    .filter(isPublicCatalogWatch)
     .map(applyProductionSpecificationPolicy)
     .map((watch) => applyProductionImagePolicy(watch, manifests))
     .sort((left, right) => left.brandName.localeCompare(right.brandName, "ru") || left.title.localeCompare(right.title, "ru"));

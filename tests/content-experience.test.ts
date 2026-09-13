@@ -84,7 +84,7 @@ describe("content experience phase", () => {
 
   it("publishes an exact visible FAQ data source and matching structured-data mapping", () => {
     expect(validateFaqItems()).toEqual([]);
-    expect(faqItems).toHaveLength(10);
+    expect(faqItems).toHaveLength(33);
     expect(new Set(faqItems.map((item) => item.id)).size).toBe(faqItems.length);
     expect(faqItems.every((item) => item.answer.length > 40)).toBe(true);
     expect(faqItems.every((item) => !item.relatedLink || item.relatedLink.href.startsWith("/") || item.relatedLink.href.startsWith("mailto:"))).toBe(true);
@@ -94,13 +94,25 @@ describe("content experience phase", () => {
     expect(page).toContain("text: item.answer");
   });
 
-  it("does not invent commercial conditions and uses the approved contact in FAQ", () => {
-    const answers = faqItems.map((item) => item.answer).join(" ");
-    expect(answers).not.toMatch(/\+7\s?\(?\d{3}\)?/);
-    expect(answers.match(/[\w.-]+@[\w.-]+/g)?.map((email) => email.replace(/[.,;:]+$/, ""))).toEqual(["timeeternal@mail.ru"]);
-    expect(answers).not.toContain("гарантируем подлинность");
-    expect(answers).toContain("Единый срок доставки не публикуется");
-    expect(answers).toContain("Актуальные условия гарантии, возврата и обмена");
+  it("uses the approved launch contacts and delivery wording in FAQ", () => {
+    const answers = faqItems.map((item) => `${item.question} ${item.answer}`).join(" ");
+    expect(answers).toContain("timeeternal@mail.ru");
+    expect(answers).toContain("+7 938 477-52-53");
+    expect(answers).toContain("около 12 календарных дней");
+    expect(answers).toContain("45 календарных дней");
+    expect(answers).not.toContain("Единый срок доставки не публикуется");
+    expect(answers).not.toContain("Публичный канал связи пока не указан");
+    expect(answers).not.toContain("Условия гарантии и возврата не публикуются");
+    expect(answers).not.toContain("21 календар");
+    expect(answers).not.toContain("eternal-time.online");
+  });
+
+  it("keeps internal/import vocabulary out of public FAQ copy", () => {
+    const faqText = JSON.stringify(faqItems);
+    expect(faqText).not.toMatch(/source_|source_url|raw|import|undefined|null/i);
+    expect(faqText).not.toContain("Water resistance for daily use");
+    expect(faqText).not.toContain("approx.");
+    expect(faqText).not.toContain("sec/day");
   });
 
   it("replaces the long brand story and six-step route with exactly two compact trust plaques", () => {

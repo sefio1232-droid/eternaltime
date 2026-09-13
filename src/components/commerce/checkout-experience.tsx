@@ -730,7 +730,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
           <p className={styles.eyebrow}>2. Получение</p>
           <div className={styles.deliveryMapSlot}>
             <strong>Доставка СДЭК</strong>
-            <p className={styles.lineMeta}>ПВЗ: бесплатно от 10 000 ₽, ниже — 500 ₽. Курьер СДЭК — всегда 650 ₽.</p>
+            <p className={styles.lineMeta}>Доставка СДЭК: бесплатно от 10 000 ₽, ниже — 500 ₽.</p>
             <div className={styles.deliveryChoice} aria-label="Способ доставки СДЭК">
               <button type="button" aria-pressed={isPickup} onClick={choosePickupMode}>
                 Пункт выдачи СДЭК

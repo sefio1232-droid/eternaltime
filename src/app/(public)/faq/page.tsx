@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import { getPublicEnv } from "@/config/public-env";
-import { faqItems, validateFaqItems, type FaqCategory } from "@/modules/faq/content/questions";
+import { faqCategories, faqIntro, faqItems, validateFaqItems, type FaqCategory } from "@/modules/faq/content/questions";
 import styles from "./faq.module.css";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-const categories: FaqCategory[] = ["Подбор", "Каталог", "Заказ и доставка", "Подлинность и комплект", "Гарантия и возврат", "Коллекция и аккаунт", "Связь"];
+const categories: readonly FaqCategory[] = faqCategories;
 const categoryId = (category: FaqCategory) => `faq-${categories.indexOf(category) + 1}`;
 
 export default function FaqPage() {
@@ -45,8 +45,8 @@ export default function FaqPage() {
         <EditorialContainer className={styles.layout}>
           <header className={styles.intro}>
             <p className={styles.kicker}>Eternal Time / Информация</p>
-            <h1 className={styles.title}>Частые вопросы</h1>
-            <p className={styles.lede}>Здесь собраны ответы на частые вопросы о выборе часов, каталоге, заказе, доставке и личной коллекции Eternal Time. Если ответа не хватило, напишите нам — подскажем следующий шаг.</p>
+            <h1 className={styles.title}>{faqIntro.title}</h1>
+            <p className={styles.lede}>{faqIntro.subtitle}</p>
           </header>
 
           <nav className={styles.categoryNav} aria-label="Категории частых вопросов">

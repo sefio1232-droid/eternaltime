@@ -88,7 +88,7 @@ describe("selection real catalog scenarios", () => {
   });
 
   it("runs the current full catalog through all representative profiles deterministically", () => {
-    expect(dataset.watches.length).toBeGreaterThanOrEqual(600);
+    expect(dataset.watches.length).toBeGreaterThanOrEqual(595);
     expect(selectionFormDefinition.steps).toHaveLength(7);
 
     for (const answers of Object.values(scenarios)) {

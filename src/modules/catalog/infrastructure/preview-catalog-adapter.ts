@@ -18,7 +18,11 @@ import type {
 } from "@/modules/catalog/infrastructure/seiko-official-photo-types";
 import type { CatalogSiteImportOverlayEntry, CatalogSiteImportOverlayManifest } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
 import { classifyCatalogImageRejection, selectBestCatalogHeroImage } from "@/modules/catalog/application/catalog-image-presentation-policy";
-import { sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
+import {
+  isPublicCatalogSpecification,
+  isPublicCatalogWatch,
+  sanitizeCatalogSpecificationValue,
+} from "@/modules/catalog/application/catalog-display";
 import { sanitizeCatalogPublicText } from "@/modules/catalog/application/catalog-public-sanitation";
 import {
   masterSpecificationDefinitions,
@@ -190,12 +194,15 @@ function publicSpecifications(candidate: MergedCatalogCandidate, overlaySpecific
     }
 
     seen.add(key);
-    result.push({
+    const specification = {
       key,
       label: definition.label,
       value: sanitizeCatalogSpecificationValue({ key, label: definition.label, value }),
       group: definition.group,
-    });
+    };
+    if (isPublicCatalogSpecification(specification)) {
+      result.push(specification);
+    }
   }
 
   return result;
@@ -855,7 +862,7 @@ export function catalogReadDatasetFromPreview(input: {
     )
     .filter((watch): watch is Omit<CatalogWatchDetail, "siblingReferences"> => watch !== null);
   const deduplicatedWatches = deduplicateByCleanReference(baseWatches);
-  const watches = attachSiblings(deduplicatedWatches);
+  const watches = attachSiblings(deduplicatedWatches.filter(isPublicCatalogWatch));
   const brandCounts = watches.reduce<Map<string, { name: string; count: number }>>((counts, watch) => {
     const existing = counts.get(watch.brandSlug);
     counts.set(watch.brandSlug, {

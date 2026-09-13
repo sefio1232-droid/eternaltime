@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { listCatalogBrands, listCatalogWatches } from "@/modules/catalog/application/catalog-read-service";
 import { parseCatalogReadQuery } from "@/modules/catalog/application/catalog-read-query";
 import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/preview-catalog-adapter";
+import { isPublicCatalogSpecification, sanitizeCatalogSpecificationValue } from "@/modules/catalog/application/catalog-display";
 import { buildImportApplyPlan } from "@/modules/imports/catalog/application/apply-plan";
 import { buildCatalogPublicHygieneReport } from "@/modules/imports/catalog/application/public-hygiene-report";
 import { applySourceRowClassification } from "@/modules/imports/catalog/domain/source-row-classification";
@@ -37,6 +38,7 @@ function candidate(input: {
   referenceNormalized: string;
   priceMinor?: number | null;
   specs?: Record<string, string>;
+  brandCollection?: string;
   classification?: SourceRowClassification;
 }): MergedCatalogCandidate {
   return {
@@ -50,7 +52,7 @@ function candidate(input: {
       referenceNormalized: input.referenceNormalized,
     },
     hierarchy: {
-      brandCollection: "Collection",
+      brandCollection: input.brandCollection ?? "Collection",
       brandLine: null,
       watchModelCandidate: input.title,
     },
@@ -222,5 +224,66 @@ describe("catalog public hygiene", () => {
 
     expect(report.currentPublicCandidateCount).toBe(0);
     expect(report.nonProductRows).toHaveLength(1);
+  });
+
+  it("keeps source URLs and internal provenance fields out of public specifications without deleting raw candidate data", () => {
+    const product = candidate({
+      candidateId: "seiko:SRE007J1",
+      brand: "Seiko",
+      title: "Seiko Presage SRE007J1",
+      referenceRaw: "SRE007J1",
+      referenceNormalized: "SRE007J1",
+      specs: {
+        case_material_raw: "stainless_steel_316L",
+        dial_color_raw: "ice_blue",
+        power_reserve_raw: "approx. 40 h",
+        accuracy_raw: "±15 sec/month",
+        water_resistance_raw: "Water resistance for daily use",
+        source_url_raw: "https://seikousa.com/products/sre007",
+      },
+    });
+    const dataset = catalogReadDatasetFromPreview({ preview: preview([product]), imagePlan: null });
+    const watch = dataset.watches[0]!;
+    const publicText = JSON.stringify(watch.specifications);
+
+    expect(product.specifications.firstClass.source_url_raw).toBe("https://seikousa.com/products/sre007");
+    expect(watch.specifications.some((specification) => specification.key === "source_url_raw")).toBe(false);
+    expect(publicText).not.toMatch(/https?:\/\/|Источник характеристик|source_url|approx\.|sec\/month|Water resistance for daily use/i);
+    expect(publicText).toContain("нержавеющая сталь 316L");
+    expect(publicText).toContain("ледяной голубой");
+    expect(publicText).toContain("около 40 ч");
+    expect(publicText).toContain("с/месяц");
+    expect(publicText).toContain("бытовая водозащита");
+  });
+
+  it("hides unsafe unknown public specification values rather than showing replacement characters or technical booleans", () => {
+    expect(sanitizeCatalogSpecificationValue({ key: "anti_reflective_raw", label: "Антиблик", value: "true" })).toBe("антибликовое покрытие");
+    expect(sanitizeCatalogSpecificationValue({ key: "functions_raw", label: "Функции", value: "��� broken source text" })).toBe("");
+    expect(
+      isPublicCatalogSpecification({
+        key: "source_url_raw",
+        label: "Источник характеристик",
+        value: "https://example.com/watch",
+        group: "other",
+      }),
+    ).toBe(false);
+  });
+
+  it("excludes Seiko LUKIA from the public read dataset while preserving the raw source candidate", () => {
+    const lukia = candidate({
+      candidateId: "seiko:SSQW094",
+      brand: "Seiko",
+      title: "Seiko LUKIA Grow Limited Edition SSQW094",
+      referenceRaw: "SSQW094",
+      referenceNormalized: "SSQW094",
+      brandCollection: "LUKIA",
+      priceMinor: 9100000,
+    });
+
+    const dataset = catalogReadDatasetFromPreview({ preview: preview([lukia]), imagePlan: null });
+
+    expect(lukia.hierarchy.brandCollection).toBe("LUKIA");
+    expect(dataset.watches).toHaveLength(0);
+    expect(dataset.brands).toHaveLength(0);
   });
 });

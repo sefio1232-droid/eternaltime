@@ -35,15 +35,15 @@ function allResults(dataset: CatalogReadDataset, searchParams: Record<string, st
 }
 
 describe("urgent catalog discoverability filters", () => {
-  it("exposes every current public brand in facets, including Seiko with the real 73-model count", () => {
+  it("exposes every current public brand in facets, including Seiko with the real 48-model non-LUKIA count", () => {
     const result = allResults(realDataset(), {});
-    expect(result.totalRecords).toBe(620);
+    expect(result.totalRecords).toBe(595);
     expect(result.facets.brands).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ value: "casio", label: "Casio", count: 222 }),
         expect.objectContaining({ value: "citizen", label: "Citizen", count: 25 }),
         expect.objectContaining({ value: "orient", label: "Orient", count: 82 }),
-        expect.objectContaining({ value: "seiko", label: "Seiko", count: 73 }),
+        expect.objectContaining({ value: "seiko", label: "Seiko", count: 48 }),
         expect.objectContaining({ value: "tissot", label: "Tissot", count: 218 }),
       ]),
     );
@@ -55,15 +55,15 @@ describe("urgent catalog discoverability filters", () => {
     expect(tabs).not.toContain(".slice(0, 4)");
   });
 
-  it("brand=seiko returns all 73 Seiko Women references", () => {
+  it("brand=seiko returns all 48 public non-LUKIA Seiko references", () => {
     const result = allResults(realDataset(), { brand: "seiko" });
-    expect(result.totalRecords).toBe(73);
+    expect(result.totalRecords).toBe(48);
     expect(new Set(result.items.map((watch) => watch.brandSlug))).toEqual(new Set(["seiko"]));
   });
 
   it("search finds Seiko by brand and by punctuated reference", () => {
     const dataset = realDataset();
-    expect(allResults(dataset, { q: "Seiko" }).totalRecords).toBe(73);
+    expect(allResults(dataset, { q: "Seiko" }).totalRecords).toBe(48);
     const byReference = allResults(dataset, { q: "SRPL61J1" });
     expect(byReference.totalRecords).toBe(1);
     expect(byReference.items[0]?.referenceNormalized).toBe("SRPL61J1");
@@ -72,18 +72,18 @@ describe("urgent catalog discoverability filters", () => {
   it("implements the public gender filter from reliable provenance, not from diameter", () => {
     const dataset = realDataset();
     const seiko = dataset.watches.filter((watch) => watch.brandSlug === "seiko");
-    expect(seiko).toHaveLength(73);
+    expect(seiko).toHaveLength(48);
     expect(seiko.every((watch) => normalizeCatalogGender(watch).gender === "female")).toBe(true);
     expect(seiko.every((watch) => normalizeCatalogGender(watch).genderProvenance === "source_category:seiko_women")).toBe(true);
 
     const result = allResults(dataset, { gender: "female" });
     expect(result.facets.genders.some((option) => option.value === "unknown")).toBe(false);
-    expect(result.totalRecords).toBeGreaterThanOrEqual(73);
+    expect(result.totalRecords).toBeGreaterThanOrEqual(48);
   });
 
-  it("Seiko + Women composes to the exact Seiko Women dataset", () => {
+  it("Seiko + Women composes to the exact public non-LUKIA Seiko dataset", () => {
     const result = allResults(realDataset(), { brand: "seiko", gender: "female" });
-    expect(result.totalRecords).toBe(73);
+    expect(result.totalRecords).toBe(48);
     expect(result.items.every((watch) => watch.brandSlug === "seiko")).toBe(true);
   });
 
@@ -124,7 +124,7 @@ describe("urgent catalog discoverability filters", () => {
     expect(normalizeMechanismGroup("Automatic")).toBe("automatic");
     expect(normalizeMechanismGroup("Quartz")).toBe("quartz");
     expect(normalizeMechanismGroup("Solar radio")).toBe("solar");
-    expect(allResults(realDataset(), { brand: "seiko", movement: "solar" }).totalRecords).toBe(32);
+    expect(allResults(realDataset(), { brand: "seiko", movement: "solar" }).totalRecords).toBe(11);
   });
 
   it("normalizes Seiko dial colors into accessible public color families", () => {
@@ -139,8 +139,8 @@ describe("urgent catalog discoverability filters", () => {
     const query = parseCatalogReadQuery({
       searchParams: { view: "all", q: "Seiko", gender: "female", sort: "price_asc", page: "4" },
     });
-    const result = listCatalogWatches(dataset, { ...query, pageSize: 24 });
-    expect(result.totalRecords).toBe(73);
+    const result = listCatalogWatches(dataset, { ...query, pageSize: 12 });
+    expect(result.totalRecords).toBe(48);
     expect(result.page).toBe(4);
     const prices = result.items.flatMap((watch) => (watch.publicPrice ? [watch.publicPrice.amountMinor] : []));
     expect(prices).toEqual([...prices].sort((left, right) => left - right));

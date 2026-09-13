@@ -111,4 +111,16 @@ describe("legal subsystem", () => {
     expect(sitemap).toContain("changeFrequency: \"yearly\"");
     expect(`${generated}\n${legalPages}`).not.toMatch(/localhost|127\.0\.0\.1|C:\\\\Users|href=["']#|file:\/\//i);
   });
+
+  it("keeps public legal delivery wording aligned with FAQ and hides parser/source metadata from legal pages", () => {
+    const delivery = legalDocuments.find((document) => document.slug === "delivery-and-payment")!;
+    const offer = legalDocuments.find((document) => document.slug === "public-offer")!;
+    const publicLegalPage = readSrc("src/app/(public)/legal/[slug]/page.tsx");
+    const legalText = `${delivery.contentText}\n${offer.contentText}`;
+
+    expect(legalText).toContain("около 12 календарных дней");
+    expect(legalText).toContain("45 календарных дней");
+    expect(legalText).not.toMatch(/двадцать один календарный день|около трех недель|около трёх недель|21 календар/i);
+    expect(publicLegalPage).not.toMatch(/sourceFileName|sourceArchive|sourceFile|sourceRow|contentText/);
+  });
 });

@@ -165,6 +165,136 @@ export function sanitizeCatalogSpecificationValue(input: { key: string; label: s
 
   value = stripLeadingSpecificationLabel(value, input.label);
 
+  if (/[\uFFFD]/u.test(value)) {
+    return "";
+  }
+
+  const normalizedToken = value.toLocaleLowerCase("en").replace(/[\s-]+/g, "_");
+
+  if (input.key === "case_material_raw") {
+    const materialTokens = normalizedToken
+      .replace(/stainless_steel/g, "stainlesssteel")
+      .replace(/biobased_resin/g, "biobasedresin")
+      .split(/_+/)
+      .filter((token) => token && token !== "316l");
+    const materialLabels: Record<string, string> = {
+      stainlesssteel: "нержавеющая сталь",
+      stainless: "нержавеющая сталь",
+      steel: "нержавеющая сталь",
+      resin: "полимер",
+      biobasedresin: "биополимер",
+      biobased: "биополимер",
+      carbon: "карбон",
+      titanium: "титан",
+    };
+    const materials = materialTokens
+      .map((token) => materialLabels[token] ?? null)
+      .filter((label): label is string => Boolean(label));
+    const uniqueMaterials = [...new Set(materials)];
+    if (uniqueMaterials.length > 0) {
+      value = uniqueMaterials.join(", ");
+      if (/316l/i.test(input.value) && uniqueMaterials.includes("нержавеющая сталь")) {
+        value = value.replace("нержавеющая сталь", "нержавеющая сталь 316L");
+      }
+    }
+  }
+
+  if (input.key === "dial_color_raw") {
+    const colorLabels: Record<string, string> = {
+      ice_blue: "ледяной голубой",
+      light_green: "светло-зеленый",
+      blue_gradient: "синий градиент",
+      bordeaux: "бордовый",
+      floral: "цветочный мотив",
+    };
+    value = colorLabels[normalizedToken] ?? value;
+  }
+
+  if (input.key === "anti_reflective_raw") {
+    const coatingLabels: Record<string, string> = {
+      true: "антибликовое покрытие",
+      confirmed_coating: "антибликовое покрытие",
+      inner: "внутреннее антибликовое покрытие",
+    };
+    value = coatingLabels[normalizedToken] ?? value;
+  }
+
+  if (input.key === "accuracy_raw") {
+    value = value
+      .replace(/\bsec\s*\/\s*month\b/giu, "с/месяц")
+      .replace(/\bsec\s*\/\s*day\b/giu, "с/сутки");
+  }
+
+  if (input.key === "power_reserve_raw") {
+    value = value
+      .replace(/\bapprox\.\s*(\d+)\s*h\b/giu, "около $1 ч")
+      .replace(/\bover\s*(\d+)\s*h\b/giu, "более $1 ч")
+      .replace(/\bmore\s+than\s*(\d+)\s*h\b/giu, "более $1 ч");
+  }
+
+  if (input.key === "case_shape_raw") {
+    const shapeLabels: Record<string, string> = {
+      rectangular: "прямоугольная",
+      square: "квадратная",
+    };
+    value = shapeLabels[normalizedToken] ?? value;
+  }
+
+  if (
+    input.key === "attachment_material_raw" ||
+    input.key === "strap_material_raw" ||
+    input.key === "bracelet_material_raw"
+  ) {
+    const strapLabels: Record<string, string> = {
+      cloth: "ткань",
+      fabric: "ткань",
+      fluoroelastomer: "фторэластомер",
+      biobased_resin: "биополимер",
+    };
+    for (const [raw, label] of Object.entries(strapLabels)) {
+      value = value.replace(new RegExp(raw, "giu"), label);
+    }
+  }
+
+  if (input.key === "water_resistance_raw") {
+    value = value
+      .replace(/Water resistance for daily use/giu, "бытовая водозащита")
+      .replace(/splash resistant/giu, "защита от брызг")
+      .replace(/ISO\s*200\s*(?:m|м)?\s*diving/giu, "ISO 200 м, для дайвинга")
+      .replace(/Both watches:\s*/giu, "");
+  }
+
+  if (input.key === "case_coating_raw") {
+    const coatingLabels: Record<string, string> = {
+      ion_plating: "ионное покрытие",
+      chrome_plating: "хромированное покрытие",
+      warm_gold_plating: "покрытие теплого золотого оттенка",
+      yellow_gold_plating: "покрытие желтого золотого оттенка",
+      rose_gold_plating: "покрытие розового золотого оттенка",
+    };
+    value = coatingLabels[normalizedToken] ?? value;
+  }
+
+  if (input.key === "clasp_raw") {
+    const claspLabels: Record<string, string> = {
+      triple_fold: "тройная раскладная застежка",
+      adjustable_clasp: "регулируемая застежка",
+    };
+    value = claspLabels[normalizedToken] ?? value;
+  }
+
+  if (input.key === "dial_markers_raw") {
+    value = normalizedToken === "indices" ? "индексы" : value;
+  }
+
+  if (input.key === "luminescence_raw") {
+    const luminescenceLabels: Record<string, string> = {
+      hands_and_indices: "стрелки и индексы",
+      luminous_dial: "люминесцентный циферблат",
+    };
+    value = luminescenceLabels[normalizedToken] ?? value;
+  }
+
   if (input.key === "crystal_type_raw") {
     value = value.replace(
       /(^|[^а-яё])((?:минеральн(?:ое|ый)|сапфиров(?:ое|ый)|акрилов(?:ое|ый)|полимерн(?:ое|ый)|органическ(?:ое|ий))\s+)стекл[оа](?=$|[^а-яё])/giu,
@@ -200,6 +330,57 @@ export function sanitizeCatalogSpecificationValue(input: { key: string; label: s
   }
 
   return dedupeDelimitedParts(value).replace(/\s+/g, " ").trim();
+}
+
+const internalSpecificationKeys = new Set([
+  "source_url_raw",
+  "source_url",
+  "characteristics_source",
+  "characteristics_source_raw",
+  "source_comment",
+  "source_file",
+  "source_sheet",
+  "source_row",
+  "raw_value",
+]);
+
+function isInternalSpecificationKey(key: string): boolean {
+  const normalized = key.toLocaleLowerCase("en").trim();
+  return internalSpecificationKeys.has(normalized) || normalized.startsWith("source_") || normalized.startsWith("__source");
+}
+
+function containsPublicMetadataLeak(value: string): boolean {
+  return /(https?:\/\/|www\.|source_url|source file|source sheet|source row|raw_value|(?:^|[^a-z])raw(?:[^a-z]|$)|(?:^|[^a-z])import(?:[^a-z]|$)|Источник характеристик|источник характеристик|Water resistance for daily use|approx\.|sec\/day|sec\/month|undefined|null)/iu.test(value);
+}
+
+export function isPublicCatalogSpecification(specification: CatalogPublicSpecification): boolean {
+  if (isInternalSpecificationKey(specification.key)) {
+    return false;
+  }
+
+  const value = normalizeDisplayText(specification.value);
+  if (!value || /[\uFFFD]/u.test(value)) {
+    return false;
+  }
+
+  return !containsPublicMetadataLeak(`${specification.label} ${value}`);
+}
+
+export function isPublicCatalogWatch(watch: Pick<CatalogWatchDetail, "brandSlug" | "brandName" | "title" | "officialName" | "brandCollectionName" | "watchModelName" | "referenceDisplay">): boolean {
+  const brand = `${watch.brandSlug} ${watch.brandName}`.toLocaleLowerCase("en");
+  const text = [
+    watch.title,
+    watch.officialName ?? "",
+    watch.brandCollectionName ?? "",
+    watch.watchModelName,
+    watch.referenceDisplay,
+  ].join(" ");
+
+  if (brand.includes("seiko") && /(LUKIA|ルキア)/iu.test(text)) {
+    return false;
+  }
+
+  return true;
 }
 
 // Note: JS regex `\b` only recognizes ASCII word characters, so it does not work as a word

@@ -9,7 +9,7 @@ import {
   serializeCommerceCartStorage,
 } from "@/modules/commerce/domain/cart";
 import { commerceCartMaxQuantity } from "@/modules/commerce/domain/types";
-import { cdekCourierDeliveryAmountMinor, getDeliveryQuote } from "@/modules/commerce/application/delivery.server";
+import { getDeliveryQuote } from "@/modules/commerce/application/delivery.server";
 import { getServerEnv } from "@/config/server-env";
 import { orderStatusLabels, paymentStatusLabels, shipmentStatusLabels } from "@/modules/commerce/domain/labels";
 import { normalizeCdekWidgetPickupPoint } from "@/modules/commerce/domain/cdek-widget";
@@ -201,7 +201,7 @@ describe("commerce server configuration", () => {
     }
   });
 
-  it("keeps CDEK courier delivery at 650 RUB for every order subtotal", () => {
+  it("applies the same Eternal Time customer delivery threshold to CDEK courier", () => {
     const env = getServerEnv({
       NODE_ENV: "production",
       CATALOG_READ_SOURCE: "database",
@@ -210,23 +210,27 @@ describe("commerce server configuration", () => {
       CDEK_BELOW_THRESHOLD_DELIVERY_RUB: "500",
       CDEK_COURIER_TARIFF_CODE: "137",
     });
-    const subtotalRubCases = [5_000, 10_000, 50_000, 100_000, 200_000];
+    const cases = [
+      { subtotalRub: 9_999, deliveryRub: 500, totalRub: 10_499 },
+      { subtotalRub: 10_000, deliveryRub: 0, totalRub: 10_000 },
+      { subtotalRub: 10_001, deliveryRub: 0, totalRub: 10_001 },
+    ];
 
-    for (const subtotalRub of subtotalRubCases) {
-      const subtotalMinor = subtotalRub * 100;
+    for (const example of cases) {
+      const subtotalMinor = example.subtotalRub * 100;
       const quote = getDeliveryQuote({ productSubtotalMinor: subtotalMinor, deliveryMethod: "cdek_courier" }, env);
 
       if (quote.status !== "configured") {
         throw new Error("Expected configured courier delivery quote.");
       }
       expect(quote.method).toBe("courier");
-      expect(quote.amountMinor).toBe(cdekCourierDeliveryAmountMinor);
-      expect(quote.freeDeliveryThresholdMinor).toBeNull();
-      expect(subtotalMinor + quote.amountMinor).toBe(subtotalMinor + 65_000);
+      expect(quote.amountMinor).toBe(example.deliveryRub * 100);
+      expect(quote.freeDeliveryThresholdMinor).toBe(1_000_000);
+      expect(subtotalMinor + quote.amountMinor).toBe(example.totalRub * 100);
     }
   });
 
-  it("does not make courier delivery free above the PVZ threshold", () => {
+  it("uses the same free delivery threshold for pickup and courier", () => {
     const env = getServerEnv({
       NODE_ENV: "production",
       CATALOG_READ_SOURCE: "database",
@@ -238,7 +242,7 @@ describe("commerce server configuration", () => {
     const courier = getDeliveryQuote({ productSubtotalMinor: 15_000_000, deliveryMethod: "cdek_courier" }, env);
     const pvz = getDeliveryQuote({ productSubtotalMinor: 15_000_000, deliveryMethod: "cdek_pickup" }, env);
 
-    expect(courier.amountMinor).toBe(65_000);
+    expect(courier.amountMinor).toBe(0);
     expect(pvz.amountMinor).toBe(0);
   });
 
@@ -436,10 +440,10 @@ describe("CDEK shipping domain", () => {
     if (customerDelivery.status !== "configured") {
       throw new Error("Expected configured delivery quote.");
     }
-    expect(customerDelivery.amountMinor).toBe(65_000);
+    expect(customerDelivery.amountMinor).toBe(0);
     for (const providerTariff of providerTariffs) {
-      expect(subtotalMinor + customerDelivery.amountMinor + providerTariff).not.toBe(subtotalMinor + providerTariff);
-      expect(subtotalMinor + customerDelivery.amountMinor).toBe(5_065_000);
+      expect(subtotalMinor + customerDelivery.amountMinor).toBe(5_000_000);
+      expect(subtotalMinor + customerDelivery.amountMinor + providerTariff).toBe(subtotalMinor + providerTariff);
     }
   });
 

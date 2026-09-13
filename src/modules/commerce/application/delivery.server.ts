@@ -3,7 +3,7 @@ import "server-only";
 import { getServerEnv, type ServerEnv } from "@/config/server-env";
 import type { CheckoutContactInput, DeliveryQuote } from "@/modules/commerce/domain/types";
 
-export const cdekCourierDeliveryAmountMinor = 65_000;
+export const cdekCourierDeliveryAmountMinor = 50_000;
 
 type DeliveryQuoteMethod = CheckoutContactInput["deliveryMethod"];
 
@@ -47,21 +47,25 @@ export function getDeliveryQuote(
   }
 
   if (env.commerce.deliveryPricingMode === "cdek_threshold") {
+    const isFree = productSubtotalMinor >= env.commerce.cdekFreeDeliveryThresholdMinor;
+    const amountMinor = isFree ? 0 : env.commerce.cdekBelowThresholdAmountMinor;
+
     if (input.deliveryMethod === "cdek_courier") {
       return {
         status: "configured",
         provider: "cdek",
         method: "courier",
         label: "СДЭК — курьером",
-        amountMinor: cdekCourierDeliveryAmountMinor,
+        amountMinor,
         currencyCode: "RUB",
         tariffCode: env.cdek.courierTariffCode ? String(env.cdek.courierTariffCode) : null,
-        freeDeliveryThresholdMinor: null,
+        freeDeliveryThresholdMinor: env.commerce.cdekFreeDeliveryThresholdMinor,
         snapshot: {
-          mode: "cdek_courier_flat",
+          mode: "cdek_courier_threshold",
           provider: "cdek",
-          amountMinor: cdekCourierDeliveryAmountMinor,
-          courierDeliveryAmountMinor: cdekCourierDeliveryAmountMinor,
+          amountMinor,
+          freeDeliveryThresholdMinor: env.commerce.cdekFreeDeliveryThresholdMinor,
+          belowThresholdAmountMinor: env.commerce.cdekBelowThresholdAmountMinor,
           subtotalMinor: productSubtotalMinor,
           courierTariffCode: env.cdek.courierTariffCode,
           fromLocationCode: env.cdek.fromLocationCode,
@@ -70,8 +74,6 @@ export function getDeliveryQuote(
       };
     }
 
-    const isFree = productSubtotalMinor >= env.commerce.cdekFreeDeliveryThresholdMinor;
-    const amountMinor = isFree ? 0 : env.commerce.cdekBelowThresholdAmountMinor;
     const fallbackTariffCode = env.cdek.pickupTariffCode ?? env.cdek.defaultTariffCode;
 
     return {
