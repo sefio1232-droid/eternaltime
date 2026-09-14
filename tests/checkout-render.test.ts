@@ -202,7 +202,7 @@ async function renderCheckout(options: {
         }
       : { type: "cart" as const, items: [] };
 
-  return Object.assign(render(React.createElement(CheckoutExperience, { source, userEmail: "buyer@example.com" })), {
+  return Object.assign(render(React.createElement(CheckoutExperience, { source, userEmail: "buyer@example.com", canMergeCart: true })), {
     fetchMock,
     widgetOptions,
   });

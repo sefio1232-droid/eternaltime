@@ -7,6 +7,7 @@ import { getServerEnv } from "@/config/server-env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { checkoutLegalDocuments } from "@/content/legal";
+import { verifyGuestOrderAccessCookie } from "@/modules/commerce/application/guest-order-access.server";
 import { mergeCommerceCartItems } from "@/modules/commerce/domain/cart";
 import type {
   CheckoutContactInput,
@@ -38,7 +39,7 @@ import {
 type OrderRow = {
   id: string;
   order_number: string;
-  user_id: string;
+  user_id: string | null;
   source: "buy_now" | "cart";
   status: OrderStatus;
   payment_status: OrderPaymentStatus;
@@ -414,7 +415,7 @@ async function insertOrderEvent(
 }
 
 export async function createCheckoutOrderAndPayment(input: {
-  userId: string;
+  userId: string | null;
   source: CheckoutSource;
   contact: CheckoutContactInput;
   checkoutSubmissionKey: string;
@@ -536,20 +537,22 @@ export async function createCheckoutOrderAndPayment(input: {
     .single();
 
   if (orderError) {
-    const { data: existingOrder, error: existingError } = await setup.client
+    let existingOrderQuery = setup.client
       .from("orders")
       .select("*")
-      .eq("user_id", input.userId)
       .eq("checkout_submission_key", input.checkoutSubmissionKey)
-      .single();
+      .limit(1);
+    existingOrderQuery = input.userId ? existingOrderQuery.eq("user_id", input.userId) : existingOrderQuery.is("user_id", null);
+    const { data: existingOrders, error: existingError } = await existingOrderQuery;
+    const existingOrder = existingOrders?.[0];
 
     if (existingError || !existingOrder) {
       throw new Error(orderError.message);
     }
 
     const details = await getOrderDetailByNumber(String(existingOrder.order_number), {
-      userId: input.userId,
-    });
+      admin: true,
+    }, setup.client);
     return {
       order: existingOrder as OrderRow,
       summary,
@@ -757,7 +760,7 @@ export async function reconcileYooKassaPayment(providerPaymentId: string) {
 
 export async function getOrderDetailByNumber(
   orderNumber: string,
-  access: { userId?: string; admin?: boolean },
+  access: { userId?: string; admin?: boolean; guestAccessCookie?: string | null },
   client = createSupabaseAdminClient(),
 ): Promise<CommerceOrderDetail | null> {
   if (!client) {
@@ -766,7 +769,13 @@ export async function getOrderDetailByNumber(
 
   let query = client.from("orders").select("*").eq("order_number", orderNumber).limit(1);
   if (!access.admin) {
-    query = query.eq("user_id", access.userId ?? "");
+    if (access.userId) {
+      query = query.eq("user_id", access.userId);
+    } else if (verifyGuestOrderAccessCookie(orderNumber, access.guestAccessCookie)) {
+      query = query.is("user_id", null);
+    } else {
+      return null;
+    }
   }
   const { data: orders } = await query;
   const order = orders?.[0] as OrderRow | undefined;
@@ -824,14 +833,19 @@ export async function listAdminOrders(client = createSupabaseAdminClient()) {
 
 export async function createPaymentForExistingOrder(input: {
   orderNumber: string;
-  userId: string;
+  userId?: string | null;
+  guestAccessCookie?: string | null;
 }): Promise<{ order: OrderRow; confirmationUrl: string | null; paymentAttempt: PaymentAttemptRow }> {
   const setup = getCommerceSetupState(true);
   if (!setup.ready) {
     throw new Error(setup.reason);
   }
 
-  const detail = await getOrderDetailByNumber(input.orderNumber, { userId: input.userId }, setup.client);
+  const detail = await getOrderDetailByNumber(
+    input.orderNumber,
+    { userId: input.userId ?? undefined, guestAccessCookie: input.guestAccessCookie },
+    setup.client,
+  );
   if (!detail) {
     throw new Error("order_not_found");
   }

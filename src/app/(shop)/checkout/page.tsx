@@ -42,9 +42,6 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const params = await searchParams;
   const currentUser = await getCurrentUser();
   const source = buildCheckoutSource(params);
-  const currentPath = `/checkout?${new URLSearchParams(
-    Object.entries(params).flatMap(([key, value]) => (typeof value === "string" ? [[key, value]] : [])),
-  ).toString()}`;
 
   if (currentUser.status === "unconfigured") {
     return (
@@ -58,10 +55,6 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
     );
   }
 
-  if (!currentUser.user) {
-    redirect(`/login?next=${encodeURIComponent(currentPath)}`);
-  }
-
   return (
     <EditorialContainer className={`${styles.checkoutPage} public-page`}>
       <header className={styles.commerceHeading}>
@@ -69,7 +62,11 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
         <h1>Оформление заказа</h1>
         <span>Контакты, доставка, юридические согласия и финальная проверка суммы перед переходом к оплате через YooKassa.</span>
       </header>
-      <CheckoutExperience source={source} userEmail={currentUser.user.email ?? ""} />
+      <CheckoutExperience
+        source={source}
+        userEmail={currentUser.user?.email ?? ""}
+        canMergeCart={Boolean(currentUser.user)}
+      />
     </EditorialContainer>
   );
 }

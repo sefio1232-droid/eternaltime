@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createCheckoutOrderSchema } from "@/modules/commerce/application/checkout-validation";
+import {
+  createGuestOrderAccessCookieValue,
+  guestOrderAccessCookieName,
+} from "@/modules/commerce/application/guest-order-access.server";
 import {
   createCheckoutOrderAndPayment,
   getAuthenticatedSupabaseUser,
@@ -9,9 +14,6 @@ export async function POST(request: Request) {
   const auth = await getAuthenticatedSupabaseUser();
   if (auth.status === "unconfigured") {
     return NextResponse.json({ error: "supabase_unconfigured" }, { status: 503 });
-  }
-  if (auth.status === "unauthenticated") {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
   const parsed = createCheckoutOrderSchema.safeParse(await request.json().catch(() => ({})));
@@ -26,18 +28,37 @@ export async function POST(request: Request) {
   }
 
   try {
+    const userId = auth.status === "authenticated" ? auth.user.id : null;
     const result = await createCheckoutOrderAndPayment({
-      userId: auth.user.id,
+      userId,
       source: parsed.data.source,
       contact: parsed.data.contact,
       checkoutSubmissionKey: parsed.data.checkoutSubmissionKey,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       orderNumber: result.order.order_number,
       confirmationUrl: result.confirmationUrl,
       paymentAttemptId: result.paymentAttempt?.id ?? null,
     });
+    if (!userId) {
+      const cookieStore = await cookies();
+      const cookieValue = createGuestOrderAccessCookieValue(
+        result.order.order_number,
+        cookieStore.get(guestOrderAccessCookieName)?.value,
+      );
+      if (cookieValue) {
+        response.cookies.set(guestOrderAccessCookieName, cookieValue, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+        });
+      }
+    }
+
+    return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "checkout_failed";
     const setupErrors = new Set(["supabase_unconfigured", "admin_secret_missing", "yookassa_unconfigured", "delivery_unconfigured"]);

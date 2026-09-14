@@ -49,7 +49,8 @@ describe("first real order operability safeguards", () => {
     const userDetail = read("src/app/(admin)/admin/users/[id]/page.tsx");
     const repository = read("src/modules/admin/infrastructure/admin-repository.server.ts");
 
-    expect(orderView).toContain('href={`/admin/users/${detail.order.user_id}`}');
+    expect(orderView).toContain('detail.order.user_id ?');
+    expect(orderView).toContain("Гостевой заказ");
     expect(userDetail).toContain('href={`/admin/orders/${order.orderNumber}`}');
     expect(userDetail).toContain("order.itemSummary");
     expect(userDetail).toContain("shipmentLabel(order.shipmentStatus)");

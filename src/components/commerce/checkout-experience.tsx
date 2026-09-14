@@ -13,6 +13,7 @@ import styles from "@/components/commerce/commerce.module.css";
 type CheckoutExperienceProps = {
   source: CheckoutSource;
   userEmail: string;
+  canMergeCart: boolean;
 };
 
 type CdekCityOption = {
@@ -341,7 +342,7 @@ function clearPickupState(contact: CheckoutContactInput): CheckoutContactInput {
   };
 }
 
-export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProps) {
+export function CheckoutExperience({ source, userEmail, canMergeCart }: CheckoutExperienceProps) {
   const rootId = `cdek-map-${useId().replace(/:/g, "")}`;
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -386,7 +387,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
   }
 
   useEffect(() => {
-    if (source.type !== "cart" || !cart.ready || cart.items.length === 0) {
+    if (!canMergeCart || source.type !== "cart" || !cart.ready || cart.items.length === 0) {
       return;
     }
 
@@ -399,7 +400,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       .catch(() => {
         // Checkout can still proceed from the local intent; merge is retried naturally on another visit.
       });
-  }, [cart, source.type]);
+  }, [canMergeCart, cart, source.type]);
 
   useEffect(() => {
     if (!widgetOpen) return;
@@ -693,7 +694,7 @@ export function CheckoutExperience({ source, userEmail }: CheckoutExperienceProp
       if (source.type === "cart") {
         cart.clear();
       }
-      router.push(`/account/orders/${encodeURIComponent(payload.orderNumber)}`);
+      router.push(`/checkout/return?order=${encodeURIComponent(payload.orderNumber)}`);
       return;
     }
 

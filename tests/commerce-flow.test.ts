@@ -477,7 +477,37 @@ describe("checkout backend activation", () => {
       repository.indexOf("const payment = await createYooKassaPayment"),
     );
     expect(checkout).toContain("Оформить заказ");
-    expect(checkout).toContain("/account/orders/");
+    expect(checkout).toContain("/checkout/return?order=");
+    expect(checkout).not.toContain("router.push(`/account/orders/");
+  });
+
+  it("allows guest checkout while keeping account-only cart merge and protected guest order return", async () => {
+    const fs = await import("node:fs");
+    const checkoutPage = fs.readFileSync("src/app/(shop)/checkout/page.tsx", "utf8");
+    const checkoutUi = fs.readFileSync("src/components/commerce/checkout-experience.tsx", "utf8");
+    const orderRoute = fs.readFileSync("src/app/api/checkout/orders/route.ts", "utf8");
+    const paymentRetryRoute = fs.readFileSync("src/app/api/orders/[orderNumber]/pay/route.ts", "utf8");
+    const returnPage = fs.readFileSync("src/app/(shop)/checkout/return/page.tsx", "utf8");
+    const repository = fs.readFileSync("src/modules/commerce/infrastructure/commerce-repository.server.ts", "utf8");
+    const guestAccess = fs.readFileSync("src/modules/commerce/application/guest-order-access.server.ts", "utf8");
+    const migration = fs.readFileSync("supabase/migrations/20260914030000_guest_checkout_orders.sql", "utf8");
+
+    expect(checkoutPage).not.toContain("redirect(`/login?next=");
+    expect(checkoutPage).toContain("canMergeCart={Boolean(currentUser.user)}");
+    expect(checkoutUi).toContain("canMergeCart: boolean");
+    expect(checkoutUi).toContain("if (!canMergeCart || source.type !== \"cart\"");
+    expect(orderRoute).not.toContain("return NextResponse.json({ error: \"unauthenticated\" }, { status: 401 });");
+    expect(orderRoute).toContain("const userId = auth.status === \"authenticated\" ? auth.user.id : null");
+    expect(orderRoute).toContain("createGuestOrderAccessCookieValue");
+    expect(repository).toContain("userId: string | null");
+    expect(repository).toContain("user_id: input.userId");
+    expect(repository).toContain("verifyGuestOrderAccessCookie(orderNumber, access.guestAccessCookie)");
+    expect(returnPage).toContain("guestAccessCookie");
+    expect(paymentRetryRoute).toContain("guestAccessCookie");
+    expect(guestAccess).toContain("crypto.createHmac(\"sha256\"");
+    expect(orderRoute).toContain("httpOnly: true");
+    expect(migration).toContain("alter column user_id drop not null");
+    expect(migration).toContain("orders_guest_checkout_submission_key_idx");
   });
 
   it("integrates the official CDEK Widget as checkout UX while keeping server validation", async () => {

@@ -34,7 +34,7 @@ export type AdminOrderListItem = {
   id: string;
   orderNumber: string;
   createdAt: string;
-  userId: string;
+  userId: string | null;
   customerEmail: string;
   customerName: string;
   customerPhone: string;

@@ -357,7 +357,14 @@ export function OrderDetailView({ detail, admin = false }: Readonly<{ detail: Co
         {admin ? (
           <div className={styles.adminShippingMeta}>
             <p className={styles.lineMeta}>Internal ID: {detail.order.id}</p>
-            <p className={styles.lineMeta}>User ID: <Link href={`/admin/users/${detail.order.user_id}`}>{detail.order.user_id}</Link></p>
+            <p className={styles.lineMeta}>
+              User ID:{" "}
+              {detail.order.user_id ? (
+                <Link href={`/admin/users/${detail.order.user_id}`}>{detail.order.user_id}</Link>
+              ) : (
+                "Гостевой заказ"
+              )}
+            </p>
             <p className={styles.lineMeta}>Создан: {formatDateTime(detail.order.created_at)}</p>
             <p className={styles.lineMeta}>Обновлён: {formatDateTime(detail.order.updated_at)}</p>
             <p className={styles.lineMeta}>Оплачен: {formatDateTime(detail.order.paid_at)}</p>
@@ -386,7 +393,9 @@ export function OrderDetailView({ detail, admin = false }: Readonly<{ detail: Co
           <p>{detail.order.contact_name}</p>
           <p className={styles.lineMeta}>{detail.order.contact_email}</p>
           <p className={styles.lineMeta}>{detail.order.contact_phone}</p>
-          {admin ? <p className={styles.lineMeta}><Link href={`/admin/users/${detail.order.user_id}`}>Открыть профиль клиента</Link></p> : null}
+          {admin && detail.order.user_id ? (
+            <p className={styles.lineMeta}><Link href={`/admin/users/${detail.order.user_id}`}>Открыть профиль клиента</Link></p>
+          ) : null}
         </div>
 
         <div>

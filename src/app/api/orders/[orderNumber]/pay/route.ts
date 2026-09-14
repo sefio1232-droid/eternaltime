@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { guestOrderAccessCookieName } from "@/modules/commerce/application/guest-order-access.server";
 import { getAuthenticatedSupabaseUser, createPaymentForExistingOrder } from "@/modules/commerce/infrastructure/commerce-repository.server";
 
 type RouteContext = {
@@ -10,16 +12,20 @@ export async function POST(_request: Request, context: RouteContext) {
   if (auth.status === "unconfigured") {
     return NextResponse.json({ error: "supabase_unconfigured" }, { status: 503 });
   }
-  if (auth.status === "unauthenticated") {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
 
   const { orderNumber } = await context.params;
+  const cookieStore = await cookies();
+  const guestAccessCookie = cookieStore.get(guestOrderAccessCookieName)?.value ?? null;
+  const userId = auth.status === "authenticated" ? auth.user.id : null;
+  if (!userId && !guestAccessCookie) {
+    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  }
 
   try {
     const result = await createPaymentForExistingOrder({
       orderNumber,
-      userId: auth.user.id,
+      userId,
+      guestAccessCookie,
     });
 
     return NextResponse.json({

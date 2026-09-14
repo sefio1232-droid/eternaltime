@@ -127,8 +127,9 @@ export function CommerceProductActions({
   if (!product.purchasable) {
     return (
       <div className={styles.productActions}>
+        <strong className={styles.lineTitle}>Сейчас недоступно для заказа</strong>
         <p className={styles.disabledNote}>
-          Цена уточняется. Оплата недоступна, пока в публичном каталоге нет корректной цены модели.
+          Вы можете посмотреть характеристики модели или сравнить её с другими часами.
         </p>
       </div>
     );
@@ -148,11 +149,12 @@ export function CommerceProductActions({
             setDrawerOpen(true);
           }}
         >
-          В корзину
+          Добавить в корзину
         </button>
       </div>
+      <strong className={styles.lineTitle}>Доступно для заказа</strong>
       <p className={styles.disabledNote}>
-        Перед оплатой мы ещё раз уточним модель, цену и доставку. Максимум одной модели в заказе — {commerceCartMaxQuantity}.
+        Перед оплатой мы проверим актуальную цену и возможность поставки. Доставка обычно занимает около 12 календарных дней. Максимум одной модели в заказе — {commerceCartMaxQuantity}.
       </p>
       <CommerceCartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>

@@ -26,6 +26,7 @@ describe("database migrations", () => {
       "20260813011000_catalog_public_read_projection.sql",
       "20260813012000_cdek_order_shipments.sql",
       "20260909090000_order_collection_provenance.sql",
+      "20260914030000_guest_checkout_orders.sql",
     ]);
   });
 
@@ -165,5 +166,18 @@ describe("database migrations", () => {
     expect(provenanceMigration).toContain("references public.order_items(id)");
     expect(provenanceMigration).toContain("user_watches_source_order_item_unique");
     expect(provenanceMigration).toContain("where source_order_item_id is not null and deleted_at is null");
+  });
+
+  it("allows guest checkout orders without weakening authenticated order ownership", () => {
+    const guestCheckoutMigration = migrations.find(
+      (migration) => migration.file === "20260914030000_guest_checkout_orders.sql",
+    )?.sql ?? "";
+
+    expect(guestCheckoutMigration).toContain("alter column user_id drop not null");
+    expect(guestCheckoutMigration).toContain("orders_user_checkout_submission_key_idx");
+    expect(guestCheckoutMigration).toContain("where user_id is not null");
+    expect(guestCheckoutMigration).toContain("orders_guest_checkout_submission_key_idx");
+    expect(guestCheckoutMigration).toContain("where user_id is null");
+    expect(allSql).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
   });
 });

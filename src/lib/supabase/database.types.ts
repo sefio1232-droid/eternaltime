@@ -1230,7 +1230,7 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           total_amount_minor: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           cancelled_at?: string | null
@@ -1271,7 +1271,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           total_amount_minor: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           cancelled_at?: string | null
@@ -1312,7 +1312,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           total_amount_minor?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
