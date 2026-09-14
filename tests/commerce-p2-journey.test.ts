@@ -81,11 +81,15 @@ describe("P2 cross-surface commerce consistency", () => {
     const card = read("src/components/catalog/catalog-watch-card.tsx");
     const detail = read("src/components/catalog/catalog-watch-detail-page.tsx");
     const productPage = read("src/app/(shop)/watches/[brandSlug]/[referenceSlug]/page.tsx");
+    const databaseAdapter = read("src/modules/catalog/infrastructure/database-catalog-adapter.server.ts");
 
     expect(card).not.toContain("Boolean(watch.publicPrice)");
     expect(detail).not.toContain("Boolean(watch.publicPrice)");
     expect(productPage).toContain("commerceState.kind === \"purchasable\"");
     expect(productPage).toContain("https://schema.org/PreOrder");
+    expect(databaseAdapter).toContain("const chunkSize = 100");
+    expect(databaseAdapter).toContain('.eq("is_visible", true)');
+    expect(databaseAdapter).toContain("allowLegacyReadModelPurchasable = offersByReference.size === 0");
   });
 
   it("keeps checkout/cart errors customer-safe", () => {

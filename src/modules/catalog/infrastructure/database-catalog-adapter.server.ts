@@ -307,21 +307,34 @@ function offerScore(row: CatalogOfferCommerceRow): number {
 
 async function loadCommerceOffers(watchReferenceIds: string[]): Promise<Map<string, CatalogOfferCommerceRow>> {
   const client = createSupabaseAdminClient() ?? await createSupabaseServerClient();
-  if (!client || watchReferenceIds.length === 0) {
+  const uniqueWatchReferenceIds = Array.from(new Set(watchReferenceIds.filter(Boolean)));
+  if (!client || uniqueWatchReferenceIds.length === 0) {
     return new Map();
   }
 
-  const { data, error } = await client
-    .from("catalog_offers")
-    .select("watch_reference_id,status,is_visible,current_price_minor,currency_code,offer_kind,condition,inventory_states(code,label,is_orderable),delivery_estimates(label,min_days,max_days)")
-    .in("watch_reference_id", watchReferenceIds);
+  const rows: CatalogOfferCommerceRow[] = [];
+  const chunkSize = 100;
+  for (let index = 0; index < uniqueWatchReferenceIds.length; index += chunkSize) {
+    const chunk = uniqueWatchReferenceIds.slice(index, index + chunkSize);
+    const { data, error } = await client
+      .from("catalog_offers")
+      .select("watch_reference_id,status,is_visible,current_price_minor,currency_code,offer_kind,condition,inventory_states(code,label,is_orderable),delivery_estimates(label,min_days,max_days)")
+      .in("watch_reference_id", chunk)
+      .eq("is_visible", true);
 
-  if (error || !data) {
-    return new Map();
+    if (error) {
+      console.error("[catalog] commerce offer load failed", {
+        code: error.code,
+        message: error.message,
+      });
+      continue;
+    }
+
+    rows.push(...((data ?? []) as unknown as CatalogOfferCommerceRow[]));
   }
 
   const bestByReference = new Map<string, CatalogOfferCommerceRow>();
-  for (const row of data as unknown as CatalogOfferCommerceRow[]) {
+  for (const row of rows) {
     const existing = bestByReference.get(row.watch_reference_id);
     if (!existing || offerScore(row) > offerScore(existing)) {
       bestByReference.set(row.watch_reference_id, row);
