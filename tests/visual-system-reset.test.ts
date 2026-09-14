@@ -84,7 +84,8 @@ describe("editorial art direction and layout refinement", () => {
     expect(card).toContain("styles.card");
     expect(card).toContain("styles.media");
     expect(card).toContain("styles.price");
-    expect(card).toContain("formatCatalogMoney(watch.publicPrice)");
+    expect(card).toContain("commerceState.priceVisible");
+    expect(card).toContain("formatCatalogMoney(visiblePrice)");
     expect(card).not.toContain("keySpecifications.map");
     expect(card).not.toContain("/account/favorites");
   });

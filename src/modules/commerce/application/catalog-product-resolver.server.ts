@@ -3,6 +3,7 @@ import "server-only";
 import { displayWatchModelHeading } from "@/modules/catalog/application/catalog-display";
 import { getPublicCatalogWatchByIdentity } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { mergeCommerceCartItems } from "@/modules/commerce/domain/cart";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import type {
   CheckoutContactInput,
   CommerceCartItemInput,
@@ -12,6 +13,7 @@ import type {
 import { getDeliveryQuote } from "@/modules/commerce/application/delivery.server";
 
 function snapshotFromWatch(watch: NonNullable<Awaited<ReturnType<typeof getPublicCatalogWatchByIdentity>>>): CommerceProductSnapshot {
+  const publicCommerceState = watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice });
   return {
     brandSlug: watch.brandSlug,
     referenceNormalized: watch.referenceNormalized,
@@ -26,11 +28,8 @@ function snapshotFromWatch(watch: NonNullable<Awaited<ReturnType<typeof getPubli
     canonicalHref: watch.href,
     image: watch.primaryImage,
     publicPrice: watch.publicPrice,
-    purchasable:
-      Boolean(watch.publicPrice) &&
-      watch.publicPrice?.currencyCode === "RUB" &&
-      Number.isInteger(watch.publicPrice.amountMinor) &&
-      watch.publicPrice.amountMinor > 0,
+    purchasable: publicCommerceState.purchaseAllowed,
+    publicCommerceState,
   };
 }
 
@@ -69,7 +68,7 @@ export async function resolveCommerceSummary(
       return [`Модель ${line.input.brandSlug} ${line.input.referenceNormalized} не найдена в публичном каталоге.`];
     }
     if (line.issue === "not_purchasable") {
-      return [`Для ${line.product?.brandName ?? line.input.brandSlug} ${line.input.referenceNormalized} нет корректной публичной цены.`];
+      return [`${line.product?.brandName ?? line.input.brandSlug} ${line.input.referenceNormalized}: эта модель сейчас недоступна для заказа. Мы сохранили её в корзине, чтобы вы могли вернуться к карточке или выбрать похожий вариант.`];
     }
     return [];
   });

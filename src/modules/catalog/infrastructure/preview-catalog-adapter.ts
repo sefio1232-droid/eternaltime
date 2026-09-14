@@ -1,4 +1,5 @@
 import { createMoney } from "@/modules/catalog/domain/money";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import { normalizeManufacturerReference, referenceSlugFromNormalized } from "@/modules/catalog/domain/reference-normalization";
 import { slugifyCatalogText } from "@/modules/catalog/domain/slug";
 import { createCatalogDevImageKey } from "@/modules/catalog/infrastructure/dev-image-keys";
@@ -716,6 +717,10 @@ function readModelFromCandidate(input: {
   const price = candidate.pricing.publicPriceCandidate
     ? createMoney(candidate.pricing.publicPriceCandidate.amountMinor, candidate.pricing.publicPriceCandidate.currencyCode)
     : null;
+  const publicCommerceState = getPublicCommerceState({
+    publicPrice: price,
+    publicReadModelPurchasable: candidate.applyEligibility.commercialApplyEligible,
+  });
   const rawOfficialName = textValue(candidate.identity.officialName);
   const officialName = rawOfficialName ? sanitizeCatalogPublicText(rawOfficialName).sanitized : null;
 
@@ -732,7 +737,8 @@ function readModelFromCandidate(input: {
     brandCollectionName: textValue(candidate.hierarchy.brandCollection),
     brandLineName: textValue(candidate.hierarchy.brandLine),
     watchModelName,
-    publicPrice: price,
+    publicPrice: publicCommerceState.priceVisible ? price : null,
+    publicCommerceState,
     primaryImage,
     imageGallery: seikoUpgrade.imageGallery,
     keySpecifications: keySpecifications(specifications),
@@ -804,6 +810,7 @@ function attachSiblings(watches: Array<Omit<CatalogWatchDetail, "siblingReferenc
         referenceNormalized: sibling.referenceNormalized,
         referenceSlug: sibling.referenceSlug,
         publicPrice: sibling.publicPrice,
+        publicCommerceState: sibling.publicCommerceState,
         primaryImage: sibling.primaryImage,
       }));
 

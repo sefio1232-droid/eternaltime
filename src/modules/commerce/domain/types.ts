@@ -1,5 +1,6 @@
 import type { Money } from "@/modules/catalog/domain/money";
 import type { CatalogImagePresentation } from "@/modules/catalog/domain/read-models";
+import type { PublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 
 export const commerceCartStorageKey = "eternal-time:cart:v2";
 export const commerceCartMaxQuantity = 5;
@@ -30,6 +31,7 @@ export type CommerceProductSnapshot = {
   image: CatalogImagePresentation;
   publicPrice: Money | null;
   purchasable: boolean;
+  publicCommerceState?: PublicCommerceState;
 };
 
 export type CommerceResolvedLine = {

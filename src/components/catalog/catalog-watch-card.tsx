@@ -9,6 +9,7 @@ import {
   displayWatchModelHeading,
   formatCatalogCardTrait,
 } from "@/modules/catalog/application/catalog-display";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import type { CatalogWatchCard } from "@/modules/catalog/domain/read-models";
 import styles from "@/components/catalog/catalog-watch-card.module.css";
 
@@ -19,6 +20,8 @@ export function CatalogWatchCardView({
   const modelHeading = displayWatchModelHeading({ brandName: watch.brandName, title: watch.title, referenceDisplay: watch.referenceDisplay });
   const quickFacts = watch.keySpecifications.slice(0, 2);
   const presentationCategory = classifyCatalogCardPresentation(watch);
+  const commerceState = watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice });
+  const visiblePrice = commerceState.priceVisible ? watch.publicPrice : null;
 
   return (
     <article className={`${styles.card} catalog-card-review-outline`} data-catalog-reference={watch.referenceDisplay}>
@@ -42,7 +45,7 @@ export function CatalogWatchCardView({
           <span className={styles.brand}>{watch.brandName}</span>
           <h2 className={styles.model}>{modelHeading}</h2>
           <span className={styles.reference}>{watch.referenceDisplay}</span>
-          <p className={styles.price}>{formatCatalogMoney(watch.publicPrice)}</p>
+          <p className={styles.price}>{visiblePrice ? formatCatalogMoney(visiblePrice) : commerceState.shortLabel}</p>
           {quickFacts.length > 0 ? (
             <dl className={styles.specs} aria-label="Ключевые характеристики">
               {quickFacts.map((fact) => (
@@ -81,10 +84,8 @@ export function CatalogWatchCardView({
           canonicalHref: watch.href,
           image: watch.primaryImage,
           publicPrice: watch.publicPrice,
-          purchasable:
-            Boolean(watch.publicPrice) &&
-            watch.publicPrice?.currencyCode === "RUB" &&
-            Boolean(watch.publicPrice?.amountMinor && watch.publicPrice.amountMinor > 0),
+          purchasable: commerceState.purchaseAllowed,
+          publicCommerceState: commerceState,
         }}
       />
     </article>

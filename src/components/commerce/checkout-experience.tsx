@@ -644,7 +644,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!summary?.purchasable) {
-      setMessage("Проверьте состав заказа и настройку доставки.");
+      setMessage("Некоторые позиции сейчас нельзя оформить. Проверьте состав заказа и выберите доступные часы.");
       return;
     }
 
@@ -710,7 +710,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
     <div className={styles.checkoutLayout} aria-busy={loading || submitting}>
       <form className={`${styles.panel} ${styles.checkoutForm}`} onSubmit={submit} noValidate>
         <section className={styles.checkoutSection}>
-          <p className={styles.eyebrow}>1. Контактные данные</p>
+          <p className={styles.eyebrow}>2. Контактные данные</p>
           <div className={styles.fieldGrid}>
             <label>
               Получатель
@@ -728,7 +728,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
         </section>
 
         <section className={styles.checkoutSection}>
-          <p className={styles.eyebrow}>2. Получение</p>
+          <p className={styles.eyebrow}>3. Доставка</p>
           <div className={styles.deliveryMapSlot}>
             <strong>Доставка СДЭК</strong>
             <p className={styles.lineMeta}>Доставка СДЭК: бесплатно от 10 000 ₽, ниже — 500 ₽.</p>
@@ -851,7 +851,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
         </section>
 
         <section className={styles.checkoutSection}>
-          <p className={styles.eyebrow}>3. Комментарии</p>
+          <p className={styles.eyebrow}>4. Комментарии</p>
           <div className={styles.fieldGrid}>
             <label className={styles.fullField}>
               Комментарий к доставке
@@ -865,7 +865,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
         </section>
 
         <section className={styles.checkoutSection} aria-labelledby="checkout-legal-title">
-          <p className={styles.eyebrow}>4. Юридические документы</p>
+          <p className={styles.eyebrow}>5. Подтверждение и оплата</p>
           <div className={styles.legalConsentBox}>
             <h2 id="checkout-legal-title">Согласия перед оформлением</h2>
             <label className={styles.checkLine}>
@@ -910,11 +910,12 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
         <button className={styles.buyNow} type="submit" disabled={submitting || !summary?.purchasable}>
           Оформить заказ
         </button>
+        <p className={styles.lineMeta}>Перед оплатой мы ещё раз подтвердим выбранный референс, актуальную цену и возможность поставки.</p>
         {message ? <p className={styles.issues} role="status">{message}</p> : null}
       </form>
 
       <aside className={styles.summaryPanel}>
-        <p className={styles.eyebrow}>Состав и стоимость</p>
+        <p className={styles.eyebrow}>1. Ваш заказ</p>
         <div className={styles.cartLines}>
           {(summary?.lines ?? []).map((line) =>
             line.product ? (
@@ -925,6 +926,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
                 <div>
                   <p className={styles.lineTitle}>{line.product.displayName}</p>
                   <p className={styles.lineMeta}>{line.product.referenceDisplay} · {line.quantity} шт.</p>
+                  <p className={styles.lineMeta}>Обычно около 12 календарных дней</p>
                   <p>{formatCommerceMoney(line.lineTotalMinor)}</p>
                 </div>
               </article>

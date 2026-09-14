@@ -62,10 +62,15 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "checkout_failed";
     const setupErrors = new Set(["supabase_unconfigured", "admin_secret_missing", "yookassa_unconfigured", "delivery_unconfigured"]);
+    if (!setupErrors.has(message)) {
+      console.error("checkout_order_failed", { message });
+    }
     return NextResponse.json(
       {
         error: setupErrors.has(message) ? message : "checkout_failed",
-        message,
+        message: setupErrors.has(message)
+          ? "Оформление заказа временно недоступно. Попробуйте позже."
+          : "Не удалось оформить заказ. Проверьте состав корзины, доставку и попробуйте ещё раз.",
       },
       { status: setupErrors.has(message) ? 503 : 409 },
     );

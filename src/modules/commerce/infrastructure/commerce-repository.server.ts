@@ -93,6 +93,13 @@ type OrderItemRow = {
   created_at: string;
 };
 
+type WatchReferenceLookupRow = {
+  id: string;
+  reference_code_normalized: string;
+  display_name: string;
+  brands?: { slug: string; name: string } | null;
+};
+
 type PaymentAttemptRow = {
   id: string;
   order_id: string;
@@ -802,6 +809,197 @@ export async function getOrderDetailByNumber(
   };
 }
 
+function orderIsDelivered(detail: CommerceOrderDetail): boolean {
+  return (
+    detail.order.status === "completed" ||
+    detail.shipments.some((shipment) => shipment.shipment_status === "delivered")
+  );
+}
+
+async function ensureDefaultUserWatchCollection(client: SupabaseClient, userId: string): Promise<string> {
+  const { data: existing } = await client
+    .from("user_watch_collections")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_default", true)
+    .limit(1);
+
+  if (existing?.[0]?.id) {
+    return String(existing[0].id);
+  }
+
+  const { data: inserted, error } = await client
+    .from("user_watch_collections")
+    .insert({ user_id: userId, is_default: true })
+    .select("id")
+    .single();
+
+  if (inserted?.id) {
+    return String(inserted.id);
+  }
+
+  if (error) {
+    const { data: raced } = await client
+      .from("user_watch_collections")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_default", true)
+      .limit(1);
+    if (raced?.[0]?.id) {
+      return String(raced[0].id);
+    }
+    throw new Error(error.message);
+  }
+
+  throw new Error("collection_create_failed");
+}
+
+async function watchReferencesForOrderItems(client: SupabaseClient, items: OrderItemRow[]) {
+  const references = [...new Set(items.map((item) => item.reference_code_normalized))];
+  if (references.length === 0) {
+    return new Map<string, WatchReferenceLookupRow>();
+  }
+
+  const { data, error } = await client
+    .from("watch_references")
+    .select("id,reference_code_normalized,display_name,brands(slug,name)")
+    .in("reference_code_normalized", references);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const byIdentity = new Map<string, WatchReferenceLookupRow>();
+  for (const row of (data ?? []) as unknown as WatchReferenceLookupRow[]) {
+    if (row.brands?.slug) {
+      byIdentity.set(`${row.brands.slug}:${row.reference_code_normalized}`, row);
+    }
+  }
+  return byIdentity;
+}
+
+export async function ensureDeliveredOrderItemsInCollection(input: {
+  orderNumber: string;
+  userId: string;
+}): Promise<{ created: number; existing: number; skipped: number }> {
+  const setup = getCommerceSetupState(false);
+  if (!setup.ready) {
+    throw new Error(setup.reason);
+  }
+
+  const detail = await getOrderDetailByNumber(input.orderNumber, { userId: input.userId }, setup.client);
+  if (!detail || detail.order.user_id !== input.userId) {
+    throw new Error("order_not_found");
+  }
+
+  if (!orderIsDelivered(detail)) {
+    return { created: 0, existing: 0, skipped: detail.items.length };
+  }
+
+  const collectionId = await ensureDefaultUserWatchCollection(setup.client, input.userId);
+  const references = await watchReferencesForOrderItems(setup.client, detail.items);
+  let created = 0;
+  let existing = 0;
+  let skipped = 0;
+
+  for (const item of detail.items) {
+    const { data: existingWatch } = await setup.client
+      .from("user_watches")
+      .select("id")
+      .eq("source_order_item_id", item.id)
+      .is("deleted_at", null)
+      .limit(1);
+
+    if (existingWatch?.[0]?.id) {
+      existing += 1;
+      continue;
+    }
+
+    const reference = references.get(`${item.brand_slug}:${item.reference_code_normalized}`);
+    if (!reference) {
+      skipped += 1;
+      continue;
+    }
+
+    const { error } = await setup.client.from("user_watches").insert({
+      user_watch_collection_id: collectionId,
+      user_id: input.userId,
+      watch_reference_id: reference.id,
+      source_kind: "catalog",
+      display_name: item.display_name_snapshot || reference.display_name,
+      ownership_status: "owned",
+      acquisition_price_minor: item.unit_price_minor,
+      acquisition_currency_code: "RUB",
+      acquisition_source: "purchase",
+      source_order_id: detail.order.id,
+      source_order_item_id: item.id,
+    });
+
+    if (error) {
+      if (error.message.toLowerCase().includes("duplicate")) {
+        existing += 1;
+        continue;
+      }
+      throw new Error(error.message);
+    }
+
+    created += 1;
+  }
+
+  return { created, existing, skipped };
+}
+
+export async function claimGuestOrderForUser(input: {
+  orderNumber: string;
+  userId: string;
+  guestAccessCookie?: string | null;
+}): Promise<{ order: OrderRow; ownership: { created: number; existing: number; skipped: number }; alreadyClaimed: boolean }> {
+  const setup = getCommerceSetupState(false);
+  if (!setup.ready) {
+    throw new Error(setup.reason);
+  }
+
+  const ownedDetail = await getOrderDetailByNumber(input.orderNumber, { userId: input.userId }, setup.client);
+  if (ownedDetail?.order.user_id === input.userId) {
+    return {
+      order: ownedDetail.order,
+      ownership: await ensureDeliveredOrderItemsInCollection({ orderNumber: input.orderNumber, userId: input.userId }),
+      alreadyClaimed: true,
+    };
+  }
+
+  const guestDetail = await getOrderDetailByNumber(input.orderNumber, { guestAccessCookie: input.guestAccessCookie ?? null }, setup.client);
+  if (!guestDetail || guestDetail.order.user_id !== null) {
+    throw new Error("order_claim_denied");
+  }
+
+  const { data: updated, error } = await setup.client
+    .from("orders")
+    .update({ user_id: input.userId })
+    .eq("id", guestDetail.order.id)
+    .is("user_id", null)
+    .select("*")
+    .single();
+
+  if (error || !updated) {
+    throw new Error("order_claim_denied");
+  }
+
+  await insertOrderEvent(setup.client, {
+    orderId: guestDetail.order.id,
+    eventType: "guest_order_claimed",
+    message: "Заказ сохранён в аккаунте покупателя.",
+    customerVisible: true,
+    actorUserId: input.userId,
+  });
+
+  return {
+    order: updated as OrderRow,
+    ownership: await ensureDeliveredOrderItemsInCollection({ orderNumber: input.orderNumber, userId: input.userId }),
+    alreadyClaimed: false,
+  };
+}
+
 export async function listOrdersForUser(userId: string, client = createSupabaseAdminClient()) {
   if (!client) {
     return [];
@@ -946,6 +1144,12 @@ export async function advanceAdminOrderStatus(input: {
     nextStatus: input.nextStatus,
     actorUserId: input.actorUserId,
   });
+  if (input.nextStatus === "completed" && detail.order.user_id) {
+    await ensureDeliveredOrderItemsInCollection({
+      orderNumber: detail.order.order_number,
+      userId: detail.order.user_id,
+    });
+  }
 }
 
 export async function createAdminRefund(input: {

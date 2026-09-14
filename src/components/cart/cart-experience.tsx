@@ -18,7 +18,7 @@ export function CartExperience() {
         <p className={styles.eyebrow}>Корзина</p>
         <h1>Корзина</h1>
         <span>
-          Модели сохраняются локально для гостя; после входа корзина синхронизируется с Supabase перед оформлением.
+          Можно оформить заказ без входа. Если модель или цена изменятся, мы покажем это до оплаты.
         </span>
       </header>
 
@@ -78,7 +78,7 @@ export function CartExperience() {
                           Удалить
                         </button>
                       </div>
-                      {line.issue ? <p className={styles.issues}>Модель нельзя оплатить сейчас.</p> : null}
+                      {line.issue ? <p className={styles.issues}>Эта модель сейчас недоступна для заказа.</p> : null}
                     </div>
                   </article>
                 ) : (
@@ -124,13 +124,13 @@ export function CartExperience() {
                 ))}
               </ul>
             ) : null}
-            <Link
-              className={summary?.purchasable ? styles.buyNow : styles.quietButton}
-              aria-disabled={!summary?.purchasable}
-              href="/checkout?source=cart"
-            >
-              Оформить заказ
-            </Link>
+            {summary?.purchasable ? (
+              <Link className={styles.buyNow} href="/checkout?source=cart">
+                Оформить заказ
+              </Link>
+            ) : (
+              <p className={styles.disabledNote}>Оформление станет доступно, когда в корзине останутся только модели, доступные для заказа.</p>
+            )}
             <button type="button" className={styles.quietButton} onClick={clear}>
               Очистить корзину
             </button>

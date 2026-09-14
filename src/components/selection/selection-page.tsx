@@ -7,6 +7,7 @@ import { SelectionOptionGroup } from "@/components/selection/selection-option-gr
 import { SelectionWatchImage } from "@/components/selection/selection-watch-image";
 import { SelectionStepFocus } from "@/components/selection/selection-step-focus";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import {
   nextSelectionStep,
   previousSelectionStep,
@@ -285,6 +286,7 @@ function SelectionResultCard({
 }>) {
   const watch = recommendation.watch;
   const Heading = variant === "featured" ? "h2" : "h3";
+  const commerceState = watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice });
 
   return (
     <article className={styles.resultCard} data-variant={variant}>
@@ -308,7 +310,7 @@ function SelectionResultCard({
           <Heading>{watch.title}</Heading>
           <span>Артикул {watch.referenceDisplay}</span>
         </div>
-        <p className={styles.price}>{formatCatalogMoney(watch.publicPrice)}</p>
+        <p className={styles.price}>{commerceState.priceVisible ? formatCatalogMoney(watch.publicPrice) : commerceState.shortLabel}</p>
         {recommendation.reasons.length > 0 ? (
           <ul className={styles.reasons}>
             {recommendation.reasons.map((reason) => <li key={reason}>{reason}</li>)}

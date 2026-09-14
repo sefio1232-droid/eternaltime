@@ -18,6 +18,7 @@ import {
   formatCatalogDisplayValue,
   splitDescriptionIntoParagraphs,
 } from "@/modules/catalog/application/catalog-display";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import {
   resolveCatalogImageQualityPresentation,
   selectBestCatalogHeroImage,
@@ -143,6 +144,8 @@ export function CatalogWatchDetailPage({
   });
   const titleScale = titleScaleClass(displayTitle);
   const overviewText = seoOverlay?.longDescription || buildFactualWatchDescription(watch);
+  const commerceState = watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice });
+  const visiblePrice = commerceState.priceVisible ? watch.publicPrice : null;
   // Only a genuinely different official name earns its own line under the title — `watchModelName`
   // is the same string as `title` for the overwhelming majority of the catalog, so showing it again
   // here would just repeat the H1 as a sentence directly below it.
@@ -196,7 +199,7 @@ export function CatalogWatchDetailPage({
             </p>
             {officialDisplayName ? <p className={styles.deck}>{officialDisplayName}</p> : null}
             <div className={styles.priceRow}>
-              <p className="price-plate type-price text-3xl">{formatCatalogMoney(watch.publicPrice)}</p>
+              <p className="price-plate type-price text-3xl">{visiblePrice ? formatCatalogMoney(visiblePrice) : commerceState.publicLabel}</p>
             </div>
             <CommerceProductActions
               product={{
@@ -209,10 +212,8 @@ export function CatalogWatchDetailPage({
                 canonicalHref: watch.href,
                 image: watch.primaryImage,
                 publicPrice: watch.publicPrice,
-                purchasable:
-                  Boolean(watch.publicPrice) &&
-                  watch.publicPrice?.currencyCode === "RUB" &&
-                  Boolean(watch.publicPrice?.amountMinor && watch.publicPrice.amountMinor > 0),
+                purchasable: commerceState.purchaseAllowed,
+                publicCommerceState: commerceState,
               }}
             />
             {keyFacts.length > 0 ? (
@@ -340,6 +341,7 @@ export function CatalogWatchDetailPage({
                     brandCollectionName: watch.brandCollectionName,
                     watchModelName: watch.watchModelName,
                     publicPrice: sibling.publicPrice,
+                    publicCommerceState: sibling.publicCommerceState,
                     primaryImage: sibling.primaryImage,
                     keySpecifications: [],
                   }}

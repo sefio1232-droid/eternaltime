@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { guestOrderAccessCookieName } from "@/modules/commerce/application/guest-order-access.server";
-import { getAuthenticatedSupabaseUser, createPaymentForExistingOrder } from "@/modules/commerce/infrastructure/commerce-repository.server";
+import {
+  claimGuestOrderForUser,
+  getAuthenticatedSupabaseUser,
+} from "@/modules/commerce/infrastructure/commerce-repository.server";
 
 type RouteContext = {
   params: Promise<{ orderNumber: string }>;
@@ -12,35 +15,37 @@ export async function POST(_request: Request, context: RouteContext) {
   if (auth.status === "unconfigured") {
     return NextResponse.json({ error: "supabase_unconfigured" }, { status: 503 });
   }
+  if (auth.status !== "authenticated") {
+    return NextResponse.json({ error: "authentication_required" }, { status: 401 });
+  }
 
   const { orderNumber } = await context.params;
   const cookieStore = await cookies();
   const guestAccessCookie = cookieStore.get(guestOrderAccessCookieName)?.value ?? null;
-  const userId = auth.status === "authenticated" ? auth.user.id : null;
-  if (!userId && !guestAccessCookie) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
 
   try {
-    const result = await createPaymentForExistingOrder({
+    const result = await claimGuestOrderForUser({
       orderNumber,
-      userId,
+      userId: auth.user.id,
       guestAccessCookie,
     });
 
     return NextResponse.json({
       orderNumber: result.order.order_number,
-      confirmationUrl: result.confirmationUrl,
-      paymentAttemptId: result.paymentAttempt.id,
+      alreadyClaimed: result.alreadyClaimed,
+      ownership: result.ownership,
     });
   } catch (error) {
-    console.error("payment_retry_failed", {
+    console.error("guest_order_claim_failed", {
       orderNumber,
-      message: error instanceof Error ? error.message : "payment_retry_failed",
+      message: error instanceof Error ? error.message : "order_claim_denied",
     });
     return NextResponse.json(
-      { error: "payment_retry_failed", message: "Не удалось открыть оплату. Проверьте страницу заказа или попробуйте позже." },
-      { status: 409 },
+      {
+        error: "order_claim_denied",
+        message: "Не удалось сохранить заказ в аккаунте. Откройте страницу заказа из того же браузера и попробуйте ещё раз.",
+      },
+      { status: 403 },
     );
   }
 }

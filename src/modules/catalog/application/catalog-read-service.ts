@@ -32,6 +32,7 @@ import type {
   CatalogWatchCard,
   CatalogWatchDetail,
 } from "@/modules/catalog/domain/read-models";
+import { commerceRank, getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 
 const filterSpecKeys = {
   movement: ["movement_type_raw", "movement_family_raw", "movement_raw"],
@@ -572,6 +573,7 @@ export function toCatalogWatchCard(watch: CatalogWatchDetail): CatalogWatchCard 
     brandCollectionName: watch.brandCollectionName,
     watchModelName: watch.watchModelName,
     publicPrice: watch.publicPrice,
+    publicCommerceState: watch.publicCommerceState,
     primaryImage: watch.primaryImage,
     keySpecifications: watch.keySpecifications,
   };
@@ -748,11 +750,12 @@ export function pickRelatedCatalogWatches(dataset: CatalogReadDataset, watch: Ca
       const relativeDiff = Math.abs(candidate.publicPrice.amountMinor - watchPriceMinor) / Math.max(watchPriceMinor, 1);
       score += Math.max(0, 30 - relativeDiff * 30);
     }
-    return { candidate, score };
+    const commerceState = candidate.publicCommerceState ?? getPublicCommerceState({ publicPrice: candidate.publicPrice });
+    return { candidate, score, commerceRank: commerceRank(commerceState) };
   });
 
   return scored
-    .sort((left, right) => right.score - left.score || left.candidate.id.localeCompare(right.candidate.id, "en"))
+    .sort((left, right) => right.score - left.score || right.commerceRank - left.commerceRank || left.candidate.id.localeCompare(right.candidate.id, "en"))
     .slice(0, limit)
     .map((entry) => toCatalogWatchCard(entry.candidate));
 }

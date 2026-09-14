@@ -97,9 +97,11 @@ export function CommerceCartDrawer({
           <Link className={styles.quietButton} href="/cart">
             Открыть корзину
           </Link>
-          <Link className={styles.buyNow} href="/checkout?source=cart">
-            Оформить
-          </Link>
+          {summary?.purchasable ? (
+            <Link className={styles.buyNow} href="/checkout?source=cart">
+              Оформить
+            </Link>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -113,6 +115,7 @@ export function CommerceProductActions({
 }>) {
   const { addItem } = useCommerceCart();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const commerceState = product.publicCommerceState;
   const cartItem = useMemo<CommerceCartItemInput>(
     () => ({
       brandSlug: product.brandSlug,
@@ -127,10 +130,18 @@ export function CommerceProductActions({
   if (!product.purchasable) {
     return (
       <div className={styles.productActions}>
-        <strong className={styles.lineTitle}>Сейчас недоступно для заказа</strong>
+        <strong className={styles.lineTitle}>{commerceState?.publicLabel ?? "Сейчас недоступно для заказа"}</strong>
         <p className={styles.disabledNote}>
-          Вы можете посмотреть характеристики модели или сравнить её с другими часами.
+          Купить эту модель сейчас нельзя, но карточка остаётся полезной: можно изучить характеристики, сравнить часы или подобрать близкий вариант.
         </p>
+        <div className={styles.drawerActions}>
+          <Link className={styles.quietButton} href="/selection">
+            Пройти подбор
+          </Link>
+          <Link className={styles.quietButton} href="/watches">
+            Смотреть похожие модели
+          </Link>
+        </div>
       </div>
     );
   }
@@ -152,9 +163,9 @@ export function CommerceProductActions({
           Добавить в корзину
         </button>
       </div>
-      <strong className={styles.lineTitle}>Доступно для заказа</strong>
+      <strong className={styles.lineTitle}>{commerceState?.shortLabel ?? "Доступно для заказа"}</strong>
       <p className={styles.disabledNote}>
-        Перед оплатой мы проверим актуальную цену и возможность поставки. Доставка обычно занимает около 12 календарных дней. Максимум одной модели в заказе — {commerceCartMaxQuantity}.
+        Перед оплатой мы ещё раз подтвердим модель, актуальную цену и возможность поставки. Ориентир доставки — около 12 календарных дней. Для одной модели можно выбрать до {commerceCartMaxQuantity} штук.
       </p>
       <CommerceCartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>

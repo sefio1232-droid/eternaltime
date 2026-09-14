@@ -34,6 +34,36 @@ export function RetryPaymentButton({ orderNumber }: Readonly<{ orderNumber: stri
   );
 }
 
+export function ClaimGuestOrderButton({ orderNumber }: Readonly<{ orderNumber: string }>) {
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+  const router = useRouter();
+
+  async function claim() {
+    setPending(true);
+    setMessage("");
+    const response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}/claim`, { method: "POST" });
+    const payload = await response.json().catch(() => ({}));
+    setPending(false);
+
+    if (!response.ok) {
+      setMessage(payload.message || "Не удалось сохранить заказ в аккаунте.");
+      return;
+    }
+
+    router.push(`/account/orders/${encodeURIComponent(orderNumber)}`);
+  }
+
+  return (
+    <div>
+      <button type="button" className={styles.buyNow} onClick={claim} disabled={pending}>
+        {pending ? "Сохраняем…" : "Сохранить заказ в аккаунте"}
+      </button>
+      {message ? <p className={styles.issues}>{message}</p> : null}
+    </div>
+  );
+}
+
 export function AdminOrderStatusButton({
   orderNumber,
   nextStatus,

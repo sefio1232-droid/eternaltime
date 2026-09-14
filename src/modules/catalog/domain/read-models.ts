@@ -1,4 +1,5 @@
 import type { Money } from "@/modules/catalog/domain/money";
+import type { PublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 
 export type CatalogReadSourceKind = "database" | "preview";
 
@@ -60,6 +61,7 @@ export type CatalogWatchCard = {
   brandCollectionName: string | null;
   watchModelName: string;
   publicPrice: Money | null;
+  publicCommerceState?: PublicCommerceState;
   primaryImage: CatalogImagePresentation;
   keySpecifications: CatalogPublicSpecification[];
 };
@@ -72,6 +74,7 @@ export type CatalogSiblingReference = {
   referenceNormalized: string;
   referenceSlug: string;
   publicPrice: Money | null;
+  publicCommerceState?: PublicCommerceState;
   primaryImage: CatalogImagePresentation;
 };
 

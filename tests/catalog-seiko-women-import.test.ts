@@ -145,12 +145,12 @@ describe("Seiko Women 73 staged import", () => {
     expect(watch).toBeUndefined();
   });
 
-  it("keeps checkout and structured-data offers guarded by server-side public price presence", () => {
+  it("keeps checkout and structured-data offers guarded by server-side commerce state", () => {
     const detailPageSource = readSrc("src/app/(shop)/watches/[brandSlug]/[referenceSlug]/page.tsx");
     const commerceActionsSource = readSrc("src/components/commerce/commerce-actions.tsx");
     const commerceResolverSource = readSrc("src/modules/commerce/application/catalog-product-resolver.server.ts");
 
-    expect(detailPageSource).toContain("if (watch.publicPrice)");
+    expect(detailPageSource).toContain('commerceState.kind === "purchasable"');
     expect(detailPageSource).toContain("data.offers");
     expect(commerceActionsSource).toContain("if (!product.purchasable)");
     expect(commerceResolverSource).toContain('issue: "not_found" | "not_purchasable" | null');

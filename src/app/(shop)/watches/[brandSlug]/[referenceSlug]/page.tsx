@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { CatalogWatchDetailPage } from "@/components/catalog/catalog-watch-detail-page";
 import { getPublicEnv } from "@/config/public-env";
-import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
 import { displayWatchSeoTitle } from "@/modules/catalog/application/catalog-display";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import {
   CatalogReadSourceError,
   getPublicCatalogRelatedWatches,
@@ -45,9 +45,7 @@ export async function generateMetadata({ params }: WatchPageProps): Promise<Meta
         }),
       description:
         seoOverlay?.metaDescription ||
-        `${watch.brandName} ${watch.referenceDisplay}: цена ${formatCatalogMoney(
-          watch.publicPrice,
-        )}, характеристики и изображения в каталоге Eternal Time.`,
+        `${watch.brandName} ${watch.referenceDisplay}: характеристики, изображения и статус заказа в каталоге Eternal Time.`,
       alternates: {
         canonical: watch.href,
       },
@@ -104,12 +102,14 @@ function productStructuredData(
     data.description = description;
   }
 
-  if (watch.publicPrice) {
+  const commerceState = watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice });
+  if (watch.publicPrice && commerceState.kind === "purchasable") {
     data.offers = {
       "@type": "Offer",
       price: (watch.publicPrice.amountMinor / 100).toFixed(0),
       priceCurrency: watch.publicPrice.currencyCode,
       url: `${env.appUrl}${watch.href}`,
+      availability: "https://schema.org/PreOrder",
     };
   }
 

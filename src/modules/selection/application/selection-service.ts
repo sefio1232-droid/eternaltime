@@ -12,6 +12,7 @@ import type {
   CatalogReadDataset,
   CatalogWatchDetail,
 } from "@/modules/catalog/domain/read-models";
+import { commerceRank, getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import type {
   SelectionActualMovementKey,
   SelectionAnswerKey,
@@ -1479,7 +1480,8 @@ function scoreSort(input: { answers: SelectionAnswers }) {
       left.criteria.filter((item) => item.status === "match").length ||
     requiredConfirmationRank(right, input.answers) - requiredConfirmationRank(left, input.answers) ||
     knownConflictCount(left) - knownConflictCount(right) ||
-    Number(right.watch.publicPrice !== null) - Number(left.watch.publicPrice !== null) ||
+    commerceRank(right.watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: right.watch.publicPrice })) -
+      commerceRank(left.watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: left.watch.publicPrice })) ||
     Number(right.imageCandidates.length > 0) - Number(left.imageCandidates.length > 0) ||
     left.watch.brandName.localeCompare(right.watch.brandName, "ru") ||
     left.watch.title.localeCompare(right.watch.title, "ru") ||

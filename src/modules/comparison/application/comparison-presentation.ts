@@ -2,6 +2,7 @@ import { displayWatchModelHeading, formatCatalogDisplayValue } from "@/modules/c
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
 import type { CatalogImagePresentation, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
 import { comparisonIdentity, type LocalComparisonItem } from "@/modules/comparison/domain/local-comparison";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 
 export type ComparisonValue = {
   value: string;
@@ -40,7 +41,21 @@ type RowDefinition = {
 };
 
 const rowDefinitions: RowDefinition[] = [
-  { key: "price", label: "Цена", group: "commercial", value: (watch) => watch.publicPrice ? formatCatalogMoney(watch.publicPrice) : null },
+  {
+    key: "commerce-state",
+    label: "Статус заказа",
+    group: "commercial",
+    value: (watch) => (watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice })).publicLabel,
+  },
+  {
+    key: "price",
+    label: "Цена",
+    group: "commercial",
+    value: (watch) => {
+      const state = watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: watch.publicPrice });
+      return state.priceVisible && watch.publicPrice ? formatCatalogMoney(watch.publicPrice) : null;
+    },
+  },
   { key: "movement", label: "Механизм", group: "mechanism", specificationKeys: ["movement_type_raw", "movement_family_raw", "movement_raw"] },
   { key: "case-material", label: "Материал корпуса", group: "case", specificationKeys: ["case_material_raw"] },
   { key: "case-size", label: "Размер корпуса", group: "dimensions", specificationKeys: ["case_width_raw", "case_diameter_raw", "case_dimensions_raw"] },
