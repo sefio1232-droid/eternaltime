@@ -3,7 +3,7 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createMoney } from "@/modules/catalog/domain/money";
-import { getPublicCommerceState, isValidRubPrice, type PublicCommerceOfferInput } from "@/modules/commerce/domain/public-commerce-state";
+import { getPublicCommerceState, type PublicCommerceOfferInput } from "@/modules/commerce/domain/public-commerce-state";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
@@ -346,7 +346,6 @@ async function loadCommerceOffers(watchReferenceIds: string[]): Promise<Map<stri
 function applyCommerceState(input: {
   watch: CatalogWatchDetail;
   offer: CatalogOfferCommerceRow | null;
-  allowLegacyReadModelPurchasable: boolean;
 }): CatalogWatchDetail {
   const offer = input.offer ? offerInput(input.offer) : null;
   const offerPriceMinor = offer?.currentPriceMinor ?? null;
@@ -357,7 +356,6 @@ function applyCommerceState(input: {
   const publicCommerceState = getPublicCommerceState({
     publicPrice: price,
     offer,
-    publicReadModelPurchasable: input.allowLegacyReadModelPurchasable && isValidRubPrice(price),
   });
 
   return {
@@ -369,7 +367,6 @@ function applyCommerceState(input: {
 
 async function datasetFromRows(rows: CatalogPublicReadModelRow[], manifests: CatalogPhotoManifests): Promise<CatalogReadDataset> {
   const offersByReference = await loadCommerceOffers(rows.map((row) => row.watch_reference_id));
-  const allowLegacyReadModelPurchasable = offersByReference.size === 0;
   const watches = rows
     .map((row) => ({
       ...row.read_model_json,
@@ -382,7 +379,6 @@ async function datasetFromRows(rows: CatalogPublicReadModelRow[], manifests: Cat
       applyCommerceState({
         watch,
         offer: offersByReference.get(watch.id) ?? null,
-        allowLegacyReadModelPurchasable,
       }),
     )
     .sort((left, right) => left.brandName.localeCompare(right.brandName, "ru") || left.title.localeCompare(right.title, "ru"));

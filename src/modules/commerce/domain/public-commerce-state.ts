@@ -16,11 +16,6 @@ export type PublicCommerceOfferInput = {
 export type PublicCommerceStateInput = {
   publicPrice: Money | null;
   offer?: PublicCommerceOfferInput | null;
-  /**
-   * Compatibility bridge for the current production catalog read-model generation.
-   * It is intentionally explicit: a raw price alone never makes a watch purchasable.
-   */
-  publicReadModelPurchasable?: boolean;
 };
 
 export type PublicCommerceState = {
@@ -33,7 +28,7 @@ export type PublicCommerceState = {
   addToCartAllowed: boolean;
   deliveryCopy: string | null;
   legalDeliveryCopy: string;
-  reason: "active_offer" | "legacy_public_read_model" | "offer_unavailable" | "catalog_only";
+  reason: "active_offer" | "offer_unavailable" | "catalog_only";
 };
 
 export const defaultDeliveryOrientationCopy = "Ориентир доставки — около 12 календарных дней.";
@@ -77,21 +72,6 @@ export function getPublicCommerceState(input: PublicCommerceStateInput): PublicC
       deliveryCopy: offer.deliveryEstimateLabel || defaultDeliveryOrientationCopy,
       legalDeliveryCopy: defaultLegalDeliveryLimitCopy,
       reason: "active_offer",
-    };
-  }
-
-  if (!offer && input.publicReadModelPurchasable && isValidRubPrice(input.publicPrice)) {
-    return {
-      kind: "purchasable",
-      publicLabel: "Можно заказать",
-      shortLabel: "Доступно для заказа",
-      priceVisible: true,
-      purchaseAllowed: true,
-      buyNowAllowed: true,
-      addToCartAllowed: true,
-      deliveryCopy: defaultDeliveryOrientationCopy,
-      legalDeliveryCopy: defaultLegalDeliveryLimitCopy,
-      reason: "legacy_public_read_model",
     };
   }
 

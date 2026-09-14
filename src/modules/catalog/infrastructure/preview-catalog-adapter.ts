@@ -719,7 +719,17 @@ function readModelFromCandidate(input: {
     : null;
   const publicCommerceState = getPublicCommerceState({
     publicPrice: price,
-    publicReadModelPurchasable: candidate.applyEligibility.commercialApplyEligible,
+    offer:
+      candidate.applyEligibility.commercialApplyEligible && price
+        ? {
+            status: "active",
+            isVisible: true,
+            currentPriceMinor: price.amountMinor,
+            currencyCode: price.currencyCode,
+            inventoryIsOrderable: true,
+            inventoryCode: "preorder",
+          }
+        : null,
   });
   const rawOfficialName = textValue(candidate.identity.officialName);
   const officialName = rawOfficialName ? sanitizeCatalogPublicText(rawOfficialName).sanitized : null;

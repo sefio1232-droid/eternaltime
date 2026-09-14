@@ -27,6 +27,7 @@
     "seiko:women:prices:apply": "tsx scripts/seiko-women-prices-import.ts",
     "catalog:citizen-seiko:audit": "tsx scripts/catalog-citizen-seiko-final-audit.ts",
     "selection:master:v3:audit": "tsx scripts/selection-master-v3-audit.ts",
+    "commerce:offers:cutover": "tsx scripts/catalog-offers-canonical-cutover.ts",
     "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
     "home-hero:prepare-assets": "node scripts/prepare-home-hero-assets.mjs",
     "home-hero:prepare-candidates": "node scripts/prepare-home-hero-candidates.mjs",

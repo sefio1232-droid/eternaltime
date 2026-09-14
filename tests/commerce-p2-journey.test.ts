@@ -55,14 +55,14 @@ describe("P2 public commerce state", () => {
     expect(state.publicLabel).toBe("Сейчас недоступно для заказа");
   });
 
-  it("preserves the explicit legacy public read-model bridge without turning raw price into a rule", () => {
+  it("rejects public price without a valid canonical offer", () => {
     const state = getPublicCommerceState({
       publicPrice: createMoney(120_000, "RUB"),
-      publicReadModelPurchasable: true,
     });
 
-    expect(state.kind).toBe("purchasable");
-    expect(state.reason).toBe("legacy_public_read_model");
+    expect(state.kind).toBe("catalog_only");
+    expect(state.reason).toBe("catalog_only");
+    expect(state.purchaseAllowed).toBe(false);
   });
 });
 
@@ -89,7 +89,7 @@ describe("P2 cross-surface commerce consistency", () => {
     expect(productPage).toContain("https://schema.org/PreOrder");
     expect(databaseAdapter).toContain("const chunkSize = 100");
     expect(databaseAdapter).toContain('.eq("is_visible", true)');
-    expect(databaseAdapter).toContain("allowLegacyReadModelPurchasable = offersByReference.size === 0");
+    expect(databaseAdapter).not.toContain("allowLegacyReadModelPurchasable");
   });
 
   it("keeps checkout/cart errors customer-safe", () => {
