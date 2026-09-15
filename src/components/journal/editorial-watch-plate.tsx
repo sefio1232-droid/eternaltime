@@ -55,6 +55,7 @@ export function EditorialWatchPlate({
               surface={surface === "navy" ? "ink" : surface === "ivory" ? "stone" : index % 2 ? "mist" : "paper"}
               showBrand
               showReference={showReference}
+              link={false}
               presentationMode={layout === "single" ? "long-strap" : "standard"}
               priority={index === 0}
             />
