@@ -21,6 +21,9 @@ describe("Journal visual edition and customer account correction", () => {
       ["kak-vybrat-brend-chasov", 4],
       ["chasy-kak-investitsiya", 3],
       ["pochemu-mekhanicheskie-chasy-populyarny", 3],
+      ["razmer-chasov-i-geometriya-posadki", 3],
+      ["vodonepronitsaemost-chasov-bez-mifov", 3],
+      ["mekhanika-kvarts-i-solar-v-povsednevnom-vladenii", 3],
     ]);
     expect(journalArticleSources.find((article) => article.status === "draft")?.editorialWatchReferences).toEqual([]);
     expect(published.flatMap((article) => article.editorialWatchReferences).every((reference) => !("price" in reference))).toBe(true);

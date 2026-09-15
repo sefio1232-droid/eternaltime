@@ -15,16 +15,19 @@ function file(relativePath: string) {
 }
 
 describe("content experience phase", () => {
-  it("imports only the four supplied DOCX sources with the approved publication states", () => {
-    expect(journalArticleSources).toHaveLength(4);
+  it("keeps the four supplied DOCX sources and adds the three P4 editorial guides", () => {
+    expect(journalArticleSources).toHaveLength(7);
     expect(journalArticleSources.map((article) => article.sourceFile)).toEqual([
       "Гайды_по_брендам_часов_как_выбрать_марку_под_себя_и_не_переплатить.docx",
       "Заказ_часов_из_Китая_через_наш_интернет_магазин.docx",
       "Можно_ли_считать_часы_инвестицией.docx",
       "Почему_механические_часы_до_сих_пор_популярны.docx",
+      "P4 editorial brief",
+      "P4 editorial brief",
+      "P4 editorial brief",
     ]);
-    expect(journalArticleSources.map((article) => article.status)).toEqual(["published", "draft", "published", "published"]);
-    expect(getJournalInventory()).toEqual({ publishedCount: 3, unpublishedDraftCount: 1 });
+    expect(journalArticleSources.map((article) => article.status)).toEqual(["published", "draft", "published", "published", "published", "published", "published"]);
+    expect(getJournalInventory()).toEqual({ publishedCount: 6, unpublishedDraftCount: 1 });
   });
 
   it("keeps exact titles, source structure, and unknown metadata unknown", () => {
@@ -33,6 +36,9 @@ describe("content experience phase", () => {
       "Заказ часов из Китая через наш интернет-магазин",
       "Можно ли считать часы инвестицией",
       "Почему механические часы до сих пор популярны",
+      "Размер часов и геометрия посадки: как читать пропорции",
+      "Водозащита часов без мифов: что смотреть в характеристиках",
+      "Механика, кварц и solar: как выбрать ритм владения",
     ]);
     expect(journalArticleSources.every((article) => article.body.length >= 10)).toBe(true);
     expect(journalArticleSources.every((article) => article.body.filter((section) => section.heading).length >= 9)).toBe(true);
@@ -50,11 +56,15 @@ describe("content experience phase", () => {
   it("excludes drafts and held commercial claims from all public article reads", () => {
     const publicArticles = listPublishedJournalArticles();
     const investment = getPublishedJournalArticle("chasy-kak-investitsiya");
-    expect(publicArticles.map((article) => article.slug)).toEqual([
+    expect(publicArticles.map((article) => article.slug)).toEqual(expect.arrayContaining([
       "pochemu-mekhanicheskie-chasy-populyarny",
+      "mekhanika-kvarts-i-solar-v-povsednevnom-vladenii",
       "kak-vybrat-brend-chasov",
       "chasy-kak-investitsiya",
-    ]);
+      "razmer-chasov-i-geometriya-posadki",
+      "vodonepronitsaemost-chasov-bez-mifov",
+    ]));
+    expect(publicArticles).toHaveLength(6);
     expect(getPublishedJournalArticle("zakaz-chasov-iz-kitaya")).toBeNull();
     expect(JSON.stringify(investment)).not.toContain("Мы также ручаемся за качество и подлинность товара");
     expect(journalArticleSources.find((article) => article.slug === "chasy-kak-investitsiya")?.body.some((section) => section.visibility === "internal-review")).toBe(true);

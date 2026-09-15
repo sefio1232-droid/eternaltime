@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getAnalyticsSessionId, trackAnalyticsEvent } from "@/components/analytics/analytics-client";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import { useCommerceCart, useResolvedCommerceCart } from "@/components/commerce/use-commerce-cart";
 import { normalizeCdekWidgetPickupPoint } from "@/modules/commerce/domain/cdek-widget";
@@ -349,6 +350,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
   const widgetInstanceRef = useRef<CdekWidgetInstance | null>(null);
   const widgetTriggerRef = useRef<HTMLButtonElement | null>(null);
   const wasWidgetOpenRef = useRef(false);
+  const checkoutStartedRef = useRef(false);
   const cart = useCommerceCart();
   const activeItems = useMemo(() => sourceItems(source, cart.items), [cart.items, source]);
   const [contact, setContact] = useState<CheckoutContactInput>({ ...emptyContact, email: userEmail });
@@ -366,6 +368,16 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
   const [widgetStatus, setWidgetStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
   const [widgetError, setWidgetError] = useState("");
   const [widgetAttempt, setWidgetAttempt] = useState(0);
+
+  useEffect(() => {
+    if (checkoutStartedRef.current || loading) return;
+    checkoutStartedRef.current = true;
+    trackAnalyticsEvent("checkout_started", {
+      source: source.type,
+      item_count: summary?.itemCount,
+      subtotal_minor: summary?.productSubtotalMinor,
+    });
+  }, [loading, source.type, summary?.itemCount, summary?.productSubtotalMinor]);
 
   function preloadCdekWidgetResources() {
     if (!widgetConfigPromiseRef.current) {
@@ -645,11 +657,13 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
     event.preventDefault();
     if (!summary?.purchasable) {
       setMessage("Некоторые позиции сейчас нельзя оформить. Проверьте состав заказа и выберите доступные часы.");
+      trackAnalyticsEvent("checkout_validation_failed", { reason: "summary_not_purchasable" });
       return;
     }
 
     if (contact.deliveryMethod === "cdek_pickup" && !contact.cdekPickupPointCode?.trim()) {
       setMessage("Выберите пункт выдачи СДЭК на карте перед переходом к оплате.");
+      trackAnalyticsEvent("checkout_validation_failed", { reason: "pickup_point_required" });
       return;
     }
 
@@ -666,7 +680,7 @@ export function CheckoutExperience({ source, userEmail, canMergeCart }: Checkout
 
     const response = await fetch("/api/checkout/orders", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-et-analytics-session": getAnalyticsSessionId() },
       body: JSON.stringify({
         checkoutSubmissionKey: submissionKey,
         source: payloadSource,

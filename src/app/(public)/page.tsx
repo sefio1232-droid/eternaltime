@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import {
   HomeCollectionIntelligencePanel,
   HomeComparisonPurchase,
@@ -36,9 +37,10 @@ export default async function HomePage() {
   const orbitWatches = buildHomeOrbitWatches(scenarios);
   const publishedArticles = listPublishedJournalArticles();
   const homepageArticleSlugs = [
+    "razmer-chasov-i-geometriya-posadki",
+    "vodonepronitsaemost-chasov-bez-mifov",
+    "mekhanika-kvarts-i-solar-v-povsednevnom-vladenii",
     "pochemu-mekhanicheskie-chasy-populyarny",
-    "kak-vybrat-brend-chasov",
-    "chasy-kak-investitsiya",
   ] as const;
   const articles = homepageArticleSlugs
     .map((slug) => publishedArticles.find((article) => article.slug === slug))
@@ -46,6 +48,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <PageAnalyticsEvent eventName="home_view" />
       <HomeMotionOrchestrator />
       <section className="home-shell">
         <EditorialWideContainer>

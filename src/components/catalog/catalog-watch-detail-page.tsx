@@ -235,6 +235,7 @@ export function CatalogWatchDetailPage({
               />
               <CompareToggle
                 variant="detail"
+                commerceState={commerceState.kind}
                 item={{
                   identity: `${watch.brandSlug}:${watch.referenceSlug}`,
                   brandName: watch.brandName,

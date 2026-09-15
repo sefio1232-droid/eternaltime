@@ -5,9 +5,26 @@ import {
   removeCandidate,
   saveCandidate,
   updateCandidateStatus,
+  type CandidateMutationInput,
 } from "@/modules/candidates/application/candidate-service";
 import { createCandidateRepository } from "@/modules/candidates/infrastructure/candidate-repository.server";
 import { getCurrentUser } from "@/modules/auth/server";
+import {
+  analyticsSourceSurfaces,
+  validateAnalyticsEvent,
+  type AnalyticsEventName,
+  type AnalyticsSourceSurface,
+} from "@/modules/analytics/domain/events";
+import { recordAnalyticsEvent } from "@/modules/analytics/infrastructure/analytics-repository.server";
+import type { CandidateStatus, CandidateSummary } from "@/modules/candidates/domain/types";
+
+type CandidateRequestPayload = {
+  watchReferenceId?: unknown;
+  status?: unknown;
+  note?: unknown;
+  sourceSurface?: unknown;
+  analyticsSessionId?: unknown;
+};
 
 function candidateErrorResponse(error: unknown) {
   if (error instanceof CandidateServiceError) {
@@ -46,6 +63,55 @@ function candidateErrorResponse(error: unknown) {
   );
 }
 
+function parseCandidatePayload(input: unknown): CandidateRequestPayload {
+  return input && typeof input === "object" ? input as CandidateRequestPayload : {};
+}
+
+function analyticsSourceSurface(input: CandidateRequestPayload): AnalyticsSourceSurface {
+  return typeof input.sourceSurface === "string" && (analyticsSourceSurfaces as readonly string[]).includes(input.sourceSurface)
+    ? input.sourceSurface as AnalyticsSourceSurface
+    : "watch_detail";
+}
+
+function toCandidateMutationInput(payload: CandidateRequestPayload): CandidateMutationInput {
+  return {
+    watchReferenceId: typeof payload.watchReferenceId === "string" ? payload.watchReferenceId : "",
+    ...(typeof payload.status === "string" ? { status: payload.status as CandidateStatus } : {}),
+    ...(typeof payload.note === "string" ? { note: payload.note } : {}),
+  };
+}
+
+async function recordCandidateEvent(input: {
+  eventName: AnalyticsEventName;
+  candidate: CandidateSummary;
+  payload: CandidateRequestPayload;
+  userId: string;
+}) {
+  const watch = input.candidate.watch;
+  if (!watch || typeof input.payload.analyticsSessionId !== "string") return;
+
+  try {
+    const sourceSurface = analyticsSourceSurface(input.payload);
+    const event = validateAnalyticsEvent({
+      eventName: sourceSurface === "selection" && input.eventName === "candidate_saved"
+        ? "selection_candidate_saved"
+        : input.eventName,
+      sessionId: input.payload.analyticsSessionId,
+      pathname: watch.href,
+      properties: {
+        brand: watch.brandName,
+        reference: watch.referenceDisplay,
+        commerce_state: watch.publicCommerceState.kind,
+        source_surface: sourceSurface,
+        ...(input.eventName === "candidate_status_changed" ? { status: input.candidate.status } : {}),
+      },
+    });
+    await recordAnalyticsEvent({ event, userId: input.userId });
+  } catch {
+    // Candidate UX must not fail if analytics payload is missing or stale.
+  }
+}
+
 async function getCandidateContext() {
   const currentUser = await getCurrentUser();
   if (currentUser.status === "unconfigured") {
@@ -71,11 +137,13 @@ export async function POST(request: Request) {
   if ("response" in context) return context.response;
 
   try {
+    const payload = parseCandidatePayload(await request.json().catch(() => ({})));
     const candidate = await saveCandidate(
       context.repository,
       context.userId,
-      await request.json().catch(() => ({})),
+      toCandidateMutationInput(payload),
     );
+    await recordCandidateEvent({ eventName: "candidate_saved", candidate, payload, userId: context.userId });
     return NextResponse.json({ candidate });
   } catch (error) {
     return candidateErrorResponse(error);
@@ -87,11 +155,16 @@ export async function PATCH(request: Request) {
   if ("response" in context) return context.response;
 
   try {
+    const payload = parseCandidatePayload(await request.json().catch(() => ({})));
     const candidate = await updateCandidateStatus(
       context.repository,
       context.userId,
-      await request.json().catch(() => ({})),
+      {
+        watchReferenceId: typeof payload.watchReferenceId === "string" ? payload.watchReferenceId : "",
+        status: payload.status as CandidateStatus,
+      },
     );
+    await recordCandidateEvent({ eventName: "candidate_status_changed", candidate, payload, userId: context.userId });
     return NextResponse.json({ candidate });
   } catch (error) {
     return candidateErrorResponse(error);
@@ -103,8 +176,13 @@ export async function DELETE(request: Request) {
   if ("response" in context) return context.response;
 
   try {
-    const payload = await request.json().catch(() => ({}));
-    await removeCandidate(context.repository, context.userId, String(payload.watchReferenceId ?? ""));
+    const payload = parseCandidatePayload(await request.json().catch(() => ({})));
+    const watchReferenceId = String(payload.watchReferenceId ?? "");
+    const existing = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(watchReferenceId)
+      ? await context.repository.findByReference(context.userId, watchReferenceId)
+      : null;
+    await removeCandidate(context.repository, context.userId, watchReferenceId);
+    if (existing) await recordCandidateEvent({ eventName: "candidate_removed", candidate: existing, payload, userId: context.userId });
     return NextResponse.json({ removed: true });
   } catch (error) {
     return candidateErrorResponse(error);

@@ -11,6 +11,7 @@ import {
   type CommerceResolvedSummary,
 } from "@/modules/commerce/domain/types";
 import { useCommerceCart, useResolvedCommerceCart } from "@/components/commerce/use-commerce-cart";
+import { trackAnalyticsEvent } from "@/components/analytics/analytics-client";
 import styles from "@/components/commerce/commerce.module.css";
 
 function buyNowHref(product: CommerceProductSnapshot): string {
@@ -157,6 +158,13 @@ export function CommerceProductActions({
           className={styles.addToCart}
           onClick={() => {
             addItem(cartItem);
+            trackAnalyticsEvent("add_to_cart", {
+              brand: product.brandName,
+              reference: product.referenceDisplay,
+              commerce_state: commerceState?.kind ?? "purchasable",
+              source_surface: "watch_detail",
+              quantity: 1,
+            });
             setDrawerOpen(true);
           }}
         >
@@ -195,6 +203,13 @@ export function CommerceCardCartButton({
           quantity: 1,
           source: "catalog",
           addedAt: new Date().toISOString(),
+        });
+        trackAnalyticsEvent("add_to_cart", {
+          brand: product.brandName,
+          reference: product.referenceDisplay,
+          commerce_state: product.publicCommerceState?.kind ?? "purchasable",
+          source_surface: "catalog",
+          quantity: 1,
         });
       }}
     >

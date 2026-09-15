@@ -7,6 +7,8 @@ import {
   candidateStatuses,
   type CandidateStatus,
 } from "@/modules/candidates/domain/types";
+import type { AnalyticsSourceSurface } from "@/modules/analytics/domain/events";
+import { getAnalyticsSessionId } from "@/components/analytics/analytics-client";
 import styles from "@/components/candidates/candidate-action.module.css";
 
 type CandidateActionResponse = {
@@ -27,12 +29,12 @@ function effectiveReturnTo(fallback: string): string {
 
 async function requestCandidate(
   method: "POST" | "PATCH" | "DELETE",
-  payload: { watchReferenceId: string; status?: CandidateStatus },
+  payload: { watchReferenceId: string; status?: CandidateStatus; sourceSurface: AnalyticsSourceSurface },
 ): Promise<CandidateActionResponse & { statusCode: number }> {
   const response = await fetch("/api/candidates", {
     method,
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, analyticsSessionId: getAnalyticsSessionId() }),
   });
   const body = (await response.json().catch(() => ({}))) as CandidateActionResponse;
   return { ...body, statusCode: response.status };
@@ -44,12 +46,14 @@ export function CandidateButton({
   returnTo,
   initialStatus = null,
   compact = false,
+  sourceSurface = "watch_detail",
 }: Readonly<{
   watchReferenceId: string;
   displayName: string;
   returnTo: string;
   initialStatus?: CandidateStatus | null;
   compact?: boolean;
+  sourceSurface?: AnalyticsSourceSurface;
 }>) {
   const router = useRouter();
   const [status, setStatus] = useState<CandidateStatus | null>(initialStatus);
@@ -68,7 +72,7 @@ export function CandidateButton({
       onClick={() => {
         setMessage(null);
         startTransition(async () => {
-          const result = await requestCandidate("POST", { watchReferenceId, status: "saved" });
+          const result = await requestCandidate("POST", { watchReferenceId, status: "saved", sourceSurface });
           if (result.statusCode === 401) {
             router.push(loginHref(effectiveReturnTo(returnTo)));
             return;
@@ -92,10 +96,12 @@ export function CandidateStatusControls({
   watchReferenceId,
   returnTo,
   initialStatus = null,
+  sourceSurface = "compare",
 }: Readonly<{
   watchReferenceId: string;
   returnTo: string;
   initialStatus?: CandidateStatus | null;
+  sourceSurface?: AnalyticsSourceSurface;
 }>) {
   const router = useRouter();
   const [status, setStatus] = useState<CandidateStatus | null>(initialStatus);
@@ -105,7 +111,7 @@ export function CandidateStatusControls({
   function mutate(nextStatus: CandidateStatus) {
     setMessage(null);
     startTransition(async () => {
-      const result = await requestCandidate(status ? "PATCH" : "POST", { watchReferenceId, status: nextStatus });
+      const result = await requestCandidate(status ? "PATCH" : "POST", { watchReferenceId, status: nextStatus, sourceSurface });
       if (result.statusCode === 401) {
         router.push(loginHref(effectiveReturnTo(returnTo)));
         return;
@@ -122,7 +128,7 @@ export function CandidateStatusControls({
   function remove() {
     setMessage(null);
     startTransition(async () => {
-      const result = await requestCandidate("DELETE", { watchReferenceId });
+      const result = await requestCandidate("DELETE", { watchReferenceId, sourceSurface });
       if (result.statusCode === 401) {
         router.push(loginHref(effectiveReturnTo(returnTo)));
         return;

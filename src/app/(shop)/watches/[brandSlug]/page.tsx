@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogListPage } from "@/components/catalog/catalog-list-page";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { parseCatalogReadQuery, type CatalogSearchParams } from "@/modules/catalog/application/catalog-read-query";
@@ -82,15 +83,18 @@ export default async function BrandCatalogPage({ params, searchParams }: BrandPa
   const sanitationEntries = reviewMode ? await getCatalogReviewSanitationEntries() : [];
 
   return (
-    <CatalogListPage
-      result={resultState.result}
-      pathname={`/watches/${resultState.brand.slug}`}
-      title={`Часы ${resultState.brand.name}`}
-      description={`Модели ${resultState.brand.name} в Eternal Time: от повседневных кварцевых часов до механики и спортивных инструментов.`}
-      includeBrandFilter={false}
-      curatorialPaths={resultState.curatorialPaths}
-      reviewMode={reviewMode}
-      sanitationEntries={sanitationEntries}
-    />
+    <>
+      <PageAnalyticsEvent eventName="catalog_view" properties={{ brand: resultState.brand.slug, query: query.search }} />
+      <CatalogListPage
+        result={resultState.result}
+        pathname={`/watches/${resultState.brand.slug}`}
+        title={`Часы ${resultState.brand.name}`}
+        description={`Модели ${resultState.brand.name} в Eternal Time: от повседневных кварцевых часов до механики и спортивных инструментов.`}
+        includeBrandFilter={false}
+        curatorialPaths={resultState.curatorialPaths}
+        reviewMode={reviewMode}
+        sanitationEntries={sanitationEntries}
+      />
+    </>
   );
 }

@@ -28,6 +28,7 @@ describe("database migrations", () => {
       "20260909090000_order_collection_provenance.sql",
       "20260914030000_guest_checkout_orders.sql",
       "20260915070000_candidates_and_lukia_public_cleanup.sql",
+      "20260915120000_first_party_analytics.sql",
     ]);
   });
 

@@ -117,6 +117,7 @@ export default async function CandidatesPage() {
                             watchReferenceId={candidate.watchReferenceId}
                             returnTo="/candidates"
                             initialStatus={candidate.status}
+                            sourceSurface="candidates"
                           />
                         </article>
                       );
@@ -161,6 +162,7 @@ export default async function CandidatesPage() {
                           watchReferenceId={candidate.watchReferenceId}
                           returnTo="/candidates"
                           initialStatus={candidate.status}
+                          sourceSurface="candidates"
                         />
                       </article>
                     );

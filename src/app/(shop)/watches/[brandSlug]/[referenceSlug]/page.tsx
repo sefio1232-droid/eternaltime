@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { CatalogWatchDetailPage } from "@/components/catalog/catalog-watch-detail-page";
 import { getPublicEnv } from "@/config/public-env";
@@ -147,6 +148,7 @@ export default async function WatchReferencePage({ params, searchParams }: Watch
   });
   const relatedWatches = await getPublicCatalogRelatedWatches(resultState.watch);
   const structuredData = productStructuredData(resultState.watch, seoOverlay);
+  const commerceState = resultState.watch.publicCommerceState ?? getPublicCommerceState({ publicPrice: resultState.watch.publicPrice });
   const query = await searchParams;
   const collectionState = typeof query.collection === "string" ? query.collection : undefined;
 
@@ -155,6 +157,14 @@ export default async function WatchReferencePage({ params, searchParams }: Watch
       {structuredData ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       ) : null}
+      <PageAnalyticsEvent
+        eventName="watch_view"
+        properties={{
+          brand: resultState.watch.brandName,
+          reference: resultState.watch.referenceDisplay,
+          commerce_state: commerceState.kind,
+        }}
+      />
       <CatalogWatchDetailPage
         watch={resultState.watch}
         collectionState={collectionState}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CompareWorkspace } from "@/components/comparison/compare-workspace";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { EditorialWideContainer } from "@/components/ui/editorial-primitives";
@@ -40,6 +41,7 @@ export default async function ComparePage({
   const presentation = buildComparisonPresentation(watches);
   return (
     <div className="compare-page">
+      <PageAnalyticsEvent eventName="compare_viewed" properties={{ item_count: presentation.watches.length }} />
       <EditorialWideContainer className="public-page">
         <CompareWorkspace
           presentation={presentation}

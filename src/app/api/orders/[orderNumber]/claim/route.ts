@@ -5,12 +5,14 @@ import {
   claimGuestOrderForUser,
   getAuthenticatedSupabaseUser,
 } from "@/modules/commerce/infrastructure/commerce-repository.server";
+import { validateAnalyticsEvent } from "@/modules/analytics/domain/events";
+import { recordAnalyticsEvent } from "@/modules/analytics/infrastructure/analytics-repository.server";
 
 type RouteContext = {
   params: Promise<{ orderNumber: string }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const auth = await getAuthenticatedSupabaseUser();
   if (auth.status === "unconfigured") {
     return NextResponse.json({ error: "supabase_unconfigured" }, { status: 503 });
@@ -29,6 +31,20 @@ export async function POST(_request: Request, context: RouteContext) {
       userId: auth.user.id,
       guestAccessCookie,
     });
+    const analyticsSessionId = request.headers.get("x-et-analytics-session");
+    if (analyticsSessionId) {
+      try {
+        const event = validateAnalyticsEvent({
+          eventName: "order_claimed",
+          sessionId: analyticsSessionId,
+          pathname: `/checkout/return?order=${encodeURIComponent(result.order.order_number)}`,
+          properties: { order_number: result.order.order_number },
+        });
+        await recordAnalyticsEvent({ event, userId: auth.user.id });
+      } catch {
+        // Claim security and UX must not depend on analytics storage.
+      }
+    }
 
     return NextResponse.json({
       orderNumber: result.order.order_number,

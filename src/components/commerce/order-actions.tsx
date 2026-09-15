@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getAnalyticsSessionId } from "@/components/analytics/analytics-client";
 import { formatCommerceMoney } from "@/modules/commerce/domain/labels";
 import styles from "@/components/commerce/commerce.module.css";
 
@@ -42,7 +43,10 @@ export function ClaimGuestOrderButton({ orderNumber }: Readonly<{ orderNumber: s
   async function claim() {
     setPending(true);
     setMessage("");
-    const response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}/claim`, { method: "POST" });
+    const response = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}/claim`, {
+      method: "POST",
+      headers: { "x-et-analytics-session": getAnalyticsSessionId() },
+    });
     const payload = await response.json().catch(() => ({}));
     setPending(false);
 

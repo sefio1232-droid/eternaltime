@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogListPage } from "@/components/catalog/catalog-list-page";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { parseCatalogReadQuery, type CatalogSearchParams } from "@/modules/catalog/application/catalog-read-query";
@@ -49,15 +50,18 @@ export default async function WatchesPage({
   const sanitationEntries = reviewMode ? await getCatalogReviewSanitationEntries() : [];
 
   return (
-    <CatalogListPage
-      result={resultState.result}
-      pathname="/watches"
-      title="Каталог часов"
-      description="Реальные модели, проверенные цены и понятные различия без лишнего шума."
-      includeBrandFilter
-      curatorialPaths={resultState.curatorialPaths}
-      reviewMode={reviewMode}
-      sanitationEntries={sanitationEntries}
-    />
+    <>
+      <PageAnalyticsEvent eventName="catalog_view" properties={{ query: query.search }} />
+      <CatalogListPage
+        result={resultState.result}
+        pathname="/watches"
+        title="Каталог часов"
+        description="Реальные модели, проверенные цены и понятные различия без лишнего шума."
+        includeBrandFilter
+        curatorialPaths={resultState.curatorialPaths}
+        reviewMode={reviewMode}
+        sanitationEntries={sanitationEntries}
+      />
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CollectionEmptyState } from "@/components/collection/collection-empty-state";
 import { CollectionOverview } from "@/components/collection/collection-overview";
 import { LocalCollectionCoreExperience } from "@/components/collection/local-collection-core-experience";
@@ -69,6 +70,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     const catalogCandidates = await loadLocalCollectionCatalogCandidates();
     return (
       <Container className="public-page">
+        <PageAnalyticsEvent eventName="collection_view" />
         <LocalCollectionCoreExperience
           initialMode={localMode}
           initialDemoScenario={demoScenario}
@@ -83,6 +85,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     const catalogCandidates = await loadLocalCollectionCatalogCandidates();
     return (
       <Container className="public-page">
+        <PageAnalyticsEvent eventName="collection_view" />
         <LocalCollectionCoreExperience
           initialMode={localMode}
           initialDemoScenario={demoScenario}
@@ -112,6 +115,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
 
   return (
     <Container className="public-page">
+      <PageAnalyticsEvent eventName="collection_view" />
       {watches.length > 0 ? (
         <CollectionOverview watches={watches} analysis={analysis} />
       ) : (

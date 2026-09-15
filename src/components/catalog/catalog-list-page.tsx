@@ -6,6 +6,7 @@ import {
   catalogFilterResetHref,
 } from "@/components/catalog/catalog-filter-panel";
 import { CatalogFilterDialog } from "@/components/catalog/catalog-filter-dialog";
+import { CatalogFilterAnalytics } from "@/components/catalog/catalog-filter-analytics";
 import { CatalogCuratorialModule } from "@/components/catalog/catalog-curatorial-module";
 import { CatalogHero } from "@/components/catalog/catalog-hero";
 import { CatalogPagination } from "@/components/catalog/catalog-pagination";
@@ -170,6 +171,7 @@ export function CatalogListPage({
 
         <div className={styles.toolbarWrap} data-layout="catalog-toolbar">
           <form action={pathname} className={styles.controlBar}>
+            <CatalogFilterAnalytics />
             {/* Preserves the active Recommended/All tab across filter-form submissions — brand
                 tabs already carry their own `brand` param through the URL, so no hidden field is
                 needed for that half of the tab state. */}

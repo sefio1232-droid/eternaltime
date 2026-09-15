@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { JournalTypographicCover } from "@/components/journal/journal-typographic-cover";
 import { EditorialWatchVisual } from "@/components/journal/editorial-watch-visual";
 import { EditorialWideContainer } from "@/components/ui/editorial-primitives";
@@ -28,6 +29,9 @@ export const metadata: Metadata = {
 
 const issueSlugs = [
   "pochemu-mekhanicheskie-chasy-populyarny",
+  "razmer-chasov-i-geometriya-posadki",
+  "vodonepronitsaemost-chasov-bez-mifov",
+  "mekhanika-kvarts-i-solar-v-povsednevnom-vladenii",
   "kak-vybrat-brend-chasov",
   "chasy-kak-investitsiya",
 ] as const;
@@ -97,6 +101,7 @@ export default async function JournalPage() {
 
   return (
     <div className={styles.page}>
+      <PageAnalyticsEvent eventName="journal_index_view" />
       <EditorialWideContainer className={styles.shell}>
         <header className={styles.masthead}>
           <div className={styles.mastheadCopy}>

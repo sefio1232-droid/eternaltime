@@ -22,6 +22,9 @@ describe("premium editorial and account foundation", () => {
       ["zakaz-chasov-iz-kitaya", "analysis", "draft"],
       ["chasy-kak-investitsiya", "essay", "published"],
       ["pochemu-mekhanicheskie-chasy-populyarny", "feature", "published"],
+      ["razmer-chasov-i-geometriya-posadki", "guide", "published"],
+      ["vodonepronitsaemost-chasov-bez-mifov", "analysis", "published"],
+      ["mekhanika-kvarts-i-solar-v-povsednevnom-vladenii", "essay", "published"],
     ]);
     expect(getPublishedJournalArticle("zakaz-chasov-iz-kitaya")).toBeNull();
   });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { SelectionPageView } from "@/components/selection/selection-page";
 import {
@@ -64,14 +65,20 @@ export default async function SelectionPage({
     );
   }
 
+  const recommendations = currentStep === "results" ? buildSelectionRecommendations({ dataset: datasetState.dataset, answers }) : [];
+
   return (
-    <SelectionPageView
-      answers={answers}
-      answeredKeys={answeredKeys}
-      currentStep={currentStep}
-      recommendations={
-        currentStep === "results" ? buildSelectionRecommendations({ dataset: datasetState.dataset, answers }) : []
-      }
-    />
+    <>
+      <PageAnalyticsEvent
+        eventName={currentStep === "results" ? "selection_completed" : "selection_started"}
+        properties={currentStep === "results" ? { result_count: recommendations.length } : {}}
+      />
+      <SelectionPageView
+        answers={answers}
+        answeredKeys={answeredKeys}
+        currentStep={currentStep}
+        recommendations={recommendations}
+      />
+    </>
   );
 }

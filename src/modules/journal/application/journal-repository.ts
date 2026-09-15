@@ -44,7 +44,9 @@ export function validateJournalArticleSources(sources: JournalArticleSource[] = 
     if (!article.excerpt.trim()) issues.push(`${label}: excerpt is required`);
     if (!allowedCategories.has(article.category)) issues.push(`${label}: unknown category`);
     if (!allowedLayoutVariants.has(article.layoutVariant)) issues.push(`${label}: unknown layout variant`);
-    if (!article.sourceFile.toLowerCase().endsWith(".docx")) issues.push(`${label}: source file must be a DOCX`);
+    if (!article.sourceFile.toLowerCase().endsWith(".docx") && article.sourceFile !== "P4 editorial brief") {
+      issues.push(`${label}: source file must be a DOCX or P4 editorial brief`);
+    }
     if (!publicBody(article).some((section) => section.paragraphs.some((paragraph) => paragraph.trim()))) {
       issues.push(`${label}: public body is empty`);
     }
@@ -131,6 +133,7 @@ function toPublicArticle(article: JournalArticleSource): JournalArticle {
     brandMentions: article.brandMentions,
     modelMentions: article.modelMentions,
     heroImage: article.heroImage,
+    seo: article.seo,
   };
 }
 

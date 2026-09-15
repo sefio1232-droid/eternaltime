@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { EditorialWatchPlate } from "@/components/journal/editorial-watch-plate";
 import { EditorialWatchVisual } from "@/components/journal/editorial-watch-visual";
 import { JournalTypographicCover } from "@/components/journal/journal-typographic-cover";
@@ -14,7 +16,14 @@ import type { JournalArticle, JournalPresentationBlock } from "@/modules/journal
 import styles from "./article.module.css";
 
 type JournalArticlePageProps = Readonly<{ params: Promise<{ slug: string }> }>;
-const articleNumbers: Record<string, string> = { "pochemu-mekhanicheskie-chasy-populyarny": "01", "kak-vybrat-brend-chasov": "02", "chasy-kak-investitsiya": "03" };
+const articleNumbers: Record<string, string> = {
+  "pochemu-mekhanicheskie-chasy-populyarny": "01",
+  "razmer-chasov-i-geometriya-posadki": "02",
+  "vodonepronitsaemost-chasov-bez-mifov": "03",
+  "mekhanika-kvarts-i-solar-v-povsednevnom-vladenii": "04",
+  "kak-vybrat-brend-chasov": "05",
+  "chasy-kak-investitsiya": "06",
+};
 const coverKeywords: Record<string, string> = { feature: "Механизмы", guide: "Выбор", essay: "Ценность", analysis: "Разбор" };
 
 export function generateStaticParams() { return listPublishedJournalArticles().map((article) => ({ slug: article.slug })); }
@@ -23,8 +32,9 @@ export async function generateMetadata({ params }: JournalArticlePageProps): Pro
   const { slug } = await params;
   const article = getPublishedJournalArticle(slug);
   if (!article) return { title: "Статья не найдена", robots: { index: false, follow: false } };
-  const description = article.dek || article.excerpt;
-  return { title: article.title, description, alternates: { canonical: `/journal/${article.slug}` }, openGraph: { type: "article", title: article.title, description, url: `/journal/${article.slug}`, siteName: "Eternal Time", locale: "ru_RU", ...(article.publishedAt ? { publishedTime: article.publishedAt } : {}), ...(article.updatedAt ? { modifiedTime: article.updatedAt } : {}), ...(article.heroImage ? { images: [{ url: article.heroImage.src, alt: article.heroImage.alt }] } : {}) } };
+  const description = article.seo?.description || article.dek || article.excerpt;
+  const title = article.seo?.title || article.title;
+  return { title, description, alternates: { canonical: `/journal/${article.slug}` }, openGraph: { type: "article", title, description, url: `/journal/${article.slug}`, siteName: "Eternal Time", locale: "ru_RU", ...(article.publishedAt ? { publishedTime: article.publishedAt } : {}), ...(article.updatedAt ? { modifiedTime: article.updatedAt } : {}), ...(article.heroImage ? { images: [{ url: article.heroImage.src, alt: article.heroImage.alt }] } : {}) } };
 }
 
 async function loadDataset(): Promise<CatalogReadDataset | null> { try { return await getCatalogReadDataset(); } catch { return null; } }
@@ -107,8 +117,8 @@ function VisualizedBody({ article, watches }: Readonly<{ article: JournalArticle
   return <div className={styles.copy}>{article.presentationBlocks.map((block, index) => (
     <div className={styles.block} key={`${block.type}-${index}`}>
       <PresentationBlock block={block} />
-      {index === firstBreak && firstSelection.length ? <EditorialWatchPlate watches={firstSelection} title={article.layoutVariant === "guide" ? "Характер начинается с пропорций" : article.layoutVariant === "essay" ? "Предметный пример из каталога" : "Другой характер механики"} description={article.layoutVariant === "guide" ? "Tissot и Orient показаны точными моделями из каталога." : "Редакционно выбранный визуальный пример; статья не посвящена этой конкретной модели."} layout={article.layoutVariant === "guide" ? "duo" : "single"} surface={article.layoutVariant === "essay" ? "ivory" : "paper"} /> : null}
-      {index === secondBreak && secondSelection.length ? <EditorialWatchPlate watches={secondSelection} title={article.layoutVariant === "feature" ? "Механика в разных характерах" : article.layoutVariant === "essay" ? "Цена и позиционирование — разные контексты" : "Модели для сравнения"} description={article.layoutVariant === "guide" ? "Ещё два точных предметных примера Tissot и Orient. Casio и Citizen не подменяются случайными фотографиями." : article.layoutVariant === "essay" ? "Визуальные примеры, а не прогноз стоимости или инвестиционная рекомендация." : "Сравните форму, пропорции и характер — без рейтинга и без подмены содержания статьи."} layout="duo" showPrice={article.layoutVariant === "feature"} surface={article.layoutVariant === "feature" ? "navy" : "paper"} /> : null}
+      {index === firstBreak && firstSelection.length ? <EditorialWatchPlate watches={firstSelection} title={article.layoutVariant === "guide" ? "Характер начинается с пропорций" : article.layoutVariant === "essay" ? "Предметный пример из каталога" : "Другой характер механики"} description={article.layoutVariant === "guide" ? "Tissot и Orient показаны точными моделями из каталога." : "Редакционно выбранный визуальный пример; статья не посвящена этой конкретной модели."} layout={article.layoutVariant === "guide" ? "duo" : "single"} surface={article.layoutVariant === "essay" ? "ivory" : "paper"} articleSlug={article.slug} /> : null}
+      {index === secondBreak && secondSelection.length ? <EditorialWatchPlate watches={secondSelection} title={article.layoutVariant === "feature" ? "Механика в разных характерах" : article.layoutVariant === "essay" ? "Цена и позиционирование — разные контексты" : "Модели для сравнения"} description={article.layoutVariant === "guide" ? "Ещё два точных предметных примера Tissot и Orient. Casio и Citizen не подменяются случайными фотографиями." : article.layoutVariant === "essay" ? "Визуальные примеры, а не прогноз стоимости или инвестиционная рекомендация." : "Сравните форму, пропорции и характер — без рейтинга и без подмены содержания статьи."} layout="duo" showPrice={article.layoutVariant === "feature"} surface={article.layoutVariant === "feature" ? "navy" : "paper"} articleSlug={article.slug} /> : null}
     </div>
   ))}</div>;
 }
@@ -129,5 +139,5 @@ export default async function JournalArticlePage({ params }: JournalArticlePageP
   const number = articleNumbers[article.slug] ?? "—";
   const headings = articleHeadings(article);
   const structuredData = { "@context": "https://schema.org", "@type": "Article", headline: article.title, description: article.dek, inLanguage: "ru-RU", mainEntityOfPage: `${env.appUrl}/journal/${article.slug}`, publisher: { "@type": "Organization", name: "Eternal Time" }, ...(article.author ? { author: { "@type": "Person", name: article.author } } : {}), ...(article.publishedAt ? { datePublished: article.publishedAt } : {}), ...(article.updatedAt ? { dateModified: article.updatedAt } : {}), ...(article.heroImage ? { image: `${env.appUrl}${article.heroImage.src}` } : {}) };
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /><div className={styles.page}><EditorialContainer className={styles.shell}><article data-article-layout={article.layoutVariant} data-media-presentation="catalog-editorial"><nav aria-label="Хлебные крошки" className={styles.breadcrumbs}><Link href="/">Главная</Link><span aria-hidden="true">/</span><Link href="/journal">Журнал</Link><span aria-hidden="true">/</span><span>{article.category}</span></nav><ArticleHero article={article} number={number} watches={watches} /><InlineContents headings={headings} /><VisualizedBody article={article} watches={watches} /><RelatedStories article={article} /><section className={styles.bridge} aria-labelledby="article-bridge-title"><div><p className={styles.label}>От чтения к выбору</p><h2 id="article-bridge-title">Сопоставьте выводы с реальными моделями</h2></div><div><p>Продолжите в каталоге или уточните критерии в подборе.</p><nav><Link href="/watches">Каталог →</Link><Link href="/selection">Подбор →</Link></nav></div></section><Link className={styles.finalBack} href="/journal">← Вернуться в Журнал</Link></article></EditorialContainer></div></>;
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /><PageAnalyticsEvent eventName="journal_article_view" properties={{ article_slug: article.slug }} /><div className={styles.page}><EditorialContainer className={styles.shell}><article data-article-layout={article.layoutVariant} data-media-presentation="catalog-editorial"><nav aria-label="Хлебные крошки" className={styles.breadcrumbs}><Link href="/">Главная</Link><span aria-hidden="true">/</span><Link href="/journal">Журнал</Link><span aria-hidden="true">/</span><span>{article.category}</span></nav><ArticleHero article={article} number={number} watches={watches} /><InlineContents headings={headings} /><VisualizedBody article={article} watches={watches} /><RelatedStories article={article} /><section className={styles.bridge} aria-labelledby="article-bridge-title"><div><p className={styles.label}>От чтения к выбору</p><h2 id="article-bridge-title">Сопоставьте выводы с реальными моделями</h2></div><div><p>Продолжите в каталоге или уточните критерии в подборе.</p><nav><Link href="/watches">Каталог →</Link><TrackedLink href="/selection" eventName="journal_selection_click" properties={{ article_slug: article.slug }}>Подбор →</TrackedLink></nav></div></section><Link className={styles.finalBack} href="/journal">← Вернуться в Журнал</Link></article></EditorialContainer></div></>;
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { CandidateButton } from "@/components/candidates/candidate-action";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -281,9 +282,11 @@ function SelectionDataNotice({ recommendation }: Readonly<{ recommendation: Sele
 function SelectionResultCard({
   recommendation,
   variant,
+  rank,
 }: Readonly<{
   recommendation: SelectionRecommendation;
   variant: "featured" | "alternative" | "additional";
+  rank: number;
 }>) {
   const watch = recommendation.watch;
   const Heading = variant === "featured" ? "h2" : "h3";
@@ -319,12 +322,26 @@ function SelectionResultCard({
         ) : null}
         <SelectionDataNotice recommendation={recommendation} />
         <div className={styles.resultActions}>
-          <Link href={watch.href} className={styles.primaryLink}>Открыть модель</Link>
+          <TrackedLink
+            href={watch.href}
+            className={styles.primaryLink}
+            eventName="selection_result_opened"
+            properties={{
+              brand: watch.brandName,
+              reference: watch.referenceDisplay,
+              commerce_state: commerceState.kind,
+              source_surface: "selection",
+              rank,
+            }}
+          >
+            Открыть модель
+          </TrackedLink>
           <CandidateButton
             watchReferenceId={watch.id}
             displayName={watch.title}
             returnTo={watch.href}
             compact
+            sourceSurface="selection"
           />
         </div>
         <SelectionExplanation>
@@ -357,16 +374,16 @@ function SelectionResults({
 
       {featured ? (
         <div className={styles.resultComposition}>
-          <SelectionResultCard recommendation={featured} variant="featured" />
+          <SelectionResultCard recommendation={featured} variant="featured" rank={1} />
           {alternatives.length > 0 ? (
             <div className={styles.alternatives}>
-              {alternatives.slice(0, 2).map((recommendation) => (
-                <SelectionResultCard key={recommendation.watch.href} recommendation={recommendation} variant="alternative" />
+              {alternatives.slice(0, 2).map((recommendation, index) => (
+                <SelectionResultCard key={recommendation.watch.href} recommendation={recommendation} variant="alternative" rank={index + 2} />
               ))}
             </div>
           ) : null}
           {alternatives[2] ? (
-            <SelectionResultCard key={alternatives[2].watch.href} recommendation={alternatives[2]} variant="additional" />
+            <SelectionResultCard key={alternatives[2].watch.href} recommendation={alternatives[2]} variant="additional" rank={4} />
           ) : null}
         </div>
       ) : (

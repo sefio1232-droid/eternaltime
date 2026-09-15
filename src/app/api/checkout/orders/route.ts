@@ -9,6 +9,8 @@ import {
   createCheckoutOrderAndPayment,
   getAuthenticatedSupabaseUser,
 } from "@/modules/commerce/infrastructure/commerce-repository.server";
+import { validateAnalyticsEvent } from "@/modules/analytics/domain/events";
+import { recordAnalyticsEvent } from "@/modules/analytics/infrastructure/analytics-repository.server";
 
 export async function POST(request: Request) {
   const auth = await getAuthenticatedSupabaseUser();
@@ -35,6 +37,25 @@ export async function POST(request: Request) {
       contact: parsed.data.contact,
       checkoutSubmissionKey: parsed.data.checkoutSubmissionKey,
     });
+    const analyticsSessionId = request.headers.get("x-et-analytics-session");
+    if (analyticsSessionId) {
+      try {
+        const event = validateAnalyticsEvent({
+          eventName: "order_created",
+          sessionId: analyticsSessionId,
+          pathname: "/checkout",
+          properties: {
+            order_number: result.order.order_number,
+            source: parsed.data.source.type,
+            item_count: result.summary.itemCount,
+            total_minor: result.order.total_amount_minor,
+          },
+        });
+        await recordAnalyticsEvent({ event, userId });
+      } catch {
+        // Order creation is server truth; analytics must never interrupt payment handoff.
+      }
+    }
 
     const response = NextResponse.json({
       orderNumber: result.order.order_number,

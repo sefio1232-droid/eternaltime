@@ -56,6 +56,10 @@ export type JournalArticle = JournalArticleSummary & {
     alt: string;
     caption?: string;
   };
+  seo?: {
+    title?: string;
+    description?: string;
+  };
 };
 
 export type JournalInventory = {

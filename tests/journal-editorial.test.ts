@@ -98,8 +98,8 @@ describe("journal and editorial selections", () => {
     const articles = listPublishedJournalArticles();
     const publicJson = JSON.stringify(articles);
 
-    expect(articles).toHaveLength(3);
-    expect(getJournalInventory()).toEqual({ publishedCount: 3, unpublishedDraftCount: 1 });
+    expect(articles).toHaveLength(6);
+    expect(getJournalInventory()).toEqual({ publishedCount: 6, unpublishedDraftCount: 1 });
     expect(getPublishedJournalArticle("pochemu-mekhanicheskie-chasy-populyarny")?.title).toBe("Почему механические часы до сих пор популярны");
     expect(getPublishedJournalArticle("zakaz-chasov-iz-kitaya")).toBeNull();
     expect(getPublishedJournalArticle("unknown-slug")).toBeNull();

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
+import { trackAnalyticsEvent } from "@/components/analytics/analytics-client";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import { useCommerceCart, useResolvedCommerceCart } from "@/components/commerce/use-commerce-cart";
 import { commerceCartMaxQuantity } from "@/modules/commerce/domain/types";
@@ -73,7 +74,17 @@ export function CartExperience() {
                         <button
                           type="button"
                           className={styles.quietButton}
-                          onClick={() => removeItem(line.product!.brandSlug, line.product!.referenceNormalized)}
+                          onClick={() => {
+                            if (!line.product) return;
+                            void trackAnalyticsEvent("remove_from_cart", {
+                              brand: line.product.brandName,
+                              reference: line.product.referenceDisplay,
+                              commerce_state: line.product.publicCommerceState?.kind ?? "catalog_only",
+                              source_surface: "cart",
+                              quantity: line.quantity,
+                            });
+                            removeItem(line.product.brandSlug, line.product.referenceNormalized);
+                          }}
                         >
                           Удалить
                         </button>

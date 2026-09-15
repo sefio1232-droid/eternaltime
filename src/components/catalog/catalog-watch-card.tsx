@@ -63,6 +63,7 @@ export function CatalogWatchCardView({
         </div>
       </Link>
       <CompareToggle
+        commerceState={commerceState.kind}
         item={{
           identity: `${watch.brandSlug}:${watch.referenceSlug}`,
           brandName: watch.brandName,

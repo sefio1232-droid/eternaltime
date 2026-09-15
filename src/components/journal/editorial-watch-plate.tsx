@@ -1,3 +1,4 @@
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { EditorialWatchVisual } from "@/components/journal/editorial-watch-visual";
 import { formatCatalogMoney } from "@/modules/catalog/application/catalog-format";
 import type { CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
@@ -13,6 +14,7 @@ export function EditorialWatchPlate({
   showPrice = false,
   showReference = true,
   surface = "paper",
+  articleSlug,
 }: Readonly<{
   watches: CatalogWatchDetail[];
   title: string;
@@ -21,6 +23,7 @@ export function EditorialWatchPlate({
   showPrice?: boolean;
   showReference?: boolean;
   surface?: "paper" | "ivory" | "navy";
+  articleSlug?: string;
 }>) {
   if (watches.length === 0) return null;
   return (
@@ -32,7 +35,19 @@ export function EditorialWatchPlate({
       </figcaption>
       <div className={styles.grid}>
         {watches.map((watch, index) => (
-          <div className={styles.watchCell} key={`${watch.brandSlug}:${watch.referenceSlug}`}>
+          <TrackedLink
+            href={watch.href}
+            className={styles.watchCell}
+            key={`${watch.brandSlug}:${watch.referenceSlug}`}
+            eventName="journal_product_click"
+            properties={{
+              article_slug: articleSlug ?? "journal-index",
+              brand: watch.brandName,
+              reference: watch.referenceDisplay,
+              commerce_state: watch.publicCommerceState?.kind,
+              block_position: index,
+            }}
+          >
             <EditorialWatchVisual
               watch={watch}
               className={styles.watch}
@@ -44,7 +59,7 @@ export function EditorialWatchPlate({
               priority={index === 0}
             />
             {showPrice && watch.publicPrice ? <span className={styles.price}>{formatCatalogMoney(watch.publicPrice)}</span> : null}
-          </div>
+          </TrackedLink>
         ))}
       </div>
     </figure>

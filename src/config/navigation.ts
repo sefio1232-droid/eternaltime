@@ -31,6 +31,7 @@ export const adminNavigation: NavigationItem[] = [
   { label: "Каталог", href: "/admin/catalog" },
   { label: "Заказы", href: "/admin/orders" },
   { label: "Пользователи", href: "/admin/users" },
+  { label: "Аналитика", href: "/admin/analytics" },
   { label: "Система", href: "/admin/system" },
   { label: "Бренды", href: "/admin/brands" },
   { label: "Коллекции брендов", href: "/admin/brand-collections" },
