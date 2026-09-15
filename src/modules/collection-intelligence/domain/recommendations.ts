@@ -1,4 +1,5 @@
 import type {
+  CollectionCandidateIntentContext,
   CollectionAnalysisItem,
   CollectionCandidateScore,
   CollectionDirection,
@@ -490,13 +491,16 @@ function rankCandidates(
   items: CollectionAnalysisItem[],
   candidates: CollectionRecommendationCandidate[],
   intent: CollectionRecommendationIntent,
+  candidateContext: CollectionCandidateIntentContext[] = [],
 ): {
   ranked: CollectionCandidateScore[];
   boundaries: ReturnType<typeof getRecommendationPriceBoundaries>;
 } {
   const profile = buildCollectionProfile(items);
   const boundaries = getRecommendationPriceBoundaries(candidates);
+  const activeCandidateReferences = new Set(candidateContext.map((candidate) => candidate.catalogReferenceId));
   const scored = candidates
+    .filter((candidate) => !activeCandidateReferences.has(candidate.catalogReferenceId))
     .map((candidate) => scoreCollectionCandidate(candidate, items, profile, intent, boundaries))
     .filter((entry): entry is CollectionCandidateScore => entry !== null)
     .sort(
@@ -639,8 +643,9 @@ export function buildCollectionRecommendationSet(
   candidates: CollectionRecommendationCandidate[],
   intent: CollectionRecommendationIntent,
   limit = 3,
+  candidateContext: CollectionCandidateIntentContext[] = [],
 ): CollectionRecommendationSet {
-  const { ranked, boundaries } = rankCandidates(items, candidates, intent);
+  const { ranked, boundaries } = rankCandidates(items, candidates, intent, candidateContext);
   const selected = buildDiverseRecommendationList(ranked, limit);
   const copy = intentCopy[intent];
 
@@ -660,8 +665,9 @@ export function buildCollectionGrowthRecommendationSet(
   candidates: CollectionRecommendationCandidate[],
   primaryIntent: CollectionRecommendationIntent,
   confidence: CollectionGrowthRecommendationSet["confidence"],
+  candidateContext: CollectionCandidateIntentContext[] = [],
 ): CollectionGrowthRecommendationSet {
-  const exactRanked = rankCandidates(items, candidates, primaryIntent).ranked;
+  const exactRanked = rankCandidates(items, candidates, primaryIntent, candidateContext).ranked;
   const exact = buildDiverseRecommendationList(exactRanked, 2).map(
     (entry): CollectionGrowthCandidate => ({
       ...entry,
@@ -673,7 +679,7 @@ export function buildCollectionGrowthRecommendationSet(
   const alternatePools = intentOrder
     .filter((intent) => intent !== primaryIntent)
     .flatMap((intent) =>
-      rankCandidates(items, candidates, intent).ranked.slice(0, 12).map((entry) => ({ entry, intent })),
+      rankCandidates(items, candidates, intent, candidateContext).ranked.slice(0, 12).map((entry) => ({ entry, intent })),
     );
 
   while (selected.length < 4) {

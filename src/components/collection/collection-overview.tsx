@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CollectionWatchStage } from "@/components/collection/collection-watch-stage";
 import { ButtonLink } from "@/components/ui/button";
+import type { CollectionAnalysisResult } from "@/modules/collection-intelligence/domain/types";
 import type { UserWatchSummary } from "@/modules/user-watch-collection/domain/types";
 
 function ownershipLabel(status: UserWatchSummary["ownershipStatus"]) {
@@ -11,7 +12,13 @@ function sourceLabel(source: UserWatchSummary["sourceKind"]) {
   return source === "catalog" ? "Связаны с каталогом" : "Добавлены вручную";
 }
 
-export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSummary[] }>) {
+export function CollectionOverview({
+  watches,
+  analysis,
+}: Readonly<{
+  watches: UserWatchSummary[];
+  analysis?: CollectionAnalysisResult | null;
+}>) {
   const [lead, ...rest] = watches;
 
   return (
@@ -26,6 +33,36 @@ export function CollectionOverview({ watches }: Readonly<{ watches: UserWatchSum
         </div>
         <ButtonLink href="/collection/new" variant="secondary">Добавить часы</ButtonLink>
       </div>
+
+      {analysis?.status === "ready" ? (
+        <section className="grid gap-4 border-y border-[var(--border)] py-6">
+          <div>
+            <p className="type-label">Интеллект коллекции</p>
+            <h2 className="mt-2 text-2xl font-semibold">
+              {analysis.summary?.label ?? "Профиль коллекции"}
+            </h2>
+          </div>
+          <p className="max-w-3xl text-sm leading-6 text-[var(--text-muted)]">
+            {analysis.summary?.text ?? analysis.statusMessage}
+          </p>
+          {analysis.candidateContext.length > 0 ? (
+            <p className="text-sm text-[var(--text-muted)]">
+              В кандидатах учтено: {analysis.candidateContext.length}. Эти модели не считаются частью коллекции,
+              пока часы не доставлены и не связаны с аккаунтом.
+            </p>
+          ) : null}
+          {analysis.direction ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm text-[var(--text-muted)]">
+                Следующее направление: {analysis.direction.title}
+              </span>
+              <ButtonLink href={`/collection/recommendations/${analysis.direction.intent}`} variant="secondary">
+                Посмотреть варианты
+              </ButtonLink>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {lead ? (
         <section className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">

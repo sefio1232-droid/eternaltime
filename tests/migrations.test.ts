@@ -27,6 +27,7 @@ describe("database migrations", () => {
       "20260813012000_cdek_order_shipments.sql",
       "20260909090000_order_collection_provenance.sql",
       "20260914030000_guest_checkout_orders.sql",
+      "20260915070000_candidates_and_lukia_public_cleanup.sql",
     ]);
   });
 
@@ -179,5 +180,32 @@ describe("database migrations", () => {
     expect(guestCheckoutMigration).toContain("orders_guest_checkout_submission_key_idx");
     expect(guestCheckoutMigration).toContain("where user_id is null");
     expect(allSql).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
+  });
+
+  it("adds private owner-scoped watch candidates and resolves them after delivered ownership", () => {
+    const candidateMigration = migrations.find(
+      (migration) => migration.file === "20260915070000_candidates_and_lukia_public_cleanup.sql",
+    )?.sql ?? "";
+
+    expect(candidateMigration).toContain("create table if not exists public.user_watch_candidates");
+    expect(candidateMigration).toContain("unique (user_id, watch_reference_id)");
+    expect(candidateMigration).toContain("check (status in ('saved', 'considering', 'finalist'))");
+    expect(candidateMigration).toContain("alter table public.user_watch_candidates enable row level security");
+    expect(candidateMigration).toContain("user_id = auth.uid()");
+    expect(candidateMigration).toContain("create trigger user_watches_resolve_candidate_after_ownership");
+    expect(candidateMigration).toContain("resolved_by_user_watch_id");
+    expect(candidateMigration).not.toMatch(/for (insert|update|delete|all)\s+to anon/i);
+  });
+
+  it("removes LUKIA only from the public read model projection", () => {
+    const candidateMigration = migrations.find(
+      (migration) => migration.file === "20260915070000_candidates_and_lukia_public_cleanup.sql",
+    )?.sql ?? "";
+
+    expect(candidateMigration).toContain("delete from public.catalog_public_read_models");
+    expect(candidateMigration).toContain("SSVW213");
+    expect(candidateMigration).toContain("SSQW091");
+    expect(candidateMigration).not.toMatch(/delete from public\.watch_references/i);
+    expect(candidateMigration).not.toMatch(/delete from public\.catalog_offers/i);
   });
 });

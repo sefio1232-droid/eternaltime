@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CandidateButton } from "@/components/candidates/candidate-action";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SelectionExplanation } from "@/components/selection/selection-explanation";
@@ -319,6 +320,12 @@ function SelectionResultCard({
         <SelectionDataNotice recommendation={recommendation} />
         <div className={styles.resultActions}>
           <Link href={watch.href} className={styles.primaryLink}>Открыть модель</Link>
+          <CandidateButton
+            watchReferenceId={watch.id}
+            displayName={watch.title}
+            returnTo={watch.href}
+            compact
+          />
         </div>
         <SelectionExplanation>
           <CriteriaList recommendation={recommendation} />

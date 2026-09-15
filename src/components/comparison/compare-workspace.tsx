@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CandidateStatusControls } from "@/components/candidates/candidate-action";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import type { ComparisonPresentation } from "@/modules/comparison/application/comparison-presentation";
 import {
@@ -140,6 +141,9 @@ export function CompareWorkspace({
               <span>{watch.brandName}</span>
               <h2>{watch.displayName}</h2>
               <p>{watch.referenceDisplay}</p>
+            </div>
+            <div className={styles.candidateActions}>
+              <CandidateStatusControls watchReferenceId={watch.watchReferenceId} returnTo="/compare" />
             </div>
             <button type="button" onClick={() => remove(watch.identity)} aria-label={`Убрать ${watch.brandName} ${watch.displayName} из сравнения`}>Убрать</button>
           </article>

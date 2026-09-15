@@ -1126,4 +1126,38 @@ describe("multi-factor collection recommendations", () => {
         .candidates,
     ).toHaveLength(0);
   });
+
+  it("treats candidates as intent context without counting them as owned collection coverage", () => {
+    const ownedItems = [
+      item({ id: "daily-1", roles: ["daily"], waterReady: false }),
+      item({ id: "daily-2", roles: ["daily"], waterReady: false, movementType: "solar" }),
+    ];
+    const finalist = recommendationCandidate({
+      catalogReferenceId: "catalog/finalist-sport",
+      referenceDisplay: "SPORT-FINALIST",
+      roles: ["sport"],
+      waterReady: true,
+      displayType: "analog",
+      caseStyle: "diver",
+      imageUrl: "/sport-finalist.webp",
+    });
+    const alternative = recommendationCandidate({
+      catalogReferenceId: "catalog/sport-alternative",
+      referenceDisplay: "SPORT-ALT",
+      roles: ["sport"],
+      waterReady: true,
+      displayType: "analog",
+      caseStyle: "diver",
+      imageUrl: "/sport-alt.webp",
+    });
+
+    const analysis = analyzeCollection(ownedItems, [finalist, alternative], {
+      candidateContext: [{ catalogReferenceId: finalist.catalogReferenceId, status: "finalist" }],
+    });
+
+    expect(analysis.gaps.map((gap) => gap.code)).toContain("water_ready");
+    expect(analysis.candidateContext).toEqual([{ catalogReferenceId: finalist.catalogReferenceId, status: "finalist" }]);
+    expect(analysis.recommendation?.candidate?.catalogReferenceId).toBe(alternative.catalogReferenceId);
+    expect(analysis.recommendationSet?.candidates.some((entry) => entry.candidate.catalogReferenceId === finalist.catalogReferenceId)).toBe(false);
+  });
 });

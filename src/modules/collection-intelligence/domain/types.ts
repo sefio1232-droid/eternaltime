@@ -108,6 +108,13 @@ export type CollectionRecommendationCandidate = {
   dataCompleteness: number;
 };
 
+export type CollectionCandidateIntentStatus = "saved" | "considering" | "finalist";
+
+export type CollectionCandidateIntentContext = {
+  catalogReferenceId: string;
+  status: CollectionCandidateIntentStatus;
+};
+
 export type CollectionDimensionCode =
   | "role"
   | "movement_type"
@@ -238,4 +245,5 @@ export type CollectionAnalysisResult = {
   direction: CollectionDirection | null;
   recommendationSet: CollectionGrowthRecommendationSet | null;
   recommendation: CollectionRecommendation | null;
+  candidateContext: CollectionCandidateIntentContext[];
 };

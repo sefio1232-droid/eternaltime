@@ -32,7 +32,7 @@ describe("foundation navigation", () => {
       "/selection",
       "/journal",
     ]);
-    expect(utilityNavigation.map((item) => item.href)).toEqual(["/collection", "/account"]);
+    expect(utilityNavigation.map((item) => item.href)).toEqual(["/candidates", "/collection", "/account"]);
   });
 
   it("keeps protected route menus internally unique", () => {

@@ -1,0 +1,77 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.button,
+.statusButton,
+.removeButton {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(22 28 32 / 18%);
+  background: rgb(250 248 243 / 72%);
+  color: var(--text);
+  padding: 0.72rem 0.95rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.button:hover,
+.statusButton:hover,
+.removeButton:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.button[data-compact="true"] {
+  min-height: 2.2rem;
+  padding: 0.58rem 0.75rem;
+  font-size: 0.62rem;
+}
+
+.button[data-active="true"],
+.statusButton[data-active="true"] {
+  border-color: #172437;
+  background: #172437;
+  color: #f7f3e9;
+}
+
+.removeButton {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.message {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.error {
+  color: var(--danger);
+}
+
+@media (max-width: 520px) {
+  .actions {
+    width: 100%;
+  }
+
+  .button,
+  .statusButton,
+  .removeButton {
+    flex: 1 1 100%;
+  }
+}

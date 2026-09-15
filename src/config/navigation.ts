@@ -12,6 +12,7 @@ export const publicNavigation: NavigationItem[] = [
 ];
 
 export const utilityNavigation: NavigationItem[] = [
+  { label: "Кандидаты", href: "/candidates" },
   { label: "Коллекция", href: "/collection" },
   { label: "Личный кабинет", href: "/account" },
 ];
@@ -20,6 +21,7 @@ export const accountNavigation: NavigationItem[] = [
   { label: "Обзор", href: "/account" },
   { label: "Корзина", href: "/cart" },
   { label: "Заказы", href: "/account/orders" },
+  { label: "Кандидаты", href: "/candidates" },
   { label: "Коллекция", href: "/collection" },
   { label: "Профиль", href: "/account/profile" },
 ];
@@ -39,4 +41,4 @@ export const adminNavigation: NavigationItem[] = [
   { label: "Настройки", href: "/admin/settings" },
 ];
 
-export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/faq", "/selection", "/collection", "/legal"] as const;
+export const foundationPublicRoutes = ["/", "/watches", "/brands", "/journal", "/faq", "/selection", "/candidates", "/collection", "/legal"] as const;

@@ -19,6 +19,7 @@ export type ComparisonRow = {
 
 export type ComparisonWatchPresentation = {
   identity: string;
+  watchReferenceId: string;
   brandName: string;
   displayName: string;
   referenceDisplay: string;
@@ -92,6 +93,7 @@ export function buildComparisonPresentation(watches: CatalogWatchDetail[]): Comp
     const identity = comparisonIdentity(watch);
     return {
       identity,
+      watchReferenceId: watch.id,
       brandName: watch.brandName,
       displayName,
       referenceDisplay: watch.referenceDisplay,

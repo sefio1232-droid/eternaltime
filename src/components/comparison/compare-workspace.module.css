@@ -250,6 +250,10 @@
   word-break: keep-all;
 }
 
+.candidateActions {
+  padding: 0 1.2rem 1.35rem;
+}
+
 .watchCard > button {
   position: absolute;
   right: 1.1rem;

@@ -1,6 +1,7 @@
 import type {
   CollectionAnalysisItem,
   CollectionAnalysisResult,
+  CollectionCandidateIntentContext,
   CollectionGap,
   CollectionOverlap,
   CollectionProfile,
@@ -264,6 +265,7 @@ export function chooseCollectionRecommendation(
   items: CollectionAnalysisItem[],
   gaps: CollectionGap[],
   candidates: CollectionRecommendationCandidate[],
+  candidateContext: CollectionCandidateIntentContext[] = [],
 ): CollectionRecommendation | null {
   if (gaps.length === 0) {
     return null;
@@ -274,10 +276,12 @@ export function chooseCollectionRecommendation(
       .map((item) => item.catalogReferenceId)
       .filter((value): value is string => Boolean(value)),
   );
+  const activeCandidateReferenceIds = new Set(candidateContext.map((candidate) => candidate.catalogReferenceId));
 
   for (const gap of gaps) {
     const ranked = candidates
       .filter((candidate) => !ownedReferenceIds.has(candidate.catalogReferenceId))
+      .filter((candidate) => !activeCandidateReferenceIds.has(candidate.catalogReferenceId))
       .map((candidate) => ({ candidate, score: candidateScore(candidate, gap) }))
       .filter((entry) => entry.score > 0)
       .sort((left, right) => right.score - left.score || left.candidate.displayName.localeCompare(right.candidate.displayName));
@@ -308,7 +312,9 @@ export function chooseCollectionRecommendation(
 export function analyzeCollection(
   items: CollectionAnalysisItem[],
   candidates: CollectionRecommendationCandidate[],
+  options: { candidateContext?: CollectionCandidateIntentContext[] } = {},
 ): CollectionAnalysisResult {
+  const candidateContext = options.candidateContext ?? [];
   const profile = buildCollectionProfile(items);
   const status = profile.activeCount === 0 ? "empty" : "ready";
   const confidence =
@@ -321,7 +327,7 @@ export function analyzeCollection(
   const overlaps = status === "ready" ? detectCollectionOverlaps(profile) : [];
   const direction = status === "ready" ? determineNextCollectionDirection(profile) : null;
   const recommendationSet = direction
-    ? buildCollectionGrowthRecommendationSet(items, candidates, direction.intent, confidence)
+    ? buildCollectionGrowthRecommendationSet(items, candidates, direction.intent, confidence, candidateContext)
     : null;
 
   return {
@@ -341,6 +347,7 @@ export function analyzeCollection(
     gaps,
     direction,
     recommendationSet,
-    recommendation: chooseCollectionRecommendation(items, gaps, candidates),
+    recommendation: chooseCollectionRecommendation(items, gaps, candidates, candidateContext),
+    candidateContext,
   };
 }

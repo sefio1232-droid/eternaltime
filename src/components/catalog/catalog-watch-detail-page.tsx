@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CatalogDetailGallery } from "@/components/catalog/catalog-detail-gallery";
 import { CatalogSectionNav, type CatalogSectionNavItem } from "@/components/catalog/catalog-section-nav";
 import { CatalogWatchCardView } from "@/components/catalog/catalog-watch-card";
+import { CandidateWatchAction } from "@/components/candidates/candidate-watch-action";
 import { CollectionWatchAction } from "@/components/collection/collection-watch-action";
 import { CommerceProductActions } from "@/components/commerce/commerce-actions";
 import { CompareToggle } from "@/components/comparison/compare-toggle";
@@ -227,11 +228,10 @@ export function CatalogWatchDetailPage({
               </dl>
             ) : null}
             <div className={styles.actions}>
-              <CollectionWatchAction
+              <CandidateWatchAction
                 watchReferenceId={watch.id}
                 displayName={displayTitle}
                 returnTo={watch.href}
-                state={collectionState}
               />
               <CompareToggle
                 variant="detail"
@@ -244,6 +244,12 @@ export function CatalogWatchDetailPage({
                   referenceSlug: watch.referenceSlug,
                   canonicalHref: watch.href,
                 }}
+              />
+              <CollectionWatchAction
+                watchReferenceId={watch.id}
+                displayName={displayTitle}
+                returnTo={watch.href}
+                state={collectionState}
               />
             </div>
           </div>
