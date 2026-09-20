@@ -62,6 +62,21 @@ describe("P4 first-party analytics validation", () => {
     expect(analyticsEventNames).toContain("journal_product_click");
     expect(analyticsEventNames).not.toContain("purchase");
   });
+
+  it("keeps P5 catalog filter instrumentation inside the existing DB-safe event vocabulary", () => {
+    expect(validateAnalyticsEvent({
+      eventName: "catalog_filter_changed",
+      sessionId,
+      pathname: "/watches",
+      properties: { action: "applied", filter: "panel", value: "4" },
+    })).toMatchObject({ eventName: "catalog_filter_changed" });
+    expect(validateAnalyticsEvent({
+      eventName: "catalog_filter_changed",
+      sessionId,
+      pathname: "/watches",
+      properties: { action: "changed", filter: "availability", value: "1" },
+    })).toMatchObject({ eventName: "catalog_filter_changed" });
+  });
 });
 
 describe("P4 analytics integration", () => {

@@ -263,6 +263,7 @@
   }
 
   .controlBarLeft {
+    order: 2;
     flex-basis: 100%;
     gap: 0.5rem;
   }
@@ -272,6 +273,7 @@
   }
 
   .controlBarRight {
+    order: 1;
     width: 100%;
     justify-content: space-between;
     gap: 0.5rem;

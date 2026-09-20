@@ -123,6 +123,10 @@ function matchesQuery(watch: CatalogWatchDetail, query: CatalogReadQuery): boole
     return false;
   }
 
+  if (query.availableOnly && watch.publicCommerceState?.kind !== "purchasable") {
+    return false;
+  }
+
   const priceMinor = watch.publicPrice?.amountMinor ?? null;
   if (query.minPriceMinor !== null && (priceMinor === null || priceMinor < query.minPriceMinor)) {
     return false;

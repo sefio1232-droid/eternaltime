@@ -61,6 +61,11 @@ function parseView(value: string | string[] | undefined): CatalogViewKey {
   return viewKeys.includes(raw as CatalogViewKey) ? (raw as CatalogViewKey) : "recommended";
 }
 
+function parseBooleanFlag(value: string | string[] | undefined): boolean {
+  const raw = firstParam(value)?.toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes";
+}
+
 export function parseCatalogReadQuery(input: {
   searchParams?: CatalogSearchParams;
   brandSlug?: string | null;
@@ -84,6 +89,7 @@ export function parseCatalogReadQuery(input: {
     caseMaterial: cleanOptionalParam(params.caseMaterial),
     crystal: cleanOptionalParam(params.crystal),
     positioning: null,
+    availableOnly: parseBooleanFlag(params.available),
     minPriceMinor,
     maxPriceMinor,
     sort: parseSort(params.sort),
@@ -136,6 +142,7 @@ export function catalogQueryToSearchParams(
   if (nextQuery.waterResistance) params.set("water", nextQuery.waterResistance);
   if (nextQuery.caseMaterial) params.set("caseMaterial", nextQuery.caseMaterial);
   if (nextQuery.crystal) params.set("crystal", nextQuery.crystal);
+  if (nextQuery.availableOnly) params.set("available", "1");
   if (nextQuery.minPriceMinor !== null) params.set("priceMin", rubMinorToQueryValue(nextQuery.minPriceMinor) ?? "");
   if (nextQuery.maxPriceMinor !== null) params.set("priceMax", rubMinorToQueryValue(nextQuery.maxPriceMinor) ?? "");
   if (nextQuery.sort !== "default") params.set("sort", nextQuery.sort);

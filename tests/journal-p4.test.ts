@@ -83,4 +83,20 @@ describe("P4 Journal 2.0", () => {
     expect(plate).toContain("watch.publicCommerceState?.kind");
     expect(articlePage).toContain("eventName=\"journal_selection_click\"");
   });
+
+  it("keeps contextual journal showcases spec-driven and free of nested anchors", () => {
+    const plate = read("src/components/journal/editorial-watch-plate.tsx");
+    const articlePage = read("src/app/(public)/journal/[slug]/page.tsx");
+
+    expect(plate).toContain("EditorialWatchShowcase");
+    expect(plate).toContain("emphasisSpecKeys");
+    expect(plate).toContain("case_diameter_raw");
+    expect(plate).toContain("water_resistance_raw");
+    expect(plate).toContain("movement_type_raw");
+    expect(plate).toContain("link={false}");
+    expect(plate).not.toContain("—</dd>");
+    expect(articlePage).toContain('return "fit"');
+    expect(articlePage).toContain('return "water"');
+    expect(articlePage).toContain('return "movement"');
+  });
 });

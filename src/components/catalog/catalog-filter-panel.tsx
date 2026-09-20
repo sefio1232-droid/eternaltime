@@ -177,6 +177,14 @@ function buildActiveChips(input: {
     });
   }
 
+  if (query.availableOnly) {
+    chips.push({
+      key: "available",
+      label: "Доступные для заказа",
+      removeHref: catalogQueryHref(pathname, query, { availableOnly: false, page: 1 }),
+    });
+  }
+
   if (query.minPriceMinor !== null || query.maxPriceMinor !== null) {
     const min = rubMinorToQueryValue(query.minPriceMinor);
     const max = rubMinorToQueryValue(query.maxPriceMinor);
@@ -206,6 +214,7 @@ function countExpandedFilters(query: CatalogReadQuery, includeBrandFilter: boole
   if (query.waterResistance) count += 1;
   if (query.caseMaterial) count += 1;
   if (query.crystal) count += 1;
+  if (query.availableOnly) count += 1;
   if (query.minPriceMinor !== null || query.maxPriceMinor !== null) count += 1;
   return count;
 }
@@ -224,6 +233,7 @@ export function catalogFilterResetHref(pathname: string, query: CatalogReadQuery
     caseMaterial: null,
     crystal: null,
     positioning: null,
+    availableOnly: false,
     minPriceMinor: null,
     maxPriceMinor: null,
     sort: "default",
@@ -397,6 +407,14 @@ function CatalogFilterExpandedFields({
             />
           </div>
         </fieldset>
+
+        <label className={styles.availabilityToggle}>
+          <input type="checkbox" name="available" value="1" defaultChecked={query.availableOnly} />
+          <span>
+            <strong>Только доступные для заказа</strong>
+            <small>По canonical commerce state, не по наличию цены.</small>
+          </span>
+        </label>
 
         {includeBrandFilter ? (
           <SelectField label="Бренд" name="brand" value={query.brandSlug} options={facets.brands} className={styles.moreField} />

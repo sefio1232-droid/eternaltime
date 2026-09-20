@@ -530,6 +530,7 @@ function baseQuery(overrides: Partial<CatalogReadQuery> = {}): CatalogReadQuery 
     caseMaterial: null,
     crystal: null,
     positioning: null,
+    availableOnly: false,
     minPriceMinor: null,
     maxPriceMinor: null,
     sort: "default",

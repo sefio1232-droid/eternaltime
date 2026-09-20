@@ -3,11 +3,12 @@ import { catalogReadDatasetFromPreview } from "@/modules/catalog/infrastructure/
 import { createCatalogDevImageKey } from "@/modules/catalog/infrastructure/dev-image-keys";
 import { findDevCatalogImagePlanItem } from "@/modules/catalog/infrastructure/dev-image-resolver";
 import { resolveCatalogReadSourcePolicy } from "@/modules/catalog/infrastructure/catalog-read-source-policy";
-import { parseCatalogReadQuery } from "@/modules/catalog/application/catalog-read-query";
+import { catalogQueryToSearchParams, parseCatalogReadQuery } from "@/modules/catalog/application/catalog-read-query";
 import {
   getCatalogWatchByRoute,
   listCatalogWatches,
 } from "@/modules/catalog/application/catalog-read-service";
+import { getPublicCommerceState } from "@/modules/commerce/domain/public-commerce-state";
 import type {
   CatalogImageUploadPlan,
   CatalogImageUploadPlanItem,
@@ -409,6 +410,33 @@ describe("catalog read experience", () => {
     expect(
       listCatalogWatches(dataset, parseCatalogReadQuery({ searchParams: { view: "all", priceMin: "60000" } })).items,
     ).toHaveLength(2);
+  });
+
+  it("uses the canonical commerce state for the available-only filter instead of treating price as availability", () => {
+    const { dataset } = fixture();
+    const unavailableState = getPublicCommerceState({
+      publicPrice: dataset.watches[1]?.publicPrice ?? null,
+      offer: {
+        status: "inactive",
+        isVisible: true,
+        currentPriceMinor: dataset.watches[1]?.publicPrice?.amountMinor ?? null,
+        currencyCode: "RUB",
+        inventoryIsOrderable: false,
+      },
+    });
+    const adjustedDataset = {
+      ...dataset,
+      watches: dataset.watches.map((watch, index) =>
+        index === 1 ? { ...watch, publicCommerceState: unavailableState } : watch,
+      ),
+    };
+    const query = parseCatalogReadQuery({ searchParams: { view: "all", available: "1" } });
+    const result = listCatalogWatches(adjustedDataset, query);
+
+    expect(query.availableOnly).toBe(true);
+    expect(catalogQueryToSearchParams(query).get("available")).toBe("1");
+    expect(result.items.every((watch) => watch.publicCommerceState?.kind === "purchasable")).toBe(true);
+    expect(result.items.map((watch) => watch.referenceNormalized)).not.toContain("T1374071104100");
   });
 
   it("supports price sorting, pagination, and invalid query normalization", () => {

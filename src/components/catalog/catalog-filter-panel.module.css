@@ -284,6 +284,43 @@
   font-size: 0.78rem;
 }
 
+.availabilityToggle {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--catalog-line, rgba(16, 22, 26, 0.12));
+  background: rgb(255 255 255 / 0.32);
+  padding: 0.75rem 0.85rem;
+  color: var(--catalog-graphite, #2b3338);
+  cursor: pointer;
+}
+
+.availabilityToggle input {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  accent-color: var(--catalog-champagne, #b98a45);
+}
+
+.availabilityToggle span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.availabilityToggle strong {
+  color: var(--catalog-ink, #10161a);
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.availabilityToggle small {
+  color: var(--catalog-muted, #747b7f);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 .moreField {
   grid-column: span 1;
   min-width: 0;

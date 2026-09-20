@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { trackAnalyticsEvent } from "@/components/analytics/analytics-client";
 
-const filterNames: Record<string, "brand" | "price" | "movement" | "style" | "water_resistance" | "sort" | "search"> = {
+const filterNames: Record<string, "brand" | "price" | "movement" | "style" | "water_resistance" | "sort" | "search" | "availability"> = {
   brand: "brand",
   collection: "style",
   gender: "style",
@@ -18,6 +18,7 @@ const filterNames: Record<string, "brand" | "price" | "movement" | "style" | "wa
   priceMax: "price",
   sort: "sort",
   q: "search",
+  available: "availability",
 };
 
 export function CatalogFilterAnalytics() {
@@ -35,8 +36,11 @@ export function CatalogFilterAnalytics() {
       if (!filter) return;
 
       void trackAnalyticsEvent("catalog_filter_changed", {
+        action: filter === "sort" ? "sort_changed" : "changed",
         filter,
-        value: target.value.slice(0, 120),
+        value: target instanceof HTMLInputElement && target.type === "checkbox"
+          ? target.checked ? "1" : "0"
+          : target.value.slice(0, 120),
       });
     }
 

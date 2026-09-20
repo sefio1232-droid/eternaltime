@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { trackAnalyticsEvent } from "@/components/analytics/analytics-client";
 import { CatalogFilterExpandedFields, catalogFilterResetHref, countExpandedFilters } from "@/components/catalog/catalog-filter-panel";
 import { formatCatalogCount } from "@/modules/catalog/application/catalog-format";
 import type { CatalogFilterFacets, CatalogReadQuery } from "@/modules/catalog/domain/read-models";
@@ -51,9 +52,14 @@ export function CatalogFilterDialog({
     const trigger = triggerRef.current;
     const dialog = dialogRef.current;
     const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
     closeButtonRef.current?.focus();
     document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -90,13 +96,22 @@ export function CatalogFilterDialog({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousBodyOverflow;
+      document.body.style.paddingRight = previousBodyPaddingRight;
       (previouslyFocused ?? trigger)?.focus();
     };
   }, [isOpen, close]);
 
   const resetHref = catalogFilterResetHref(pathname, query);
   const expandedCount = countExpandedFilters(query, includeBrandFilter);
-  const toggleLabel = expandedCount > 0 ? `Фильтры · ${expandedCount}` : "Фильтры";
+  const toggleLabel = expandedCount > 0 ? `Фильтры ${expandedCount}` : "Фильтры";
+
+  function trackFilterAction(action: "opened" | "applied" | "cleared") {
+    void trackAnalyticsEvent("catalog_filter_changed", {
+      action,
+      filter: "panel",
+      value: expandedCount > 0 ? String(expandedCount) : "0",
+    });
+  }
 
   return (
     <>
@@ -107,7 +122,10 @@ export function CatalogFilterDialog({
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls="catalog-filters-panel"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          trackFilterAction("opened");
+          setIsOpen(true);
+        }}
       >
         {toggleLabel}
       </button>
@@ -127,6 +145,11 @@ export function CatalogFilterDialog({
               <h2 id="catalog-filters-title" className={styles.panelTitle}>
                 Фильтры
               </h2>
+              {expandedCount > 0 ? (
+                <Link href={resetHref} className={styles.headReset} onClick={() => trackFilterAction("cleared")}>
+                  Сбросить
+                </Link>
+              ) : null}
               <button type="button" ref={closeButtonRef} className={styles.closeButton} onClick={close} aria-label="Закрыть фильтры">
                 <span aria-hidden="true">×</span>
               </button>
@@ -144,10 +167,12 @@ export function CatalogFilterDialog({
             </div>
 
             <div className={styles.panelFooter}>
-              <Link href={resetHref} className={styles.footerReset} onClick={close}>
-                Сбросить
-              </Link>
-              <button type="submit" className={styles.footerSubmit}>
+              {expandedCount > 0 ? (
+                <Link href={resetHref} className={styles.footerReset} onClick={() => trackFilterAction("cleared")}>
+                  Сбросить
+                </Link>
+              ) : <span aria-hidden="true" />}
+              <button type="submit" className={styles.footerSubmit} onClick={() => trackFilterAction("applied")}>
                 Показать {formatCatalogCount(totalRecords)} моделей
               </button>
             </div>

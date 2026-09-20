@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { TrackedLink } from "@/components/analytics/tracked-link";
-import { EditorialWatchPlate } from "@/components/journal/editorial-watch-plate";
+import { EditorialWatchPlate, EditorialWatchShowcase, type EditorialShowcaseEmphasis } from "@/components/journal/editorial-watch-plate";
 import { EditorialWatchVisual } from "@/components/journal/editorial-watch-visual";
 import { JournalTypographicCover } from "@/components/journal/journal-typographic-cover";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
@@ -109,16 +109,48 @@ function PresentationBlock({ block }: Readonly<{ block: JournalPresentationBlock
   return <section className={styles.conclusion}><p className={styles.label}>Вывод</p><h2 id="conclusion">{block.title}</h2><Paragraphs paragraphs={block.paragraphs} /></section>;
 }
 
+function articleShowcaseEmphasis(article: JournalArticle): EditorialShowcaseEmphasis | null {
+  if (article.slug === "razmer-chasov-i-geometriya-posadki") return "fit";
+  if (article.slug === "vodonepronitsaemost-chasov-bez-mifov") return "water";
+  if (article.slug === "mekhanika-kvarts-i-solar-v-povsednevnom-vladenii") return "movement";
+  return null;
+}
+
 function VisualizedBody({ article, watches }: Readonly<{ article: JournalArticle; watches: CatalogWatchDetail[] }>) {
   const firstBreak = Math.max(2, Math.floor(article.presentationBlocks.length * 0.28));
   const secondBreak = Math.max(firstBreak + 2, Math.floor(article.presentationBlocks.length * 0.62));
-  const firstSelection = article.layoutVariant === "feature" ? watches.slice(1, 2) : article.layoutVariant === "guide" ? watches.slice(0, 2) : watches.slice(0, 1);
-  const secondSelection = article.layoutVariant === "feature" ? [watches[0], watches[2]].filter((watch): watch is CatalogWatchDetail => Boolean(watch)) : article.layoutVariant === "guide" ? watches.slice(2, 4) : watches.slice(1, 3);
+  const showcaseEmphasis = articleShowcaseEmphasis(article);
+  const firstSelection = showcaseEmphasis
+    ? watches.slice(0, 2)
+    : article.layoutVariant === "feature" ? watches.slice(1, 2) : article.layoutVariant === "guide" ? watches.slice(0, 2) : watches.slice(0, 1);
+  const secondSelection = showcaseEmphasis
+    ? watches.slice(1, 3)
+    : article.layoutVariant === "feature" ? [watches[0], watches[2]].filter((watch): watch is CatalogWatchDetail => Boolean(watch)) : article.layoutVariant === "guide" ? watches.slice(2, 4) : watches.slice(1, 3);
   return <div className={styles.copy}>{article.presentationBlocks.map((block, index) => (
     <div className={styles.block} key={`${block.type}-${index}`}>
       <PresentationBlock block={block} />
-      {index === firstBreak && firstSelection.length ? <EditorialWatchPlate watches={firstSelection} title={article.layoutVariant === "guide" ? "Характер начинается с пропорций" : article.layoutVariant === "essay" ? "Предметный пример из каталога" : "Другой характер механики"} description={article.layoutVariant === "guide" ? "Tissot и Orient показаны точными моделями из каталога." : "Редакционно выбранный визуальный пример; статья не посвящена этой конкретной модели."} layout={article.layoutVariant === "guide" ? "duo" : "single"} surface={article.layoutVariant === "essay" ? "ivory" : "paper"} articleSlug={article.slug} /> : null}
-      {index === secondBreak && secondSelection.length ? <EditorialWatchPlate watches={secondSelection} title={article.layoutVariant === "feature" ? "Механика в разных характерах" : article.layoutVariant === "essay" ? "Цена и позиционирование — разные контексты" : "Модели для сравнения"} description={article.layoutVariant === "guide" ? "Ещё два точных предметных примера Tissot и Orient. Casio и Citizen не подменяются случайными фотографиями." : article.layoutVariant === "essay" ? "Визуальные примеры, а не прогноз стоимости или инвестиционная рекомендация." : "Сравните форму, пропорции и характер — без рейтинга и без подмены содержания статьи."} layout="duo" showPrice={article.layoutVariant === "feature"} surface={article.layoutVariant === "feature" ? "navy" : "paper"} articleSlug={article.slug} /> : null}
+      {index === firstBreak && firstSelection.length ? (
+        showcaseEmphasis ? (
+          <EditorialWatchShowcase
+            watches={firstSelection}
+            title={showcaseEmphasis === "fit" ? "Посадка в цифрах, а не только в диаметре" : showcaseEmphasis === "water" ? "Водозащита рядом с конструкцией" : "Механизм как ритм владения"}
+            description={showcaseEmphasis === "fit" ? "Показываем только те размерные параметры, которые есть в canonical catalog." : showcaseEmphasis === "water" ? "Сравнивайте маркировку водозащиты вместе с материалами, стеклом и функциями, если они подтверждены." : "Тип механизма, запас хода и калибр выводятся только там, где они есть в карточке модели."}
+            emphasis={showcaseEmphasis}
+            articleSlug={article.slug}
+          />
+        ) : <EditorialWatchPlate watches={firstSelection} title={article.layoutVariant === "guide" ? "Характер начинается с пропорций" : article.layoutVariant === "essay" ? "Предметный пример из каталога" : "Другой характер механики"} description={article.layoutVariant === "guide" ? "Tissot и Orient показаны точными моделями из каталога." : "Редакционно выбранный визуальный пример; статья не посвящена этой конкретной модели."} layout={article.layoutVariant === "guide" ? "duo" : "single"} surface={article.layoutVariant === "essay" ? "ivory" : "paper"} articleSlug={article.slug} />
+      ) : null}
+      {index === secondBreak && secondSelection.length ? (
+        showcaseEmphasis ? (
+          <EditorialWatchShowcase
+            watches={secondSelection}
+            title={showcaseEmphasis === "fit" ? "Разные корпуса — разные ощущения" : showcaseEmphasis === "water" ? "Одинаковый сценарий, разные подтверждённые данные" : "Кварц, механика и запас хода в реальных карточках"}
+            description={showcaseEmphasis === "fit" ? "Если lug-to-lug или толщина не указаны, блок не подставляет прочерк и не придумывает размер." : showcaseEmphasis === "water" ? "Пустые или маркетингово-неоднозначные характеристики не превращаются в точные метры." : "Этот блок помогает увидеть, какие параметры реально указаны, а какие не стоит додумывать."}
+            emphasis={showcaseEmphasis}
+            articleSlug={article.slug}
+          />
+        ) : <EditorialWatchPlate watches={secondSelection} title={article.layoutVariant === "feature" ? "Механика в разных характерах" : article.layoutVariant === "essay" ? "Цена и позиционирование — разные контексты" : "Модели для сравнения"} description={article.layoutVariant === "guide" ? "Ещё два точных предметных примера Tissot и Orient. Casio и Citizen не подменяются случайными фотографиями." : article.layoutVariant === "essay" ? "Визуальные примеры, а не прогноз стоимости или инвестиционная рекомендация." : "Сравните форму, пропорции и характер — без рейтинга и без подмены содержания статьи."} layout="duo" showPrice={article.layoutVariant === "feature"} surface={article.layoutVariant === "feature" ? "navy" : "paper"} articleSlug={article.slug} />
+      ) : null}
     </div>
   ))}</div>;
 }

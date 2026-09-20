@@ -29,6 +29,20 @@
 [data-surface="navy"] .identity > span, [data-surface="navy"] .identity small { color: rgb(247 243 233 / 62%); }
 .identity em { margin-top: 0.35rem; color: #8a693a; font-size: 0.72rem; font-style: normal; }
 .price { position: absolute; right: 1rem; bottom: 0.8rem; z-index: 3; color: #8a693a; font-size: 0.68rem; }
+.showcase { width: min(100%, 68rem); margin: clamp(3rem, 7vw, 6rem) auto; border-block: 1px solid rgb(16 19 22 / 15%); background: #f6f2e9; }
+.showcaseHead { display: grid; grid-template-columns: minmax(9rem, 0.8fr) minmax(0, 1.4fr); gap: 0.45rem 1.4rem; padding: 1rem clamp(1rem, 2.4vw, 1.8rem); border-bottom: 1px solid rgb(16 19 22 / 12%); }
+.showcaseHead > span { color: #8a693a; font-family: var(--font-reference); font-size: 0.56rem; letter-spacing: 0.1em; }
+.showcaseHead h3 { color: #172437; font-family: var(--journal-serif, var(--font-editorial)), Georgia, serif; font-size: clamp(1.25rem, 1.7vw, 1.8rem); font-weight: 400; line-height: 1.1; }
+.showcaseHead p { grid-column: 2; max-width: 40rem; color: var(--text-muted); font-size: 0.82rem; line-height: 1.58; }
+.showcaseGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.showcaseCard { display: grid; grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1fr); grid-template-rows: auto auto; min-width: 0; border-right: 1px solid rgb(16 19 22 / 10%); border-bottom: 1px solid rgb(16 19 22 / 10%); color: inherit; }
+.showcaseCard:nth-child(2n) { border-right: 0; }
+.showcaseVisual { min-height: 14rem; grid-row: 1 / 3; border-right: 1px solid rgb(16 19 22 / 10%); }
+.showcaseSpecs { display: grid; align-content: start; gap: 0.55rem; margin: 0; padding: 1rem 1rem 0.6rem; }
+.showcaseSpecs div { display: grid; gap: 0.12rem; min-width: 0; }
+.showcaseSpecs dt { color: #8a693a; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.showcaseSpecs dd { min-width: 0; color: #243039; font-size: 0.78rem; line-height: 1.35; overflow-wrap: break-word; }
+.showcaseCommerce { align-self: end; padding: 0 1rem 1rem; color: var(--text-muted); font-size: 0.68rem; }
 .composition { position: relative; isolation: isolate; min-height: clamp(29rem, 38vw, 34rem); overflow: hidden; background: linear-gradient(90deg, #ddd6ca 0 67%, #172437 67% 100%); color: #172437; }
 .composition::before { position: absolute; z-index: -1; inset: 0 0 0 66%; background: #172437; content: ""; }
 .composition::after { position: absolute; z-index: 0; right: 18%; bottom: -17%; width: 42%; aspect-ratio: 1; border: 1px solid rgb(23 36 55 / 18%); border-radius: 50%; content: ""; }
@@ -48,6 +62,11 @@
   .watchCell { border-right: 0; border-bottom: 1px solid rgb(16 19 22 / 12%); }
   .plate[data-layout="single"] .watch { grid-template-columns: minmax(8rem, 0.48fr) minmax(0, 0.52fr); }
   .stage { min-height: 13rem; }
+  .showcaseHead { grid-template-columns: 1fr; }
+  .showcaseHead p { grid-column: 1; }
+  .showcaseGrid { grid-template-columns: 1fr; }
+  .showcaseCard { grid-template-columns: minmax(7rem, 0.42fr) minmax(0, 0.58fr); border-right: 0; }
+  .showcaseVisual { min-height: 12rem; }
   .composition { min-height: 32rem; }
   .composition::before { inset: 55% 0 0 0; }
   .compositionWatch[data-size="large"] { inset: 14% 17% 24% 5%; }

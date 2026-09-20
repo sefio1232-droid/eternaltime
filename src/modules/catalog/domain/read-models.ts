@@ -129,6 +129,7 @@ export type CatalogReadQuery = {
   caseMaterial: string | null;
   crystal: string | null;
   positioning: string | null;
+  availableOnly: boolean;
   minPriceMinor: number | null;
   maxPriceMinor: number | null;
   sort: CatalogSortKey;
