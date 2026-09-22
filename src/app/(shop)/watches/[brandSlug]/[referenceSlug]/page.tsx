@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
@@ -18,7 +18,7 @@ type WatchPageProps = Readonly<{
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }>;
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: WatchPageProps): Promise<Metadata> {
   const { brandSlug, referenceSlug } = await params;

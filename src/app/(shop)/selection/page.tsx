@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { SelectionPageView } from "@/components/selection/selection-page";
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function SelectionPage({
   searchParams,

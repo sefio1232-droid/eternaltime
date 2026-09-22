@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { JournalTypographicCover } from "@/components/journal/journal-typographic-cover";
 import { EditorialWatchVisual } from "@/components/journal/editorial-watch-visual";
 import { EditorialWideContainer } from "@/components/ui/editorial-primitives";
-import { getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import {
+  getCatalogReadDataset,
+} from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { resolveJournalArticleEditorialWatches } from "@/modules/journal/application/journal-catalog-relations";
 import { getPublishedJournalArticle } from "@/modules/journal/application/journal-repository";
 import { upcomingEditorialStories } from "@/modules/journal/content/upcoming-stories";
@@ -26,6 +28,8 @@ export const metadata: Metadata = {
     locale: "ru_RU",
   },
 };
+
+export const revalidate = 300;
 
 const issueSlugs = [
   "pochemu-mekhanicheskie-chasy-populyarny",

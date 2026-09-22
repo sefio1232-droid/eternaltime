@@ -408,7 +408,7 @@ async function datasetFromRows(rows: CatalogPublicReadModelRow[], manifests: Cat
 }
 
 export async function catalogReadDatasetFromDatabase(): Promise<CatalogReadDataset | null> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient() ?? (process.env.NODE_ENV === "production" ? null : await createSupabaseServerClient());
   if (!supabase) {
     return null;
   }

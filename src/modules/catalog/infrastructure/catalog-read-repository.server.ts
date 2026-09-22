@@ -32,7 +32,7 @@ import {
   SITE_IMPORT_OVERLAY_OUTPUT_PATH,
   type CatalogSiteImportOverlayManifest,
 } from "@/modules/catalog/infrastructure/catalog-site-import-overlay-types";
-import type { CatalogReadQuery, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
+import type { CatalogReadDataset, CatalogReadQuery, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
 import type { CatalogImageUploadPlan } from "@/modules/imports/catalog/domain/database-apply-types";
 import type { CatalogImportPreview } from "@/modules/imports/catalog/domain/types";
 
@@ -43,6 +43,10 @@ const casioManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), C
 const tissotManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), TISSOT_MANIFEST_OUTPUT_PATH);
 const citizenOfficialManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), CITIZEN_OFFICIAL_PHOTO_MANIFEST_PATH);
 const seikoOfficialManifestPath = path.join(/* turbopackIgnore: true */ process.cwd(), SEIKO_OFFICIAL_PHOTO_MANIFEST_PATH);
+export const CATALOG_READ_REVALIDATE_SECONDS = 300;
+const CATALOG_READ_CACHE_TTL_MS = CATALOG_READ_REVALIDATE_SECONDS * 1000;
+let productionCatalogReadCache: { dataset: CatalogReadDataset; expiresAt: number } | null = null;
+let productionCatalogReadPending: Promise<CatalogReadDataset> | null = null;
 
 export class CatalogReadSourceError extends Error {
   readonly code: "catalog_source_unavailable" | "catalog_source_not_configured";
@@ -97,7 +101,7 @@ const getCatalogSiteImportOverlayManifest = cache(async () => {
   return readOptionalJsonFromCandidates<CatalogSiteImportOverlayManifest>(catalogAssetCandidatePaths(SITE_IMPORT_OVERLAY_OUTPUT_PATH));
 });
 
-export const getCatalogReadDataset = cache(async () => {
+async function loadCatalogReadDataset() {
   const env = getServerEnv();
   const policy = resolveCatalogReadSourcePolicy(env);
 
@@ -145,6 +149,44 @@ export const getCatalogReadDataset = cache(async () => {
   }
 
   return dataset;
+}
+
+async function getProductionCatalogReadDataset() {
+  const now = Date.now();
+  if (productionCatalogReadCache && productionCatalogReadCache.expiresAt > now) {
+    return productionCatalogReadCache.dataset;
+  }
+
+  if (productionCatalogReadPending) {
+    return productionCatalogReadPending;
+  }
+
+  productionCatalogReadPending = loadCatalogReadDataset()
+    .then((dataset) => {
+      productionCatalogReadCache = {
+        dataset,
+        expiresAt: Date.now() + CATALOG_READ_CACHE_TTL_MS,
+      };
+      return dataset;
+    })
+    .finally(() => {
+      productionCatalogReadPending = null;
+    });
+
+  return productionCatalogReadPending;
+}
+
+export function invalidateCatalogReadDatasetCache() {
+  productionCatalogReadCache = null;
+  productionCatalogReadPending = null;
+}
+
+export const getCatalogReadDataset = cache(async () => {
+  if (process.env.NODE_ENV !== "production") {
+    return loadCatalogReadDataset();
+  }
+
+  return getProductionCatalogReadDataset();
 });
 
 export async function listPublicCatalogWatches(query: CatalogReadQuery) {

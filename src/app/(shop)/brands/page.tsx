@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogImage } from "@/components/catalog/catalog-image";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function BrandsPage() {
   const resultState = await listPublicCatalogBrands()

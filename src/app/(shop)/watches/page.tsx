@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CatalogListPage } from "@/components/catalog/catalog-list-page";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function WatchesPage({
   searchParams,

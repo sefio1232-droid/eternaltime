@@ -1,11 +1,14 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import { CompareWorkspace } from "@/components/comparison/compare-workspace";
 import { CatalogSourceState } from "@/components/catalog/catalog-source-state";
 import { EditorialWideContainer } from "@/components/ui/editorial-primitives";
 import { buildComparisonPresentation } from "@/modules/comparison/application/comparison-presentation";
 import { parseComparisonReferences } from "@/modules/comparison/domain/local-comparison";
-import { CatalogReadSourceError, getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import {
+  CatalogReadSourceError,
+  getCatalogReadDataset,
+} from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 
 export const metadata: Metadata = {
   title: "Сравнение часов",
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function ComparePage({
   searchParams,

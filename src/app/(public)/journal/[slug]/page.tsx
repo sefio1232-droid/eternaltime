@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
@@ -8,7 +8,9 @@ import { EditorialWatchVisual } from "@/components/journal/editorial-watch-visua
 import { JournalTypographicCover } from "@/components/journal/journal-typographic-cover";
 import { EditorialContainer } from "@/components/ui/editorial-primitives";
 import { getPublicEnv } from "@/config/public-env";
-import { getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import {
+  getCatalogReadDataset,
+} from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { resolveJournalArticleEditorialWatches } from "@/modules/journal/application/journal-catalog-relations";
 import { getPublishedJournalArticle, listPublishedJournalArticles } from "@/modules/journal/application/journal-repository";
 import type { CatalogReadDataset, CatalogWatchDetail } from "@/modules/catalog/domain/read-models";
@@ -16,6 +18,7 @@ import type { JournalArticle, JournalPresentationBlock } from "@/modules/journal
 import styles from "./article.module.css";
 
 type JournalArticlePageProps = Readonly<{ params: Promise<{ slug: string }> }>;
+export const revalidate = 300;
 const articleNumbers: Record<string, string> = {
   "pochemu-mekhanicheskie-chasy-populyarny": "01",
   "razmer-chasov-i-geometriya-posadki": "02",

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { PageAnalyticsEvent } from "@/components/analytics/page-analytics";
 import {
   HomeCollectionIntelligencePanel,
@@ -13,7 +13,9 @@ import { HomeMotionOrchestrator } from "@/components/home/home-motion-orchestrat
 import { buildHomeEditorialCuration, buildHomeOrbitWatches, buildHomeScenarios } from "@/components/home/home-scenario-model";
 import { EditorialWideContainer } from "@/components/ui/editorial-primitives";
 import type { CatalogReadDataset } from "@/modules/catalog/domain/read-models";
-import { getCatalogReadDataset } from "@/modules/catalog/infrastructure/catalog-read-repository.server";
+import {
+  getCatalogReadDataset,
+} from "@/modules/catalog/infrastructure/catalog-read-repository.server";
 import { listPublishedJournalArticles } from "@/modules/journal/application/journal-repository";
 
 export const metadata: Metadata = {
@@ -21,6 +23,8 @@ export const metadata: Metadata = {
   description: "Оригинальные наручные часы в интернет-магазине Eternal Time. Каталог моделей, подбор по вашим предпочтениям и журнал о часах.",
   alternates: { canonical: "/" },
 };
+
+export const revalidate = 300;
 
 async function loadDataset(): Promise<CatalogReadDataset | null> {
   try {
