@@ -55,11 +55,13 @@ export function CatalogFilterDialog({
     const previousBodyPaddingRight = document.body.style.paddingRight;
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-    closeButtonRef.current?.focus();
     document.body.style.overflow = "hidden";
     if (scrollbarWidth > 0) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
+    const focusFrame = window.requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -95,6 +97,7 @@ export function CatalogFilterDialog({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      window.cancelAnimationFrame(focusFrame);
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.paddingRight = previousBodyPaddingRight;
       (previouslyFocused ?? trigger)?.focus();

@@ -34,6 +34,9 @@
   inset: 0;
   z-index: 50;
   background: rgba(16, 22, 26, 0.45);
+  contain: layout paint;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
 }
 
 .panel {
@@ -46,6 +49,9 @@
   max-height: 88vh;
   background: var(--catalog-paper, #f5f3ee);
   box-shadow: 0 -12px 32px rgba(16, 22, 26, 0.18);
+  contain: layout paint;
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 /* Right-side panel at desktop widths — never inline, never a layout shift for the grid below it
@@ -112,6 +118,8 @@
 .panelBody {
   overflow-y: auto;
   padding: 1.1rem 1.25rem;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .panelFooter {

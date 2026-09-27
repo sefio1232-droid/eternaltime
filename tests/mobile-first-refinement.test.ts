@@ -83,6 +83,28 @@ describe("mobile-first production refinement contracts", () => {
     expect(fields).toContain("font-size: 16px");
   });
 
+  it("keeps mobile openable surfaces lightweight and responsive", () => {
+    const search = readSrc("src/components/shell/search-dialog.tsx");
+    const commerceActions = readSrc("src/components/commerce/commerce-actions.tsx");
+    const globals = readSrc("src/app/globals.css");
+    const filterDialog = readSrc("src/components/catalog/catalog-filter-dialog.tsx");
+    const filterStyles = readSrc("src/components/catalog/catalog-filter-dialog.module.css");
+    const commerceStyles = readSrc("src/components/commerce/commerce.module.css");
+    const galleryStyles = readSrc("src/components/catalog/catalog-detail-gallery.module.css");
+
+    expect(search).toContain("cachedSuggestions");
+    expect(search).toContain("onPointerDown={warmSearchSuggestions}");
+    expect(search).toContain("window.requestAnimationFrame");
+    expect(search).not.toContain("autoFocus");
+    expect(commerceActions).toContain("{drawerOpen ? <CommerceCartDrawer");
+    expect(filterDialog).toContain("window.requestAnimationFrame");
+
+    for (const css of [globals, filterStyles, commerceStyles, galleryStyles]) {
+      expect(css).toContain("contain: layout paint");
+      expect(css).toContain("overscroll-behavior: contain");
+    }
+  });
+
   it("keeps mobile commerce surfaces touch-safe without overlaying watch detail typography", () => {
     const detail = readSrc("src/components/catalog/watch-detail.module.css");
     const commerce = readSrc("src/components/commerce/commerce.module.css");

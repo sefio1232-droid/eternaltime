@@ -45,18 +45,12 @@ export function CommerceCartIcon() {
 }
 
 export function CommerceCartDrawer({
-  open,
   onClose,
 }: Readonly<{
-  open: boolean;
   onClose: () => void;
 }>) {
   const { items } = useCommerceCart();
   const { summary } = useResolvedCommerceCart(items);
-
-  if (!open) {
-    return null;
-  }
 
   return (
     <aside className={styles.drawer} aria-label="Мини-корзина" aria-live="polite">
@@ -175,7 +169,7 @@ export function CommerceProductActions({
       <p className={styles.disabledNote}>
         Перед оплатой мы ещё раз подтвердим модель, актуальную цену и возможность поставки. Ориентир доставки — около 12 календарных дней. Для одной модели можно выбрать до {commerceCartMaxQuantity} штук.
       </p>
-      <CommerceCartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      {drawerOpen ? <CommerceCartDrawer onClose={() => setDrawerOpen(false)} /> : null}
     </div>
   );
 }

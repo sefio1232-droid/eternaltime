@@ -131,6 +131,9 @@
   background: color-mix(in srgb, var(--canvas) 96%, white 4%);
   box-shadow: 0 24px 70px rgb(0 0 0 / 18%);
   padding: 1.1rem;
+  contain: layout paint;
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 .drawerHeader {
@@ -165,6 +168,8 @@
   max-height: 18rem;
   overflow: auto;
   padding: 1rem 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .line {
@@ -706,6 +711,9 @@
     color-mix(in srgb, var(--surface-graphite) 88%, black 12%);
   backdrop-filter: blur(10px);
   padding: clamp(0.5rem, 2vw, 1.4rem);
+  contain: layout paint;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
 }
 
 .cdekWidgetShell {
@@ -719,6 +727,9 @@
     linear-gradient(135deg, color-mix(in srgb, var(--canvas) 92%, white 8%), color-mix(in srgb, var(--surface-warm) 22%, var(--canvas))),
     var(--canvas);
   box-shadow: 0 2rem 5rem color-mix(in srgb, black 32%, transparent);
+  contain: layout paint;
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 .cdekWidgetHeader {
@@ -746,6 +757,7 @@
   height: 100%;
   overflow: hidden;
   background: color-mix(in srgb, var(--surface-warm) 30%, var(--canvas));
+  contain: layout paint;
 }
 
 .cdekWidgetRoot {
@@ -801,6 +813,12 @@
 
   .cdekWidgetMap {
     min-height: 70dvh;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cdekWidgetOverlay {
+    backdrop-filter: none;
   }
 }
 

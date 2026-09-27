@@ -4386,6 +4386,10 @@ select {
       radial-gradient(circle at 82% 0, rgb(199 164 106 / 0.16), transparent 12rem),
       #fbfaf7;
     color: var(--text);
+    contain: layout paint;
+    overscroll-behavior: contain;
+    transform: translateZ(0);
+    will-change: transform, opacity;
   }
 
   .mobile-navigation-drawer-head {
@@ -4465,6 +4469,9 @@ select {
       calc(env(safe-area-inset-top, 0px) + 0.75rem)
       1rem
       calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    contain: layout paint;
+    overscroll-behavior: contain;
+    touch-action: manipulation;
   }
 
   .search-dialog-panel {
@@ -4472,6 +4479,9 @@ select {
     margin-top: 0 !important;
     border: 1px solid rgb(255 255 255 / 0.24);
     box-shadow: 0 24px 70px rgb(0 0 0 / 0.28);
+    contain: layout paint;
+    transform: translateZ(0);
+    will-change: transform, opacity;
   }
 
   .search-dialog-panel form button[type="submit"] {

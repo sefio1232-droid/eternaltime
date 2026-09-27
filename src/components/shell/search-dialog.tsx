@@ -2,6 +2,37 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
+let cachedSuggestions: string[] | null = null;
+let pendingSuggestions: Promise<string[]> | null = null;
+
+function loadSearchSuggestions() {
+  if (cachedSuggestions) {
+    return Promise.resolve(cachedSuggestions);
+  }
+
+  if (pendingSuggestions) {
+    return pendingSuggestions;
+  }
+
+  pendingSuggestions = fetch("/api/catalog/search-suggestions", { cache: "force-cache" })
+    .then((response) => response.ok ? response.json() : { suggestions: [] })
+    .then((payload: { suggestions?: unknown }) => {
+      cachedSuggestions = Array.isArray(payload.suggestions)
+        ? payload.suggestions.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        : [];
+      return cachedSuggestions;
+    })
+    .catch(() => {
+      cachedSuggestions = [];
+      return cachedSuggestions;
+    })
+    .finally(() => {
+      pendingSuggestions = null;
+    });
+
+  return pendingSuggestions;
+}
+
 function SearchSymbol() {
   return (
     <span
@@ -15,6 +46,7 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const suggestionListId = useId();
 
   useEffect(() => {
@@ -39,25 +71,30 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen || suggestions.length > 0) return;
+    if (!isOpen) return;
 
-    const controller = new AbortController();
+    let active = true;
+    const focusFrame = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
 
-    fetch("/api/catalog/search-suggestions", {
-      cache: "force-cache",
-      signal: controller.signal,
-    })
-      .then((response) => response.ok ? response.json() : { suggestions: [] })
-      .then((payload: { suggestions?: unknown }) => {
-        if (!Array.isArray(payload.suggestions)) return;
-        setSuggestions(payload.suggestions.filter((item): item is string => typeof item === "string" && item.trim().length > 0));
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+    if (suggestions.length === 0) {
+      void loadSearchSuggestions().then((items) => {
+        if (active) {
+          setSuggestions(items);
+        }
       });
+    }
 
-    return () => controller.abort();
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(focusFrame);
+    };
   }, [isOpen, suggestions.length]);
+
+  function warmSearchSuggestions() {
+    void loadSearchSuggestions();
+  }
 
   return (
     <>
@@ -71,6 +108,9 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
         }
         aria-haspopup="dialog"
         aria-expanded={isOpen}
+        onFocus={warmSearchSuggestions}
+        onMouseEnter={warmSearchSuggestions}
+        onPointerDown={warmSearchSuggestions}
         onClick={() => setIsOpen(true)}
       >
         <SearchSymbol />
@@ -100,8 +140,8 @@ export function SearchDialog({ compact = false }: Readonly<{ compact?: boolean }
               <label className="grid gap-2">
                 <span className="type-meta">Бренд, модель или код на корпусе</span>
                 <input
+                  ref={inputRef}
                   name="q"
-                  autoFocus
                   list={suggestionListId}
                   className="h-14 border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-lg outline-none"
                   placeholder="Например, PRX или A158WA"
