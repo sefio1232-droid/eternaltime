@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { YandexMetrika, YandexMetrikaNoScript } from "@/components/analytics/yandex-metrika";
 import { getPublicEnv } from "@/config/public-env";
 import "./globals.css";
 
@@ -21,7 +23,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Suspense fallback={null}>
+          <YandexMetrika />
+        </Suspense>
+        <YandexMetrikaNoScript />
+      </body>
     </html>
   );
 }
